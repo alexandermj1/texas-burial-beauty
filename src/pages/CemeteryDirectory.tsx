@@ -1,12 +1,22 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Search, ArrowRight, Phone, X, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  Search,
+  ArrowRight,
+  Phone,
+  X,
+  ShieldCheck,
+  Check,
+  Tag,
+  ChevronRight,
+  Navigation,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-
 
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
@@ -70,6 +80,11 @@ const photoFor = (region: string, hash: number) => {
   return PHOTO_POOL[hash % PHOTO_POOL.length];
 };
 
+const hashName = (s: string) => {
+  let h = 0;
+  for (let k = 0; k < s.length; k++) h = (h * 31 + s.charCodeAt(k)) >>> 0;
+  return h;
+};
 
 // Botanical leaf accents (scattered decoratively across the page background)
 const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
@@ -78,234 +93,357 @@ const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
 }) as Record<string, string>;
 const LEAVES = Object.values(LEAF_MODULES);
 const LEAF_SCATTER: Array<{ top: string; left?: string; right?: string; size: number; rotate: number; opacity: number; idx: number }> = [
-  // Austin (~0-11%) — moved big terracotta monstera from left to right side
-  { top: "2%",  right: "1%",  size: 130, rotate: 14,  opacity: 0.55, idx: 0 },
-  { top: "5%",  left: "2%",   size: 110, rotate: -8,  opacity: 0.5,  idx: 5 },
-  { top: "9%",  right: "44%", size: 70,  rotate: 30,  opacity: 0.35, idx: 11 },
-  // Central Texas (~11-22%)
-  { top: "14%", left: "3%",   size: 95,  rotate: -25, opacity: 0.45, idx: 2 },
-  { top: "16%", right: "4%",  size: 100, rotate: 10,  opacity: 0.45, idx: 7 },
-  { top: "22%", left: "30%",  size: 70,  rotate: 40,  opacity: 0.35, idx: 14 },
-  // Dallas–Fort Worth (~22-33%)
-  { top: "26%", right: "2%",  size: 125, rotate: -30, opacity: 0.55, idx: 16 }, // teal hibiscus (favorite)
-  { top: "30%", left: "3%",   size: 95,  rotate: 12,  opacity: 0.5,  idx: 18 },
-  // East Texas (~33-44%) — leaf next to heading enlarged
-  { top: "34%", left: "2%",   size: 145, rotate: -8,  opacity: 0.55, idx: 9 },  // bigger palm fan
-  { top: "38%", right: "3%",  size: 155, rotate: 12,  opacity: 0.55, idx: 21 }, // bigger leaf
-  { top: "44%", left: "38%",  size: 80,  rotate: -10, opacity: 0.4,  idx: 3 },
-  // El Paso & West Texas (~44-55%)
-  { top: "46%", right: "32%", size: 110, rotate: 12,  opacity: 0.5,  idx: 16 }, // teal hibiscus (favorite)
-  { top: "50%", left: "2%",   size: 130, rotate: -20, opacity: 0.55, idx: 17 },
-  { top: "54%", right: "2%",  size: 120, rotate: 20,  opacity: 0.5,  idx: 12 },
-  // Greater Houston (~55-66%) — rotated so leaves face up
-  { top: "58%", left: "3%",   size: 130, rotate: 0,   opacity: 0.55, idx: 4 },  // caladium upright
-  { top: "62%", right: "20%", size: 120, rotate: -8,  opacity: 0.5,  idx: 8 },
-  { top: "66%", left: "38%",  size: 80,  rotate: 6,   opacity: 0.4,  idx: 16 }, // teal hibiscus (favorite)
-  // San Antonio (~66-77%) — caladium enlarged, leaves up / stalks down
-  { top: "70%", right: "2%",  size: 200, rotate: 0,   opacity: 0.6,  idx: 15 }, // BIG upright caladium
-  { top: "74%", left: "3%",   size: 110, rotate: -10, opacity: 0.5,  idx: 19 },
-  // South Texas (~77-88%)
-  { top: "78%", right: "3%",  size: 130, rotate: 8,   opacity: 0.55, idx: 20 },
-  { top: "82%", left: "30%",  size: 90,  rotate: -15, opacity: 0.45, idx: 16 }, // teal hibiscus (favorite)
-  { top: "86%", left: "2%",   size: 125, rotate: -10, opacity: 0.55, idx: 13 },
-  // West & North Texas (~88-100%)
-  { top: "88%", right: "2%",  size: 140, rotate: 0,   opacity: 0.6,  idx: 16 }, // teal hibiscus (favorite, original)
-  { top: "92%", left: "20%",  size: 110, rotate: -8,  opacity: 0.5,  idx: 16 }, // teal hibiscus (favorite)
-  { top: "95%", right: "38%", size: 95,  rotate: 14,  opacity: 0.45, idx: 6 },
+  { top: "2%", right: "1%", size: 130, rotate: 14, opacity: 0.5, idx: 0 },
+  { top: "6%", left: "2%", size: 110, rotate: -8, opacity: 0.45, idx: 5 },
+  { top: "14%", left: "3%", size: 95, rotate: -25, opacity: 0.4, idx: 2 },
+  { top: "18%", right: "3%", size: 110, rotate: 10, opacity: 0.42, idx: 7 },
+  { top: "28%", right: "2%", size: 125, rotate: -30, opacity: 0.5, idx: 16 },
+  { top: "34%", left: "2%", size: 140, rotate: -8, opacity: 0.5, idx: 9 },
+  { top: "44%", right: "3%", size: 150, rotate: 12, opacity: 0.5, idx: 21 },
+  { top: "52%", left: "2%", size: 130, rotate: -20, opacity: 0.5, idx: 17 },
+  { top: "60%", right: "2%", size: 120, rotate: 20, opacity: 0.45, idx: 12 },
+  { top: "68%", left: "3%", size: 130, rotate: 0, opacity: 0.5, idx: 4 },
+  { top: "76%", right: "2%", size: 180, rotate: 0, opacity: 0.55, idx: 15 },
+  { top: "84%", left: "3%", size: 115, rotate: -10, opacity: 0.45, idx: 19 },
+  { top: "90%", right: "3%", size: 130, rotate: 8, opacity: 0.5, idx: 20 },
 ];
 
 type Cem = (typeof bayCemeteries)[number];
 
-const OFFERING_SETS: string[][] = [
-  ["Plots", "Niches", "Mausoleums"],
-  ["Plots", "Companion", "Cremation"],
-  ["Plots", "Lawn Crypts", "Family Estates"],
-  ["Plots", "Niches", "Veteran"],
-];
+type Step = "where" | "cemetery" | null;
 
-const RegionRow = ({
-  groupRegion,
-  list,
-  gIdx,
-  setRef,
+/* ------------------------------------------------------------------ */
+/* Search — Airbnb-style segmented pill with dropdown panels           */
+/* ------------------------------------------------------------------ */
+
+function HeroSearch({
+  variant = "hero",
+  region,
+  setRegion,
+  query,
+  setQuery,
+  cemeteryNames,
+  onSubmit,
 }: {
-  groupRegion: string;
-  list: Cem[];
-  gIdx: number;
-  setRef: (el: HTMLDivElement | null) => void;
-}) => {
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const [canPrev, setCanPrev] = useState(false);
-  const [canNext, setCanNext] = useState(false);
-
-  const updateArrows = () => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    setCanPrev(el.scrollLeft > 4);
-    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  };
+  variant?: "hero" | "compact";
+  region: string;
+  setRegion: (r: string) => void;
+  query: string;
+  setQuery: (q: string) => void;
+  cemeteryNames: string[];
+  onSubmit: () => void;
+}) {
+  const [step, setStep] = useState<Step>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    updateArrows();
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", updateArrows, { passive: true });
-    window.addEventListener("resize", updateArrows);
-    return () => {
-      el.removeEventListener("scroll", updateArrows);
-      window.removeEventListener("resize", updateArrows);
-    };
-  }, [list]);
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setStep(null);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
 
-  const scrollBy = (dir: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const amount = Math.max(el.clientWidth * 0.85, 320);
-    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  const whereLabel = region === "All" ? "All of Texas" : region;
+  const cemeteryLabel = query.trim() ? query : "Any cemetery";
+
+  const submit = () => {
+    setStep(null);
+    onSubmit();
   };
 
-  return (
-    <div
-      data-region={groupRegion}
-      ref={setRef}
-      className="mb-14 last:mb-0 scroll-mt-[200px]"
-    >
-      {/* Region header — quiet editorial band with carousel arrows */}
-      <div className="flex items-end justify-between gap-6 mb-5">
-        <div className="flex items-baseline gap-4 min-w-0">
-          <span className="font-display text-xs text-primary tabular-nums tracking-[0.2em] uppercase shrink-0">
-            №&nbsp;{String(gIdx + 1).padStart(2, "0")}
-          </span>
-          <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-none truncate flex items-center gap-3">
-            <svg aria-hidden viewBox="0 0 40 40" className="w-6 h-6 md:w-7 md:h-7 text-primary/70 shrink-0">
-              <g fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
-                <path d="M20 4 C 28 14, 28 26, 20 36 C 12 26, 12 14, 20 4 Z" />
-                <path d="M20 6 L 20 34" />
-              </g>
-            </svg>
-            {groupRegion}
-          </h2>
-          <span className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-medium tabular-nums shrink-0 hidden sm:inline">
-            · {list.length.toString().padStart(2, "0")} {list.length === 1 ? "cemetery" : "cemeteries"}
-          </span>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
+  if (variant === "compact") {
+    return (
+      <div ref={ref} className="relative z-40 w-full max-w-2xl">
+        <div className="flex items-center bg-background border border-border rounded-full shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.4)] h-[52px] pl-5 pr-1.5 gap-3">
+          <Search className="w-[18px] h-[18px] text-primary flex-none" strokeWidth={2.4} />
           <button
-            onClick={() => scrollBy(-1)}
-            disabled={!canPrev}
-            aria-label="Scroll left"
-            className="w-11 h-11 rounded-full border-2 border-primary/60 bg-background flex items-center justify-center text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-25 disabled:hover:bg-background disabled:hover:text-foreground disabled:hover:border-primary/60 transition-colors"
+            onClick={() => setStep(step === "where" ? null : "where")}
+            className="text-[14.5px] font-semibold text-foreground truncate hover:text-primary transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" strokeWidth={2.25} />
+            {whereLabel}
+          </button>
+          <span className="w-px h-5 bg-border flex-none" />
+          <button
+            onClick={() => setStep(step === "cemetery" ? null : "cemetery")}
+            className="text-[14.5px] font-semibold text-foreground truncate hover:text-primary transition-colors flex-1 text-left"
+          >
+            {cemeteryLabel}
           </button>
           <button
-            onClick={() => scrollBy(1)}
-            disabled={!canNext}
-            aria-label="Scroll right"
-            className="w-11 h-11 rounded-full border-2 border-primary/60 bg-background flex items-center justify-center text-foreground shadow-sm hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-25 disabled:hover:bg-background disabled:hover:text-foreground disabled:hover:border-primary/60 transition-colors"
+            onClick={submit}
+            aria-label="Search"
+            className="ml-auto w-[40px] h-[40px] rounded-full bg-primary text-primary-foreground grid place-items-center transition-opacity hover:opacity-90 flex-none"
           >
-            <ChevronRight className="w-5 h-5" strokeWidth={2.25} />
+            <Search className="w-[16px] h-[16px]" strokeWidth={2.4} />
           </button>
         </div>
+        {step && (
+          <SearchPanel
+            step={step}
+            region={region}
+            query={query}
+            cemeteryNames={cemeteryNames}
+            setRegion={setRegion}
+            setQuery={setQuery}
+            setStep={setStep}
+          />
+        )}
+      </div>
+    );
+  }
 
+  return (
+    <div ref={ref} className="relative mx-auto max-w-[920px] text-left z-40">
+      <div className="flex items-center bg-background border border-border rounded-full shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.45)] p-2.5 gap-1">
+        <Segment
+          icon={<MapPin className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
+          label="Where"
+          value={whereLabel}
+          active={step === "where"}
+          onClick={() => setStep(step === "where" ? null : "where")}
+        />
+        <span className="w-px h-9 bg-border flex-none hidden min-[760px]:block" />
+        <Segment
+          icon={<Tag className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
+          label="Cemetery"
+          value={cemeteryLabel}
+          active={step === "cemetery"}
+          onClick={() => setStep(step === "cemetery" ? null : "cemetery")}
+          hideOnSmall
+        />
+        <button
+          onClick={submit}
+          className="ml-auto flex-none flex items-center gap-2.5 bg-primary hover:opacity-90 text-primary-foreground rounded-full h-[56px] px-6 md:px-9 font-bold text-[15.5px] transition-opacity"
+        >
+          <Search className="w-[18px] h-[18px]" strokeWidth={2.6} />
+          <span>Search</span>
+        </button>
       </div>
 
-      {/* Horizontal scroll row — Airbnb-style, x-only */}
-      <div className="relative -mx-6 pl-8 pr-6 md:-mx-8 md:pl-10 md:pr-8">
-        <div
-          ref={scrollerRef}
-          className="flex gap-5 overflow-x-auto overflow-y-hidden no-scrollbar snap-x snap-mandatory scroll-smooth scroll-pl-8 md:scroll-pl-10 py-3 [touch-action:pan-y] [overscroll-behavior-x:contain] [overscroll-behavior-y:auto] [mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,#000_0,#000_calc(100%-72px),transparent_100%)]"
-        >
-          {list.map((c, i) => {
-            let h = 0;
-            for (let k = 0; k < c.name.length; k++) h = (h * 31 + c.name.charCodeAt(k)) >>> 0;
-            const offerings = OFFERING_SETS[h % OFFERING_SETS.length];
-            const refNum = String((h % 999) + 1).padStart(3, "0");
-            const slug = slugify(c.name);
+      {step && (
+        <SearchPanel
+          step={step}
+          region={region}
+          query={query}
+          cemeteryNames={cemeteryNames}
+          setRegion={setRegion}
+          setQuery={setQuery}
+          setStep={setStep}
+        />
+      )}
+    </div>
+  );
+}
 
+function Segment({
+  icon,
+  label,
+  value,
+  active,
+  onClick,
+  hideOnSmall,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  active: boolean;
+  onClick: () => void;
+  hideOnSmall?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 min-w-0 flex items-center gap-3.5 text-left rounded-full px-3 py-2.5 transition-colors ${
+        active ? "bg-muted" : "hover:bg-muted/60"
+      } ${hideOnSmall ? "hidden min-[760px]:flex" : ""}`}
+    >
+      <span className="w-[44px] h-[44px] rounded-2xl bg-primary/10 grid place-items-center flex-none">{icon}</span>
+      <span className="flex flex-col min-w-0">
+        <span className="text-[10.5px] font-bold uppercase tracking-[0.11em] text-muted-foreground leading-none">{label}</span>
+        <span className="text-[16px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
+      </span>
+    </button>
+  );
+}
+
+function SearchPanel({
+  step,
+  region,
+  query,
+  cemeteryNames,
+  setRegion,
+  setQuery,
+  setStep,
+}: {
+  step: Step;
+  region: string;
+  query: string;
+  cemeteryNames: string[];
+  setRegion: (r: string) => void;
+  setQuery: (q: string) => void;
+  setStep: (s: Step) => void;
+}) {
+  const [typed, setTyped] = useState(query);
+
+  const matches = useMemo(() => {
+    const q = typed.trim().toLowerCase();
+    const list = q ? cemeteryNames.filter((n) => n.toLowerCase().includes(q)) : cemeteryNames;
+    return list.slice(0, 60);
+  }, [typed, cemeteryNames]);
+
+  return (
+    <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 bg-background border border-border rounded-3xl shadow-2xl p-5 md:p-6 z-50 w-[min(92vw,680px)]">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4 px-1">
+        {step === "where" ? "Choose a region" : "Choose a cemetery"}
+      </div>
+
+      {step === "where" ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {regions.map((r) => {
+            const selected = region === r;
             return (
-              <motion.article
-                key={`${c.name}-${c.city}`}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-[26px] overflow-hidden border border-border/70 shadow-[0_10px_30px_-18px_hsl(var(--foreground)/0.35)] hover:shadow-[0_26px_50px_-20px_hsl(var(--primary)/0.35)] hover:-translate-y-1.5 transition-all duration-500 shrink-0 snap-start w-[288px] sm:w-[330px] md:w-[352px]"
+              <button
+                key={r}
+                onClick={() => {
+                  setRegion(r);
+                  setStep("cemetery");
+                }}
+                className={`flex items-center justify-between text-left px-4 py-3.5 rounded-full text-[13.5px] font-semibold transition-all hover:-translate-y-0.5 ${
+                  selected ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted hover:bg-accent/40 text-foreground"
+                }`}
               >
-                <Link to={`/cemeteries/${slug}`} className="block">
-                  {/* Photo — Airbnb-style image-first card */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img
-                      src={photoFor(c.region, h)}
-                      alt={`${c.name}, ${c.city}, Texas`}
-                      loading="lazy"
-                      decoding="async"
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/5 to-transparent" />
-                    <span className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/92 backdrop-blur-md text-[11px] font-semibold tracking-tight text-foreground shadow-sm">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-50" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent" />
-                      </span>
-                      Plots available
-                    </span>
-                    <span className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-foreground/45 backdrop-blur-md text-[10px] font-semibold tracking-[0.12em] uppercase text-background">
-                      №&nbsp;{refNum}
-                    </span>
-                    <div className="absolute bottom-3.5 left-4 right-4">
-                      <h3 className="font-display text-[21px] leading-[1.14] text-background tracking-tight line-clamp-2 drop-shadow-[0_2px_10px_hsl(var(--foreground)/0.6)]">
-                        {c.name}
-                      </h3>
-                    </div>
-                  </div>
-                </Link>
-
-                <div className="px-5 pt-4 pb-4 flex-1 flex flex-col">
-                  <p className="text-[13px] text-muted-foreground flex items-center gap-1.5 mb-3">
-                    <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/75" />
-                    <span className="font-medium tracking-tight text-foreground/80">{c.city}, TX</span>
-                    <span className="text-muted-foreground/50">·</span>
-                    <span>{c.region}</span>
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {offerings.map((o) => (
-                      <span
-                        key={o}
-                        className="text-[11.5px] px-2.5 py-1 rounded-full bg-primary/6 text-primary ring-1 ring-primary/12 font-semibold"
-                      >
-                        {o}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
-                  <Link
-                    to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
-                    className="group/btn flex items-center justify-center gap-1.5 py-3.5 text-[13.5px] font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
-                  >
-                    Buy <span className="font-normal opacity-60 group-hover/btn:opacity-100">here</span>
-                  </Link>
-                  <Link
-                    to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
-                    className="group/btn flex items-center justify-center gap-1.5 py-3.5 text-[13.5px] font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
-                  >
-                    Sell <span className="font-normal opacity-60 group-hover/btn:opacity-100">mine</span>
-                  </Link>
-                </div>
-              </motion.article>
+                <span className="truncate">{r === "All" ? "All of Texas" : r}</span>
+                {selected && <Check className="w-4 h-4 flex-none ml-2" />}
+              </button>
             );
           })}
         </div>
-      </div>
+      ) : (
+        <div>
+          <div className="flex items-center gap-2.5 bg-muted rounded-full px-4 h-11 mb-3">
+            <Search className="w-4 h-4 text-muted-foreground flex-none" />
+            <input
+              autoFocus
+              value={typed}
+              onChange={(e) => {
+                setTyped(e.target.value);
+                setQuery(e.target.value);
+              }}
+              placeholder="Search cemeteries, cities or regions"
+              className="flex-1 bg-transparent text-[14.5px] font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+            />
+            {typed && (
+              <button
+                onClick={() => {
+                  setTyped("");
+                  setQuery("");
+                }}
+                aria-label="Clear"
+                className="w-6 h-6 rounded-full hover:bg-background grid place-items-center text-muted-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="max-h-[320px] overflow-y-auto -mx-1 px-1">
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => {
+                  setTyped("");
+                  setQuery("");
+                  setStep(null);
+                }}
+                className="flex items-center gap-2.5 text-left px-4 py-3 rounded-xl text-[14px] font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+              >
+                <Navigation className="w-4 h-4 flex-none" /> Any cemetery
+              </button>
+              {matches.map((name) => {
+                const selected = query === name;
+                return (
+                  <button
+                    key={name}
+                    onClick={() => {
+                      setTyped(name);
+                      setQuery(name);
+                      setStep(null);
+                    }}
+                    className={`flex items-center justify-between text-left px-4 py-3 rounded-xl text-[14px] font-semibold transition-colors ${
+                      selected ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent/40 text-foreground"
+                    }`}
+                  >
+                    <span className="truncate">{name}</span>
+                    {selected && <Check className="w-4 h-4 flex-none ml-2" />}
+                  </button>
+                );
+              })}
+              {matches.length === 0 && (
+                <p className="px-4 py-6 text-center text-[13.5px] text-muted-foreground">No cemeteries match that name.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Cemetery card — compact photo-strip row (California layout)         */
+/* ------------------------------------------------------------------ */
+
+const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
+  const h = hashName(c.name);
+  const slug = slugify(c.name);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.025, 0.2) }}
+    >
+      <Link
+        to={`/cemeteries/${slug}`}
+        className="group flex items-stretch gap-3 sm:gap-4 bg-card border border-border rounded-2xl overflow-hidden shadow-[0_6px_18px_-12px_hsl(var(--foreground)/0.3)] hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.35)] hover:border-primary/60 transition-all"
+      >
+        <div
+          className="relative w-24 sm:w-32 shrink-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${photoFor(c.region, h)})` }}
+          aria-hidden
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-foreground/15 to-transparent" />
+        </div>
+
+        <div className="flex-1 min-w-0 py-3 sm:py-4 pr-3 sm:pr-4 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-display font-semibold text-[16.5px] sm:text-[18px] leading-tight tracking-tight text-foreground truncate">
+              {c.name}
+            </h3>
+            <p className="mt-1 flex items-center gap-1 text-[13px] text-muted-foreground truncate">
+              <MapPin className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+              <span className="truncate">
+                {c.city}, TX · {c.region}
+              </span>
+            </p>
+            <p className="mt-1.5 text-[12.5px] font-semibold text-muted-foreground">Plots available · Buy or sell</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+        </div>
+      </Link>
+    </motion.div>
+  );
 };
+
+/* ------------------------------------------------------------------ */
 
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
   const [query, setQuery] = useState("");
+
+  const cemeteryNames = useMemo(
+    () => Array.from(new Set(bayCemeteries.map((c) => c.name))).sort((a, b) => a.localeCompare(b)),
+    []
+  );
 
   const grouped = useMemo(() => {
     const filtered = bayCemeteries.filter((c) => {
@@ -320,7 +458,7 @@ const CemeteryDirectory = () => {
       }
       return true;
     });
-    const map = new Map<string, typeof bayCemeteries>();
+    const map = new Map<string, Cem[]>();
     filtered.forEach((c) => {
       const arr = map.get(c.region) ?? [];
       arr.push(c);
@@ -329,59 +467,14 @@ const CemeteryDirectory = () => {
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [region, query]);
 
-
-  // Chip order — stable, matches alphabetical section order on the page so
-  // the chips never reshuffle while scrolling or filtering.
-  const chipOrder = useMemo(
-    () => ["All", ...regions.filter((r) => r !== "All").sort((a, b) => a.localeCompare(b))],
-    []
-  );
-
   const total = bayCemeteries.length;
 
-  // Scroll spy: track which region group is currently in view
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [activeRegion, setActiveRegion] = useState<string>("Dallas–Fort Worth");
-
-  useEffect(() => {
-    const els = Object.entries(sectionRefs.current).filter(([, el]) => el) as [string, HTMLDivElement][];
-    if (els.length === 0) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]) {
-          const name = (visible[0].target as HTMLElement).dataset.region!;
-          setActiveRegion(name);
-        }
-      },
-      { rootMargin: "-140px 0px -55% 0px", threshold: [0, 0.1, 0.5, 1] }
-    );
-    els.forEach(([, el]) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [grouped]);
-
-  const scrollToRegion = (name: string) => {
-    const el = sectionRefs.current[name];
-    if (!el) return;
-    const y = el.getBoundingClientRect().top + window.scrollY - 180;
-    window.scrollTo({ top: y, behavior: "smooth" });
-  };
-
-  // Smooth scroll progress through the regions list (0 → 1)
   const listRef = useRef<HTMLDivElement | null>(null);
-  const [progress, setProgress] = useState(0);
-
-  // Pinned-bar state. Sticky doesn't work because PageTransition wraps the
-  // page in overflow-hidden containers (which break position:sticky against
-  // the viewport). We fall back to fixed positioning toggled by scroll.
   const barAnchorRef = useRef<HTMLDivElement | null>(null);
   const [barPinned, setBarPinned] = useState(false);
   const [navHeight, setNavHeight] = useState(64);
 
   useEffect(() => {
-    // Measure navbar height so the pinned bar tucks flush under it (no gap).
     const measureNav = () => {
       const nav = document.querySelector("nav");
       if (nav) setNavHeight((nav as HTMLElement).offsetHeight);
@@ -389,22 +482,8 @@ const CemeteryDirectory = () => {
     measureNav();
     const onScroll = () => {
       measureNav();
-      // progress
-      const el = listRef.current;
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const viewportAnchor = window.innerHeight * 0.35;
-        const traveled = viewportAnchor - rect.top;
-        const total = Math.max(rect.height - viewportAnchor, 1);
-        const p = Math.min(1, Math.max(0, traveled / total));
-        setProgress(p);
-      }
-      // pin/unpin the region bar based on its anchor position
       const anchor = barAnchorRef.current;
-      if (anchor) {
-        const top = anchor.getBoundingClientRect().top;
-        setBarPinned(top <= navHeight);
-      }
+      if (anchor) setBarPinned(anchor.getBoundingClientRect().top <= navHeight);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -413,9 +492,14 @@ const CemeteryDirectory = () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [grouped, navHeight]);
+  }, [navHeight]);
 
-
+  const scrollToResults = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 140;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  };
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -432,17 +516,6 @@ const CemeteryDirectory = () => {
 
   return (
     <div className="relative min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
-      {/* Page-wide warm wash — one continuous field behind the whole page so
-          the theme never stops abruptly below the hero. Kept light at the very
-          top so the navbar stays perfectly legible. */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          backgroundImage:
-            "radial-gradient(90% 55% at 10% 12%, hsl(var(--secondary) / 0.55) 0%, transparent 60%), radial-gradient(85% 55% at 90% 18%, hsl(var(--accent) / 0.28) 0%, transparent 62%), radial-gradient(80% 60% at 50% 95%, hsl(var(--primary) / 0.10) 0%, transparent 65%), linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary) / 0.35) 45%, hsl(var(--background)) 100%)",
-        }}
-      />
       <Seo
         title="Texas Cemeteries We Serve — Buy & Sell Plots | Texas Cemetery Brokers"
         description={`Browse ${total}+ cemeteries across Dallas–Fort Worth, Houston, Austin, San Antonio, El Paso & beyond. Get help buying or selling cemetery plots in Texas.`}
@@ -451,164 +524,98 @@ const CemeteryDirectory = () => {
       />
       <Navbar forceScrolled />
 
-      {/* HERO — sits on the shared page wash, Airbnb-style segmented search */}
-      <section className="relative z-10 pt-28 pb-10 md:pt-36 md:pb-14">
+      {/* HERO — warm wash that feathers into the page */}
+      <section className="relative z-10">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 -top-24 -bottom-32 -z-10 overflow-hidden pointer-events-none"
+          style={{
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary/70 via-accent/20 to-background" />
+          <div className="absolute -top-32 -right-32 w-[640px] h-[640px] rounded-full bg-primary/15 blur-3xl" />
+          <div className="absolute top-40 -left-40 w-[520px] h-[520px] rounded-full bg-accent/20 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-[420px] h-[420px] rounded-full bg-secondary/50 blur-3xl" />
+          {LEAVES.length > 0 && (
+            <>
+              <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute bottom-24 left-[3%] w-40 opacity-60 -rotate-[24deg] hidden md:block select-none" />
+              <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute bottom-10 right-[4%] w-48 opacity-55 rotate-[12deg] hidden md:block select-none" />
+              <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute top-1/3 right-[9%] w-24 opacity-45 rotate-[30deg] hidden lg:block select-none" />
+            </>
+          )}
+        </div>
 
-
-        <div className="relative container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-4xl mx-auto text-center"
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/60 shadow-sm mb-7">
+        <div className="container mx-auto px-6 pt-28 pb-10 md:pt-36 md:pb-14">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-5">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-primary">
+              <span className="text-[11px] tracking-[0.16em] uppercase font-bold text-primary">
                 Texas&rsquo; licensed plot marketplace
               </span>
             </span>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[68px] text-foreground leading-[1.04] tracking-tight mb-6">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[66px] text-foreground leading-[1.04] tracking-tight">
               Cemetery plots,
               <br />
               <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
-            <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto mb-9 leading-relaxed">
-              {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail.
-              We handle the cemetery paperwork, transfer and title end to end.
+            <p className="mt-5 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
+              cemetery paperwork, transfer and title end to end.
             </p>
 
-            {/* Airbnb-style segmented search */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="max-w-3xl mx-auto"
-            >
-              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0 bg-background rounded-[28px] md:rounded-full border border-border/70 p-2 shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.45)] focus-within:shadow-[0_28px_70px_-26px_hsl(var(--primary)/0.4)] transition-shadow duration-300">
-                {/* Where */}
-                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
-                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <MapPin className="w-4 h-4 text-primary" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Where</span>
-                    <select
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
-                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
-                    >
-                      {chipOrder.map((r) => (
-                        <option key={r} value={r}>{r === "All" ? "All of Texas" : r}</option>
-                      ))}
-                    </select>
-                  </span>
-                </label>
+            <div className="mt-9">
+              <HeroSearch
+                region={region}
+                setRegion={setRegion}
+                query={query}
+                setQuery={setQuery}
+                cemeteryNames={cemeteryNames}
+                onSubmit={scrollToResults}
+              />
+            </div>
 
-                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
-
-
-
-                {/* Cemetery */}
-                <label className="group flex-[1.2] flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors text-left">
-                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Search className="w-4 h-4 text-primary" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Cemetery</span>
-                    <input
-                      type="text"
-                      placeholder="Any cemetery"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="w-full bg-transparent text-[15px] font-semibold text-foreground placeholder:font-semibold placeholder:text-muted-foreground/70 tracking-tight focus:outline-none"
-                    />
-                  </span>
-                  {query && (
-                    <button
-                      onClick={() => setQuery("")}
-                      aria-label="Clear search"
-                      className="w-7 h-7 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors shrink-0"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </label>
-
-                <Link
-                  to="/buy"
-                  className="shrink-0 inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] hover:opacity-90 transition-opacity"
-                >
-                  <Search className="w-4 h-4" strokeWidth={2.4} /> Search
-                </Link>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13px] text-muted-foreground">
-                <span className="inline-flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                  {total}+ cemeteries served
-                </span>
-                <span>30–60% below retail</span>
-                <a href="tel:+12142304740" className="text-foreground font-semibold hover:text-primary transition-colors">
-                  (214) 230-4740
-                </a>
-              </div>
-            </motion.div>
-          </motion.div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13px] text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                {total}+ cemeteries served
+              </span>
+              <span>30–60% below retail</span>
+              <a href="tel:+12142304740" className="text-foreground font-semibold hover:text-primary transition-colors">
+                (214) 230-4740
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Anchor that marks where the hero search ends — used to trigger the
-          condensed Airbnb-style pinned bar. */}
-      <div ref={barAnchorRef as any} aria-hidden="true" />
+      <div ref={barAnchorRef} aria-hidden="true" />
 
-      {/* Sticky search bar — the hero search itself, smoothly transitioning
-          to a slightly condensed sticky state at the top of the viewport. */}
+      {/* Condensed pinned search — same control, slim variant */}
       {typeof document !== "undefined" &&
         createPortal(
           <AnimatePresence>
             {barPinned && (
               <motion.div
                 key="sticky-search"
-                initial={{ y: -28, opacity: 0, scale: 0.97 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                exit={{ y: -20, opacity: 0, scale: 0.97 }}
-                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ y: -28, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="hidden md:block fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.22)]"
-                style={{ top: `${navHeight}px`, transformOrigin: "center top" }}
+                style={{ top: `${navHeight}px` }}
               >
                 <div className="container mx-auto px-6 py-3 flex justify-center">
-                  {/* Same hero pill design, condensed ~15% in padding & type */}
-                  <motion.div
-                    layout
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full max-w-2xl flex items-center bg-background rounded-full border border-border shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.4)] focus-within:shadow-[0_14px_32px_-16px_hsl(var(--primary)/0.45)] transition-shadow duration-300"
-                  >
-                    <Search className="w-[17px] h-[17px] text-muted-foreground ml-5 shrink-0" strokeWidth={2} />
-                    <input
-                      type="text"
-                      placeholder="Search cemeteries, cities, or regions"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-base md:text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none tracking-tight"
-                    />
-                    {query ? (
-                      <button
-                        onClick={() => setQuery("")}
-                        className="mr-1.5 w-8 h-8 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-                        aria-label="Clear search"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    ) : (
-                      <Link
-                        to="/buy"
-                        className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-foreground text-background text-[12.5px] font-medium hover:bg-foreground/85 transition-colors"
-                      >
-                        Find a plot <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    )}
-                  </motion.div>
+                  <HeroSearch
+                    variant="compact"
+                    region={region}
+                    setRegion={setRegion}
+                    query={query}
+                    setQuery={setQuery}
+                    cemeteryNames={cemeteryNames}
+                    onSubmit={scrollToResults}
+                  />
                 </div>
               </motion.div>
             )}
@@ -616,17 +623,13 @@ const CemeteryDirectory = () => {
           document.body
         )}
 
-
-      {/* Cards grid — continues the same page wash, no hard edge */}
-      <section className="relative z-10 pt-10 md:pt-14 pb-20 md:pb-28 overflow-hidden">
-
-        {/* Dotted grid texture — warm tone to match botanical scatter */}
+      {/* REGION SECTIONS — grid of compact cards, one block per region */}
+      <section className="relative z-10 pt-6 md:pt-10 pb-20 md:pb-28 overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.55]"
+          className="pointer-events-none absolute inset-0 opacity-[0.45]"
           style={{
-            backgroundImage:
-              "radial-gradient(hsl(var(--accent) / 0.5) 1.4px, transparent 1.4px)",
+            backgroundImage: "radial-gradient(hsl(var(--accent) / 0.45) 1.4px, transparent 1.4px)",
             backgroundSize: "24px 24px",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
@@ -634,36 +637,31 @@ const CemeteryDirectory = () => {
               "linear-gradient(to bottom, transparent 0, hsl(0 0% 0%) 180px, hsl(0 0% 0%) calc(100% - 220px), transparent 100%)",
           }}
         />
+        <div aria-hidden className="pointer-events-none absolute top-[18%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-[55%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/12 blur-3xl" />
 
-
-        {/* Decorative warm washes — terracotta + sage */}
-        <div aria-hidden className="pointer-events-none absolute top-[18%] -right-40 w-[520px] h-[520px] rounded-full bg-primary/12 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute top-[50%] -left-40 w-[460px] h-[460px] rounded-full bg-accent/15 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute bottom-[15%] right-1/3 w-[360px] h-[360px] rounded-full bg-secondary/40 blur-3xl" />
-
-        {/* Botanical scatter — real painted leaves & flowers, freely arranged */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          {LEAVES.length > 0 && LEAF_SCATTER.map((s, i) => (
-            <img
-              key={i}
-              src={LEAVES[s.idx % LEAVES.length]}
-              alt=""
-              loading="lazy"
-              className="absolute select-none"
-              style={{
-                top: s.top,
-                left: s.left,
-                right: s.right,
-                width: `${Math.round(s.size * 1.55)}px`,
-                height: "auto",
-                opacity: s.opacity,
-                transform: `rotate(${s.rotate}deg)`,
-                filter: "saturate(0.85)",
-              }}
-            />
-          ))}
+          {LEAVES.length > 0 &&
+            LEAF_SCATTER.map((s, i) => (
+              <img
+                key={i}
+                src={LEAVES[s.idx % LEAVES.length]}
+                alt=""
+                loading="lazy"
+                className="absolute select-none"
+                style={{
+                  top: s.top,
+                  left: s.left,
+                  right: s.right,
+                  width: `${Math.round(s.size * 1.45)}px`,
+                  height: "auto",
+                  opacity: s.opacity,
+                  transform: `rotate(${s.rotate}deg)`,
+                  filter: "saturate(0.85)",
+                }}
+              />
+            ))}
         </div>
-
 
         <div className="relative container mx-auto px-6">
           {grouped.length === 0 && (
@@ -674,28 +672,32 @@ const CemeteryDirectory = () => {
           )}
 
           <div ref={listRef}>
-            <div className="min-w-0">
-              {grouped.map(([groupRegion, list], gIdx) => {
-                return (
-              <RegionRow
-                key={groupRegion}
-                groupRegion={groupRegion}
-                list={list}
-                gIdx={gIdx}
-                setRef={(el) => { sectionRefs.current[groupRegion] = el; }}
-              />
-                );
-              })}
-            </div>
+            {grouped.map(([groupRegion, list]) => (
+              <section key={groupRegion} className="py-5 sm:py-8">
+                <div className="flex items-end justify-between mb-3 sm:mb-5 gap-4">
+                  <h2 className="font-display text-2xl sm:text-3xl md:text-4xl tracking-tight text-foreground">
+                    Cemeteries in <em className="italic text-primary">{groupRegion}</em>
+                  </h2>
+                  <span className="hidden sm:inline text-[12px] uppercase tracking-[0.16em] text-muted-foreground font-semibold whitespace-nowrap">
+                    {list.length} {list.length === 1 ? "cemetery" : "cemeteries"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
+                  {list.map((c, i) => (
+                    <CemeteryCard key={`${c.name}-${c.city}`} c={c} index={i} />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
 
-          {/* Conversion-driving CTA — dark editorial, dual action */}
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="mt-20 relative overflow-hidden rounded-[28px] border border-border/60"
+            className="mt-16 relative overflow-hidden rounded-[28px] border border-border/60"
           >
             <img loading="lazy" decoding="async" src={imgHillside} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/85 to-foreground/60" />
@@ -714,8 +716,8 @@ const CemeteryDirectory = () => {
                   <em className="italic font-normal text-background/70">Buying or selling — we'll guide it.</em>
                 </h3>
                 <p className="text-background/70 mb-7 max-w-xl text-base">
-                  One short call. No pressure. We'll tell you exactly what we can do at your specific cemetery,
-                  what your plot is worth, and what's available to buy.
+                  One short call. No pressure. We'll tell you exactly what we can do at your specific cemetery, what
+                  your plot is worth, and what's available to buy.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
