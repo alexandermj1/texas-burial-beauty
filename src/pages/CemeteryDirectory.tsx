@@ -513,6 +513,10 @@ const CemeteryDirectory = () => {
 
   const total = bayCemeteries.length;
 
+  // While someone is searching for a cemetery by name, the matching cemeteries
+  // move to the top of the page — the metro gallery and coverage map step aside.
+  const isSearching = query.trim().length > 0;
+
   // The coverage map follows whichever metro area is selected.
   const mapRegions = useMemo(
     () => (region === "All" ? ALL_TEXAS_REGIONS : [region]),
@@ -664,7 +668,8 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* METRO AREAS — photo cards straight under the search */}
+      {/* METRO AREAS — photo cards straight under the search (hidden while searching) */}
+      {!isSearching && (
       <section className="relative z-20 container mx-auto px-6 pt-6 pb-10 md:pt-8 md:pb-16">
         <div className="text-center mb-6 md:mb-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5">Explore Texas</p>
@@ -722,8 +727,10 @@ const CemeteryDirectory = () => {
           </button>
         </div>
       </section>
+      )}
 
       {/* COVERAGE MAP — follows whichever metro area is selected, styled as an inline widget */}
+      {!isSearching && (
       <section className="relative z-20 container mx-auto px-6 pb-6 md:pb-8">
         <div className="text-center mb-6 md:mb-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5 inline-flex items-center gap-2">
@@ -760,6 +767,7 @@ const CemeteryDirectory = () => {
           </Suspense>
         </div>
       </section>
+      )}
 
       <div ref={barAnchorRef} aria-hidden="true" />
 
