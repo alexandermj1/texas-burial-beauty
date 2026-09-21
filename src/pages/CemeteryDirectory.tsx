@@ -803,7 +803,7 @@ const CemeteryDirectory = () => {
         )}
 
       {/* REGION SECTIONS — grid of compact cards, one block per region */}
-      <section className="relative z-10 pt-2 md:pt-4 pb-20 md:pb-28 overflow-hidden">
+      <section className="relative z-10 pt-10 md:pt-14 pb-20 md:pb-28 overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.45]"
