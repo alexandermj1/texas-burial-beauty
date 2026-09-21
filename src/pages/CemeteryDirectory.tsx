@@ -637,7 +637,7 @@ const CemeteryDirectory = () => {
 
       {/* HERO — warm wash that feathers into the page */}
       <section className="relative z-30 overflow-visible">
-        <div className="relative z-10 container mx-auto px-6 pt-28 pb-10 md:pt-36 md:pb-8">
+        <div className="relative z-10 container mx-auto px-6 pt-28 pb-10 md:pt-36 md:pb-5">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-4">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
