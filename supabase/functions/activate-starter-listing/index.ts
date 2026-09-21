@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     // Look up cemetery/name for the confirmation UI + emails.
     const { data: submission } = await supabase
       .from("contact_submissions")
-      .select("id, name, email, cemetery, quote_amount, quote_sent_at")
+      .select("id, name, email, cemetery, quote_amount, quote_sent_at, quote_response, accepted_quote_amount, plot_count")
       .eq("id", tx.submission_id)
       .maybeSingle();
 
