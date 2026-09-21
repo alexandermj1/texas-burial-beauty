@@ -3423,11 +3423,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {(() => {
-          // The pipeline counts everyone except buyers, so the Total/Today chips match.
-          const sellerU = pipelineUniverse.filter(s => resolveKind(s.customer_kind, s.source) !== "buyer");
-          const total = sellerU.length;
+          // Total includes everyone in the view — sellers, buyers and general
+          // forms alike — deduplicated by email. Every form gets classified as
+          // seller or buyer and flows through its pipeline from there.
+          const total = pipelineUniverse.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
-          const today = sellerU.filter(s => {
+          const today = pipelineUniverse.filter(s => {
             const d = (s as any).created_at ? new Date((s as any).created_at) : null;
             return d && d >= startOfToday;
           }).length;
