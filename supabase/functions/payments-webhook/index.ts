@@ -187,11 +187,29 @@ async function runAutopilot(submissionId: string, step: string) {
 async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: string) {
   const tier = tx.metadata?.listing_tier || "pro";
   if (tx.submission_id) {
-    await db().from("contact_submissions").update({
+    const nowIso = new Date().toISOString();
+    const patch: Record<string, unknown> = {
       listing_tier: tier,
-      listing_paid_at: new Date().toISOString(),
-      payment_received_at: new Date().toISOString(),
-    }).eq("id", tx.submission_id);
+      listing_paid_at: nowIso,
+      payment_received_at: nowIso,
+      listing_option: tier,
+    };
+    // Paying for a listing is an acceptance of the quoted price.
+    const { data: sub } = await db()
+      .from("contact_submissions")
+      .select("quote_response, quote_amount, accepted_quote_amount, plot_count")
+      .eq("id", tx.submission_id)
+      .maybeSingle();
+    if (sub && (sub as any).quote_response !== "accepted") {
+      const perSpace = Number((sub as any).quote_amount ?? 0) || 0;
+      const plots = Math.max(1, Number((sub as any).plot_count ?? 1) || 1);
+      patch.quote_response = "accepted";
+      patch.quote_responded_at = nowIso;
+      patch.acceptance_channel = "listing_payment";
+      patch.accepted_quote_amount =
+        (sub as any).accepted_quote_amount ?? (perSpace > 0 ? perSpace * plots : null);
+    }
+    await db().from("contact_submissions").update(patch).eq("id", tx.submission_id);
   }
   const firstName = (tx.recipient_name || "").split(" ")[0] || "there";
   const tierLabel = TIER_LABEL[tier] || "Listing";
