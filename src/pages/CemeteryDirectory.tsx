@@ -432,12 +432,136 @@ function SearchPanel({
 }
 
 /* ------------------------------------------------------------------ */
-/* Cemetery card — compact photo-strip row (California layout)         */
+/* Cemetery card — serif-led botanical cards. The name is the hero;    */
+/* photos appear only on rare anchor cards.                            */
 /* ------------------------------------------------------------------ */
+
+// Split a cemetery name into a plain first line + italic remainder.
+const splitName = (name: string): [string, string] => {
+  const words = name.split(" ");
+  if (words.length < 2) return [name, ""];
+  const cut = Math.max(1, Math.ceil(words.length / 2));
+  return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
+};
 
 const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
   const h = hashName(c.name);
   const slug = slugify(c.name);
+  const [first, rest] = splitName(c.name);
+  const isPhotoAnchor = index % 7 === 3;
+  const isEngraved = !isPhotoAnchor && index % 3 === 1;
+
+  const cardBody = isPhotoAnchor ? (
+    /* — Photo anchor card (rare) — */
+    <>
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:scale-105 transition-transform duration-700"
+        style={{ backgroundImage: `url(${photoFor(c.region, h)})` }}
+        aria-hidden
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/25 to-transparent" />
+      <div className="relative mt-auto p-7 sm:p-8">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-primary-foreground/75 font-semibold mb-2">
+          {c.region}
+        </p>
+        <h3 className="font-display text-3xl sm:text-4xl leading-tight text-primary-foreground mb-5">
+          {first}
+          {rest && (
+            <>
+              {" "}
+              <span className="italic font-medium opacity-90">{rest}</span>
+            </>
+          )}
+        </h3>
+        <div className="flex items-center justify-between gap-3">
+          <span className="px-3 py-1 border border-primary-foreground/40 text-primary-foreground text-[11px] font-bold uppercase tracking-wider rounded-full backdrop-blur-md">
+            {c.city}
+          </span>
+          <span className="font-display text-sm italic text-primary-foreground/90 underline decoration-1 underline-offset-4">
+            View details
+          </span>
+        </div>
+      </div>
+    </>
+  ) : isEngraved ? (
+    /* — Engraved terracotta card — */
+    <>
+      <div className="border-l border-t border-accent/25 absolute top-4 left-4 w-12 h-12" aria-hidden />
+      <div className="border-r border-b border-accent/25 absolute bottom-4 right-4 w-12 h-12" aria-hidden />
+      <div className="my-auto text-center px-2">
+        <p className="text-[11px] uppercase tracking-[0.15em] text-accent mb-4 font-semibold">
+          {c.city}, TX
+        </p>
+        <h3 className="font-display text-2xl sm:text-3xl font-light text-foreground leading-snug">
+          {first}
+          {rest && (
+            <>
+              {" "}
+              <span className="italic text-foreground/60">{rest}</span>
+            </>
+          )}
+        </h3>
+        <div className="inline-flex items-center gap-2 mt-6 mb-6" aria-hidden>
+          <div className="w-1 h-1 rounded-full bg-accent" />
+          <div className="w-8 h-px bg-border" />
+          <div className="w-1 h-1 rounded-full bg-accent" />
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="px-4 py-1.5 bg-accent/[0.08] text-accent text-[10px] font-bold uppercase tracking-widest rounded-sm">
+            Plots available
+          </span>
+          <span className="font-display text-sm text-foreground group-hover:text-accent transition-colors">
+            Inquire about plots &rarr;
+          </span>
+        </div>
+      </div>
+    </>
+  ) : (
+    /* — Typographic sage card (default) — */
+    <>
+      <div
+        className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+        aria-hidden
+      >
+        <svg
+          className="w-20 h-20 text-primary"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1"
+        >
+          <path
+            d="M12 2C12 2 15 7 15 12C15 17 12 22 12 22M12 2C12 2 9 7 9 12C9 17 12 22 12 22M2 12H22"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      <div className="mt-auto">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-3">
+          {c.region}
+        </p>
+        <h3 className="font-display text-2xl sm:text-[1.7rem] leading-tight text-foreground mb-4">
+          {first}
+          {rest && (
+            <>
+              {" "}
+              <span className="italic font-medium text-foreground/70">{rest}</span>
+            </>
+          )}
+        </h3>
+        <div className="h-px w-12 bg-primary mb-4" aria-hidden />
+        <div className="flex items-center justify-between gap-3 mt-2">
+          <span className="px-3 py-1 bg-primary/[0.09] text-primary text-[11px] font-bold uppercase tracking-wider rounded-full whitespace-nowrap">
+            Plots available
+          </span>
+          <span className="font-display text-sm italic text-primary underline decoration-1 underline-offset-4 whitespace-nowrap">
+            Buy or sell
+          </span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
@@ -447,37 +571,15 @@ const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
     >
       <Link
         to={`/cemeteries/${slug}`}
-        className="group flex items-stretch gap-4 sm:gap-5 bg-card border border-border rounded-2xl overflow-hidden shadow-[0_6px_18px_-12px_hsl(var(--foreground)/0.3)] hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.35)] hover:border-primary/60 transition-all"
+        className={`group relative flex flex-col h-64 sm:h-72 p-6 sm:p-7 overflow-hidden border transition-all ${
+          isPhotoAnchor
+            ? "bg-foreground border-border rounded-2xl"
+            : isEngraved
+              ? "bg-secondary/40 border-border rounded-2xl hover:bg-card hover:shadow-[0_18px_36px_-18px_hsl(var(--accent)/0.4)]"
+              : "bg-card border-border rounded-2xl hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.4)]"
+        }`}
       >
-        <div
-          className="relative w-28 sm:w-36 shrink-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${photoFor(c.region, h)})` }}
-          aria-hidden
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-foreground/15 to-transparent" />
-        </div>
-
-        <div className="flex-1 min-w-0 py-4 sm:py-5 pr-4 sm:pr-5 flex flex-col justify-center gap-2.5">
-          <div className="min-w-0">
-            <h3 className="font-display font-semibold text-lg sm:text-xl leading-tight tracking-tight text-foreground line-clamp-2">
-              {c.name}
-            </h3>
-            <p className="mt-1.5 flex items-center gap-1.5 text-[13.5px] text-foreground/65 truncate">
-              <MapPin className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
-              <span className="truncate">
-                {c.city}, TX · {c.region}
-              </span>
-            </p>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center rounded-full bg-primary/[0.09] text-primary px-2.5 py-1 text-[11.5px] font-bold tracking-wide">
-              Plots available
-            </span>
-            <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-foreground/70 group-hover:text-primary transition-colors">
-              Buy or sell <ChevronRight className="w-3.5 h-3.5" />
-            </span>
-          </div>
-        </div>
+        {cardBody}
       </Link>
     </motion.div>
   );
