@@ -301,8 +301,8 @@ function Segment({
     >
       <span className="w-[44px] h-[44px] rounded-2xl bg-gradient-to-br from-primary/[0.16] to-accent/[0.16] grid place-items-center flex-none shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14)]">{icon}</span>
       <span className="flex flex-col min-w-0">
-        <span className="text-[11px] font-bold uppercase tracking-[0.11em] text-foreground/60 leading-none">{label}</span>
-        <span className="text-[16px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
+        <span className="text-[12px] font-bold uppercase tracking-[0.11em] text-foreground/60 leading-none">{label}</span>
+        <span className="text-[17px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
       </span>
     </button>
   );
