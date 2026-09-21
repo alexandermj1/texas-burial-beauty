@@ -1761,6 +1761,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         : r.jointNames;
       const overrides: Record<string, unknown> = f
         ? {
+            // Typed by staff in the edit dialog — print exactly as entered.
+            manual_edit: true,
             seller_name: f.seller_name,
             address: f.address, city_state_zip: f.city_state_zip,
             phone: f.phone, email: f.email,
