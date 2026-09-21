@@ -520,7 +520,7 @@ const CemeteryDirectory = () => {
       <Navbar forceScrolled />
 
       {/* HERO — warm wash that feathers into the page */}
-      <section className="relative z-10">
+      <section className="relative z-30">
         <div
           aria-hidden
           className="absolute inset-x-0 -top-24 -bottom-32 -z-10 overflow-hidden pointer-events-none"
