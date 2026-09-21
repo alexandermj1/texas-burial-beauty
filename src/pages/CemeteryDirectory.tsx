@@ -13,6 +13,49 @@ import { slugify } from "@/lib/cemeterySlug";
 
 import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
+import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
+import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
+import imgPalms from "@/assets/hero/cemetery-palms.jpg";
+
+// Real Texas cemetery photography (uploaded park photos, CDN-hosted)
+import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
+import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
+import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
+import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
+import resthavenStatue from "@/assets/resthaven/resthaven-statue-lawn.jpg.asset.json";
+import resthavenWalkway from "@/assets/resthaven/resthaven-walkway.jpg.asset.json";
+import resthavenPavilion from "@/assets/resthaven/resthaven-pavilion-walk.jpg.asset.json";
+import resthavenBench from "@/assets/resthaven/resthaven-oak-bench.jpg.asset.json";
+import resthavenFlags from "@/assets/resthaven/resthaven-veteran-flags.jpg.asset.json";
+import grounds1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
+import grounds2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
+import grounds3 from "@/assets/cemeteries/cemetery-grounds-3.jpg.asset.json";
+
+const PHOTO_POOL: string[] = [
+  restlandHero.url,
+  resthavenAvenue.url,
+  grounds1.url,
+  resthavenOakPath.url,
+  imgHillside,
+  grounds2.url,
+  resthavenStatue.url,
+  restlandLawn.url,
+  imgCathedral,
+  resthavenWalkway.url,
+  grounds3.url,
+  resthavenPavilion.url,
+  imgMountains,
+  resthavenBench.url,
+  imgPalms,
+  resthavenFlags.url,
+];
+
+const photoFor = (name: string, hash: number) => {
+  const n = name.toLowerCase();
+  if (n.includes("restland")) return restlandHero.url;
+  if (n.includes("rest haven") || n.includes("resthaven")) return resthavenAvenue.url;
+  return PHOTO_POOL[hash % PHOTO_POOL.length];
+};
 
 // Botanical leaf accents (scattered decoratively across the page background)
 const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
@@ -173,63 +216,49 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/80 shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.14)] hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.28)] hover:border-primary hover:-translate-y-1 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-[26px] overflow-hidden border border-border/70 shadow-[0_10px_30px_-18px_hsl(var(--foreground)/0.35)] hover:shadow-[0_26px_50px_-20px_hsl(var(--primary)/0.35)] hover:-translate-y-1.5 transition-all duration-500 shrink-0 snap-start w-[288px] sm:w-[330px] md:w-[352px]"
               >
-                <Link
-                  to={`/cemeteries/${slug}`}
-                  className="relative block px-7 pt-7 pb-6 overflow-hidden"
-                >
-                  {/* Oversized italic reference number watermark */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-3 right-4 font-display italic text-[88px] leading-none text-primary/[0.06] select-none pointer-events-none tabular-nums tracking-tight"
-                  >
-                    {refNum}
-                  </span>
-                  <div className="relative">
-                    {/* Header meta: region + mono № + active pill */}
-                    <div className="flex items-start justify-between mb-9">
-                      <div className="space-y-1">
-                        <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-semibold">
-                          {c.region}
-                        </p>
-                        <p className="font-mono text-[11px] text-primary/70 tabular-nums">
-                          №&nbsp;{refNum}
-                        </p>
-                      </div>
-                      <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-background border border-border/60">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-40" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                        </span>
-                        <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-muted-foreground">
-                          Active
-                        </span>
+                <Link to={`/cemeteries/${slug}`} className="block">
+                  {/* Photo — Airbnb-style image-first card */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img
+                      src={photoFor(c.name, h)}
+                      alt={`${c.name}, ${c.city}, Texas`}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/5 to-transparent" />
+                    <span className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/92 backdrop-blur-md text-[11px] font-semibold tracking-tight text-foreground shadow-sm">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-50" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent" />
                       </span>
-                    </div>
-
-                    {/* Name + city */}
-                    <div className="mb-8">
-                      <h3 className="font-display text-[22px] leading-[1.12] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      Plots available
+                    </span>
+                    <span className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-foreground/45 backdrop-blur-md text-[10px] font-semibold tracking-[0.12em] uppercase text-background">
+                      №&nbsp;{refNum}
+                    </span>
+                    <div className="absolute bottom-3.5 left-4 right-4">
+                      <h3 className="font-display text-[21px] leading-[1.14] text-background tracking-tight line-clamp-2 drop-shadow-[0_2px_10px_hsl(var(--foreground)/0.6)]">
                         {c.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                        <span className="font-medium tracking-tight">{c.city}, TX</span>
-                      </p>
                     </div>
                   </div>
                 </Link>
 
-                <div className="px-7 pb-6 flex-1 flex flex-col">
-                  <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-bold mb-3">
-                    Inventory Available
+                <div className="px-5 pt-4 pb-4 flex-1 flex flex-col">
+                  <p className="text-[13px] text-muted-foreground flex items-center gap-1.5 mb-3">
+                    <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/75" />
+                    <span className="font-medium tracking-tight text-foreground/80">{c.city}, TX</span>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span>{c.region}</span>
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {offerings.map((o) => (
                       <span
                         key={o}
-                        className="text-[11px] px-3 py-1.5 rounded-lg bg-primary/5 text-primary ring-1 ring-primary/10 font-semibold"
+                        className="text-[11.5px] px-2.5 py-1 rounded-full bg-primary/6 text-primary ring-1 ring-primary/12 font-semibold"
                       >
                         {o}
                       </span>
@@ -240,13 +269,13 @@ const RegionRow = ({
                 <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
                   <Link
                     to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
-                    className="group/btn flex items-center justify-center gap-1.5 py-4 text-sm font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
+                    className="group/btn flex items-center justify-center gap-1.5 py-3.5 text-[13.5px] font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
                   >
                     Buy <span className="font-normal opacity-60 group-hover/btn:opacity-100">here</span>
                   </Link>
                   <Link
                     to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
-                    className="group/btn flex items-center justify-center gap-1.5 py-4 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
+                    className="group/btn flex items-center justify-center gap-1.5 py-3.5 text-[13.5px] font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
                   >
                     Sell <span className="font-normal opacity-60 group-hover/btn:opacity-100">mine</span>
                   </Link>
