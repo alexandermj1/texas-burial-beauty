@@ -25,6 +25,7 @@ import { slugify } from "@/lib/cemeterySlug";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
 import heroBotanicalLeft from "@/assets/flowers/hero-botanical-left.png";
 import heroBotanicalRight from "@/assets/flowers/hero-botanical-right.png";
+import searchSprig from "@/assets/flowers/search-sprig.png";
 
 // Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
