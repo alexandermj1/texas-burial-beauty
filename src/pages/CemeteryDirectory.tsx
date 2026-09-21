@@ -172,14 +172,14 @@ function HeroSearch({
           <Search className="w-[18px] h-[18px] text-primary flex-none" strokeWidth={2.4} />
           <button
             onClick={() => setStep(step === "where" ? null : "where")}
-            className="text-[14.5px] font-semibold text-foreground truncate hover:text-primary transition-colors"
+            className="text-[15.5px] font-semibold text-foreground truncate hover:text-primary transition-colors"
           >
             {whereLabel}
           </button>
           <span className="w-px h-5 bg-border flex-none" />
           <button
             onClick={() => setStep(step === "cemetery" ? null : "cemetery")}
-            className="text-[14.5px] font-semibold text-foreground truncate hover:text-primary transition-colors flex-1 text-left"
+            className="text-[15.5px] font-semibold text-foreground truncate hover:text-primary transition-colors flex-1 text-left"
           >
             {cemeteryLabel}
           </button>
@@ -239,7 +239,13 @@ function HeroSearch({
           />
           <span className="w-px h-9 bg-gradient-to-b from-transparent via-primary/25 to-transparent flex-none hidden min-[760px]:block" />
           <Segment
-            icon={<Tag className="w-[18px] h-[18px] text-accent" strokeWidth={2} />}
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px] text-accent" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 20h12" />
+                <path d="M9 20v-8a3 3 0 0 1 6 0v8" />
+                <path d="M8 12h8" />
+              </svg>
+            }
             label="Cemetery"
             value={cemeteryLabel}
             active={step === "cemetery"}
@@ -295,8 +301,8 @@ function Segment({
     >
       <span className="w-[44px] h-[44px] rounded-2xl bg-gradient-to-br from-primary/[0.16] to-accent/[0.16] grid place-items-center flex-none shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14)]">{icon}</span>
       <span className="flex flex-col min-w-0">
-        <span className="text-[11px] font-bold uppercase tracking-[0.11em] text-foreground/60 leading-none">{label}</span>
-        <span className="text-[16px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
+        <span className="text-[12px] font-bold uppercase tracking-[0.11em] text-foreground/60 leading-none">{label}</span>
+        <span className="text-[17px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
       </span>
     </button>
   );
@@ -646,8 +652,8 @@ const CemeteryDirectory = () => {
               </span>
             </span>
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[54px] text-foreground leading-[1.06] tracking-tight">
-              Cemetery plots,{" "}
-              <em className="not-italic text-primary">simply</em> bought and sold.
+              The simpler way to buy and sell{" "}
+              <em className="not-italic text-primary">cemetery plots in Texas</em>.
             </h1>
             <p className="mt-3 md:mt-4 text-foreground/70 text-[15px] md:text-base max-w-2xl mx-auto leading-relaxed">
               {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
