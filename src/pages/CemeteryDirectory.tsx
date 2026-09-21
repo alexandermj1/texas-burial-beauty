@@ -26,52 +26,50 @@ import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
 import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 
-// Real Texas cemetery photography (uploaded park photos, CDN-hosted)
+// Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
 import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
-import resthavenStatue from "@/assets/resthaven/resthaven-statue-lawn.jpg.asset.json";
-import resthavenWalkway from "@/assets/resthaven/resthaven-walkway.jpg.asset.json";
-import resthavenPavilion from "@/assets/resthaven/resthaven-pavilion-walk.jpg.asset.json";
-import resthavenBench from "@/assets/resthaven/resthaven-oak-bench.jpg.asset.json";
-import resthavenFlags from "@/assets/resthaven/resthaven-veteran-flags.jpg.asset.json";
-import grounds1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
-import grounds2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
-import grounds3 from "@/assets/cemeteries/cemetery-grounds-3.jpg.asset.json";
+import park04 from "@/assets/parks/park-04.jpg.asset.json";
+import park12 from "@/assets/parks/park-12.jpg.asset.json";
+import park23 from "@/assets/parks/park-23.jpg.asset.json";
+import park30 from "@/assets/parks/park-30.jpg.asset.json";
+import park36 from "@/assets/parks/park-36.jpg.asset.json";
+import park39 from "@/assets/parks/park-39.jpg.asset.json";
+import park47 from "@/assets/parks/park-47.jpg.asset.json";
+import park50 from "@/assets/parks/park-50.jpg.asset.json";
+import park57 from "@/assets/parks/park-57.jpg.asset.json";
 
 const PHOTO_POOL: string[] = [
+  park04.url,
+  park12.url,
+  park23.url,
+  park30.url,
+  park36.url,
+  park39.url,
+  park47.url,
+  park50.url,
+  park57.url,
   restlandHero.url,
   resthavenAvenue.url,
-  grounds1.url,
-  resthavenOakPath.url,
-  imgHillside,
-  grounds2.url,
-  resthavenStatue.url,
   restlandLawn.url,
-  imgCathedral,
-  resthavenWalkway.url,
-  grounds3.url,
-  resthavenPavilion.url,
-  imgMountains,
-  resthavenBench.url,
-  imgPalms,
-  resthavenFlags.url,
+  resthavenOakPath.url,
 ];
 
 // Photography is chosen by REGION (a landscape that represents the area),
 // not per individual cemetery — same region shares the same imagery family.
 const REGION_PHOTOS: Record<string, string[]> = {
-  "Dallas–Fort Worth": [restlandHero.url, restlandLawn.url],
-  "Greater Houston": [resthavenAvenue.url, resthavenOakPath.url],
-  "Austin": [resthavenPavilion.url, resthavenBench.url],
-  "Central Texas": [grounds1.url, resthavenWalkway.url],
-  "San Antonio": [resthavenStatue.url, grounds2.url],
-  "South Texas": [imgPalms, grounds3.url],
-  "East Texas": [resthavenOakPath.url, resthavenBench.url],
-  "El Paso & West Texas": [imgMountains, imgHillside],
-  "West Texas": [imgMountains, imgHillside],
-  "North Texas": [restlandLawn.url, grounds1.url],
+  "Dallas–Fort Worth": [park30.url, park04.url],
+  "Greater Houston": [park47.url, park12.url],
+  "Austin": [park23.url, park36.url],
+  "Central Texas": [park39.url, park50.url],
+  "San Antonio": [park57.url, park23.url],
+  "South Texas": [park12.url, park47.url],
+  "East Texas": [park36.url, park39.url],
+  "El Paso & West Texas": [park50.url, park57.url],
+  "West Texas": [park50.url, park30.url],
+  "North Texas": [park04.url, park39.url],
 };
 
 const photoFor = (region: string, hash: number) => {
