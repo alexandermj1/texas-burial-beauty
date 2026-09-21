@@ -665,9 +665,7 @@ const CemeteryDirectory = () => {
               <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Explore Texas</span>
             </div>
             <h2 className="font-display font-semibold text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
-            <svg viewBox="0 0 220 12" className="mt-2 h-2.5 w-44 text-primary/70" aria-hidden>
-              <path d="M2 8 C 40 2, 80 11, 120 6 S 190 3, 218 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
-            </svg>
+            <p className="mt-1.5 text-[15px] text-foreground/65">Pick a part of Texas to see its cemeteries below.</p>
           </div>
           <button
             onClick={() => {
