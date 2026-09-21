@@ -565,6 +565,11 @@ const CemeteryDirectory = () => {
 
   return (
     <div className="relative min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
+      {/* warm wash continuing from the hero down past the region gallery */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-[1650px] z-0 pointer-events-none bg-gradient-to-b from-accent/45 via-secondary/80 via-45% to-background"
+      />
       <Seo
         title="Texas Cemeteries We Serve — Buy & Sell Plots | Texas Cemetery Brokers"
         description={`Browse ${total}+ cemeteries across Dallas–Fort Worth, Houston, Austin, San Antonio, El Paso & beyond. Get help buying or selling cemetery plots in Texas.`}
@@ -577,7 +582,7 @@ const CemeteryDirectory = () => {
       <section className="relative z-30 overflow-visible">
         <div
           aria-hidden
-          className="absolute inset-x-0 -top-24 -bottom-[420px] -z-10 overflow-hidden pointer-events-none"
+          className="absolute inset-x-0 -top-24 -bottom-44 -z-10 overflow-hidden pointer-events-none"
           style={{
           WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
           maskImage: "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
