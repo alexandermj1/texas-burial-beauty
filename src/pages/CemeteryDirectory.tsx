@@ -579,8 +579,8 @@ const CemeteryDirectory = () => {
           aria-hidden
           className="absolute inset-x-0 -top-24 -bottom-44 -z-10 overflow-hidden pointer-events-none"
           style={{
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 78%, transparent 100%)",
-            maskImage: "linear-gradient(to bottom, black 0%, black 78%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-accent/65 via-secondary to-background" />
