@@ -66,8 +66,8 @@
 - [ ] Request Google indexing for the live guide
 
 ## Cemetery directory card redesign
-- [ ] Gather reference screenshots of the preferred California/Airbnb-style card layout
-- [ ] Generate 3 design directions based on the reference
+- [x] Generate 3 design directions (rejected — wants cemetery name prioritized, photos on only some cards)
+- [ ] Regenerate directions: name-first hierarchy, photos on select anchor cards only
 - [ ] Implement the chosen card style on the Texas cemetery directory page
 - [ ] Use uploaded cemetery photos where available
 - [ ] Verify desktop and mobile presentation
