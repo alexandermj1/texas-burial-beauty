@@ -3299,11 +3299,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           <div className="flex-1 min-w-0 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(() => {
               // Stage counters and the Total chip share one set (pipelineUniverse),
-              // so the nine buckets always add up to the total and nobody can sit
-              // in two buckets at once. Buyers have their own tab and workflow, so
-              // they are excluded from the seller pipeline counts.
+              // so the buckets always add up to the total and nobody can sit in two
+              // buckets at once. Buyers have their own tab and workflow, so they are
+              // the only kind excluded here — general enquiries still count.
               const txU = pipelineUniverse;
-              const sellerU = txU.filter(s => resolveKind(s.customer_kind, s.source) === "seller");
+              const sellerU = txU.filter(s => resolveKind(s.customer_kind, s.source) !== "buyer");
               const sellerStageCount = (step: number) => sellerU.filter(s => effStep(s) === step).length;
               type Tone = { dot: string; ring: string; text: string; soft: string };
               const tones: Record<string, Tone> = {
@@ -3423,8 +3423,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {(() => {
-          // The pipeline counts sellers only, so the Total/Today chips match.
-          const sellerU = pipelineUniverse.filter(s => resolveKind(s.customer_kind, s.source) === "seller");
+          // The pipeline counts everyone except buyers, so the Total/Today chips match.
+          const sellerU = pipelineUniverse.filter(s => resolveKind(s.customer_kind, s.source) !== "buyer");
           const total = sellerU.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
           const today = sellerU.filter(s => {
@@ -3434,7 +3434,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return (
             <div
               className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
-              title="Total sellers in this view (the stage counts add up to this) / new sellers today"
+              title="Everyone in this view except buyers (the stage counts add up to this) / new today. Buyers are counted on the Buyers button."
             >
               <div className="flex items-center gap-1.5 pr-3">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
