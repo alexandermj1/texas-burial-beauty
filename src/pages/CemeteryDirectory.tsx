@@ -617,8 +617,9 @@ const CemeteryDirectory = () => {
         )}
 
 
-      {/* Cards grid — warm cream wash that fades softly into the page */}
-      <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
+      {/* Cards grid — continues the same page wash, no hard edge */}
+      <section className="relative z-10 pt-10 md:pt-14 pb-20 md:pb-28 overflow-hidden">
+
         {/* Dotted grid texture — warm tone to match botanical scatter */}
         <div
           aria-hidden
