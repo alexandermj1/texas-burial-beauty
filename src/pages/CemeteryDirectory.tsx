@@ -99,6 +99,39 @@ const photoFor = (region: string, hash: number) => {
   return PHOTO_POOL[hash % PHOTO_POOL.length];
 };
 
+/* ------------------------------------------------------------------ */
+/* Most-in-demand cemeteries per region — these appear as large photo  */
+/* cards above each region's list. Everything else is a compact,       */
+/* photo-free card so the same park imagery never repeats down the page */
+/* ------------------------------------------------------------------ */
+const FEATURED_BY_REGION: Record<string, string[]> = {
+  "Dallas–Fort Worth": [
+    "Sparkman-Hillcrest Memorial Park",
+    "Restland Memorial Park",
+    "Bluebonnet Hills Memorial Park",
+    "Laurel Land Memorial Park Fort Worth",
+  ],
+  "Greater Houston": ["Memorial Oaks Cemetery", "Forest Park Lawndale", "Glenwood Cemetery"],
+  Austin: ["Austin Memorial Park", "Cook-Walden Capital Parks Funeral Home & Cemetery", "Forest Oaks Memorial Park"],
+  "San Antonio": ["Sunset Memorial Park", "Mission Burial Park South", "Roselawn Memorial Park"],
+  "East Texas": ["Cathedral in the Pines Memorial Gardens", "Tyler Memorial Park", "Forest Lawn Beaumont"],
+  "El Paso & West Texas": ["Evergreen Cemetery", "Restlawn Cemetery", "Resthaven Memorial Park"],
+  "South Texas": ["Seaside Memorial Park", "Rose Hill Burial Park", "Valley Memorial Gardens"],
+  "Central Texas": ["Waco Memorial Park", "Greenleaf Cemetery", "Killeen Memorial Park"],
+  "West & North Texas": ["Resthaven Funeral Home & Memorial Park", "Llano Cemetery", "Elmwood Memorial Park"],
+};
+
+// Original photography we hold for specific cemeteries (same shots as their own pages)
+const CEMETERY_PHOTOS: Record<string, string> = {
+  "Sparkman-Hillcrest Memorial Park": SPARKMAN_HERO.src,
+  "Restland Memorial Park": RESTLAND_HERO.src,
+  "Bluebonnet Hills Memorial Park": BLUEBONNET_HERO.src,
+  "Rest Haven Memorial Park": RESTHAVEN_HERO.src,
+  "Laurel Land Memorial Park Fort Worth": LAUREL_LAND_HERO.src,
+};
+
+const FEATURED_LABELS = ["High interest", "Sought after", "Most requested", "Frequently traded"];
+
 const hashName = (s: string) => {
   let h = 0;
   for (let k = 0; k < s.length; k++) h = (h * 31 + s.charCodeAt(k)) >>> 0;
