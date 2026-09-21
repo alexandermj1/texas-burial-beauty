@@ -41,6 +41,8 @@ interface Props {
   compact?: boolean;
   /** Render the metro/region switcher above the map (default true). */
   metroTabs?: boolean;
+  /** Widget mode: no metro tabs, borderless compact toolbar, shorter map — sits inline like a card widget. */
+  widget?: boolean;
 }
 
 const ACCENT = "#c1704a";
