@@ -3270,7 +3270,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               }`}
               title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
             >
-              <ArrowUpFromLine className="w-4 h-4" /> Buyers
+              <ArrowUpFromLine className="w-4 h-4" />
+              Buyers
+              {buyerCount > 0 && (
+                <span className={`ml-0.5 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold leading-none grid place-items-center ${
+                  kindFilter === "buyer" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+                }`}>
+                  {buyerCount}
+                </span>
+              )}
             </button>
             {onRefresh && (
               <button
