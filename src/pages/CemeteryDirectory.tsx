@@ -21,6 +21,9 @@ import Seo from "@/components/Seo";
 
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
+import { ALL_TEXAS_REGIONS } from "@/data/metroRegions";
+
+const MetroCemeteryMap = lazy(() => import("@/components/MetroCemeteryMap"));
 
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
 import heroBotanicalLeft from "@/assets/flowers/hero-botanical-left.png";
