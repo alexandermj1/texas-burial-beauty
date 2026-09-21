@@ -3435,7 +3435,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           return (
             <div
               className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
-              title="Everyone in this view except buyers (the stage counts add up to this) / new today. Buyers are counted on the Buyers button."
+              title="Everyone in this view — sellers, buyers and general forms, with duplicates counted once / new today"
             >
               <div className="flex items-center gap-1.5 pr-3">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
