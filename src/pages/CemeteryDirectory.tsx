@@ -767,6 +767,7 @@ const CemeteryDirectory = () => {
           </Suspense>
         </div>
       </section>
+      )}
 
       <div ref={barAnchorRef} aria-hidden="true" />
 
