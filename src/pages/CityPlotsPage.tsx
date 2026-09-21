@@ -107,7 +107,7 @@ const CityPlotsPage = () => {
       <Navbar forceScrolled />
 
       {/* HERO */}
-      {data.slug === "houston" || data.slug === "austin" ? (
+      {data.slug === "houston" || data.slug === "austin" || data.slug === "dallas" ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-24 md:pt-28">
           <div className="grid lg:grid-cols-2 items-center gap-10 lg:gap-0">
             <motion.div
