@@ -483,142 +483,96 @@ const splitName = (name: string): [string, string] => {
   return [words.slice(0, cut).join(" "), words.slice(cut).join(" ")];
 };
 
-const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
+/* Featured card — photo with a floating cream plate (used sparingly, at the
+   top of each region for the cemeteries we see the most interest in). */
+const FeaturedCemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
   const h = hashName(c.name);
   const slug = slugify(c.name);
   const [first, rest] = splitName(c.name);
-  const isPhotoAnchor = index % 7 === 3;
-  const isEngraved = !isPhotoAnchor && index % 3 === 1;
-
-  const cardBody = isPhotoAnchor ? (
-    /* — Photo anchor card (rare) — */
-    <>
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:scale-105 transition-transform duration-700"
-        style={{ backgroundImage: `url(${photoFor(c.region, h)})` }}
-        aria-hidden
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/25 to-transparent" />
-      <div className="relative mt-auto p-7 sm:p-8">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-primary-foreground/75 font-semibold mb-2">
-          {c.region}
-        </p>
-        <h3 className="font-display text-3xl sm:text-4xl leading-tight text-primary-foreground mb-5">
-          {first}
-          {rest && (
-            <>
-              {" "}
-              <span className="italic font-medium opacity-90">{rest}</span>
-            </>
-          )}
-        </h3>
-        <div className="flex items-center justify-between gap-3">
-          <span className="px-3 py-1 border border-primary-foreground/40 text-primary-foreground text-[11px] font-bold uppercase tracking-wider rounded-full backdrop-blur-md">
-            {c.city}
-          </span>
-          <span className="font-display text-sm italic text-primary-foreground/90 underline decoration-1 underline-offset-4">
-            View details
-          </span>
-        </div>
-      </div>
-    </>
-  ) : isEngraved ? (
-    /* — Engraved terracotta card — */
-    <>
-      <div className="border-l border-t border-accent/25 absolute top-4 left-4 w-12 h-12" aria-hidden />
-      <div className="border-r border-b border-accent/25 absolute bottom-4 right-4 w-12 h-12" aria-hidden />
-      <div className="my-auto text-center px-2">
-        <p className="text-[11px] uppercase tracking-[0.15em] text-accent mb-4 font-semibold">
-          {c.city}, TX
-        </p>
-        <h3 className="font-display text-2xl sm:text-3xl font-light text-foreground leading-snug">
-          {first}
-          {rest && (
-            <>
-              {" "}
-              <span className="italic text-foreground/60">{rest}</span>
-            </>
-          )}
-        </h3>
-        <div className="inline-flex items-center gap-2 mt-6 mb-6" aria-hidden>
-          <div className="w-1 h-1 rounded-full bg-accent" />
-          <div className="w-8 h-px bg-border" />
-          <div className="w-1 h-1 rounded-full bg-accent" />
-        </div>
-        <div className="flex flex-col items-center gap-3">
-          <span className="px-4 py-1.5 bg-accent/[0.08] text-accent text-[10px] font-bold uppercase tracking-widest rounded-sm">
-            Plots available
-          </span>
-          <span className="font-display text-sm text-foreground group-hover:text-accent transition-colors">
-            Inquire about plots &rarr;
-          </span>
-        </div>
-      </div>
-    </>
-  ) : (
-    /* — Typographic sage card (default) — */
-    <>
-      <div
-        className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
-        aria-hidden
-      >
-        <svg
-          className="w-20 h-20 text-primary"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1"
-        >
-          <path
-            d="M12 2C12 2 15 7 15 12C15 17 12 22 12 22M12 2C12 2 9 7 9 12C9 17 12 22 12 22M2 12H22"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-      <div className="mt-auto">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold mb-3">
-          {c.region}
-        </p>
-        <h3 className="font-display text-2xl sm:text-[1.7rem] leading-tight text-foreground mb-4">
-          {first}
-          {rest && (
-            <>
-              {" "}
-              <span className="italic font-medium text-foreground/70">{rest}</span>
-            </>
-          )}
-        </h3>
-        <div className="h-px w-12 bg-primary mb-4" aria-hidden />
-        <div className="flex items-center justify-between gap-3 mt-2">
-          <span className="px-3 py-1 bg-primary/[0.09] text-primary text-[11px] font-bold uppercase tracking-wider rounded-full whitespace-nowrap">
-            Plots available
-          </span>
-          <span className="font-display text-sm italic text-primary underline decoration-1 underline-offset-4 whitespace-nowrap">
-            Buy or sell
-          </span>
-        </div>
-      </div>
-    </>
-  );
+  const photo = CEMETERY_PHOTOS[c.name] ?? photoFor(c.region, h + index);
+  const label = FEATURED_LABELS[index % FEATURED_LABELS.length];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.35, delay: Math.min(index * 0.025, 0.2) }}
+      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.2) }}
     >
       <Link
         to={`/cemeteries/${slug}`}
-        className={`group relative flex flex-col h-64 sm:h-72 p-6 sm:p-7 overflow-hidden border transition-all ${
-          isPhotoAnchor
-            ? "bg-foreground border-border rounded-2xl"
-            : isEngraved
-              ? "bg-secondary/40 border-border rounded-2xl hover:bg-card hover:shadow-[0_18px_36px_-18px_hsl(var(--accent)/0.4)]"
-              : "bg-card border-border rounded-2xl hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.4)]"
-        }`}
+        className="group relative block h-[300px] sm:h-[340px] rounded-2xl overflow-hidden border border-border shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.45)]"
       >
-        {cardBody}
+        <img
+          src={photo}
+          alt={`${c.name}, ${c.city}, Texas`}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
+
+        <div className="absolute left-4 right-4 bottom-4 sm:left-5 sm:right-5 sm:bottom-5 rounded-xl bg-background/95 backdrop-blur-sm px-5 py-4 shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.5)]">
+          <p className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em] text-accent font-semibold mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" aria-hidden />
+            {label}
+          </p>
+          <h3 className="font-display text-xl sm:text-2xl leading-tight text-foreground">
+            {first}
+            {rest && (
+              <>
+                {" "}
+                <span className="italic font-medium text-foreground/80">{rest}</span>
+              </>
+            )}
+          </h3>
+          <div className="h-px bg-border my-3" aria-hidden />
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[13px] text-foreground/65 truncate">
+              {c.city}, TX · {c.region}
+            </span>
+            <span className="text-[13px] font-semibold text-primary whitespace-nowrap group-hover:underline underline-offset-4">
+              Buy or sell
+            </span>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+};
+
+/* Compact card — no photography, the name leads. */
+const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
+  const slug = slugify(c.name);
+  const [first, rest] = splitName(c.name);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.015, 0.15) }}
+    >
+      <Link
+        to={`/cemeteries/${slug}`}
+        className="group relative flex flex-col justify-between h-full min-h-[134px] rounded-xl border border-border bg-card px-5 py-4 transition-all hover:border-primary/45 hover:shadow-[0_14px_28px_-18px_hsl(var(--primary)/0.45)]"
+      >
+        <div>
+          <h3 className="font-display text-[1.15rem] sm:text-[1.25rem] leading-snug text-foreground">
+            {first}
+            {rest && (
+              <>
+                {" "}
+                <span className="italic font-medium text-foreground/70">{rest}</span>
+              </>
+            )}
+          </h3>
+          <p className="mt-1.5 text-[12.5px] text-foreground/60">{c.city}, TX</p>
+        </div>
+        <div className="flex items-center justify-between gap-3 mt-4">
+          <span className="text-[10.5px] font-bold uppercase tracking-wider text-primary/85">Plots available</span>
+          <ChevronRight className="w-4 h-4 text-primary/70 group-hover:translate-x-0.5 transition-transform" />
+        </div>
       </Link>
     </motion.div>
   );
