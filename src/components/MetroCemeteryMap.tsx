@@ -516,16 +516,16 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         </div>
 
 
-        <div className="grid lg:grid-cols-[minmax(0,2.15fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,2.6fr)_26rem] gap-5 xl:gap-7 items-start">
+        <div className={`grid items-start ${widget ? "lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)] gap-4 md:gap-5" : "lg:grid-cols-[minmax(0,2.15fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,2.6fr)_26rem] gap-5 xl:gap-7"}`}>
           {/* Map canvas */}
           <motion.div
             initial={{ opacity: 0, scale: 0.985 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative rounded-3xl overflow-hidden border border-border/70 bg-card shadow-soft"
+            className={`relative overflow-hidden bg-card ${widget ? "rounded-2xl border border-border/60 shadow-sm" : "rounded-3xl border border-border/70 shadow-soft"}`}
           >
-            <div ref={mapEl} className="w-full h-[20rem] sm:h-[32rem] md:h-[40rem] lg:h-[46rem] xl:h-[52rem] bg-[hsl(38_35%_95%)]" />
+            <div ref={mapEl} className={`w-full bg-[hsl(38_35%_95%)] ${widget ? "h-[19rem] sm:h-[24rem] lg:h-[28rem]" : "h-[20rem] sm:h-[32rem] md:h-[40rem] lg:h-[46rem] xl:h-[52rem]"}`} />
 
             {!ready && !failed && (
               <div className="absolute inset-0 grid place-items-center bg-[hsl(38_35%_95%)] text-muted-foreground gap-2">
