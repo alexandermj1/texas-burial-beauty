@@ -384,7 +384,9 @@ Deno.serve(async (req) => {
       sign_token_expires_at: existingTokenUsable
         ? (existing!.sign_token_expires_at as string | null)
         : new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
-      fill_data: fill,
+      // Remember that these values were typed by staff, so a later resync or a
+      // cemetery/location change rebuilds the document with their wording intact.
+      fill_data: manualEdit ? { ...fill, manual_edit: true } : fill,
       filled_pdf_path: path,
       created_by: userData.user?.id ?? null,
       principal_key: principalKey,
