@@ -36,9 +36,11 @@ import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.js
 import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
 // Photography from the individual cemetery pages, used for the featured cards
-import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
-import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
-import { RESTLAND_HERO } from "@/data/restlandDossierPhotos";
+// Local copies of the cemeteries' own photography (the .asset.json CDN
+// pointers don't resolve in every environment, so these are bundled).
+import sparkmanHero from "@/assets/featured/sparkman-fountain-garden.jpg";
+import bluebonnetHero from "@/assets/featured/bluebonnet-hero-lake.jpg";
+import restlandHero from "@/assets/featured/restland-hero-lawn.jpg";
 import { RESTHAVEN_HERO } from "@/data/resthavenPhotos";
 import { LAUREL_LAND_HERO } from "@/data/laurelLandPhotos";
 import park04 from "@/assets/parks/local/park-04.jpg";
@@ -122,9 +124,9 @@ const FEATURED_BY_REGION: Record<string, string[]> = {
 
 // Original photography we hold for specific cemeteries (same shots as their own pages)
 const CEMETERY_PHOTOS: Record<string, string> = {
-  "Sparkman-Hillcrest Memorial Park": SPARKMAN_HERO.src,
-  "Restland Memorial Park": RESTLAND_HERO.src,
-  "Bluebonnet Hills Memorial Park": BLUEBONNET_HERO.src,
+  "Sparkman-Hillcrest Memorial Park": sparkmanHero,
+  "Restland Memorial Park": restlandHero,
+  "Bluebonnet Hills Memorial Park": bluebonnetHero,
   "Rest Haven Memorial Park": RESTHAVEN_HERO.src,
   "Laurel Land Memorial Park Fort Worth": LAUREL_LAND_HERO.src,
 };
