@@ -173,7 +173,7 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/70 hover:border-primary hover:-translate-y-1 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/80 shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.14)] hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.28)] hover:border-primary hover:-translate-y-1 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
               >
                 <Link
                   to={`/cemeteries/${slug}`}
