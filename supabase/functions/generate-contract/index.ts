@@ -288,7 +288,9 @@ Deno.serve(async (req) => {
 
     } else if (kind === 'poa' && Array.isArray(overrides.joint_names) && overrides.joint_names.filter(Boolean).length > 1) {
       // A married couple signing one instrument instead of one POA each.
-      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2).map(fullName);
+      const jointNames = (overrides.joint_names as string[]).filter(Boolean).slice(0, 2)
+        // Staff-typed names print exactly as typed.
+        .map((n) => (manualEdit ? String(n).trim() : fullName(n)));
       // Remember this on the contract so every later regeneration (the seller's
       // sign page, the notary packet) rebuilds the JOINT document, not the
       // single-signer template.
