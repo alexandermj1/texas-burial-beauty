@@ -287,10 +287,10 @@ function Segment({
     <button
       onClick={onClick}
       className={`flex-1 min-w-0 flex items-center gap-3.5 text-left rounded-full px-3 py-2.5 transition-colors ${
-        active ? "bg-muted" : "hover:bg-muted/60"
+        active ? "bg-gradient-to-r from-primary/[0.10] to-accent/[0.10]" : "hover:bg-muted/60"
       } ${hideOnSmall ? "hidden min-[760px]:flex" : ""}`}
     >
-      <span className="w-[44px] h-[44px] rounded-2xl bg-primary/10 grid place-items-center flex-none">{icon}</span>
+      <span className="w-[44px] h-[44px] rounded-2xl bg-gradient-to-br from-primary/[0.16] to-accent/[0.16] grid place-items-center flex-none shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14)]">{icon}</span>
       <span className="flex flex-col min-w-0">
         <span className="text-[10.5px] font-bold uppercase tracking-[0.11em] text-muted-foreground leading-none">{label}</span>
         <span className="text-[16px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
