@@ -301,7 +301,7 @@ export function masterRequirements(v2: V2State, cem?: CemeteryDocRules | null, d
         personName: name,
         review: true,
       });
-      add({ code: "D7", label: `The will of ${name}`, why: "So we can check whether it deals with the cemetery property.", personName: name });
+      add({ code: "D7", label: `The will of ${name}`, why: "A certified copy of the probated will and the order admitting it to probate.", personName: name });
       for (const t of takers) {
         addSigner(ctx, {
           key: key(t), name: t, role: "heir",
