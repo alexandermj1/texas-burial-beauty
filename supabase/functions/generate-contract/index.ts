@@ -188,7 +188,15 @@ Deno.serve(async (req) => {
       return hits.sort((a, b) => b.trim().length - a.trim().length)[0] ?? n;
     };
 
-    const principalName = fullName(rawPrincipal);
+    // A value typed by a member of staff in the "check or edit this document"
+    // dialog is final: it must print exactly as typed, never be re-resolved
+    // against the roster or the questionnaire. Without this, an edited name was
+    // silently swapped back for the "most complete" spelling we held on file,
+    // so the saved edit was visible in the dialog but absent from the PDF.
+    const manualEdit = overrides.manual_edit === true;
+    const principalName = manualEdit && String(overrides.seller_name ?? '').trim()
+      ? String(overrides.seller_name).trim()
+      : fullName(rawPrincipal);
     const sellerContact = contactFor(ownership, principalName);
 
     // A submission can require one POA per signer. Keep each person's document
