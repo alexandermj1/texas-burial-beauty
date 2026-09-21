@@ -431,7 +431,18 @@ const CemeteryDirectory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
+    <div className="relative min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
+      {/* Page-wide warm wash — one continuous field behind the whole page so
+          the theme never stops abruptly below the hero. Kept light at the very
+          top so the navbar stays perfectly legible. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(90% 55% at 10% 12%, hsl(var(--secondary) / 0.55) 0%, transparent 60%), radial-gradient(85% 55% at 90% 18%, hsl(var(--accent) / 0.28) 0%, transparent 62%), radial-gradient(80% 60% at 50% 95%, hsl(var(--primary) / 0.10) 0%, transparent 65%), linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary) / 0.35) 45%, hsl(var(--background)) 100%)",
+        }}
+      />
       <Seo
         title="Texas Cemeteries We Serve — Buy & Sell Plots | Texas Cemetery Brokers"
         description={`Browse ${total}+ cemeteries across Dallas–Fort Worth, Houston, Austin, San Antonio, El Paso & beyond. Get help buying or selling cemetery plots in Texas.`}
@@ -440,19 +451,9 @@ const CemeteryDirectory = () => {
       />
       <Navbar />
 
-      {/* HERO — warm gradient wash with an Airbnb-style segmented search */}
-      <section className="relative pt-28 pb-10 md:pt-36 md:pb-14 overflow-hidden">
-        {/* Soft brand gradient field */}
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(120% 90% at 12% 0%, hsl(var(--secondary)) 0%, transparent 55%), radial-gradient(110% 85% at 88% 8%, hsl(var(--accent) / 0.55) 0%, transparent 58%), radial-gradient(100% 80% at 50% 100%, hsl(var(--primary) / 0.22) 0%, transparent 62%), linear-gradient(180deg, hsl(var(--secondary) / 0.85) 0%, hsl(var(--background)) 100%)",
-          }}
-        />
-        <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-accent/25 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -top-10 -right-24 w-[460px] h-[460px] rounded-full bg-primary/15 blur-3xl" />
+      {/* HERO — sits on the shared page wash, Airbnb-style segmented search */}
+      <section className="relative z-10 pt-28 pb-10 md:pt-36 md:pb-14">
+
 
         <div className="relative container mx-auto px-6">
           <motion.div
