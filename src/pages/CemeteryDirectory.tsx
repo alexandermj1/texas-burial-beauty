@@ -529,10 +529,11 @@ const CemeteryDirectory = () => {
             maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-secondary/70 via-accent/20 to-background" />
-          <div className="absolute -top-32 -right-32 w-[640px] h-[640px] rounded-full bg-primary/15 blur-3xl" />
-          <div className="absolute top-40 -left-40 w-[520px] h-[520px] rounded-full bg-accent/20 blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 w-[420px] h-[420px] rounded-full bg-secondary/50 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/55 via-secondary to-background" />
+          <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/30 blur-3xl" />
+          <div className="absolute top-32 -left-36 w-[560px] h-[560px] rounded-full bg-accent/45 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-10 left-1/4 w-[420px] h-[420px] rounded-full bg-accent/35 blur-3xl" />
           {LEAVES.length > 0 && (
             <>
               <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute bottom-24 left-[3%] w-40 opacity-60 -rotate-[24deg] hidden md:block select-none" />
