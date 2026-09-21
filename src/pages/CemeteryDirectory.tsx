@@ -35,6 +35,12 @@ import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
 import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
+// Photography from the individual cemetery pages, used for the featured cards
+import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
+import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
+import { RESTLAND_HERO } from "@/data/restlandDossierPhotos";
+import { RESTHAVEN_HERO } from "@/data/resthavenPhotos";
+import { LAUREL_LAND_HERO } from "@/data/laurelLandPhotos";
 import park04 from "@/assets/parks/local/park-04.jpg";
 import park12 from "@/assets/parks/local/park-12.jpg";
 import park23 from "@/assets/parks/local/park-23.jpg";
