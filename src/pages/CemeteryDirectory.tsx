@@ -681,7 +681,7 @@ const CemeteryDirectory = () => {
 
       {/* METRO AREAS — photo cards straight under the search (hidden while searching) */}
       {!isSearching && (
-      <section className="relative z-20 container mx-auto px-6 pt-4 pb-8 md:pt-6 md:pb-16">
+      <section className="relative z-20 container mx-auto px-6 pt-4 pb-8 md:pt-3 md:pb-16">
         <div className="text-center mb-6 md:mb-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5">Explore Texas</p>
           <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
