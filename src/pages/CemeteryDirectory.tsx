@@ -622,7 +622,7 @@ const CemeteryDirectory = () => {
 
       {/* HERO — warm wash that feathers into the page */}
       <section className="relative z-30 overflow-visible">
-        <div className="relative z-10 container mx-auto px-6 pt-24 pb-6 md:pt-28 md:pb-8">
+        <div className="relative z-10 container mx-auto px-6 pt-28 pb-10 md:pt-36 md:pb-14">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-4">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
@@ -665,22 +665,15 @@ const CemeteryDirectory = () => {
       </section>
 
       {/* METRO AREAS — photo cards straight under the search */}
-      <section className="relative z-20 container mx-auto px-6 pt-2 pb-10 md:pt-3 md:pb-14">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 mb-4 md:mb-5 rounded-2xl bg-background/75 backdrop-blur-sm border border-border/60 px-4 py-3 md:px-5 shadow-sm">
-          <p className="text-[15px] text-foreground/70">
-            <span className="font-semibold text-foreground">Choose a metro area</span> — each one opens its cemeteries and
-            coverage map below.
+      <section className="relative z-20 container mx-auto px-6 pt-6 pb-10 md:pt-8 md:pb-16">
+        <div className="text-center mb-6 md:mb-8">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5">Explore Texas</p>
+          <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
+            Choose a metro area
+          </h2>
+          <p className="mt-1.5 text-sm text-foreground/60">
+            Each one opens its cemeteries and coverage map below.
           </p>
-          <button
-            onClick={() => {
-              setRegion("All");
-              setQuery("");
-              window.setTimeout(scrollToResults, 60);
-            }}
-            className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-foreground transition-colors"
-          >
-            View all {total} <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
 
 
@@ -716,7 +709,7 @@ const CemeteryDirectory = () => {
             </button>
           ))}
         </div>
-        <div className="mt-4 flex sm:hidden justify-center">
+        <div className="mt-5 flex justify-center">
           <button
             onClick={() => {
               setRegion("All");
@@ -730,28 +723,36 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* COVERAGE MAP — follows whichever metro area is selected */}
-      <section className="relative z-20 container mx-auto px-6 pb-12 md:pb-16">
-        <div className="rounded-3xl overflow-hidden border border-border/70 bg-background/85 backdrop-blur-sm shadow-[0_18px_44px_-28px_hsl(var(--foreground)/0.45)]">
-          <div className="px-5 pt-5 md:px-7 md:pt-7">
-            <div className="flex items-center gap-2 text-primary mb-1.5">
-              <Navigation className="w-4 h-4" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Coverage map</span>
+      {/* COVERAGE MAP — follows whichever metro area is selected, styled as an inline widget */}
+      <section className="relative z-20 container mx-auto px-6 pb-14 md:pb-20">
+        <div className="rounded-3xl border border-border/60 bg-background/80 backdrop-blur-sm shadow-[0_24px_50px_-30px_hsl(var(--foreground)/0.4)] px-5 py-6 md:px-8 md:py-8">
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5 inline-flex items-center gap-2">
+                <Navigation className="w-3.5 h-3.5" />
+                Coverage map
+              </p>
+              <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
+                {region === "All" ? "Every cemetery we cover in Texas" : `Cemeteries across ${region}`}
+              </h2>
+              <p className="mt-1.5 text-sm text-foreground/60">
+                Every pin is a cemetery we hold a profile for — pricing, section detail and the current transfer fee.
+              </p>
             </div>
-            <h2 className="font-display font-semibold text-2xl md:text-3xl tracking-tight text-foreground">
-              {region === "All" ? "Every cemetery we cover in Texas" : `Cemeteries across ${region}`}
-            </h2>
+            <span className="hidden md:inline-flex items-center gap-2 rounded-full bg-secondary/70 px-3.5 py-1.5 text-xs font-semibold text-foreground/70">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Updated as new cemeteries join
+            </span>
           </div>
           <Suspense
-            fallback={<div className="h-[420px] flex items-center justify-center text-sm text-foreground/60">Loading map…</div>}
+            fallback={<div className="h-[320px] flex items-center justify-center text-sm text-foreground/60">Loading map…</div>}
           >
             <MetroCemeteryMap
               regions={mapRegions}
               metro={region === "All" ? "Texas" : region}
               fullBleed={false}
-              compact
+              widget
               hideTitle
-              blurb={`Every pin is a cemetery we hold a profile for — pricing, section detail and the current transfer fee.`}
             />
           </Suspense>
         </div>

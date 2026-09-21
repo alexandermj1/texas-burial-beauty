@@ -41,6 +41,8 @@ interface Props {
   compact?: boolean;
   /** Render the metro/region switcher above the map (default true). */
   metroTabs?: boolean;
+  /** Widget mode: no metro tabs, borderless compact toolbar, shorter map — sits inline like a card widget. */
+  widget?: boolean;
 }
 
 const ACCENT = "#c1704a";
@@ -103,11 +105,12 @@ const markerIcon = (color: string, active = false) => {
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
  */
-const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true }: Props) => {
+const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true, widget = false }: Props) => {
   const [metroIdx, setMetroIdx] = useState(() => metroIndexForRegions(regions));
   const activeMetro = METRO_OPTIONS[metroIdx];
-  const effRegions = metroTabs ? activeMetro.regions : regions;
-  const effMetro = metroTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
+  const showTabs = metroTabs && !widget;
+  const effRegions = showTabs ? activeMetro.regions : regions;
+  const effMetro = showTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
 
   const [active, setActive] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -408,7 +411,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
   const sameDayMetro = effRegions.some((r) => SAME_DAY_REGIONS.includes(r));
 
   return (
-    <section id="map" className={`scroll-mt-28 w-full ${compact ? "py-0" : "py-12 md:py-16"}`}>
+    <section id="map" className={`scroll-mt-28 w-full ${compact || widget ? "py-0" : "py-12 md:py-16"}`}>
       <div className="mx-auto w-full max-w-[1440px]">
         {!hideTitle && (
           <div className="mb-6 text-center">
@@ -427,7 +430,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         )}
 
         {/* Region switcher */}
-        {metroTabs && (
+        {showTabs && (
           <div className="mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
             {METRO_OPTIONS.map((m, i) => (
               <button
@@ -447,8 +450,8 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         )}
 
         {/* One toolbar: search + address */}
-        <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4">
-          <div className="grid gap-3 lg:grid-cols-2">
+        <div className={widget ? "mb-4" : "rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4"}>
+          <div className={widget ? "grid gap-2.5 md:grid-cols-2" : "grid gap-3 lg:grid-cols-2"}>
             <label className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -513,16 +516,16 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         </div>
 
 
-        <div className="grid lg:grid-cols-[minmax(0,2.15fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,2.6fr)_26rem] gap-5 xl:gap-7 items-start">
+        <div className={`grid items-start ${widget ? "lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)] gap-4 md:gap-5" : "lg:grid-cols-[minmax(0,2.15fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,2.6fr)_26rem] gap-5 xl:gap-7"}`}>
           {/* Map canvas */}
           <motion.div
             initial={{ opacity: 0, scale: 0.985 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative rounded-3xl overflow-hidden border border-border/70 bg-card shadow-soft"
+            className={`relative overflow-hidden bg-card ${widget ? "rounded-2xl border border-border/60 shadow-sm" : "rounded-3xl border border-border/70 shadow-soft"}`}
           >
-            <div ref={mapEl} className="w-full h-[20rem] sm:h-[32rem] md:h-[40rem] lg:h-[46rem] xl:h-[52rem] bg-[hsl(38_35%_95%)]" />
+            <div ref={mapEl} className={`w-full bg-[hsl(38_35%_95%)] ${widget ? "h-[19rem] sm:h-[24rem] lg:h-[28rem]" : "h-[20rem] sm:h-[32rem] md:h-[40rem] lg:h-[46rem] xl:h-[52rem]"}`} />
 
             {!ready && !failed && (
               <div className="absolute inset-0 grid place-items-center bg-[hsl(38_35%_95%)] text-muted-foreground gap-2">
@@ -594,7 +597,11 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
           {/* Index list — also the crawlable version of the map */}
           <div
             ref={listRef}
-            className="rounded-3xl border border-border/70 bg-gradient-to-b from-card/80 to-background/40 p-2 sm:p-3 max-h-[28rem] lg:max-h-[46rem] xl:max-h-[52rem] overflow-y-auto no-scrollbar"
+            className={`border bg-gradient-to-b from-card/80 to-background/40 p-2 sm:p-3 overflow-y-auto no-scrollbar ${
+              widget
+                ? "rounded-2xl border-border/60 max-h-[19rem] sm:max-h-[24rem] lg:max-h-[28rem]"
+                : "rounded-3xl border-border/70 max-h-[28rem] lg:max-h-[46rem] xl:max-h-[52rem]"
+            }`}
           >
 
             <ul className="list-none pl-0 m-0 space-y-2.5">
