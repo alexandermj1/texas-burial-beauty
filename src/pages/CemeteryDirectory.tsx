@@ -489,7 +489,12 @@ const FeaturedCemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
   const h = hashName(c.name);
   const slug = slugify(c.name);
   const [first, rest] = splitName(c.name);
-  const photo = CEMETERY_PHOTOS[c.name] ?? photoFor(c.region, h + index);
+  // Prefer the cemetery's own photography; otherwise pick a distinct park photo
+  // so the featured row of a region never shows the same shot twice.
+  const regionSet = REGION_PHOTOS[c.region] ?? [];
+  const fallbackPool = [...regionSet, ...PHOTO_POOL.filter((p) => !regionSet.includes(p))];
+  const photo =
+    CEMETERY_PHOTOS[c.name] ?? fallbackPool[(index + (hashName(c.region) % fallbackPool.length)) % fallbackPool.length];
   const label = FEATURED_LABELS[index % FEATURED_LABELS.length];
 
   return (
