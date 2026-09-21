@@ -1017,11 +1017,38 @@ const CemeteryDirectory = () => {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
-                  {list.map((c, i) => (
-                    <CemeteryCard key={`${c.name}-${c.city}`} c={c} index={i} />
-                  ))}
-                </div>
+              {(() => {
+                const featuredNames = FEATURED_BY_REGION[groupRegion] ?? [];
+                const featured = featuredNames
+                  .map((n) => list.find((c) => c.name === n))
+                  .filter(Boolean) as Cem[];
+                const rest = list.filter((c) => !featured.includes(c));
+                return (
+                  <>
+                    {featured.length > 0 && (
+                      <div className="mb-8 sm:mb-10">
+                        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-foreground/55 font-semibold mb-4">
+                          Most interest in {groupRegion}
+                        </p>
+                        <div
+                          className={`grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 ${
+                            featured.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2"
+                          }`}
+                        >
+                          {featured.map((c, i) => (
+                            <FeaturedCemeteryCard key={`f-${c.name}-${c.city}`} c={c} index={i} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+                      {rest.map((c, i) => (
+                        <CemeteryCard key={`${c.name}-${c.city}`} c={c} index={i} />
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
               </section>
             ))}
           </div>
