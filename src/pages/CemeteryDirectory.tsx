@@ -490,7 +490,7 @@ const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
       <div className="border-r border-b border-accent/25 absolute bottom-4 right-4 w-12 h-12" aria-hidden />
       <div className="my-auto text-center px-2">
         <p className="text-[11px] uppercase tracking-[0.15em] text-accent mb-4 font-semibold">
-          {c.city} &bull; {c.region}
+          {c.city}, TX
         </p>
         <h3 className="font-display text-2xl sm:text-3xl font-light text-foreground leading-snug">
           {first}
