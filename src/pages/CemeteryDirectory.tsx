@@ -858,15 +858,53 @@ const CemeteryDirectory = () => {
           <div ref={listRef}>
             {grouped.map(([groupRegion, list]) => (
               <section key={groupRegion} className="py-5 sm:py-8">
-                <div className="text-center mb-4 sm:mb-6">
-                  <h2 className="font-display text-2xl sm:text-3xl md:text-4xl tracking-tight text-foreground">
-                    Cemeteries in <em className="italic text-primary">{groupRegion}</em>
-                  </h2>
-                  <span className="inline-block mt-1.5 text-[12px] uppercase tracking-[0.16em] text-foreground/60 font-semibold">
-                    {list.length} {list.length === 1 ? "cemetery" : "cemeteries"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
+              <div className="text-center mb-4 sm:mb-6">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl tracking-tight text-foreground">
+                  Cemeteries in <em className="italic text-primary">{groupRegion}</em>
+                </h2>
+                <span className="inline-block mt-1.5 text-[12px] uppercase tracking-[0.16em] text-foreground/60 font-semibold">
+                  {list.length} {list.length === 1 ? "cemetery" : "cemeteries"}
+                </span>
+
+                {/* Region switcher — lets users hop to another region without scrolling back to the top */}
+                {region !== "All" && groupRegion === region && (
+                  <div className="flex flex-wrap justify-center gap-2 mt-5">
+                    <button
+                      onClick={() => {
+                        setRegion("All");
+                        setQuery("");
+                        window.setTimeout(scrollToResults, 60);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all ${
+                        region === "All"
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-background/80 text-foreground/80 border-border hover:border-primary/50 hover:bg-secondary"
+                      }`}
+                    >
+                      All Texas
+                    </button>
+                    {allRegions.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => {
+                          setRegion(r);
+                          setQuery("");
+                          window.setTimeout(scrollToResults, 60);
+                        }}
+                        className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border transition-all ${
+                          region === r
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-background/80 text-foreground/80 border-border hover:border-primary/50 hover:bg-secondary"
+                        }`}
+                      >
+                        {r}
+                        <span className="ml-1.5 text-[10px] opacity-70">({countByRegion[r] ?? 0})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                   {list.map((c, i) => (
                     <CemeteryCard key={`${c.name}-${c.city}`} c={c} index={i} />
                   ))}
