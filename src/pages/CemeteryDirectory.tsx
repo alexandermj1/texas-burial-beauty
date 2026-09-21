@@ -314,6 +314,8 @@ function SearchPanel({
                 key={r}
                 onClick={() => {
                   setRegion(r);
+                  setTyped("");
+                  setQuery("");
                   setStep("cemetery");
                 }}
                 className={`flex items-center justify-between text-left px-4 py-3.5 rounded-full text-[13.5px] font-semibold transition-all hover:-translate-y-0.5 ${
@@ -448,8 +450,15 @@ const CemeteryDirectory = () => {
   const [query, setQuery] = useState("");
 
   const cemeteryNames = useMemo(
-    () => Array.from(new Set(bayCemeteries.map((c) => c.name))).sort((a, b) => a.localeCompare(b)),
-    []
+    () =>
+      Array.from(
+        new Set(
+          bayCemeteries
+            .filter((c) => region === "All" || c.region === region)
+            .map((c) => c.name)
+        )
+      ).sort((a, b) => a.localeCompare(b)),
+    [region]
   );
 
   const grouped = useMemo(() => {
@@ -555,13 +564,13 @@ const CemeteryDirectory = () => {
           <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
           {LEAVES.length > 0 && (
             <>
-              <div className="absolute -bottom-8 -left-7 hidden md:block w-64 h-64">
-                <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute bottom-8 left-5 w-40 opacity-70 -rotate-[18deg] select-none" />
-                <img src={LEAVES[21 % LEAVES.length]} alt="" className="absolute bottom-10 left-32 w-28 opacity-55 rotate-[34deg] select-none" />
+              <div className="absolute top-28 -left-10 hidden md:block w-96 h-96">
+                <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute top-8 left-2 w-64 opacity-75 -rotate-[18deg] select-none" />
+                <img src={LEAVES[21 % LEAVES.length]} alt="" className="absolute top-32 left-44 w-44 opacity-65 rotate-[34deg] select-none" />
               </div>
-              <div className="absolute -bottom-14 -right-8 hidden md:block w-72 h-72">
-                <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute bottom-0 right-0 w-64 opacity-55 rotate-[10deg] select-none" />
-                <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute bottom-4 right-36 w-32 opacity-48 -rotate-[14deg] select-none" />
+              <div className="absolute top-20 -right-10 hidden md:block w-[28rem] h-[28rem]">
+                <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute top-0 right-0 w-80 opacity-65 rotate-[10deg] select-none" />
+                <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute top-44 right-56 w-48 opacity-60 -rotate-[14deg] select-none" />
               </div>
             </>
           )}
@@ -612,13 +621,13 @@ const CemeteryDirectory = () => {
 
       {/* AREA PHOTOS — an editorial browse-by-region gallery */}
       <section className="relative z-20 container mx-auto px-6 pt-4 pb-10 md:pt-6 md:pb-14">
-        <div className="flex items-end justify-between gap-6 mb-6 md:mb-8">
+        <div className="flex items-end justify-between gap-6 mb-6 md:mb-8 rounded-2xl bg-background/75 backdrop-blur-sm border border-border/70 px-5 py-4 md:px-6 md:py-5 shadow-sm">
           <div>
             <div className="flex items-center gap-2 text-primary mb-2">
               <Sparkles className="w-4 h-4" />
               <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Explore Texas</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
+            <h2 className="font-display font-semibold text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
           </div>
           <button
             onClick={() => {
