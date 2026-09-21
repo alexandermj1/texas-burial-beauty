@@ -94,9 +94,11 @@ Deno.serve(async (req) => {
     // over-fetches and the per-person check below enforces the real rule.
     const waitCutoff = new Date(nowMs - 7 * 86_400_000).toISOString();
     let query = db.from("contact_submissions")
-      .select("id,name,email,cemetery,created_at,customer_profile_id,seller_attachments")
+      .select("id,name,email,cemetery,created_at,customer_profile_id,seller_attachments,source,customer_kind")
       .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
       .is("quote_sent_at", null).is("document_followup_paused_at", null)
+      // Sellers only. Buyers and general enquiries must never get seller reminders.
+      .eq("source", "seller_quote")
       .not("email", "is", null).lte("created_at", waitCutoff)
       .order("created_at", { ascending: false }).limit(500);
     if (onlyId) query = query.eq("id", onlyId);
