@@ -666,7 +666,7 @@ const CemeteryDirectory = () => {
 
       {/* METRO AREAS — photo cards straight under the search */}
       <section className="relative z-20 container mx-auto px-6 pt-2 pb-10 md:pt-3 md:pb-14">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 mb-4 md:mb-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 mb-4 md:mb-5 rounded-2xl bg-background/75 backdrop-blur-sm border border-border/60 px-4 py-3 md:px-5 shadow-sm">
           <p className="text-[15px] text-foreground/70">
             <span className="font-semibold text-foreground">Choose a metro area</span> — each one opens its cemeteries and
             coverage map below.
