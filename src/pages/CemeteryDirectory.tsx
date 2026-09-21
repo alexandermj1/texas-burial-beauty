@@ -292,7 +292,7 @@ function Segment({
     >
       <span className="w-[44px] h-[44px] rounded-2xl bg-gradient-to-br from-primary/[0.16] to-accent/[0.16] grid place-items-center flex-none shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.14)]">{icon}</span>
       <span className="flex flex-col min-w-0">
-        <span className="text-[10.5px] font-bold uppercase tracking-[0.11em] text-muted-foreground leading-none">{label}</span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.11em] text-foreground/60 leading-none">{label}</span>
         <span className="text-[16px] font-semibold text-foreground leading-tight truncate mt-1">{value}</span>
       </span>
     </button>
@@ -326,7 +326,7 @@ function SearchPanel({
 
   return (
     <div className="absolute top-full mt-3 left-1/2 -translate-x-1/2 bg-background border border-border rounded-3xl shadow-2xl p-5 md:p-6 z-50 w-[min(92vw,680px)]">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4 px-1">
+      <div className="text-[11.5px] font-bold uppercase tracking-wider text-foreground/60 mb-4 px-1">
         {step === "where" ? "Choose a region" : "Choose a cemetery"}
       </div>
 
@@ -365,7 +365,7 @@ function SearchPanel({
                 setQuery(e.target.value);
               }}
               placeholder="Search cemeteries, cities or regions"
-              className="flex-1 bg-transparent text-[14.5px] font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+              className="flex-1 bg-transparent text-[14.5px] font-medium text-foreground placeholder:text-foreground/45 focus:outline-none"
             />
             {typed && (
               <button
@@ -412,7 +412,7 @@ function SearchPanel({
                 );
               })}
               {matches.length === 0 && (
-                <p className="px-4 py-6 text-center text-[13.5px] text-muted-foreground">No cemeteries match that name.</p>
+                <p className="px-4 py-6 text-center text-[13.5px] text-foreground/60">No cemeteries match that name.</p>
               )}
             </div>
           </div>
@@ -453,13 +453,13 @@ const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
             <h3 className="font-display font-semibold text-[16.5px] sm:text-[18px] leading-tight tracking-tight text-foreground truncate">
               {c.name}
             </h3>
-            <p className="mt-1 flex items-center gap-1 text-[13px] text-muted-foreground truncate">
+            <p className="mt-1 flex items-center gap-1 text-[13px] text-foreground/65 truncate">
               <MapPin className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
               <span className="truncate">
                 {c.city}, TX · {c.region}
               </span>
             </p>
-            <p className="mt-1.5 text-[12.5px] font-semibold text-muted-foreground">Plots available · Buy or sell</p>
+            <p className="mt-1.5 text-[12.5px] font-semibold text-primary/80">Plots available · Buy or sell</p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
         </div>
@@ -626,7 +626,7 @@ const CemeteryDirectory = () => {
               <br />
               <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
-            <p className="mt-5 text-muted-foreground text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-5 text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
               {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
               cemetery paperwork, transfer and title end to end.
             </p>
@@ -642,7 +642,7 @@ const CemeteryDirectory = () => {
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13px] text-muted-foreground">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
               <span className="inline-flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {total}+ cemeteries served
@@ -665,6 +665,9 @@ const CemeteryDirectory = () => {
               <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Explore Texas</span>
             </div>
             <h2 className="font-display font-semibold text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
+            <svg viewBox="0 0 220 12" className="mt-2 h-2.5 w-44 text-primary/70" aria-hidden>
+              <path d="M2 8 C 40 2, 80 11, 120 6 S 190 3, 218 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+            </svg>
           </div>
           <button
             onClick={() => {
@@ -698,14 +701,14 @@ const CemeteryDirectory = () => {
               <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 text-primary-foreground">
                 <div className="flex items-end justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-foreground/75 mb-1">Texas region</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-foreground/90 mb-1">Texas region</p>
                     <h3 className={`font-display tracking-tight leading-none ${index < 2 ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>{a.region}</h3>
                   </div>
                   <span className="shrink-0 rounded-full bg-background/90 px-2.5 py-1 text-xs font-bold text-foreground backdrop-blur">
                     {countByRegion[a.region] ?? 0}
                   </span>
                 </div>
-                <p className="hidden sm:block mt-2 text-xs md:text-sm text-primary-foreground/80 truncate">{a.cities}</p>
+                <p className="hidden sm:block mt-2 text-xs md:text-sm text-primary-foreground/90 truncate">{a.cities}</p>
               </div>
             </button>
           ))}
@@ -801,7 +804,7 @@ const CemeteryDirectory = () => {
           {grouped.length === 0 && (
             <div className="text-center py-24">
               <p className="font-display text-2xl text-foreground mb-2">No cemeteries match</p>
-              <p className="text-sm text-muted-foreground">Try a different search or region.</p>
+              <p className="text-sm text-foreground/65">Try a different search or region.</p>
             </div>
           )}
 
@@ -812,7 +815,7 @@ const CemeteryDirectory = () => {
                   <h2 className="font-display text-2xl sm:text-3xl md:text-4xl tracking-tight text-foreground">
                     Cemeteries in <em className="italic text-primary">{groupRegion}</em>
                   </h2>
-                  <span className="hidden sm:inline text-[12px] uppercase tracking-[0.16em] text-muted-foreground font-semibold whitespace-nowrap">
+                  <span className="hidden sm:inline text-[12px] uppercase tracking-[0.16em] text-foreground/60 font-semibold whitespace-nowrap">
                     {list.length} {list.length === 1 ? "cemetery" : "cemeteries"}
                   </span>
                 </div>
