@@ -204,30 +204,52 @@ function HeroSearch({
 
   return (
     <div ref={ref} className="relative mx-auto max-w-[920px] text-left z-40">
-      <div className="flex items-center bg-background border border-border rounded-full shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.45)] p-2.5 gap-1">
-        <Segment
-          icon={<MapPin className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
-          label="Where"
-          value={whereLabel}
-          active={step === "where"}
-          onClick={() => setStep(step === "where" ? null : "where")}
-        />
-        <span className="w-px h-9 bg-border flex-none hidden min-[760px]:block" />
-        <Segment
-          icon={<Tag className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
-          label="Cemetery"
-          value={cemeteryLabel}
-          active={step === "cemetery"}
-          onClick={() => setStep(step === "cemetery" ? null : "cemetery")}
-          hideOnSmall
-        />
-        <button
-          onClick={submit}
-          className="ml-auto flex-none flex items-center gap-2.5 bg-primary hover:opacity-90 text-primary-foreground rounded-full h-[56px] px-6 md:px-9 font-bold text-[15.5px] transition-opacity"
-        >
-          <Search className="w-[18px] h-[18px]" strokeWidth={2.6} />
-          <span>Search</span>
-        </button>
+      {/* Floral sprigs leaning in from each end of the bar (desktop only) */}
+      <img
+        src={searchSprig}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        width={992}
+        height={672}
+        className="hidden lg:block absolute -left-[118px] -top-[52px] w-[150px] rotate-[168deg] pointer-events-none select-none opacity-90"
+      />
+      <img
+        src={searchSprig}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        width={992}
+        height={672}
+        className="hidden lg:block absolute -right-[118px] -bottom-[58px] w-[150px] rotate-[-12deg] pointer-events-none select-none opacity-90"
+      />
+      {/* Gradient ring — sage to terracotta, tying the bar into the floral hero */}
+      <div className="rounded-full p-[2px] bg-gradient-to-r from-primary/50 via-accent/40 to-primary/50 shadow-[0_24px_60px_-26px_hsl(var(--foreground)/0.45)]">
+        <div className="flex items-center rounded-full p-2.5 gap-1 bg-gradient-to-r from-primary/[0.05] via-background to-accent/[0.06]">
+          <Segment
+            icon={<MapPin className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
+            label="Where"
+            value={whereLabel}
+            active={step === "where"}
+            onClick={() => setStep(step === "where" ? null : "where")}
+          />
+          <span className="w-px h-9 bg-gradient-to-b from-transparent via-primary/25 to-transparent flex-none hidden min-[760px]:block" />
+          <Segment
+            icon={<Tag className="w-[18px] h-[18px] text-accent" strokeWidth={2} />}
+            label="Cemetery"
+            value={cemeteryLabel}
+            active={step === "cemetery"}
+            onClick={() => setStep(step === "cemetery" ? null : "cemetery")}
+            hideOnSmall
+          />
+          <button
+            onClick={submit}
+            className="ml-auto flex-none flex items-center gap-2.5 rounded-full h-[56px] px-6 md:px-9 font-bold text-[15.5px] text-primary-foreground bg-gradient-to-r from-primary via-primary to-accent transition-all hover:shadow-[0_10px_26px_-8px_hsl(var(--accent)/0.55)] hover:brightness-[1.05]"
+          >
+            <Search className="w-[18px] h-[18px]" strokeWidth={2.6} />
+            <span>Search</span>
+          </button>
+        </div>
       </div>
 
       {step && (
