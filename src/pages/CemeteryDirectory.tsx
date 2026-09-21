@@ -681,13 +681,13 @@ const CemeteryDirectory = () => {
 
       {/* METRO AREAS — photo cards straight under the search (hidden while searching) */}
       {!isSearching && (
-      <section className="relative z-20 container mx-auto px-6 pt-4 pb-8 md:pt-3 md:pb-16">
-        <div className="text-center mb-6 md:mb-8">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5">Explore Texas</p>
+      <section className="relative z-20 container mx-auto px-6 pt-4 pb-8 md:pt-2 md:pb-16">
+        <div className="text-center mb-4 md:mb-6">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1">Explore Texas</p>
           <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
             Choose a metro area
           </h2>
-          <p className="mt-1.5 text-sm text-foreground/60">
+          <p className="mt-1 text-sm text-foreground/60">
             Each one opens its cemeteries and coverage map below.
           </p>
         </div>
