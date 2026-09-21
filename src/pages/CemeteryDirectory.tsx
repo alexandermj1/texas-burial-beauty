@@ -11,7 +11,6 @@ import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
-import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
 import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
 import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
