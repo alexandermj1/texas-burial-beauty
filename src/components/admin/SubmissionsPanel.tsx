@@ -3300,8 +3300,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {(() => {
               // Stage counters and the Total chip share one set (pipelineUniverse),
               // so the nine buckets always add up to the total and nobody can sit
-              // in two buckets at once.
+              // in two buckets at once. Buyers have their own tab and workflow, so
+              // they are excluded from the seller pipeline counts.
               const txU = pipelineUniverse;
+              const sellerU = txU.filter(s => resolveKind(s.customer_kind, s.source) === "seller");
+              const sellerStageCount = (step: number) => sellerU.filter(s => effStep(s) === step).length;
               type Tone = { dot: string; ring: string; text: string; soft: string };
               const tones: Record<string, Tone> = {
                 slate:   { dot: "bg-slate-500",   ring: "ring-slate-500/40",   text: "text-slate-600 dark:text-slate-300",     soft: "bg-slate-500/10" },
@@ -3322,33 +3325,33 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   count: archivedCount,
                   active: archivedView, toggle: () => setArchivedView(!archivedView), tone: tones.amber },
                 { key: "no-docs", label: "No attachments", icon: FileX,
-                  count: txU.filter(s => effStep(s) === 1).length,
+                  count: sellerStageCount(1),
                   active: docsFilter === "without",
                   toggle: () => setDocsFilter(docsFilter === "without" ? "all" : "without"), tone: tones.slate },
                 { key: "docs", label: "Attachments", icon: Paperclip,
-                  count: txU.filter(s => effStep(s) === 2).length,
+                  count: sellerStageCount(2),
                   active: docsFilter === "with",
                   toggle: () => setDocsFilter(docsFilter === "with" ? "all" : "with"), tone: tones.amber },
                 { key: "quoted", label: "Quoted", icon: DollarSign,
-                  count: txU.filter(s => effStep(s) === 3).length,
+                  count: sellerStageCount(3),
                   active: quotedFilter, toggle: () => setQuotedFilter(!quotedFilter), tone: tones.purple },
                 { key: "accepted", label: "Accepted", icon: CheckCircle,
-                  count: txU.filter(s => effStep(s) === 4).length,
+                  count: sellerStageCount(4),
                   active: acceptedFilter, toggle: () => setAcceptedFilter(!acceptedFilter), tone: tones.emerald },
                 { key: "tree-sent", label: "Tree sent", icon: Send,
-                  count: txU.filter(s => effStep(s) === 5).length,
+                  count: sellerStageCount(5),
                   active: ftSentFilter, toggle: () => setFtSentFilter(!ftSentFilter), tone: tones.indigo },
                 { key: "tree-done", label: "Tree done", icon: Users,
-                  count: txU.filter(s => effStep(s) === 6).length,
+                  count: sellerStageCount(6),
                   active: ftDoneFilter, toggle: () => setFtDoneFilter(!ftDoneFilter), tone: tones.teal },
                 { key: "docs-out", label: "Docs out", icon: FileText,
-                  count: txU.filter(s => effStep(s) === 7).length,
+                  count: sellerStageCount(7),
                   active: docsOutFilter, toggle: () => setDocsOutFilter(!docsOutFilter), tone: tones.sky },
                 { key: "docs-returned", label: "Docs returned", icon: FileCheck,
-                  count: txU.filter(s => effStep(s) === 8).length,
+                  count: sellerStageCount(8),
                   active: docsReturnedFilter, toggle: () => setDocsReturnedFilter(!docsReturnedFilter), tone: tones.cyan },
                 { key: "complete", label: "Complete", icon: Sparkles,
-                  count: txU.filter(s => effStep(s) === 9).length,
+                  count: sellerStageCount(9),
                   active: completeFilter, toggle: () => setCompleteFilter(!completeFilter), tone: tones.green },
               ];
               // Buyers don't move through the seller pipeline — in buyer view
