@@ -2888,6 +2888,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      notification_group: { Args: { _source_type: string }; Returns: string }
       notify_staff: {
         Args: {
           _body: string
