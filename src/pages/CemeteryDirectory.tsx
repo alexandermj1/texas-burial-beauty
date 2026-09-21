@@ -49,12 +49,27 @@ const PHOTO_POOL: string[] = [
   resthavenFlags.url,
 ];
 
-const photoFor = (name: string, hash: number) => {
-  const n = name.toLowerCase();
-  if (n.includes("restland")) return restlandHero.url;
-  if (n.includes("rest haven") || n.includes("resthaven")) return resthavenAvenue.url;
+// Photography is chosen by REGION (a landscape that represents the area),
+// not per individual cemetery — same region shares the same imagery family.
+const REGION_PHOTOS: Record<string, string[]> = {
+  "Dallas–Fort Worth": [restlandHero.url, restlandLawn.url],
+  "Greater Houston": [resthavenAvenue.url, resthavenOakPath.url],
+  "Austin": [resthavenPavilion.url, resthavenBench.url],
+  "Central Texas": [grounds1.url, resthavenWalkway.url],
+  "San Antonio": [resthavenStatue.url, grounds2.url],
+  "South Texas": [imgPalms, grounds3.url],
+  "East Texas": [resthavenOakPath.url, resthavenBench.url],
+  "El Paso & West Texas": [imgMountains, imgHillside],
+  "West Texas": [imgMountains, imgHillside],
+  "North Texas": [restlandLawn.url, grounds1.url],
+};
+
+const photoFor = (region: string, hash: number) => {
+  const set = REGION_PHOTOS[region];
+  if (set && set.length) return set[hash % set.length];
   return PHOTO_POOL[hash % PHOTO_POOL.length];
 };
+
 
 // Botanical leaf accents (scattered decoratively across the page background)
 const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
@@ -221,7 +236,7 @@ const RegionRow = ({
                   {/* Photo — Airbnb-style image-first card */}
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
-                      src={photoFor(c.name, h)}
+                      src={photoFor(c.region, h)}
                       alt={`${c.name}, ${c.city}, Texas`}
                       loading="lazy"
                       decoding="async"
@@ -291,16 +306,10 @@ const RegionRow = ({
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
   const [query, setQuery] = useState("");
-  const [plotType, setPlotType] = useState("Any type");
 
   const grouped = useMemo(() => {
     const filtered = bayCemeteries.filter((c) => {
       if (region !== "All" && c.region !== region) return false;
-      if (plotType !== "Any type") {
-        let hh = 0;
-        for (let k = 0; k < c.name.length; k++) hh = (hh * 31 + c.name.charCodeAt(k)) >>> 0;
-        if (!OFFERING_SETS[hh % OFFERING_SETS.length].includes(plotType)) return false;
-      }
       if (query.trim()) {
         const q = query.toLowerCase();
         return (
@@ -318,7 +327,8 @@ const CemeteryDirectory = () => {
       map.set(c.region, arr);
     });
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [region, query, plotType]);
+  }, [region, query]);
+
 
   // Chip order — stable, matches alphabetical section order on the page so
   // the chips never reshuffle while scrolling or filtering.
@@ -421,28 +431,29 @@ const CemeteryDirectory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
+    <div className="relative min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
+      {/* Page-wide warm wash — one continuous field behind the whole page so
+          the theme never stops abruptly below the hero. Kept light at the very
+          top so the navbar stays perfectly legible. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(90% 55% at 10% 12%, hsl(var(--secondary) / 0.55) 0%, transparent 60%), radial-gradient(85% 55% at 90% 18%, hsl(var(--accent) / 0.28) 0%, transparent 62%), radial-gradient(80% 60% at 50% 95%, hsl(var(--primary) / 0.10) 0%, transparent 65%), linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary) / 0.35) 45%, hsl(var(--background)) 100%)",
+        }}
+      />
       <Seo
         title="Texas Cemeteries We Serve — Buy & Sell Plots | Texas Cemetery Brokers"
         description={`Browse ${total}+ cemeteries across Dallas–Fort Worth, Houston, Austin, San Antonio, El Paso & beyond. Get help buying or selling cemetery plots in Texas.`}
         path="/cemeteries"
         jsonLd={jsonLd}
       />
-      <Navbar />
+      <Navbar forceScrolled />
 
-      {/* HERO — warm gradient wash with an Airbnb-style segmented search */}
-      <section className="relative pt-28 pb-10 md:pt-36 md:pb-14 overflow-hidden">
-        {/* Soft brand gradient field */}
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(120% 90% at 12% 0%, hsl(var(--secondary)) 0%, transparent 55%), radial-gradient(110% 85% at 88% 8%, hsl(var(--accent) / 0.55) 0%, transparent 58%), radial-gradient(100% 80% at 50% 100%, hsl(var(--primary) / 0.22) 0%, transparent 62%), linear-gradient(180deg, hsl(var(--secondary) / 0.85) 0%, hsl(var(--background)) 100%)",
-          }}
-        />
-        <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-accent/25 blur-3xl" />
-        <div aria-hidden className="pointer-events-none absolute -top-10 -right-24 w-[460px] h-[460px] rounded-full bg-primary/15 blur-3xl" />
+      {/* HERO — sits on the shared page wash, Airbnb-style segmented search */}
+      <section className="relative z-10 pt-28 pb-10 md:pt-36 md:pb-14">
+
 
         <div className="relative container mx-auto px-6">
           <motion.div
@@ -496,26 +507,7 @@ const CemeteryDirectory = () => {
 
                 <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
 
-                {/* Plot type */}
-                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
-                  <span className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-4 h-4 text-primary" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Plot type</span>
-                    <select
-                      value={plotType}
-                      onChange={(e) => setPlotType(e.target.value)}
-                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
-                    >
-                      {["Any type", "Plots", "Niches", "Mausoleums", "Companion", "Cremation", "Lawn Crypts", "Family Estates", "Veteran"].map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </span>
-                </label>
 
-                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
 
                 {/* Cemetery */}
                 <label className="group flex-[1.2] flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors text-left">
@@ -625,8 +617,9 @@ const CemeteryDirectory = () => {
         )}
 
 
-      {/* Cards grid — warm cream wash that fades softly into the page */}
-      <section className="relative pt-14 md:pt-20 pb-20 md:pb-28 overflow-hidden">
+      {/* Cards grid — continues the same page wash, no hard edge */}
+      <section className="relative z-10 pt-10 md:pt-14 pb-20 md:pb-28 overflow-hidden">
+
         {/* Dotted grid texture — warm tone to match botanical scatter */}
         <div
           aria-hidden
