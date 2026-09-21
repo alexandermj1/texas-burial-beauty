@@ -107,7 +107,7 @@ const CityPlotsPage = () => {
       <Navbar forceScrolled />
 
       {/* HERO */}
-      {data.slug === "houston" || data.slug === "austin" ? (
+      {data.slug === "houston" || data.slug === "austin" || data.slug === "dallas" ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-24 md:pt-28">
           <div className="grid lg:grid-cols-2 items-center gap-10 lg:gap-0">
             <motion.div
@@ -161,10 +161,18 @@ const CityPlotsPage = () => {
 
             <div className="relative h-full lg:self-stretch">
               <img
-                src={data.slug === "austin" ? austinHeroArt.url : houstonHeroArt.url}
+                src={
+                  data.slug === "austin"
+                    ? austinHeroArt.url
+                    : data.slug === "dallas"
+                    ? dallasHeroArt.url
+                    : houstonHeroArt.url
+                }
                 alt={
                   data.slug === "austin"
                     ? "Watercolor illustration of an Austin, Texas cemetery entrance sign with mausoleum, headstones and the downtown Austin skyline behind it"
+                    : data.slug === "dallas"
+                    ? "Illustration of a Dallas, Texas cemetery with the downtown Dallas skyline behind it"
                     : "Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
                 }
                 title={`Cemetery plots for sale in ${data.city}, Texas`}
@@ -187,70 +195,6 @@ const CityPlotsPage = () => {
 
           {/* Blend the hero into the page below */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-background" />
-        </section>
-      ) : data.slug === "dallas" ? (
-        <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-28 md:pt-32">
-          <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px]">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="text-center max-w-3xl mx-auto"
-            >
-              <div className="mb-6 flex items-center justify-center gap-4">
-                <span className="h-px w-12 bg-accent/40" />
-                <p className="text-accent text-[11px] tracking-[0.28em] uppercase font-semibold">{data.metro}</p>
-                <span className="h-px w-12 bg-accent/40" />
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-foreground leading-[1.08] tracking-tight [text-wrap:balance]">
-                {data.h1Lead} <span className="text-foreground">{data.city}</span>
-              </h1>
-              <p className="mt-7 text-base md:text-[17px] text-foreground/70 leading-relaxed font-light max-w-2xl mx-auto [text-wrap:balance]">
-                {data.intro}
-              </p>
-
-              <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link to="/contact#buy-inquiry" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground rounded-full font-medium text-[15px] hover:opacity-90 transition-all">
-                  Find a plot in {data.city}
-                </Link>
-                <Link to="/sell" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-accent/50 text-accent font-medium text-[15px] hover:bg-accent/5 transition-all">
-                  Sell a plot in {data.city}
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Full-width illustration */}
-          <div className="relative mt-12 md:mt-16">
-            <img
-              src={dallasHeroArt.url}
-              alt="Illustration of a Dallas, Texas cemetery with the downtown Dallas skyline behind it"
-              className="w-full object-cover mix-blend-multiply"
-              loading="eager"
-            />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[hsl(38_35%_95%)] to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 md:w-28 bg-gradient-to-r from-[hsl(38_35%_95%)] to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-28 bg-gradient-to-l from-[hsl(38_35%_95%)] to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[hsl(38_35%_95%)] to-transparent" />
-          </div>
-
-          {/* Figures */}
-          <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px]">
-            <div className="border-t border-foreground/10 pt-10 pb-16 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-foreground/50 mb-2">Cemetery retail</p>
-                <p className="font-display text-2xl md:text-[28px] text-foreground">{data.retailRange}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-foreground/50 mb-2">Typical resale</p>
-                <p className="font-display text-2xl md:text-[28px] text-foreground">{data.resaleRange}</p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-foreground/50 mb-2">Cemeteries covered</p>
-                <p className="font-display text-2xl md:text-[28px] text-foreground">{data.metroCemeteryCount}+ in {data.metro}</p>
-              </div>
-            </div>
-          </div>
         </section>
 
       ) : (
