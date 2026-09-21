@@ -447,30 +447,36 @@ const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
     >
       <Link
         to={`/cemeteries/${slug}`}
-        className="group flex items-stretch gap-3 sm:gap-4 bg-card border border-border rounded-2xl overflow-hidden shadow-[0_6px_18px_-12px_hsl(var(--foreground)/0.3)] hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.35)] hover:border-primary/60 transition-all"
+        className="group flex items-stretch gap-4 sm:gap-5 bg-card border border-border rounded-2xl overflow-hidden shadow-[0_6px_18px_-12px_hsl(var(--foreground)/0.3)] hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.35)] hover:border-primary/60 transition-all"
       >
         <div
-          className="relative w-24 sm:w-32 shrink-0 bg-cover bg-center"
+          className="relative w-28 sm:w-36 shrink-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${photoFor(c.region, h)})` }}
           aria-hidden
         >
           <div className="absolute inset-0 bg-gradient-to-r from-foreground/15 to-transparent" />
         </div>
 
-        <div className="flex-1 min-w-0 py-3 sm:py-4 pr-3 sm:pr-4 flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display font-semibold text-[16.5px] sm:text-[18px] leading-tight tracking-tight text-foreground truncate">
+        <div className="flex-1 min-w-0 py-4 sm:py-5 pr-4 sm:pr-5 flex flex-col justify-center gap-2.5">
+          <div className="min-w-0">
+            <h3 className="font-display font-semibold text-lg sm:text-xl leading-tight tracking-tight text-foreground line-clamp-2">
               {c.name}
             </h3>
-            <p className="mt-1 flex items-center gap-1 text-[13px] text-foreground/65 truncate">
+            <p className="mt-1.5 flex items-center gap-1.5 text-[13.5px] text-foreground/65 truncate">
               <MapPin className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
               <span className="truncate">
                 {c.city}, TX · {c.region}
               </span>
             </p>
-            <p className="mt-1.5 text-[12.5px] font-semibold text-primary/80">Plots available · Buy or sell</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex items-center rounded-full bg-primary/[0.09] text-primary px-2.5 py-1 text-[11.5px] font-bold tracking-wide">
+              Plots available
+            </span>
+            <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-foreground/70 group-hover:text-primary transition-colors">
+              Buy or sell <ChevronRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
         </div>
       </Link>
     </motion.div>
