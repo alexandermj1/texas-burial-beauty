@@ -172,14 +172,14 @@ function HeroSearch({
           <Search className="w-[18px] h-[18px] text-primary flex-none" strokeWidth={2.4} />
           <button
             onClick={() => setStep(step === "where" ? null : "where")}
-            className="text-[14.5px] font-semibold text-foreground truncate hover:text-primary transition-colors"
+            className="text-[15.5px] font-semibold text-foreground truncate hover:text-primary transition-colors"
           >
             {whereLabel}
           </button>
           <span className="w-px h-5 bg-border flex-none" />
           <button
             onClick={() => setStep(step === "cemetery" ? null : "cemetery")}
-            className="text-[14.5px] font-semibold text-foreground truncate hover:text-primary transition-colors flex-1 text-left"
+            className="text-[15.5px] font-semibold text-foreground truncate hover:text-primary transition-colors flex-1 text-left"
           >
             {cemeteryLabel}
           </button>
