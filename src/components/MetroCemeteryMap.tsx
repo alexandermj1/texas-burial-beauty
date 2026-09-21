@@ -430,7 +430,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         )}
 
         {/* Region switcher */}
-        {metroTabs && (
+        {showTabs && (
           <div className="mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
             {METRO_OPTIONS.map((m, i) => (
               <button
