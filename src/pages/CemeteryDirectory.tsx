@@ -239,7 +239,13 @@ function HeroSearch({
           />
           <span className="w-px h-9 bg-gradient-to-b from-transparent via-primary/25 to-transparent flex-none hidden min-[760px]:block" />
           <Segment
-            icon={<Tag className="w-[18px] h-[18px] text-accent" strokeWidth={2} />}
+            icon={
+              <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px] text-accent" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 20h12" />
+                <path d="M9 20v-8a3 3 0 0 1 6 0v8" />
+                <path d="M8 12h8" />
+              </svg>
+            }
             label="Cemetery"
             value={cemeteryLabel}
             active={step === "cemetery"}
