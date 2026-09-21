@@ -22,9 +22,6 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
-import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 
 // Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
