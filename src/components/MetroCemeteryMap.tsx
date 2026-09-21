@@ -597,7 +597,11 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
           {/* Index list — also the crawlable version of the map */}
           <div
             ref={listRef}
-            className="rounded-3xl border border-border/70 bg-gradient-to-b from-card/80 to-background/40 p-2 sm:p-3 max-h-[28rem] lg:max-h-[46rem] xl:max-h-[52rem] overflow-y-auto no-scrollbar"
+            className={`border bg-gradient-to-b from-card/80 to-background/40 p-2 sm:p-3 overflow-y-auto no-scrollbar ${
+              widget
+                ? "rounded-2xl border-border/60 max-h-[19rem] sm:max-h-[24rem] lg:max-h-[28rem]"
+                : "rounded-3xl border-border/70 max-h-[28rem] lg:max-h-[46rem] xl:max-h-[52rem]"
+            }`}
           >
 
             <ul className="list-none pl-0 m-0 space-y-2.5">
