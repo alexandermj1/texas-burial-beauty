@@ -3423,18 +3423,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {(() => {
-          // The pipeline counts everyone except buyers, so the Total/Today chips match.
-          const sellerU = pipelineUniverse.filter(s => resolveKind(s.customer_kind, s.source) !== "buyer");
-          const total = sellerU.length;
+          // Total includes everyone in the view — sellers, buyers and general
+          // forms alike — deduplicated by email. Every form gets classified as
+          // seller or buyer and flows through its pipeline from there.
+          const total = pipelineUniverse.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
-          const today = sellerU.filter(s => {
+          const today = pipelineUniverse.filter(s => {
             const d = (s as any).created_at ? new Date((s as any).created_at) : null;
             return d && d >= startOfToday;
           }).length;
           return (
             <div
               className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
-              title="Everyone in this view except buyers (the stage counts add up to this) / new today. Buyers are counted on the Buyers button."
+              title="Everyone in this view — sellers, buyers and general forms, with duplicates counted once / new today"
             >
               <div className="flex items-center gap-1.5 pr-3">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
