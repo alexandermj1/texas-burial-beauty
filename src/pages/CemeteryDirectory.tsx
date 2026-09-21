@@ -583,16 +583,26 @@ const CemeteryDirectory = () => {
           fading gently into the page below the region gallery */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-[1500px] z-0 overflow-hidden pointer-events-none"
+        className="absolute inset-x-0 top-0 h-[900px] md:h-[1500px] z-0 overflow-hidden pointer-events-none"
         style={{
           WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
           maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/65 via-secondary to-background" />
-        <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/35 blur-3xl" />
-        <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
-        <div className="absolute top-[560px] right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
+        {/* Desktop: richer diagonal wash */}
+        <div className="hidden md:block absolute inset-0 bg-gradient-to-br from-accent/65 via-secondary to-background" />
+        <div className="md:hidden absolute inset-0 bg-gradient-to-b from-accent/30 via-secondary/50 via-40% to-background" />
+
+        {/* Desktop blur accents */}
+        <div className="hidden md:block absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/35 blur-3xl" />
+        <div className="hidden md:block absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
+        <div className="hidden md:block absolute top-[560px] right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
+
+        {/* Mobile blur accents — smaller, lighter, cream-forward so it doesn't turn brown */}
+        <div className="md:hidden absolute -top-10 -right-14 w-[320px] h-[320px] rounded-full bg-accent/25 blur-3xl" />
+        <div className="md:hidden absolute top-10 -left-14 w-[280px] h-[280px] rounded-full bg-primary/20 blur-3xl" />
+        <div className="md:hidden absolute top-[320px] right-1/4 w-[240px] h-[240px] rounded-full bg-background/60 blur-3xl" />
+
         {/* Two purpose-built arrangements create a continuous botanical frame
             around the headline and search bar, stopping well above the results. */}
         <div className="absolute inset-x-0 top-8 h-[520px] hidden md:block">
