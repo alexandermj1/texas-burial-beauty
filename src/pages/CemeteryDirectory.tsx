@@ -23,6 +23,8 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
+import heroBotanicalLeft from "@/assets/flowers/hero-botanical-left.png";
+import heroBotanicalRight from "@/assets/flowers/hero-botanical-right.png";
 
 // Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
@@ -562,21 +564,33 @@ const CemeteryDirectory = () => {
           <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/35 blur-3xl" />
           <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
           <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
-          {LEAVES.length > 0 && (
-            <>
-              <div className="absolute top-28 -left-10 hidden md:block w-96 h-96">
-                <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute top-8 left-2 w-64 opacity-75 -rotate-[18deg] select-none" />
-                <img src={LEAVES[21 % LEAVES.length]} alt="" className="absolute top-32 left-44 w-44 opacity-65 rotate-[34deg] select-none" />
-              </div>
-              <div className="absolute top-20 -right-10 hidden md:block w-[28rem] h-[28rem]">
-                <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute top-0 right-0 w-80 opacity-65 rotate-[10deg] select-none" />
-                <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute top-44 right-56 w-48 opacity-60 -rotate-[14deg] select-none" />
-              </div>
-            </>
-          )}
+          {/* Two purpose-built arrangements create a continuous botanical frame
+              around the headline instead of unrelated floating decorations. */}
+          <div className="absolute inset-0 hidden md:block" aria-hidden>
+            <img
+              src={heroBotanicalLeft}
+              alt=""
+              width={1024}
+              height={1408}
+              className="absolute -left-24 top-8 h-[610px] w-auto max-w-[42vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
+            />
+            <img
+              src={heroBotanicalRight}
+              alt=""
+              width={1024}
+              height={1408}
+              className="absolute -right-24 top-5 h-[620px] w-auto max-w-[42vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
+            />
+          </div>
+
+          {/* On phones, keep the frame above and beside the title so the search stays clear. */}
+          <div className="absolute inset-x-0 top-16 h-[320px] md:hidden" aria-hidden>
+            <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-0 h-64 w-auto opacity-70 select-none" />
+            <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-0 h-64 w-auto opacity-70 select-none" />
+          </div>
         </div>
 
-        <div className="container mx-auto px-6 pt-28 pb-12 md:pt-32 md:pb-16">
+        <div className="relative z-10 container mx-auto px-6 pt-28 pb-12 md:pt-32 md:pb-16">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-5">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
