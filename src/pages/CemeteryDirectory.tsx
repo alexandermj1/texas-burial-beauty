@@ -575,7 +575,7 @@ const CemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
           isPhotoAnchor
             ? "bg-foreground border-border rounded-2xl"
             : isEngraved
-              ? "bg-[#FCF9F3] border-border rounded-2xl hover:bg-card hover:shadow-[0_18px_36px_-18px_hsl(var(--accent)/0.4)]"
+              ? "bg-secondary/40 border-border rounded-2xl hover:bg-card hover:shadow-[0_18px_36px_-18px_hsl(var(--accent)/0.4)]"
               : "bg-card border-border rounded-2xl hover:shadow-[0_18px_36px_-18px_hsl(var(--primary)/0.4)]"
         }`}
       >
