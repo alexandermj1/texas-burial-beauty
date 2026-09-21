@@ -593,27 +593,27 @@ const CemeteryDirectory = () => {
         <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
         <div className="absolute top-[560px] right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
         {/* Two purpose-built arrangements create a continuous botanical frame
-            around the headline instead of unrelated floating decorations. */}
-        <div className="absolute inset-x-0 top-24 h-[760px] hidden md:block">
+            around the headline and search bar, stopping well above the results. */}
+        <div className="absolute inset-x-0 top-8 h-[520px] hidden md:block">
           <img
             src={heroBotanicalLeft}
             alt=""
             width={1024}
             height={1408}
-            className="absolute -left-24 top-0 h-[600px] w-auto max-w-[44vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
+            className="absolute -left-28 top-0 h-[480px] w-auto max-w-[40vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
           />
           <img
             src={heroBotanicalRight}
             alt=""
             width={1024}
             height={1408}
-            className="absolute -right-24 -top-1 h-[610px] w-auto max-w-[44vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
+            className="absolute -right-28 top-0 h-[490px] w-auto max-w-[40vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
           />
         </div>
         {/* On phones, keep the frame above and beside the title so the search stays clear. */}
-        <div className="absolute inset-x-0 top-40 h-[320px] md:hidden">
-          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-8 h-64 w-auto opacity-70 select-none" />
-          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-8 h-64 w-auto opacity-70 select-none" />
+        <div className="absolute inset-x-0 top-16 h-[280px] md:hidden">
+          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-0 h-48 w-auto opacity-70 select-none" />
+          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-0 h-48 w-auto opacity-70 select-none" />
         </div>
       </div>
       <Seo
