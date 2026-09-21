@@ -531,6 +531,11 @@ const CemeteryDirectory = () => {
     return m;
   }, []);
 
+  const allRegions = useMemo(() => {
+    const set = new Set(bayCemeteries.map((c) => c.region));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, []);
+
   const listRef = useRef<HTMLDivElement | null>(null);
   const barAnchorRef = useRef<HTMLDivElement | null>(null);
   const [barPinned, setBarPinned] = useState(false);
