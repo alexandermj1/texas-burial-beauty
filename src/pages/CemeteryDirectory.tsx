@@ -879,7 +879,7 @@ const CemeteryDirectory = () => {
                     >
                       All Texas
                     </button>
-                    {allRegions.map((r) => (
+                    {regions.filter((r) => r !== "All").map((r) => (
                       <button
                         key={r}
                         onClick={() => {
