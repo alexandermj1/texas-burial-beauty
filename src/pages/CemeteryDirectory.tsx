@@ -228,8 +228,8 @@ function HeroSearch({
         className="hidden lg:block absolute -right-[118px] -bottom-[58px] w-[150px] rotate-[-12deg] pointer-events-none select-none opacity-90"
       />
       {/* Gradient ring — sage to terracotta, tying the bar into the floral hero */}
-      <div className="rounded-full p-[2px] bg-gradient-to-r from-primary/50 via-accent/40 to-primary/50 shadow-[0_24px_60px_-26px_hsl(var(--foreground)/0.45)]">
-        <div className="flex items-center rounded-full p-2.5 gap-1 bg-gradient-to-r from-primary/[0.05] via-background to-accent/[0.06]">
+      <div className="rounded-full p-[2.5px] bg-gradient-to-r from-primary/65 via-accent/55 to-primary/65 shadow-[0_28px_70px_-28px_hsl(var(--foreground)/0.55),0_0_0_1px_hsl(var(--background)/0.6)]">
+        <div className="flex items-center rounded-full p-2.5 gap-1 bg-gradient-to-r from-primary/[0.06] via-background/95 to-accent/[0.07] backdrop-blur-sm">
           <Segment
             icon={<MapPin className="w-[18px] h-[18px] text-primary" strokeWidth={2} />}
             label="Where"
@@ -593,27 +593,27 @@ const CemeteryDirectory = () => {
         <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
         <div className="absolute top-[560px] right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
         {/* Two purpose-built arrangements create a continuous botanical frame
-            around the headline instead of unrelated floating decorations. */}
-        <div className="absolute inset-x-0 top-24 h-[760px] hidden md:block">
+            around the headline and search bar, stopping well above the results. */}
+        <div className="absolute inset-x-0 top-8 h-[520px] hidden md:block">
           <img
             src={heroBotanicalLeft}
             alt=""
             width={1024}
             height={1408}
-            className="absolute -left-24 top-0 h-[600px] w-auto max-w-[44vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
+            className="absolute -left-28 top-0 h-[480px] w-auto max-w-[40vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
           />
           <img
             src={heroBotanicalRight}
             alt=""
             width={1024}
             height={1408}
-            className="absolute -right-24 -top-1 h-[610px] w-auto max-w-[44vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
+            className="absolute -right-28 top-0 h-[490px] w-auto max-w-[40vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
           />
         </div>
         {/* On phones, keep the frame above and beside the title so the search stays clear. */}
-        <div className="absolute inset-x-0 top-40 h-[320px] md:hidden">
-          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-8 h-64 w-auto opacity-70 select-none" />
-          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-8 h-64 w-auto opacity-70 select-none" />
+        <div className="absolute inset-x-0 top-16 h-[280px] md:hidden">
+          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-0 h-48 w-auto opacity-70 select-none" />
+          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-0 h-48 w-auto opacity-70 select-none" />
         </div>
       </div>
       <Seo
@@ -803,7 +803,7 @@ const CemeteryDirectory = () => {
         )}
 
       {/* REGION SECTIONS — grid of compact cards, one block per region */}
-      <section className="relative z-10 pt-2 md:pt-4 pb-20 md:pb-28 overflow-hidden">
+      <section className="relative z-10 pt-10 md:pt-14 pb-20 md:pb-28 overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.45]"
