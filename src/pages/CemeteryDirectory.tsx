@@ -22,57 +22,63 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
-import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
-import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
-import imgPalms from "@/assets/hero/cemetery-palms.jpg";
 
-// Real Texas cemetery photography (uploaded park photos, CDN-hosted)
+// Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
 import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
-import resthavenStatue from "@/assets/resthaven/resthaven-statue-lawn.jpg.asset.json";
-import resthavenWalkway from "@/assets/resthaven/resthaven-walkway.jpg.asset.json";
-import resthavenPavilion from "@/assets/resthaven/resthaven-pavilion-walk.jpg.asset.json";
-import resthavenBench from "@/assets/resthaven/resthaven-oak-bench.jpg.asset.json";
-import resthavenFlags from "@/assets/resthaven/resthaven-veteran-flags.jpg.asset.json";
-import grounds1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
-import grounds2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
-import grounds3 from "@/assets/cemeteries/cemetery-grounds-3.jpg.asset.json";
+import park04 from "@/assets/parks/park-04.jpg.asset.json";
+import park12 from "@/assets/parks/park-12.jpg.asset.json";
+import park23 from "@/assets/parks/park-23.jpg.asset.json";
+import park30 from "@/assets/parks/park-30.jpg.asset.json";
+import park36 from "@/assets/parks/park-36.jpg.asset.json";
+import park39 from "@/assets/parks/park-39.jpg.asset.json";
+import park47 from "@/assets/parks/park-47.jpg.asset.json";
+import park50 from "@/assets/parks/park-50.jpg.asset.json";
+import park57 from "@/assets/parks/park-57.jpg.asset.json";
 
 const PHOTO_POOL: string[] = [
+  park04.url,
+  park12.url,
+  park23.url,
+  park30.url,
+  park36.url,
+  park39.url,
+  park47.url,
+  park50.url,
+  park57.url,
   restlandHero.url,
   resthavenAvenue.url,
-  grounds1.url,
-  resthavenOakPath.url,
-  imgHillside,
-  grounds2.url,
-  resthavenStatue.url,
   restlandLawn.url,
-  imgCathedral,
-  resthavenWalkway.url,
-  grounds3.url,
-  resthavenPavilion.url,
-  imgMountains,
-  resthavenBench.url,
-  imgPalms,
-  resthavenFlags.url,
+  resthavenOakPath.url,
 ];
 
 // Photography is chosen by REGION (a landscape that represents the area),
 // not per individual cemetery — same region shares the same imagery family.
 const REGION_PHOTOS: Record<string, string[]> = {
-  "Dallas–Fort Worth": [restlandHero.url, restlandLawn.url],
-  "Greater Houston": [resthavenAvenue.url, resthavenOakPath.url],
-  "Austin": [resthavenPavilion.url, resthavenBench.url],
-  "Central Texas": [grounds1.url, resthavenWalkway.url],
-  "San Antonio": [resthavenStatue.url, grounds2.url],
-  "South Texas": [imgPalms, grounds3.url],
-  "East Texas": [resthavenOakPath.url, resthavenBench.url],
-  "El Paso & West Texas": [imgMountains, imgHillside],
-  "West Texas": [imgMountains, imgHillside],
-  "North Texas": [restlandLawn.url, grounds1.url],
+  "Dallas–Fort Worth": [park30.url, park04.url],
+  "Greater Houston": [park47.url, park12.url],
+  "Austin": [park23.url, park36.url],
+  "Central Texas": [park39.url, park50.url],
+  "San Antonio": [park57.url, park23.url],
+  "South Texas": [park12.url, park47.url],
+  "East Texas": [park36.url, park39.url],
+  "El Paso & West Texas": [park50.url, park57.url],
+  "West Texas": [park50.url, park30.url],
+  "North Texas": [park04.url, park39.url],
 };
+
+// Featured areas shown as large photo cards above the cemetery lists.
+const AREA_FEATURES: Array<{ region: string; cities: string }> = [
+  { region: "Dallas–Fort Worth", cities: "Dallas · Fort Worth · Plano · Arlington · Denton" },
+  { region: "Greater Houston", cities: "Houston · Katy · Sugar Land · The Woodlands" },
+  { region: "Austin", cities: "Austin · Round Rock · San Marcos · Georgetown" },
+  { region: "San Antonio", cities: "San Antonio · New Braunfels · Boerne" },
+  { region: "East Texas", cities: "Tyler · Longview · Lufkin · Texarkana" },
+  { region: "El Paso & West Texas", cities: "El Paso · Midland · Odessa · Lubbock" },
+];
+
 
 const photoFor = (region: string, hash: number) => {
   const set = REGION_PHOTOS[region];
@@ -469,6 +475,14 @@ const CemeteryDirectory = () => {
 
   const total = bayCemeteries.length;
 
+  const countByRegion = useMemo(() => {
+    const m: Record<string, number> = {};
+    bayCemeteries.forEach((c) => {
+      m[c.region] = (m[c.region] ?? 0) + 1;
+    });
+    return m;
+  }, []);
+
   const listRef = useRef<HTMLDivElement | null>(null);
   const barAnchorRef = useRef<HTMLDivElement | null>(null);
   const [barPinned, setBarPinned] = useState(false);
@@ -525,7 +539,7 @@ const CemeteryDirectory = () => {
       <Navbar forceScrolled />
 
       {/* HERO — warm wash that feathers into the page */}
-      <section className="relative z-10">
+      <section className="relative z-30">
         <div
           aria-hidden
           className="absolute inset-x-0 -top-24 -bottom-32 -z-10 overflow-hidden pointer-events-none"
@@ -534,10 +548,11 @@ const CemeteryDirectory = () => {
             maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-secondary/70 via-accent/20 to-background" />
-          <div className="absolute -top-32 -right-32 w-[640px] h-[640px] rounded-full bg-primary/15 blur-3xl" />
-          <div className="absolute top-40 -left-40 w-[520px] h-[520px] rounded-full bg-accent/20 blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 w-[420px] h-[420px] rounded-full bg-secondary/50 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/55 via-secondary to-background" />
+          <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/30 blur-3xl" />
+          <div className="absolute top-32 -left-36 w-[560px] h-[560px] rounded-full bg-accent/45 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-10 left-1/4 w-[420px] h-[420px] rounded-full bg-accent/35 blur-3xl" />
           {LEAVES.length > 0 && (
             <>
               <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute bottom-24 left-[3%] w-40 opacity-60 -rotate-[24deg] hidden md:block select-none" />
@@ -587,6 +602,41 @@ const CemeteryDirectory = () => {
               </a>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* AREA PHOTOS — big regional images before the cemetery lists */}
+      <section className="relative z-20 container mx-auto px-6 pb-4 md:pb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {AREA_FEATURES.map((a) => (
+            <button
+              key={a.region}
+              onClick={() => {
+                setRegion(a.region);
+                setQuery("");
+                window.setTimeout(scrollToResults, 60);
+              }}
+              className="group block text-left"
+            >
+              <div className="flex items-baseline justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Texas</span>
+                  <h3 className="font-display text-2xl md:text-[28px] tracking-tight mt-0.5 truncate">{a.region}</h3>
+                </div>
+                <span className="text-sm font-bold text-muted-foreground whitespace-nowrap">
+                  {countByRegion[a.region] ?? 0}
+                </span>
+              </div>
+              <div className="relative overflow-hidden rounded-2xl shadow-[0_14px_34px_-18px_hsl(var(--foreground)/0.45)] group-hover:shadow-[0_22px_48px_-18px_hsl(var(--primary)/0.45)] transition-shadow">
+                <div
+                  className="aspect-[16/10] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${REGION_PHOTOS[a.region]?.[0] ?? PHOTO_POOL[0]})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/35 to-transparent" />
+              </div>
+              <p className="text-sm text-muted-foreground mt-3">{a.cities}</p>
+            </button>
+          ))}
         </div>
       </section>
 
