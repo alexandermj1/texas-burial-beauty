@@ -108,8 +108,9 @@ const markerIcon = (color: string, active = false) => {
 const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true, widget = false }: Props) => {
   const [metroIdx, setMetroIdx] = useState(() => metroIndexForRegions(regions));
   const activeMetro = METRO_OPTIONS[metroIdx];
-  const effRegions = metroTabs ? activeMetro.regions : regions;
-  const effMetro = metroTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
+  const showTabs = metroTabs && !widget;
+  const effRegions = showTabs ? activeMetro.regions : regions;
+  const effMetro = showTabs ? (activeMetro.label === "All Texas" ? "Texas" : activeMetro.label) : metro;
 
   const [active, setActive] = useState<string | null>(null);
   const [query, setQuery] = useState("");
