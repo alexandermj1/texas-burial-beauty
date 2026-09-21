@@ -665,12 +665,17 @@ const CemeteryDirectory = () => {
       </section>
 
       {/* METRO AREAS — photo cards straight under the search */}
-      <section className="relative z-20 container mx-auto px-6 pt-2 pb-10 md:pt-3 md:pb-14">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 mb-4 md:mb-5 rounded-2xl bg-background/75 backdrop-blur-sm border border-border/60 px-4 py-3 md:px-5 shadow-sm">
-          <p className="text-[15px] text-foreground/70">
-            <span className="font-semibold text-foreground">Choose a metro area</span> — each one opens its cemeteries and
-            coverage map below.
-          </p>
+      <section className="relative z-20 container mx-auto px-6 pt-6 pb-10 md:pt-8 md:pb-16">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 mb-5 md:mb-7 max-w-3xl mx-auto text-center sm:text-left sm:max-w-none">
+          <div className="mx-auto sm:mx-0">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1.5">Explore Texas</p>
+            <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
+              Choose a metro area
+            </h2>
+            <p className="mt-1.5 text-sm text-foreground/60">
+              Each one opens its cemeteries and coverage map below.
+            </p>
+          </div>
           <button
             onClick={() => {
               setRegion("All");
