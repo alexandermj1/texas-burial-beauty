@@ -161,10 +161,18 @@ const CityPlotsPage = () => {
 
             <div className="relative h-full lg:self-stretch">
               <img
-                src={data.slug === "austin" ? austinHeroArt.url : houstonHeroArt.url}
+                src={
+                  data.slug === "austin"
+                    ? austinHeroArt.url
+                    : data.slug === "dallas"
+                    ? dallasHeroArt.url
+                    : houstonHeroArt.url
+                }
                 alt={
                   data.slug === "austin"
                     ? "Watercolor illustration of an Austin, Texas cemetery entrance sign with mausoleum, headstones and the downtown Austin skyline behind it"
+                    : data.slug === "dallas"
+                    ? "Illustration of a Dallas, Texas cemetery with the downtown Dallas skyline behind it"
                     : "Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
                 }
                 title={`Cemetery plots for sale in ${data.city}, Texas`}
