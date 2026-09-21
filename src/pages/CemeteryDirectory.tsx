@@ -613,25 +613,24 @@ const CemeteryDirectory = () => {
 
       {/* HERO — warm wash that feathers into the page */}
       <section className="relative z-30 overflow-visible">
-        <div className="relative z-10 container mx-auto px-6 pt-28 pb-12 md:pt-32 md:pb-16">
+        <div className="relative z-10 container mx-auto px-6 pt-24 pb-6 md:pt-28 md:pb-8">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-5">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-4">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
               <span className="text-[11px] tracking-[0.16em] uppercase font-bold text-primary">
                 Texas&rsquo; licensed plot marketplace
               </span>
             </span>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[66px] text-foreground leading-[1.04] tracking-tight">
-              Cemetery plots,
-              <br />
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[54px] text-foreground leading-[1.06] tracking-tight">
+              Cemetery plots,{" "}
               <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
-            <p className="mt-5 text-foreground/70 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-4 text-foreground/70 text-[15px] md:text-base max-w-2xl mx-auto leading-relaxed">
               {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
               cemetery paperwork, transfer and title end to end.
             </p>
 
-            <div className="mt-9">
+            <div className="mt-7">
               <HeroSearch
                 region={region}
                 setRegion={setRegion}
@@ -642,7 +641,7 @@ const CemeteryDirectory = () => {
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
               <span className="inline-flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {total}+ cemeteries served
@@ -656,17 +655,13 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* AREA PHOTOS — an editorial browse-by-region gallery */}
-      <section className="relative z-20 container mx-auto px-6 pt-4 pb-10 md:pt-6 md:pb-14">
-        <div className="flex items-end justify-between gap-6 mb-6 md:mb-8 rounded-2xl bg-background/75 backdrop-blur-sm border border-border/70 px-5 py-4 md:px-6 md:py-5 shadow-sm">
-          <div>
-            <div className="flex items-center gap-2 text-primary mb-2">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Explore Texas</span>
-            </div>
-            <h2 className="font-display font-semibold text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
-            <p className="mt-1.5 text-[15px] text-foreground/65">Pick a part of Texas to see its cemeteries below.</p>
-          </div>
+      {/* METRO AREAS — photo cards straight under the search */}
+      <section className="relative z-20 container mx-auto px-6 pt-2 pb-10 md:pt-3 md:pb-14">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 mb-4 md:mb-5">
+          <p className="text-[15px] text-foreground/70">
+            <span className="font-semibold text-foreground">Choose a metro area</span> — each one opens its cemeteries and
+            coverage map below.
+          </p>
           <button
             onClick={() => {
               setRegion("All");
@@ -678,6 +673,7 @@ const CemeteryDirectory = () => {
             View all {total} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
+
 
         <div className="grid grid-cols-2 lg:grid-cols-12 gap-3 md:gap-5">
           {AREA_FEATURES.map((a, index) => (
