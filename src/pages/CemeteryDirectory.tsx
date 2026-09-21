@@ -649,7 +649,7 @@ const CemeteryDirectory = () => {
               Cemetery plots,{" "}
               <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
-            <p className="mt-4 text-foreground/70 text-[15px] md:text-base max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-3 md:mt-4 text-foreground/70 text-[15px] md:text-base max-w-2xl mx-auto leading-relaxed">
               {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
               cemetery paperwork, transfer and title end to end.
             </p>
