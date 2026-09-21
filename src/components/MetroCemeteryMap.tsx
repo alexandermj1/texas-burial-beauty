@@ -105,7 +105,7 @@ const markerIcon = (color: string, active = false) => {
  * Interactive Google map of the cemeteries we broker in a metro, paired with a
  * synced, crawlable index of colour-coded cemetery cards.
  */
-const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true }: Props) => {
+const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed = true, hideTitle = false, compact = false, metroTabs = true, widget = false }: Props) => {
   const [metroIdx, setMetroIdx] = useState(() => metroIndexForRegions(regions));
   const activeMetro = METRO_OPTIONS[metroIdx];
   const effRegions = metroTabs ? activeMetro.regions : regions;
