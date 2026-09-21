@@ -572,21 +572,21 @@ const CemeteryDirectory = () => {
               alt=""
               width={1024}
               height={1408}
-              className="absolute -left-24 top-8 h-[610px] w-auto max-w-[42vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
+              className="absolute -left-24 top-24 h-[600px] w-auto max-w-[44vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
             />
             <img
               src={heroBotanicalRight}
               alt=""
               width={1024}
               height={1408}
-              className="absolute -right-24 top-5 h-[620px] w-auto max-w-[42vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
+              className="absolute -right-24 top-20 h-[610px] w-auto max-w-[44vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
             />
           </div>
 
           {/* On phones, keep the frame above and beside the title so the search stays clear. */}
           <div className="absolute inset-x-0 top-16 h-[320px] md:hidden" aria-hidden>
-            <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-0 h-64 w-auto opacity-70 select-none" />
-            <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-0 h-64 w-auto opacity-70 select-none" />
+            <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-8 h-64 w-auto opacity-70 select-none" />
+            <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-8 h-64 w-auto opacity-70 select-none" />
           </div>
         </div>
 
