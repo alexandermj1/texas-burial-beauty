@@ -577,7 +577,7 @@ const CemeteryDirectory = () => {
       <section className="relative z-30 overflow-visible">
         <div
           aria-hidden
-          className="absolute inset-x-0 -top-24 -bottom-44 -z-10 overflow-hidden pointer-events-none"
+          className="absolute inset-x-0 -top-24 -bottom-[420px] -z-10 overflow-hidden pointer-events-none"
           style={{
           WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
           maskImage: "linear-gradient(to bottom, black 0%, black 92%, transparent 100%)",
