@@ -654,7 +654,7 @@ const CemeteryDirectory = () => {
               cemetery paperwork, transfer and title end to end.
             </p>
 
-            <div className="mt-6 md:mt-7">
+            <div className="mt-6 md:mt-6">
               <HeroSearch
                 region={region}
                 setRegion={setRegion}
@@ -665,7 +665,7 @@ const CemeteryDirectory = () => {
               />
             </div>
 
-            <div className="hidden md:flex mt-5 flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
+            <div className="hidden md:flex mt-4 flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13.5px] font-medium text-foreground/70">
               <span className="inline-flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {total}+ cemeteries served
