@@ -506,7 +506,6 @@ const CemeteryDirectory = () => {
 
                 <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
 
-                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
 
 
                 {/* Cemetery */}
