@@ -622,9 +622,9 @@ const CemeteryDirectory = () => {
           />
         </div>
         {/* On phones, let the frame wrap the title and search bar too. */}
-        <div className="absolute inset-x-0 top-16 h-[360px] md:hidden">
-          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-24 top-0 h-64 w-auto opacity-65 select-none" />
-          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-24 top-0 h-64 w-auto opacity-65 select-none" />
+        <div className="absolute inset-x-0 top-16 h-[440px] md:hidden">
+          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-28 top-4 h-80 w-auto opacity-60 select-none" />
+          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-28 top-4 h-80 w-auto opacity-60 select-none" />
         </div>
       </div>
       <Seo
