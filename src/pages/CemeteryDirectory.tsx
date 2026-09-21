@@ -510,6 +510,12 @@ const CemeteryDirectory = () => {
 
   const total = bayCemeteries.length;
 
+  // The coverage map follows whichever metro area is selected.
+  const mapRegions = useMemo(
+    () => (region === "All" ? ALL_TEXAS_REGIONS : [region]),
+    [region]
+  );
+
   const countByRegion = useMemo(() => {
     const m: Record<string, number> = {};
     bayCemeteries.forEach((c) => {
