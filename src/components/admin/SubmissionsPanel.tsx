@@ -3423,10 +3423,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {(() => {
-          // Same set the stage buckets count, so Total === sum of the stages.
-          const total = pipelineUniverse.length;
+          // The pipeline counts sellers only, so the Total/Today chips match.
+          const sellerU = pipelineUniverse.filter(s => resolveKind(s.customer_kind, s.source) === "seller");
+          const total = sellerU.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
-          const today = pipelineUniverse.filter(s => {
+          const today = sellerU.filter(s => {
             const d = (s as any).created_at ? new Date((s as any).created_at) : null;
             return d && d >= startOfToday;
           }).length;
