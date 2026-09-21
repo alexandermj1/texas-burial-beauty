@@ -99,13 +99,24 @@ Deno.serve(async (req) => {
         paid_at: nowIso,
       }).eq("id", transactionId);
 
-      // Record the customer's free listing choice. Quote acceptance is handled
-      // only from an explicit email reply or a deliberate staff pipeline move.
-      await supabase.from("contact_submissions").update({
+      // Record the customer's free listing choice. Choosing a listing tier is
+      // also an acceptance of the quoted price.
+      const starterPatch: Record<string, unknown> = {
         listing_tier: "starter",
+        listing_option: "starter",
         listing_paid_at: nowIso,
         payment_received_at: nowIso,
-      } as any).eq("id", tx.submission_id);
+      };
+      if ((submission as any)?.quote_response !== "accepted") {
+        const perSpace = Number((submission as any)?.quote_amount ?? 0) || 0;
+        const plots = Math.max(1, Number((submission as any)?.plot_count ?? 1) || 1);
+        starterPatch.quote_response = "accepted";
+        starterPatch.quote_responded_at = nowIso;
+        starterPatch.acceptance_channel = "listing_selection";
+        starterPatch.accepted_quote_amount =
+          (submission as any)?.accepted_quote_amount ?? (perSpace > 0 ? perSpace * plots : null);
+      }
+      await supabase.from("contact_submissions").update(starterPatch as any).eq("id", tx.submission_id);
 
       // Confirmation email to the seller.
       const firstName = (tx.recipient_name || submission?.name || "").split(" ")[0] || "there";
