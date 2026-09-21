@@ -11,8 +11,50 @@ import Seo from "@/components/Seo";
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
-import heroBg from "@/assets/hero/cemetery-mural.jpg";
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
+import imgCathedral from "@/assets/hero/cemetery-cathedral.jpg";
+import imgMountains from "@/assets/hero/cemetery-mountains.jpg";
+import imgPalms from "@/assets/hero/cemetery-palms.jpg";
+
+// Real Texas cemetery photography (uploaded park photos, CDN-hosted)
+import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
+import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
+import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
+import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
+import resthavenStatue from "@/assets/resthaven/resthaven-statue-lawn.jpg.asset.json";
+import resthavenWalkway from "@/assets/resthaven/resthaven-walkway.jpg.asset.json";
+import resthavenPavilion from "@/assets/resthaven/resthaven-pavilion-walk.jpg.asset.json";
+import resthavenBench from "@/assets/resthaven/resthaven-oak-bench.jpg.asset.json";
+import resthavenFlags from "@/assets/resthaven/resthaven-veteran-flags.jpg.asset.json";
+import grounds1 from "@/assets/cemeteries/cemetery-grounds-1.jpg.asset.json";
+import grounds2 from "@/assets/cemeteries/cemetery-grounds-2.jpg.asset.json";
+import grounds3 from "@/assets/cemeteries/cemetery-grounds-3.jpg.asset.json";
+
+const PHOTO_POOL: string[] = [
+  restlandHero.url,
+  resthavenAvenue.url,
+  grounds1.url,
+  resthavenOakPath.url,
+  imgHillside,
+  grounds2.url,
+  resthavenStatue.url,
+  restlandLawn.url,
+  imgCathedral,
+  resthavenWalkway.url,
+  grounds3.url,
+  resthavenPavilion.url,
+  imgMountains,
+  resthavenBench.url,
+  imgPalms,
+  resthavenFlags.url,
+];
+
+const photoFor = (name: string, hash: number) => {
+  const n = name.toLowerCase();
+  if (n.includes("restland")) return restlandHero.url;
+  if (n.includes("rest haven") || n.includes("resthaven")) return resthavenAvenue.url;
+  return PHOTO_POOL[hash % PHOTO_POOL.length];
+};
 
 // Botanical leaf accents (scattered decoratively across the page background)
 const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
@@ -173,63 +215,49 @@ const RegionRow = ({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.25) }}
-                className="group relative flex flex-col bg-card rounded-3xl overflow-hidden border-2 border-primary/80 shadow-[0_8px_24px_-12px_hsl(var(--foreground)/0.14)] hover:shadow-[0_20px_40px_-16px_hsl(var(--primary)/0.28)] hover:border-primary hover:-translate-y-1 transition-all duration-500 shrink-0 snap-start w-[280px] sm:w-[320px] md:w-[340px]"
+                className="group relative flex flex-col bg-card rounded-[26px] overflow-hidden border border-border/70 shadow-[0_10px_30px_-18px_hsl(var(--foreground)/0.35)] hover:shadow-[0_26px_50px_-20px_hsl(var(--primary)/0.35)] hover:-translate-y-1.5 transition-all duration-500 shrink-0 snap-start w-[288px] sm:w-[330px] md:w-[352px]"
               >
-                <Link
-                  to={`/cemeteries/${slug}`}
-                  className="relative block px-7 pt-7 pb-6 overflow-hidden"
-                >
-                  {/* Oversized italic reference number watermark */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-3 right-4 font-display italic text-[88px] leading-none text-primary/[0.06] select-none pointer-events-none tabular-nums tracking-tight"
-                  >
-                    {refNum}
-                  </span>
-                  <div className="relative">
-                    {/* Header meta: region + mono № + active pill */}
-                    <div className="flex items-start justify-between mb-9">
-                      <div className="space-y-1">
-                        <p className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground/80 font-semibold">
-                          {c.region}
-                        </p>
-                        <p className="font-mono text-[11px] text-primary/70 tabular-nums">
-                          №&nbsp;{refNum}
-                        </p>
-                      </div>
-                      <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-background border border-border/60">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-40" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                        </span>
-                        <span className="text-[10px] font-bold tracking-[0.14em] uppercase text-muted-foreground">
-                          Active
-                        </span>
+                <Link to={`/cemeteries/${slug}`} className="block">
+                  {/* Photo — Airbnb-style image-first card */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img
+                      src={photoFor(c.name, h)}
+                      alt={`${c.name}, ${c.city}, Texas`}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/5 to-transparent" />
+                    <span className="absolute top-3.5 left-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/92 backdrop-blur-md text-[11px] font-semibold tracking-tight text-foreground shadow-sm">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-50" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent" />
                       </span>
-                    </div>
-
-                    {/* Name + city */}
-                    <div className="mb-8">
-                      <h3 className="font-display text-[22px] leading-[1.12] text-foreground tracking-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      Plots available
+                    </span>
+                    <span className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-foreground/45 backdrop-blur-md text-[10px] font-semibold tracking-[0.12em] uppercase text-background">
+                      №&nbsp;{refNum}
+                    </span>
+                    <div className="absolute bottom-3.5 left-4 right-4">
+                      <h3 className="font-display text-[21px] leading-[1.14] text-background tracking-tight line-clamp-2 drop-shadow-[0_2px_10px_hsl(var(--foreground)/0.6)]">
                         {c.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                        <span className="font-medium tracking-tight">{c.city}, TX</span>
-                      </p>
                     </div>
                   </div>
                 </Link>
 
-                <div className="px-7 pb-6 flex-1 flex flex-col">
-                  <p className="text-[10px] tracking-[0.18em] uppercase text-muted-foreground/70 font-bold mb-3">
-                    Inventory Available
+                <div className="px-5 pt-4 pb-4 flex-1 flex flex-col">
+                  <p className="text-[13px] text-muted-foreground flex items-center gap-1.5 mb-3">
+                    <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/75" />
+                    <span className="font-medium tracking-tight text-foreground/80">{c.city}, TX</span>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span>{c.region}</span>
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {offerings.map((o) => (
                       <span
                         key={o}
-                        className="text-[11px] px-3 py-1.5 rounded-lg bg-primary/5 text-primary ring-1 ring-primary/10 font-semibold"
+                        className="text-[11.5px] px-2.5 py-1 rounded-full bg-primary/6 text-primary ring-1 ring-primary/12 font-semibold"
                       >
                         {o}
                       </span>
@@ -240,13 +268,13 @@ const RegionRow = ({
                 <div className="grid grid-cols-2 border-t border-border/60 divide-x divide-border/60">
                   <Link
                     to={`/buy?cemetery=${encodeURIComponent(c.name)}`}
-                    className="group/btn flex items-center justify-center gap-1.5 py-4 text-sm font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
+                    className="group/btn flex items-center justify-center gap-1.5 py-3.5 text-[13.5px] font-semibold text-foreground hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
                   >
                     Buy <span className="font-normal opacity-60 group-hover/btn:opacity-100">here</span>
                   </Link>
                   <Link
                     to={`/sell?cemetery=${encodeURIComponent(c.name)}`}
-                    className="group/btn flex items-center justify-center gap-1.5 py-4 text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
+                    className="group/btn flex items-center justify-center gap-1.5 py-3.5 text-[13.5px] font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300"
                   >
                     Sell <span className="font-normal opacity-60 group-hover/btn:opacity-100">mine</span>
                   </Link>
@@ -263,10 +291,16 @@ const RegionRow = ({
 const CemeteryDirectory = () => {
   const [region, setRegion] = useState("All");
   const [query, setQuery] = useState("");
+  const [plotType, setPlotType] = useState("Any type");
 
   const grouped = useMemo(() => {
     const filtered = bayCemeteries.filter((c) => {
       if (region !== "All" && c.region !== region) return false;
+      if (plotType !== "Any type") {
+        let hh = 0;
+        for (let k = 0; k < c.name.length; k++) hh = (hh * 31 + c.name.charCodeAt(k)) >>> 0;
+        if (!OFFERING_SETS[hh % OFFERING_SETS.length].includes(plotType)) return false;
+      }
       if (query.trim()) {
         const q = query.toLowerCase();
         return (
@@ -284,7 +318,7 @@ const CemeteryDirectory = () => {
       map.set(c.region, arr);
     });
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [region, query]);
+  }, [region, query, plotType]);
 
   // Chip order — stable, matches alphabetical section order on the page so
   // the chips never reshuffle while scrolling or filtering.
@@ -396,19 +430,19 @@ const CemeteryDirectory = () => {
       />
       <Navbar />
 
-      {/* HERO — centered, minimal, integrated with directory */}
-      <section className="relative pt-32 pb-4 md:pt-40 md:pb-6 overflow-hidden">
-        <motion.img
-          src={heroBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover object-[56%_30%]"
-          initial={{ scale: 1.04 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.6, ease: "easeOut" }}
+      {/* HERO — warm gradient wash with an Airbnb-style segmented search */}
+      <section className="relative pt-28 pb-10 md:pt-36 md:pb-14 overflow-hidden">
+        {/* Soft brand gradient field */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(120% 90% at 12% 0%, hsl(var(--secondary)) 0%, transparent 55%), radial-gradient(110% 85% at 88% 8%, hsl(var(--accent) / 0.55) 0%, transparent 58%), radial-gradient(100% 80% at 50% 100%, hsl(var(--primary) / 0.22) 0%, transparent 62%), linear-gradient(180deg, hsl(var(--secondary) / 0.85) 0%, hsl(var(--background)) 100%)",
+          }}
         />
-        {/* Strong readability scrim, soft fade into the page */}
-        <div className="absolute inset-0 bg-foreground/55" />
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/20 to-background" />
+        <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-accent/25 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -top-10 -right-24 w-[460px] h-[460px] rounded-full bg-primary/15 blur-3xl" />
 
         <div className="relative container mx-auto px-6">
           <motion.div
@@ -417,59 +451,116 @@ const CemeteryDirectory = () => {
             transition={{ duration: 0.7 }}
             className="max-w-4xl mx-auto text-center"
           >
-            <p className="text-[11px] tracking-[0.32em] uppercase text-background/85 font-medium mb-6">
-              The Texas Directory · {total}+ cemeteries
-            </p>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-background leading-[1.05] tracking-tight mb-6">
-              Every cemetery in Texas.
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/60 shadow-sm mb-7">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-primary">
+                Texas&rsquo; licensed plot marketplace
+              </span>
+            </span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[68px] text-foreground leading-[1.04] tracking-tight mb-6">
+              Cemetery plots,
               <br />
-              <em className="italic font-light text-background/85">One trusted broker.</em>
+              <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
-            <p className="text-background text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed font-light">
-              Browse the cemeteries we serve, find available plots, or list the one you already own — handled end-to-end.
+            <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto mb-9 leading-relaxed">
+              {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail.
+              We handle the cemetery paperwork, transfer and title end to end.
             </p>
 
-            {/* Big centered search bar */}
+            {/* Airbnb-style segmented search */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="max-w-2xl mx-auto"
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="max-w-3xl mx-auto"
             >
-              <div className="flex items-center bg-background rounded-full border border-background/20 shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.55)] focus-within:shadow-[0_24px_60px_-20px_hsl(var(--primary)/0.45)] transition-shadow duration-300">
-                <Search className="w-[18px] h-[18px] text-muted-foreground ml-6 shrink-0" strokeWidth={2} />
-                <input
-                  type="text"
-                  placeholder="Search cemeteries, cities, or regions"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 min-w-0 bg-transparent px-4 py-3.5 md:py-4 text-foreground placeholder:text-muted-foreground/55 focus:outline-none text-base md:text-[15px] tracking-tight"
-                />
-                {query ? (
-                  <button
-                    onClick={() => setQuery("")}
-                    className="mr-1.5 w-9 h-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-                    aria-label="Clear search"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <Link
-                    to="/buy"
-                    className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-[13px] font-medium hover:bg-accent/90 transition-colors"
-                  >
-                    Find a plot <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                )}
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0 bg-background rounded-[28px] md:rounded-full border border-border/70 p-2 shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.45)] focus-within:shadow-[0_28px_70px_-26px_hsl(var(--primary)/0.4)] transition-shadow duration-300">
+                {/* Where */}
+                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
+                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Where</span>
+                    <select
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
+                    >
+                      {chipOrder.map((r) => (
+                        <option key={r} value={r}>{r === "All" ? "All of Texas" : r}</option>
+                      ))}
+                    </select>
+                  </span>
+                </label>
+
+                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
+
+                {/* Plot type */}
+                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
+                  <span className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Plot type</span>
+                    <select
+                      value={plotType}
+                      onChange={(e) => setPlotType(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
+                    >
+                      {["Any type", "Plots", "Niches", "Mausoleums", "Companion", "Cremation", "Lawn Crypts", "Family Estates", "Veteran"].map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </span>
+                </label>
+
+                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
+
+                {/* Cemetery */}
+                <label className="group flex-[1.2] flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors text-left">
+                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Search className="w-4 h-4 text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Cemetery</span>
+                    <input
+                      type="text"
+                      placeholder="Any cemetery"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-semibold text-foreground placeholder:font-semibold placeholder:text-muted-foreground/70 tracking-tight focus:outline-none"
+                    />
+                  </span>
+                  {query && (
+                    <button
+                      onClick={() => setQuery("")}
+                      aria-label="Clear search"
+                      className="w-7 h-7 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </label>
+
+                <Link
+                  to="/buy"
+                  className="shrink-0 inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] hover:opacity-90 transition-opacity"
+                >
+                  <Search className="w-4 h-4" strokeWidth={2.4} /> Search
+                </Link>
               </div>
 
-              {/* Apple-style ultra-minimal supporting line — no pill */}
-              <p className="mt-5 text-[12px] text-background/75 font-light tracking-wide">
-                Partnered with Bayer Cemetery Brokers (CA licensed) · 30–60% below retail ·{" "}
-                <a href="tel:+12142304740" className="text-background hover:text-primary transition-colors underline-offset-4 hover:underline">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13px] text-muted-foreground">
+                <span className="inline-flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  {total}+ cemeteries served
+                </span>
+                <span>30–60% below retail</span>
+                <a href="tel:+12142304740" className="text-foreground font-semibold hover:text-primary transition-colors">
                   (214) 230-4740
                 </a>
-              </p>
+              </div>
             </motion.div>
           </motion.div>
         </div>
