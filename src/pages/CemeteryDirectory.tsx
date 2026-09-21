@@ -319,7 +319,7 @@ const CemeteryDirectory = () => {
       map.set(c.region, arr);
     });
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [region, query]);
+  }, [region, query, plotType]);
 
   // Chip order — stable, matches alphabetical section order on the page so
   // the chips never reshuffle while scrolling or filtering.
@@ -431,19 +431,19 @@ const CemeteryDirectory = () => {
       />
       <Navbar />
 
-      {/* HERO — centered, minimal, integrated with directory */}
-      <section className="relative pt-32 pb-4 md:pt-40 md:pb-6 overflow-hidden">
-        <motion.img
-          src={heroBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover object-[56%_30%]"
-          initial={{ scale: 1.04 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.6, ease: "easeOut" }}
+      {/* HERO — warm gradient wash with an Airbnb-style segmented search */}
+      <section className="relative pt-28 pb-10 md:pt-36 md:pb-14 overflow-hidden">
+        {/* Soft brand gradient field */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(120% 90% at 12% 0%, hsl(var(--secondary)) 0%, transparent 55%), radial-gradient(110% 85% at 88% 8%, hsl(var(--accent) / 0.55) 0%, transparent 58%), radial-gradient(100% 80% at 50% 100%, hsl(var(--primary) / 0.22) 0%, transparent 62%), linear-gradient(180deg, hsl(var(--secondary) / 0.85) 0%, hsl(var(--background)) 100%)",
+          }}
         />
-        {/* Strong readability scrim, soft fade into the page */}
-        <div className="absolute inset-0 bg-foreground/55" />
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/20 to-background" />
+        <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-accent/25 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -top-10 -right-24 w-[460px] h-[460px] rounded-full bg-primary/15 blur-3xl" />
 
         <div className="relative container mx-auto px-6">
           <motion.div
@@ -452,59 +452,116 @@ const CemeteryDirectory = () => {
             transition={{ duration: 0.7 }}
             className="max-w-4xl mx-auto text-center"
           >
-            <p className="text-[11px] tracking-[0.32em] uppercase text-background/85 font-medium mb-6">
-              The Texas Directory · {total}+ cemeteries
-            </p>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-background leading-[1.05] tracking-tight mb-6">
-              Every cemetery in Texas.
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/60 shadow-sm mb-7">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-primary">
+                Texas&rsquo; licensed plot marketplace
+              </span>
+            </span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[68px] text-foreground leading-[1.04] tracking-tight mb-6">
+              Cemetery plots,
               <br />
-              <em className="italic font-light text-background/85">One trusted broker.</em>
+              <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
-            <p className="text-background text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed font-light">
-              Browse the cemeteries we serve, find available plots, or list the one you already own — handled end-to-end.
+            <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto mb-9 leading-relaxed">
+              {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail.
+              We handle the cemetery paperwork, transfer and title end to end.
             </p>
 
-            {/* Big centered search bar */}
+            {/* Airbnb-style segmented search */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="max-w-2xl mx-auto"
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="max-w-3xl mx-auto"
             >
-              <div className="flex items-center bg-background rounded-full border border-background/20 shadow-[0_20px_50px_-20px_hsl(var(--foreground)/0.55)] focus-within:shadow-[0_24px_60px_-20px_hsl(var(--primary)/0.45)] transition-shadow duration-300">
-                <Search className="w-[18px] h-[18px] text-muted-foreground ml-6 shrink-0" strokeWidth={2} />
-                <input
-                  type="text"
-                  placeholder="Search cemeteries, cities, or regions"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="flex-1 min-w-0 bg-transparent px-4 py-3.5 md:py-4 text-foreground placeholder:text-muted-foreground/55 focus:outline-none text-base md:text-[15px] tracking-tight"
-                />
-                {query ? (
-                  <button
-                    onClick={() => setQuery("")}
-                    className="mr-1.5 w-9 h-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
-                    aria-label="Clear search"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <Link
-                    to="/buy"
-                    className="hidden sm:inline-flex mr-1.5 items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-accent-foreground text-[13px] font-medium hover:bg-accent/90 transition-colors"
-                  >
-                    Find a plot <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                )}
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0 bg-background rounded-[28px] md:rounded-full border border-border/70 p-2 shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.45)] focus-within:shadow-[0_28px_70px_-26px_hsl(var(--primary)/0.4)] transition-shadow duration-300">
+                {/* Where */}
+                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
+                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Where</span>
+                    <select
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
+                    >
+                      {chipOrder.map((r) => (
+                        <option key={r} value={r}>{r === "All" ? "All of Texas" : r}</option>
+                      ))}
+                    </select>
+                  </span>
+                </label>
+
+                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
+
+                {/* Plot type */}
+                <label className="group flex-1 flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer text-left">
+                  <span className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Plot type</span>
+                    <select
+                      value={plotType}
+                      onChange={(e) => setPlotType(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-semibold text-foreground tracking-tight focus:outline-none cursor-pointer -ml-0.5"
+                    >
+                      {["Any type", "Plots", "Niches", "Mausoleums", "Companion", "Cremation", "Lawn Crypts", "Family Estates", "Veteran"].map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </span>
+                </label>
+
+                <span aria-hidden className="hidden md:block w-px h-9 bg-border/70" />
+
+                {/* Cemetery */}
+                <label className="group flex-[1.2] flex items-center gap-3 px-4 py-2.5 rounded-full hover:bg-muted/50 transition-colors text-left">
+                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Search className="w-4 h-4 text-primary" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] tracking-[0.16em] uppercase font-bold text-muted-foreground">Cemetery</span>
+                    <input
+                      type="text"
+                      placeholder="Any cemetery"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="w-full bg-transparent text-[15px] font-semibold text-foreground placeholder:font-semibold placeholder:text-muted-foreground/70 tracking-tight focus:outline-none"
+                    />
+                  </span>
+                  {query && (
+                    <button
+                      onClick={() => setQuery("")}
+                      aria-label="Clear search"
+                      className="w-7 h-7 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </label>
+
+                <Link
+                  to="/buy"
+                  className="shrink-0 inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold text-[15px] hover:opacity-90 transition-opacity"
+                >
+                  <Search className="w-4 h-4" strokeWidth={2.4} /> Search
+                </Link>
               </div>
 
-              {/* Apple-style ultra-minimal supporting line — no pill */}
-              <p className="mt-5 text-[12px] text-background/75 font-light tracking-wide">
-                Partnered with Bayer Cemetery Brokers (CA licensed) · 30–60% below retail ·{" "}
-                <a href="tel:+12142304740" className="text-background hover:text-primary transition-colors underline-offset-4 hover:underline">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[13px] text-muted-foreground">
+                <span className="inline-flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  {total}+ cemeteries served
+                </span>
+                <span>30–60% below retail</span>
+                <a href="tel:+12142304740" className="text-foreground font-semibold hover:text-primary transition-colors">
                   (214) 230-4740
                 </a>
-              </p>
+              </div>
             </motion.div>
           </motion.div>
         </div>
