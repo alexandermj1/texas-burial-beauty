@@ -36,9 +36,11 @@ import restlandLawn from "@/assets/restland/restland-lawn-monuments.jpg.asset.js
 import resthavenAvenue from "@/assets/resthaven/resthaven-avenue.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
 // Photography from the individual cemetery pages, used for the featured cards
-import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
-import { BLUEBONNET_HERO } from "@/data/bluebonnetPhotos";
-import { RESTLAND_HERO } from "@/data/restlandDossierPhotos";
+// Local copies of the cemeteries' own photography (the .asset.json CDN
+// pointers don't resolve in every environment, so these are bundled).
+import sparkmanHero from "@/assets/featured/sparkman-fountain-garden.jpg";
+import bluebonnetHero from "@/assets/featured/bluebonnet-hero-lake.jpg";
+import restlandFeatured from "@/assets/featured/restland-hero-lawn.jpg";
 import { RESTHAVEN_HERO } from "@/data/resthavenPhotos";
 import { LAUREL_LAND_HERO } from "@/data/laurelLandPhotos";
 import park04 from "@/assets/parks/local/park-04.jpg";
@@ -109,7 +111,6 @@ const FEATURED_BY_REGION: Record<string, string[]> = {
     "Sparkman-Hillcrest Memorial Park",
     "Restland Memorial Park",
     "Bluebonnet Hills Memorial Park",
-    "Laurel Land Memorial Park Fort Worth",
   ],
   "Greater Houston": ["Memorial Oaks Cemetery", "Forest Park Lawndale", "Glenwood Cemetery"],
   Austin: ["Austin Memorial Park", "Cook-Walden Capital Parks Funeral Home & Cemetery", "Forest Oaks Memorial Park"],
@@ -123,9 +124,9 @@ const FEATURED_BY_REGION: Record<string, string[]> = {
 
 // Original photography we hold for specific cemeteries (same shots as their own pages)
 const CEMETERY_PHOTOS: Record<string, string> = {
-  "Sparkman-Hillcrest Memorial Park": SPARKMAN_HERO.src,
-  "Restland Memorial Park": RESTLAND_HERO.src,
-  "Bluebonnet Hills Memorial Park": BLUEBONNET_HERO.src,
+  "Sparkman-Hillcrest Memorial Park": sparkmanHero,
+  "Restland Memorial Park": restlandFeatured,
+  "Bluebonnet Hills Memorial Park": bluebonnetHero,
   "Rest Haven Memorial Park": RESTHAVEN_HERO.src,
   "Laurel Land Memorial Park Fort Worth": LAUREL_LAND_HERO.src,
 };
@@ -513,9 +514,9 @@ const FeaturedCemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
           alt={`${c.name}, ${c.city}, Texas`}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+          className="absolute inset-0 w-full h-full object-cover brightness-[1.14] saturate-[1.06] group-hover:scale-[1.04] transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/18 via-transparent to-transparent" />
 
         <div className="absolute left-4 right-4 bottom-4 sm:left-5 sm:right-5 sm:bottom-5 rounded-xl bg-background/95 backdrop-blur-sm px-5 py-4 shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.5)]">
           <p className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em] text-accent font-semibold mb-2">
