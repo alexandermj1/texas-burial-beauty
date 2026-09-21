@@ -642,18 +642,18 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
 
                       <div className="relative px-4 py-4 pl-5">
                         <div className="flex items-start gap-3">
-                          <Headstone color={t.pin} className="w-7 h-9 shrink-0 mt-0.5" />
+                          <Headstone color={t.pin} className="w-8 h-10 shrink-0 mt-0.5" />
 
                           <div className="min-w-0 flex-1">
                             <Link
                               to={cemeteryPath(c.name)}
                               onClick={(e) => e.stopPropagation()}
-                              className="block font-display text-[17px] leading-snug text-foreground hover:text-primary transition-colors"
+                              className="block font-display text-lg sm:text-[19px] font-semibold leading-snug text-foreground hover:text-primary transition-colors"
                             >
                               {c.name}
                             </Link>
-                            <p className="text-xs text-foreground/55 mt-1 flex items-center gap-1.5">
-                              <MapPin className="w-3 h-3 shrink-0" />
+                            <p className="text-[13px] text-foreground/60 mt-1.5 flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
                               {c.city}, Texas
                               {miles != null && (
                                 <>
@@ -673,43 +673,42 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                        <div className="flex flex-wrap items-center gap-2 mt-3">
                           <span
-                            className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full"
                             style={{ color: t.pin, background: `${t.pin}14`, border: `1px solid ${t.pin}40` }}
                           >
                             {t.label}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-primary/25 bg-primary/8 text-primary">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-primary/25 bg-primary/8 text-primary">
                             <CalendarClock className="w-3 h-3" />
                             {showingLabel(c.region)}
                           </span>
                           {m.transferFee != null && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-border bg-muted/60 text-foreground/70">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-border bg-muted/60 text-foreground/70">
                               <Receipt className="w-3 h-3" />
                               {money(m.transferFee)} transfer
                             </span>
                           )}
                         </div>
 
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-4 mt-3.5 pt-3 border-t border-border/50 text-[11px] font-semibold">
+                        {/* Actions — clean pill buttons with room to breathe */}
+                        <div className="flex items-center gap-2.5 mt-4">
                           <Link
                             to={cemeteryPath(c.name)}
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 text-primary hover:opacity-75 transition-opacity"
+                            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                           >
-                            View profile <ArrowUpRight className="w-3 h-3" />
+                            View profile <ArrowUpRight className="w-3.5 h-3.5" />
                           </Link>
                           <a
                             href={directionsUrl(c, here)}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 text-accent hover:opacity-75 transition-opacity"
+                            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold border border-border bg-card text-foreground/80 hover:border-primary/40 hover:text-primary transition-colors"
                           >
-                            <Navigation className="w-3 h-3" /> Directions
+                            <Navigation className="w-3.5 h-3.5" /> Directions
                           </a>
                           {m.website && (
                             <a
@@ -718,9 +717,9 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                               rel="noopener noreferrer nofollow"
                               onClick={(e) => e.stopPropagation()}
                               title={hostOf(m.website)}
-                              className="inline-flex items-center gap-1 text-foreground/55 hover:text-foreground transition-colors ml-auto"
+                              className="ml-auto inline-flex items-center justify-center w-8 h-8 rounded-full border border-border/70 bg-background text-foreground/55 hover:text-foreground hover:border-primary/40 transition-colors"
                             >
-                              <Globe className="w-3 h-3" /> Official site
+                              <Globe className="w-3.5 h-3.5" />
                             </a>
                           )}
                         </div>
