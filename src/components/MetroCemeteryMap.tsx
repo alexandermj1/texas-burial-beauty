@@ -439,7 +439,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
 
         {/* Region switcher */}
         {showTabs && (
-          <div className="mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className={`mb-3 -mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-2 overflow-x-auto no-scrollbar ${widget ? "sm:justify-center" : ""}`}>
             {METRO_OPTIONS.map((m, i) => (
               <button
                 key={m.label}
@@ -447,6 +447,7 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
                 onClick={() => {
                   setMetroIdx(i);
                   setActive(null);
+                  onMetroChange?.(m.regions);
                 }}
                 aria-pressed={i === metroIdx}
                 className={`${chip(i === metroIdx)} shrink-0`}
