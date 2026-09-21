@@ -449,7 +449,7 @@ const CemeteryDirectory = () => {
         path="/cemeteries"
         jsonLd={jsonLd}
       />
-      <Navbar />
+      <Navbar forceScrolled />
 
       {/* HERO — sits on the shared page wash, Airbnb-style segmented search */}
       <section className="relative z-10 pt-28 pb-10 md:pt-36 md:pb-14">
