@@ -23,6 +23,12 @@ import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
 
 import imgHillside from "@/assets/hero/cemetery-hillside.jpg";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import hibiscusRed from "@/assets/flowers/hibiscus-red.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 
 // Memorial park photography (CDN-hosted)
 import restlandHero from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
@@ -562,21 +568,36 @@ const CemeteryDirectory = () => {
           <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/35 blur-3xl" />
           <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
           <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
-          {LEAVES.length > 0 && (
-            <>
-              <div className="absolute top-28 -left-10 hidden md:block w-96 h-96">
-                <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute top-8 left-2 w-64 opacity-75 -rotate-[18deg] select-none" />
-                <img src={LEAVES[21 % LEAVES.length]} alt="" className="absolute top-32 left-44 w-44 opacity-65 rotate-[34deg] select-none" />
-              </div>
-              <div className="absolute top-20 -right-10 hidden md:block w-[28rem] h-[28rem]">
-                <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute top-0 right-0 w-80 opacity-65 rotate-[10deg] select-none" />
-                <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute top-44 right-56 w-48 opacity-60 -rotate-[14deg] select-none" />
-              </div>
-            </>
-          )}
+          {/* A composed botanical frame: foliage creates the outer sweep while
+              flowers step inward around the headline instead of floating alone. */}
+          <div className="absolute inset-0 hidden md:block" aria-hidden>
+            <div className="absolute left-0 top-20 h-[590px] w-[35%] max-w-[510px]">
+              <img src={palmFan.url} alt="" className="absolute -left-20 top-0 w-[310px] -rotate-[18deg] opacity-80 select-none" />
+              <img src={bananaLeaf.url} alt="" className="absolute -left-14 top-52 w-[280px] rotate-[16deg] opacity-75 select-none" />
+              <img src={pinkBranch.url} alt="" className="absolute left-20 top-8 w-[230px] rotate-[20deg] opacity-90 select-none" />
+              <img src={hibiscusCoral.url} alt="" className="absolute left-20 top-56 w-[190px] -rotate-[12deg] opacity-95 select-none drop-shadow-sm" />
+              <img src={plumeriaCluster.url} alt="" className="absolute left-48 top-40 w-[145px] rotate-[8deg] opacity-95 select-none drop-shadow-sm" />
+            </div>
+
+            <div className="absolute right-0 top-16 h-[600px] w-[35%] max-w-[520px]">
+              <img src={palmFan.url} alt="" className="absolute -right-24 top-2 w-[330px] rotate-[22deg] opacity-80 scale-x-[-1] select-none" />
+              <img src={bananaLeaf.url} alt="" className="absolute -right-12 top-60 w-[290px] -rotate-[20deg] opacity-75 scale-x-[-1] select-none" />
+              <img src={pinkBranch.url} alt="" className="absolute right-24 top-4 w-[220px] -rotate-[22deg] opacity-90 scale-x-[-1] select-none" />
+              <img src={hibiscusRed.url} alt="" className="absolute right-16 top-56 w-[180px] rotate-[14deg] opacity-95 select-none drop-shadow-sm" />
+              <img src={plumeriaCluster.url} alt="" className="absolute right-48 top-40 w-[140px] -rotate-[10deg] opacity-95 scale-x-[-1] select-none drop-shadow-sm" />
+            </div>
+          </div>
+
+          {/* On phones, keep the frame above and beside the title so the search stays clear. */}
+          <div className="absolute inset-x-0 top-16 h-[320px] md:hidden" aria-hidden>
+            <img src={pinkBranch.url} alt="" className="absolute -left-10 top-8 w-36 rotate-[18deg] opacity-75 select-none" />
+            <img src={hibiscusCoral.url} alt="" className="absolute -left-7 top-36 w-24 -rotate-[12deg] opacity-85 select-none" />
+            <img src={pinkBranch.url} alt="" className="absolute -right-10 top-5 w-36 -rotate-[20deg] opacity-75 scale-x-[-1] select-none" />
+            <img src={plumeriaCluster.url} alt="" className="absolute -right-5 top-36 w-24 rotate-[12deg] opacity-90 select-none" />
+          </div>
         </div>
 
-        <div className="container mx-auto px-6 pt-28 pb-12 md:pt-32 md:pb-16">
+        <div className="relative z-10 container mx-auto px-6 pt-28 pb-12 md:pt-32 md:pb-16">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-5">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
