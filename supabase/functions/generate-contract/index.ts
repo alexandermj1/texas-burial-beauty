@@ -210,8 +210,13 @@ Deno.serve(async (req) => {
       // The signer writes their own address on the Power of Attorney in front of
       // the notary, so we never pre-print one there. Other documents keep using
       // whatever address we hold.
-      address: kind === 'poa' ? '' : (overrides.address || sellerContact.address || ''),
-      city_state_zip: kind === 'poa' ? '' : (overrides.city_state_zip || sellerContact.city_state_zip || ''),
+      // POAs are normally left blank for the signer to complete in front of the
+      // notary — unless staff deliberately typed an address in the edit dialog,
+      // in which case their entry is printed.
+      address: kind === 'poa' && !(manualEdit && String(overrides.address ?? '').trim())
+        ? '' : (overrides.address || sellerContact.address || ''),
+      city_state_zip: kind === 'poa' && !(manualEdit && String(overrides.city_state_zip ?? '').trim())
+        ? '' : (overrides.city_state_zip || sellerContact.city_state_zip || ''),
       phone: overrides.phone || sellerContact.phone || sub.phone || '',
       email: overrides.email || sellerContact.email || sub.email || '',
       cemetery: overrides.cemetery ?? sub.cemetery ?? '',
