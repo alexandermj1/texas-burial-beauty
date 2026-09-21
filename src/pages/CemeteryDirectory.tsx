@@ -652,8 +652,8 @@ const CemeteryDirectory = () => {
               </span>
             </span>
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[54px] text-foreground leading-[1.06] tracking-tight">
-              The simpler way to buy and sell{" "}
-              <em className="not-italic text-primary">cemetery plots in Texas</em>.
+              Cemetery plots,{" "}
+              <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
             <p className="mt-3 md:mt-4 text-foreground/70 text-[15px] md:text-base max-w-2xl mx-auto leading-relaxed">
               {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
