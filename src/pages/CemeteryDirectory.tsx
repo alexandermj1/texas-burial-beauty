@@ -665,6 +665,9 @@ const CemeteryDirectory = () => {
               <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Explore Texas</span>
             </div>
             <h2 className="font-display font-semibold text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
+            <svg viewBox="0 0 220 12" className="mt-2 h-2.5 w-44 text-primary/70" aria-hidden>
+              <path d="M2 8 C 40 2, 80 11, 120 6 S 190 3, 218 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+            </svg>
           </div>
           <button
             onClick={() => {
@@ -698,14 +701,14 @@ const CemeteryDirectory = () => {
               <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 text-primary-foreground">
                 <div className="flex items-end justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-foreground/75 mb-1">Texas region</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-foreground/90 mb-1">Texas region</p>
                     <h3 className={`font-display tracking-tight leading-none ${index < 2 ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>{a.region}</h3>
                   </div>
                   <span className="shrink-0 rounded-full bg-background/90 px-2.5 py-1 text-xs font-bold text-foreground backdrop-blur">
                     {countByRegion[a.region] ?? 0}
                   </span>
                 </div>
-                <p className="hidden sm:block mt-2 text-xs md:text-sm text-primary-foreground/80 truncate">{a.cities}</p>
+                <p className="hidden sm:block mt-2 text-xs md:text-sm text-primary-foreground/90 truncate">{a.cities}</p>
               </div>
             </button>
           ))}
