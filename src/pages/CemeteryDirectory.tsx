@@ -603,28 +603,28 @@ const CemeteryDirectory = () => {
         <div className="md:hidden absolute top-10 -left-14 w-[280px] h-[280px] rounded-full bg-primary/20 blur-3xl" />
         <div className="md:hidden absolute top-[320px] right-1/4 w-[240px] h-[240px] rounded-full bg-background/60 blur-3xl" />
 
-        {/* Two purpose-built arrangements create a continuous botanical frame
-            around the headline and search bar, stopping well above the results. */}
-        <div className="absolute inset-x-0 top-8 h-[520px] hidden md:block">
+        {/* Two purpose-built arrangements wrap around the headline and search bar,
+            extending lower so they visually frame the search field from both sides. */}
+        <div className="absolute inset-x-0 top-8 h-[640px] hidden md:block">
           <img
             src={heroBotanicalLeft}
             alt=""
             width={1024}
             height={1408}
-            className="absolute -left-28 top-0 h-[480px] w-auto max-w-[40vw] object-contain object-left-top opacity-95 select-none drop-shadow-sm"
+            className="absolute -left-32 top-0 h-[580px] w-auto max-w-[38vw] object-contain object-left-top opacity-90 select-none drop-shadow-sm"
           />
           <img
             src={heroBotanicalRight}
             alt=""
             width={1024}
             height={1408}
-            className="absolute -right-28 top-0 h-[490px] w-auto max-w-[40vw] object-contain object-right-top opacity-95 select-none drop-shadow-sm"
+            className="absolute -right-32 top-0 h-[590px] w-auto max-w-[38vw] object-contain object-right-top opacity-90 select-none drop-shadow-sm"
           />
         </div>
-        {/* On phones, keep the frame above and beside the title so the search stays clear. */}
-        <div className="absolute inset-x-0 top-16 h-[280px] md:hidden">
-          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-20 top-0 h-48 w-auto opacity-70 select-none" />
-          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-20 top-0 h-48 w-auto opacity-70 select-none" />
+        {/* On phones, let the frame wrap the title and search bar too. */}
+        <div className="absolute inset-x-0 top-16 h-[360px] md:hidden">
+          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-24 top-0 h-64 w-auto opacity-65 select-none" />
+          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-24 top-0 h-64 w-auto opacity-65 select-none" />
         </div>
       </div>
       <Seo
