@@ -49,12 +49,27 @@ const PHOTO_POOL: string[] = [
   resthavenFlags.url,
 ];
 
-const photoFor = (name: string, hash: number) => {
-  const n = name.toLowerCase();
-  if (n.includes("restland")) return restlandHero.url;
-  if (n.includes("rest haven") || n.includes("resthaven")) return resthavenAvenue.url;
+// Photography is chosen by REGION (a landscape that represents the area),
+// not per individual cemetery — same region shares the same imagery family.
+const REGION_PHOTOS: Record<string, string[]> = {
+  "Dallas–Fort Worth": [restlandHero.url, restlandLawn.url],
+  "Greater Houston": [resthavenAvenue.url, resthavenOakPath.url],
+  "Austin": [resthavenPavilion.url, resthavenBench.url],
+  "Central Texas": [grounds1.url, resthavenWalkway.url],
+  "San Antonio": [resthavenStatue.url, grounds2.url],
+  "South Texas": [imgPalms, grounds3.url],
+  "East Texas": [resthavenOakPath.url, resthavenBench.url],
+  "El Paso & West Texas": [imgMountains, imgHillside],
+  "West Texas": [imgMountains, imgHillside],
+  "North Texas": [restlandLawn.url, grounds1.url],
+};
+
+const photoFor = (region: string, hash: number) => {
+  const set = REGION_PHOTOS[region];
+  if (set && set.length) return set[hash % set.length];
   return PHOTO_POOL[hash % PHOTO_POOL.length];
 };
+
 
 // Botanical leaf accents (scattered decoratively across the page background)
 const LEAF_MODULES = import.meta.glob("@/assets/leaves/*.png", {
@@ -221,7 +236,7 @@ const RegionRow = ({
                   {/* Photo — Airbnb-style image-first card */}
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
-                      src={photoFor(c.name, h)}
+                      src={photoFor(c.region, h)}
                       alt={`${c.name}, ${c.city}, Texas`}
                       loading="lazy"
                       decoding="async"
