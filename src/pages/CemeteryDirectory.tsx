@@ -69,6 +69,17 @@ const REGION_PHOTOS: Record<string, string[]> = {
   "North Texas": [park04.url, park39.url],
 };
 
+// Featured areas shown as large photo cards above the cemetery lists.
+const AREA_FEATURES: Array<{ region: string; cities: string }> = [
+  { region: "Dallas–Fort Worth", cities: "Dallas · Fort Worth · Plano · Arlington · Denton" },
+  { region: "Greater Houston", cities: "Houston · Katy · Sugar Land · The Woodlands" },
+  { region: "Austin", cities: "Austin · Round Rock · San Marcos · Georgetown" },
+  { region: "San Antonio", cities: "San Antonio · New Braunfels · Boerne" },
+  { region: "East Texas", cities: "Tyler · Longview · Lufkin · Texarkana" },
+  { region: "El Paso & West Texas", cities: "El Paso · Midland · Odessa · Lubbock" },
+];
+
+
 const photoFor = (region: string, hash: number) => {
   const set = REGION_PHOTOS[region];
   if (set && set.length) return set[hash % set.length];
