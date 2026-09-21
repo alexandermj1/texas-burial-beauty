@@ -109,7 +109,6 @@ const FEATURED_BY_REGION: Record<string, string[]> = {
     "Sparkman-Hillcrest Memorial Park",
     "Restland Memorial Park",
     "Bluebonnet Hills Memorial Park",
-    "Laurel Land Memorial Park Fort Worth",
   ],
   "Greater Houston": ["Memorial Oaks Cemetery", "Forest Park Lawndale", "Glenwood Cemetery"],
   Austin: ["Austin Memorial Park", "Cook-Walden Capital Parks Funeral Home & Cemetery", "Forest Oaks Memorial Park"],
@@ -513,9 +512,9 @@ const FeaturedCemeteryCard = ({ c, index }: { c: Cem; index: number }) => {
           alt={`${c.name}, ${c.city}, Texas`}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+          className="absolute inset-0 w-full h-full object-cover brightness-[1.14] saturate-[1.06] group-hover:scale-[1.04] transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/18 via-transparent to-transparent" />
 
         <div className="absolute left-4 right-4 bottom-4 sm:left-5 sm:right-5 sm:bottom-5 rounded-xl bg-background/95 backdrop-blur-sm px-5 py-4 shadow-[0_10px_28px_-16px_hsl(var(--foreground)/0.5)]">
           <p className="flex items-center gap-2 text-[10.5px] uppercase tracking-[0.18em] text-accent font-semibold mb-2">
