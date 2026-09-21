@@ -12,6 +12,7 @@ import {
   Tag,
   ChevronRight,
   Navigation,
+  Sparkles,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -536,33 +537,37 @@ const CemeteryDirectory = () => {
         path="/cemeteries"
         jsonLd={jsonLd}
       />
-      <Navbar forceScrolled />
+      <Navbar warm />
 
       {/* HERO — warm wash that feathers into the page */}
-      <section className="relative z-30">
+      <section className="relative z-30 overflow-visible">
         <div
           aria-hidden
-          className="absolute inset-x-0 -top-24 -bottom-32 -z-10 overflow-hidden pointer-events-none"
+          className="absolute inset-x-0 -top-24 -bottom-44 -z-10 overflow-hidden pointer-events-none"
           style={{
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
-            maskImage: "linear-gradient(to bottom, black 0%, black 72%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 78%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, black 0%, black 78%, transparent 100%)",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-accent/55 via-secondary to-background" />
-          <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/30 blur-3xl" />
-          <div className="absolute top-32 -left-36 w-[560px] h-[560px] rounded-full bg-accent/45 blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute -bottom-10 left-1/4 w-[420px] h-[420px] rounded-full bg-accent/35 blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/65 via-secondary to-background" />
+          <div className="absolute -top-28 -right-24 w-[680px] h-[680px] rounded-full bg-primary/35 blur-3xl" />
+          <div className="absolute top-28 -left-36 w-[580px] h-[580px] rounded-full bg-accent/55 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-[460px] h-[460px] rounded-full bg-primary/25 blur-3xl" />
           {LEAVES.length > 0 && (
             <>
-              <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute bottom-24 left-[3%] w-40 opacity-60 -rotate-[24deg] hidden md:block select-none" />
-              <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute bottom-10 right-[4%] w-48 opacity-55 rotate-[12deg] hidden md:block select-none" />
-              <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute top-1/3 right-[9%] w-24 opacity-45 rotate-[30deg] hidden lg:block select-none" />
+              <div className="absolute -bottom-8 -left-7 hidden md:block w-64 h-64">
+                <img src={LEAVES[16 % LEAVES.length]} alt="" className="absolute bottom-8 left-5 w-40 opacity-70 -rotate-[18deg] select-none" />
+                <img src={LEAVES[21 % LEAVES.length]} alt="" className="absolute bottom-10 left-32 w-28 opacity-55 rotate-[34deg] select-none" />
+              </div>
+              <div className="absolute -bottom-14 -right-8 hidden md:block w-72 h-72">
+                <img src={LEAVES[9 % LEAVES.length]} alt="" className="absolute bottom-0 right-0 w-64 opacity-55 rotate-[10deg] select-none" />
+                <img src={LEAVES[4 % LEAVES.length]} alt="" className="absolute bottom-4 right-36 w-32 opacity-48 -rotate-[14deg] select-none" />
+              </div>
             </>
           )}
         </div>
 
-        <div className="container mx-auto px-6 pt-28 pb-10 md:pt-36 md:pb-14">
+        <div className="container mx-auto px-6 pt-28 pb-12 md:pt-32 md:pb-16">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-5">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
@@ -605,10 +610,30 @@ const CemeteryDirectory = () => {
         </div>
       </section>
 
-      {/* AREA PHOTOS — big regional images before the cemetery lists */}
-      <section className="relative z-20 container mx-auto px-6 pb-4 md:pb-8">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {AREA_FEATURES.map((a) => (
+      {/* AREA PHOTOS — an editorial browse-by-region gallery */}
+      <section className="relative z-20 container mx-auto px-6 pt-4 pb-10 md:pt-6 md:pb-14">
+        <div className="flex items-end justify-between gap-6 mb-6 md:mb-8">
+          <div>
+            <div className="flex items-center gap-2 text-primary mb-2">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Explore Texas</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl tracking-tight text-foreground">Browse by region</h2>
+          </div>
+          <button
+            onClick={() => {
+              setRegion("All");
+              setQuery("");
+              window.setTimeout(scrollToResults, 60);
+            }}
+            className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-foreground transition-colors"
+          >
+            View all {total} <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-12 gap-3 md:gap-5">
+          {AREA_FEATURES.map((a, index) => (
             <button
               key={a.region}
               onClick={() => {
@@ -616,27 +641,40 @@ const CemeteryDirectory = () => {
                 setQuery("");
                 window.setTimeout(scrollToResults, 60);
               }}
-              className="group block text-left"
+              className={`${index < 2 ? "lg:col-span-6" : "lg:col-span-3"} group relative overflow-hidden rounded-2xl text-left shadow-[0_12px_30px_-18px_hsl(var(--foreground)/0.55)] hover:shadow-[0_24px_44px_-18px_hsl(var(--primary)/0.5)] transition-shadow`}
             >
-              <div className="flex items-baseline justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">Texas</span>
-                  <h3 className="font-display text-2xl md:text-[28px] tracking-tight mt-0.5 truncate">{a.region}</h3>
+              <img
+                src={REGION_PHOTOS[a.region]?.[0] ?? PHOTO_POOL[0]}
+                alt={`${a.region} cemetery park`}
+                className={`w-full object-cover transition-transform duration-700 group-hover:scale-105 ${index < 2 ? "h-56 md:h-72" : "h-48 md:h-60"}`}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-4 md:p-6 text-primary-foreground">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-foreground/75 mb-1">Texas region</p>
+                    <h3 className={`font-display tracking-tight leading-none ${index < 2 ? "text-2xl md:text-4xl" : "text-xl md:text-2xl"}`}>{a.region}</h3>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-background/90 px-2.5 py-1 text-xs font-bold text-foreground backdrop-blur">
+                    {countByRegion[a.region] ?? 0}
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-muted-foreground whitespace-nowrap">
-                  {countByRegion[a.region] ?? 0}
-                </span>
+                <p className="hidden sm:block mt-2 text-xs md:text-sm text-primary-foreground/80 truncate">{a.cities}</p>
               </div>
-              <div className="relative overflow-hidden rounded-2xl shadow-[0_14px_34px_-18px_hsl(var(--foreground)/0.45)] group-hover:shadow-[0_22px_48px_-18px_hsl(var(--primary)/0.45)] transition-shadow">
-                <div
-                  className="aspect-[16/10] bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: `url(${REGION_PHOTOS[a.region]?.[0] ?? PHOTO_POOL[0]})` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/35 to-transparent" />
-              </div>
-              <p className="text-sm text-muted-foreground mt-3">{a.cities}</p>
             </button>
           ))}
+        </div>
+        <div className="mt-4 flex sm:hidden justify-center">
+          <button
+            onClick={() => {
+              setRegion("All");
+              setQuery("");
+              window.setTimeout(scrollToResults, 60);
+            }}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
+          >
+            View all {total} <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </section>
 

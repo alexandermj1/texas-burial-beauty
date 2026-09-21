@@ -3,7 +3,7 @@ import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, Ar
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
-const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boolean; dark?: boolean }) => {
+const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
     forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
   const [scrolled, setScrolled] = useState(computeScrolled);
@@ -71,16 +71,18 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
             ? dkBar
             : solid
               ? `bg-background/95 backdrop-blur-lg ${megaOpen && !menuOpen ? "" : "shadow-soft"} border-b border-border`
-              : "bg-transparent"
+              : warm
+                ? "bg-background/20 backdrop-blur-sm border-b border-foreground/5"
+                : "bg-transparent"
         }`}
       >
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 whitespace-nowrap shrink-0">
             <span className="relative grid h-8 w-8 shrink-0 place-items-center" aria-hidden>
-              <Flower2 className={`h-6 w-6 ${dark ? "text-[hsl(var(--gold))]" : solid ? "text-primary" : "text-primary-foreground"}`} />
+              <Flower2 className={`h-6 w-6 ${dark ? "text-[hsl(var(--gold))]" : solid || warm ? "text-primary" : "text-primary-foreground"}`} />
               <img src={hibiscusLogo.url} alt="" width={32} height={32} className="absolute inset-0 h-8 w-8 object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />
             </span>
-            <span className={`font-display text-lg sm:text-2xl transition-colors duration-300 ${dark ? dkBrand : solid ? "text-foreground" : "text-primary-foreground"}`}>
+            <span className={`font-display text-lg sm:text-2xl transition-colors duration-300 ${dark ? dkBrand : solid || warm ? "text-foreground" : "text-primary-foreground"}`}>
               Texas Cemetery Brokers
             </span>
           </Link>
@@ -92,8 +94,8 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
                 dark
                   ? dkLink(isActive)
                   : isActive
-                    ? solid ? "text-foreground font-medium" : "text-primary-foreground font-medium"
-                    : solid ? "text-muted-foreground hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
+                    ? solid || warm ? "text-foreground font-medium" : "text-primary-foreground font-medium"
+                    : solid || warm ? "text-foreground/65 hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
               }`;
 
               if (link.to !== "/cemeteries") {
@@ -199,7 +201,7 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all ${
                 dark
                   ? "bg-[hsl(var(--gold))] text-[hsl(var(--ink))] hover:bg-[hsl(var(--parchment))]"
-                  : solid
+                    : solid || warm
                     ? "bg-primary text-primary-foreground hover:opacity-90"
                     : "bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/20 backdrop-blur-sm"
               }`}
@@ -216,7 +218,7 @@ const Navbar = ({ forceScrolled = false, dark = false }: { forceScrolled?: boole
             className={`md:hidden inline-flex items-center justify-center w-11 h-11 rounded-full border transition-colors ${
               dark
                 ? "text-[hsl(var(--parchment))] border-[hsl(var(--gold)/0.4)] hover:bg-[hsl(var(--gold)/0.12)]"
-                : (scrolled || menuOpen)
+                : (scrolled || menuOpen || warm)
                   ? "text-foreground border-border hover:bg-muted"
                   : "text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
             }`}
