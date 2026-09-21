@@ -450,8 +450,8 @@ const MetroCemeteryMap = ({ regions, metro, blurb, searchable = false, fullBleed
         )}
 
         {/* One toolbar: search + address */}
-        <div className="rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4">
-          <div className="grid gap-3 lg:grid-cols-2">
+        <div className={widget ? "mb-4" : "rounded-2xl border border-border/70 bg-card/70 p-3 sm:p-4 mb-4"}>
+          <div className={widget ? "grid gap-2.5 md:grid-cols-2" : "grid gap-3 lg:grid-cols-2"}>
             <label className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
