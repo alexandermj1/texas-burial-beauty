@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
     for (const sub of submissions ?? []) {
       const email = String(sub.email ?? "").trim().toLowerCase();
       if (!email.includes("@")) continue;
+      if ((sub as any).customer_kind && (sub as any).customer_kind !== "seller") { results.push({ id: sub.id, status: "skipped", reason: "not-a-seller" }); continue; }
       // One person, one email — duplicates of the same seller are skipped, and
       // so is anyone whose other submission has already been quoted or closed.
       if (handled.has(email)) { results.push({ id: sub.id, status: "skipped", reason: "duplicate-person" }); continue; }
