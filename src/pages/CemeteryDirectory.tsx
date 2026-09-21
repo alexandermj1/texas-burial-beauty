@@ -853,11 +853,11 @@ const CemeteryDirectory = () => {
           <div ref={listRef}>
             {grouped.map(([groupRegion, list]) => (
               <section key={groupRegion} className="py-5 sm:py-8">
-                <div className="flex items-end justify-between mb-3 sm:mb-5 gap-4">
+                <div className="text-center mb-4 sm:mb-6">
                   <h2 className="font-display text-2xl sm:text-3xl md:text-4xl tracking-tight text-foreground">
                     Cemeteries in <em className="italic text-primary">{groupRegion}</em>
                   </h2>
-                  <span className="hidden sm:inline text-[12px] uppercase tracking-[0.16em] text-foreground/60 font-semibold whitespace-nowrap">
+                  <span className="inline-block mt-1.5 text-[12px] uppercase tracking-[0.16em] text-foreground/60 font-semibold">
                     {list.length} {list.length === 1 ? "cemetery" : "cemeteries"}
                   </span>
                 </div>
