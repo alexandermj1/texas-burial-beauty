@@ -146,6 +146,26 @@ Deno.serve(async (req) => {
     );
     // Always print the full legal name the seller gave us in the questionnaire
     // ("David Allan Cline"), not the short name on the enquiry ("David Cline").
+    // The very last step of the family tree asks each signer for their name
+    // exactly as it reads on their ID ("Darla Jo Goolishian"). That answer is
+    // authoritative and must beat the friendly/nickname spelling we hold on the
+    // roster ("Darla (Jordan) Goolishian") — otherwise the printed POA carries a
+    // name that does not match the signer's identification.
+    const legalByKey: Record<string, string> = {};
+    {
+      const v2 = (ownership.v2 ?? {}) as Record<string, unknown>;
+      const contacts = (v2.contacts ?? {}) as Record<string, { legal?: string }>;
+      for (const [k, c] of Object.entries(contacts)) {
+        const legal = String(c?.legal ?? '').trim();
+        if (legal) legalByKey[nameKey(k)] = legal;
+      }
+      // "Who holds the power of attorney" also collects the agent's legal name.
+      const signerPoa = (v2.signerPoa ?? {}) as Record<string, { n?: string }>;
+      for (const [k, s] of Object.entries(signerPoa)) {
+        const n = String(s?.n ?? '').trim();
+        if (n && !legalByKey[nameKey(n)]) legalByKey[nameKey(n)] = n;
+      }
+    }
     const rosterNames = [
       ...people.map((p) => p.name),
       ...(Array.isArray((sub as Record<string, unknown>).ownership_roster)
@@ -154,19 +174,20 @@ Deno.serve(async (req) => {
       ...(() => {
         const v2 = (ownership.v2 ?? {}) as Record<string, unknown>;
         const deed = Array.isArray(v2.deed) ? v2.deed as Record<string, string>[] : [];
-        // The last step of the family tree asks for each signer's name exactly
-        // as it reads on their ID, so that spelling wins on the document.
-        const contacts = (v2.contacts ?? {}) as Record<string, { legal?: string }>;
-        const legal = Object.values(contacts).map((c) => String(c?.legal ?? ''));
-        return [...deed.map((d) => d.n), ...legal];
+        return [...deed.map((d) => d.n), ...Object.values(legalByKey)];
       })(),
     ].filter((n) => typeof n === 'string' && n.trim());
     const fullName = (n: string) => {
       const key = nameKey(n);
-      const hits = rosterNames.filter((c) => nameKey(c) === key);
+      if (legalByKey[key]) return legalByKey[key];
+      const hits = rosterNames
+        // A nickname in brackets is never part of a legal name.
+        .map((c) => c.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim())
+        .filter((c) => nameKey(c) === key);
       // Prefer the most complete spelling (middle names included).
       return hits.sort((a, b) => b.trim().length - a.trim().length)[0] ?? n;
     };
+
     const principalName = fullName(rawPrincipal);
     const sellerContact = contactFor(ownership, principalName);
 
