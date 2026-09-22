@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { checkRole } from "@/lib/checkRole";
 
 // Returns whether the signed-in user has the `staff` role.
 // Staff users get limited access to the admin dashboard
@@ -13,16 +14,14 @@ export const useStaff = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { setIsStaff(false); setLoading(false); return; }
-    (async () => {
-      const { data } = await supabase
-        .from("user_roles" as any)
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "staff")
-        .maybeSingle();
-      setIsStaff(!!data);
+    let cancelled = false;
+    setLoading(true);
+    checkRole(supabase, user.id, "staff").then((has) => {
+      if (cancelled) return;
+      setIsStaff(has);
       setLoading(false);
-    })();
+    });
+    return () => { cancelled = true; };
   }, [user, authLoading]);
 
   return { isStaff, loading: loading || authLoading };

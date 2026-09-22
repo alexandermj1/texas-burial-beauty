@@ -29,9 +29,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
 
-    return () => subscription.unsubscribe();
+    // Safety net: if the session lookup stalls (offline, slow token refresh),
+    // stop blocking the whole app on a spinner. onAuthStateChange still fills
+    // the session in when it eventually arrives.
+    const timer = setTimeout(() => setLoading(false), 6000);
+
+    return () => { clearTimeout(timer); subscription.unsubscribe(); };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
