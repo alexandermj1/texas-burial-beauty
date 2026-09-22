@@ -95,13 +95,11 @@ const Section = ({
 }) => (
   <section id={id} className="relative scroll-mt-28 border-t border-border/60 py-10 md:py-14">
     <img
-      src={transferBotanical}
+      src={pinkBranch.url}
       alt=""
       aria-hidden
-      width={1024}
-      height={1024}
       loading="lazy"
-      className="pointer-events-none absolute -right-24 -top-16 hidden w-56 opacity-[0.09] lg:block"
+      className="pointer-events-none absolute -right-20 -top-14 hidden w-52 rotate-12 opacity-[0.14] lg:block"
     />
     <div className="relative">
       <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
