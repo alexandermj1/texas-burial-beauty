@@ -2339,9 +2339,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </button>
                       <button
                         className={toggleCls(!!(selected as any).reply_dismissed_at)}
-                        onClick={() => onUpdate(selected.id, {
-                          reply_dismissed_at: (selected as any).reply_dismissed_at ? null : new Date().toISOString(),
-                        } as any)}
+                        onClick={() => setReplyState(selected, (selected as any).reply_dismissed_at ? null : new Date().toISOString())}
                       >
                         <MessageCircleX className="w-3.5 h-3.5" /> No reply needed
                       </button>
