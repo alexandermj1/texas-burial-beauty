@@ -337,6 +337,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
   const [trashOpen, setTrashOpen] = useState(false);
+
+  // Needs reply is computed per submission, but the list shows one card per
+  // PERSON (duplicates collapsed). Dismissing on a single row therefore left the
+  // tag alive on the person's other submissions. Always apply the reply state to
+  // every live submission that shares the same email address.
+  const setReplyState = async (sub: Submission, dismissedAt: string | null) => {
+    await onUpdate(sub.id, { reply_dismissed_at: dismissedAt } as any);
+    const em = (sub.email || "").trim().toLowerCase();
+    if (!em) return;
+    for (const dup of submissions) {
+      if (dup.id === sub.id) continue;
+      if ((dup as any).deleted_at) continue;
+      if ((dup.email || "").trim().toLowerCase() !== em) continue;
+      await onUpdate(dup.id, { reply_dismissed_at: dismissedAt } as any);
+    }
+  };
   // Map of submission_id -> latest PAID listing transaction (tier + amount + when + description).
   const [paidMap, setPaidMap] = useState<Record<string, { tier: string; amountCents: number; paidAt: string; description: string }>>({});
   // Map of submission_id -> listing agreement signing state (for the "LA signed" tag).
@@ -2323,9 +2339,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </button>
                       <button
                         className={toggleCls(!!(selected as any).reply_dismissed_at)}
-                        onClick={() => onUpdate(selected.id, {
-                          reply_dismissed_at: (selected as any).reply_dismissed_at ? null : new Date().toISOString(),
-                        } as any)}
+                        onClick={() => setReplyState(selected, (selected as any).reply_dismissed_at ? null : new Date().toISOString())}
                       >
                         <MessageCircleX className="w-3.5 h-3.5" /> No reply needed
                       </button>
@@ -2358,7 +2372,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   Inventory came up at {plotMatchMap[selected.id].cemetery || "their cemetery"}.
                 </span>
                 <button
-                  onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                  onClick={() => setReplyState(selected, new Date().toISOString())}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
                   title="Removes the Potential Plot Match tag and Needs reply. It returns only if this buyer emails again or new inventory appears."
                 >
@@ -2370,14 +2384,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             {/* Reply state + custom tag — Texas only */}
             {subRegion(selected) === "texas" && kind === "buyer" && (() => {
-              const isAwaiting = !!awaitingMap[selected.id];
+              // The list collapses duplicates into one person, so treat the person
+              // as awaiting if ANY of their submissions is tagged (including a
+              // plot-match driven one).
+              const selEmail = (selected.email || "").trim().toLowerCase();
+              const isAwaiting = !!awaitingAll[selected.id] || (!!selEmail && submissions.some(s =>
+                !(s as any).deleted_at && (s.email || "").trim().toLowerCase() === selEmail && !!awaitingAll[s.id]));
               const currentTag = ((selected as any).custom_tag || "").trim();
               return (
                 <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
                   <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
                   {isAwaiting && (
                     <button
-                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                      onClick={() => setReplyState(selected, new Date().toISOString())}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))] hover:bg-[hsl(var(--status-nodocs-soft))]/70 transition-colors"
                       title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
                     >
@@ -2386,7 +2405,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   )}
                   {!isAwaiting && (selected as any).reply_dismissed_at && (
                     <button
-                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: null } as any)}
+                      onClick={() => setReplyState(selected, null)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
                       title="Undo — re-enable Needs reply detection"
                     >
@@ -3142,7 +3161,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </>
             )}
     </>);
-    const recordControls = kind !== "buyer" ? <div className="flex items-center justify-end gap-2 border-t border-border/50 pt-4">
+    const recordControls = <div className="flex items-center justify-end gap-2 border-t border-border/50 pt-4">
       <Button type="button" size="sm" variant="ghost" className="text-amber-700" onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
         const archiving = !selected.archived_at;
         const patch = { archived_at: archiving ? new Date().toISOString() : null, archived_by: archiving ? (adminName || "admin") : null } as any;
@@ -3152,7 +3171,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
       })}>{selected.archived_at ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}{selected.archived_at ? "Unarchive" : "Archive"}</Button>
       <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}><Trash2 className="h-3.5 w-3.5" />Delete</Button>
-    </div> : null;
+    </div>;
     return (
           <motion.div
             key={selected.id}
@@ -3175,12 +3194,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                  {recordControls}
               </div>
             ) : focusSplit ? (
-              <div className="grid grid-cols-12 gap-6 items-start">
-                <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
-                <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>
+              <div className="space-y-5">
+                <div className="grid grid-cols-12 gap-6 items-start">
+                  <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
+                  <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>
+                </div>
+                {recordControls}
               </div>
             ) : (
-              <>{headBlock}{emailBlock}{tailBlock}</>
+              <>{headBlock}{emailBlock}{tailBlock}{recordControls}</>
             )}
           </motion.div>
     );
