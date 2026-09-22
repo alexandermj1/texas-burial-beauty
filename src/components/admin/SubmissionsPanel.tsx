@@ -3581,10 +3581,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const bgCls = isActive
               ? "bg-primary/15"
               : needsReply
-                // Buyers needing reply get a cool sky tint; everyone else keeps the
-                // urgent terracotta. This makes buyer cards instantly recognisable.
+                // Buyers needing reply get a stronger cool sky tint; everyone else
+                // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
                 ? isBuyer
-                  ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70"
+                  ? "bg-[hsl(var(--status-new)/0.15)] hover:bg-[hsl(var(--status-new)/0.25)]"
                   : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
                 : beingWorked
                   ? "bg-accent/10 hover:bg-accent/15"
