@@ -39,6 +39,7 @@ const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPl
 const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
 const GuidePreneedCemeteryPlots = lazy(() => import("./pages/GuidePreneedCemeteryPlots"));
 const GuideCemeteryTransferProcess = lazy(() => import("./pages/GuideCemeteryTransferProcess"));
+const GuidePlanningFuneralTexas = lazy(() => import("./pages/GuidePlanningFuneralTexas"));
 const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
 import { CITY_PAGES } from "./pages/city-page-data";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
@@ -102,6 +103,7 @@ const App = () => (
                 <Route path="/cemetery-plot-cost-texas" element={<GuideCemeteryPlotCost />} />
                 <Route path="/preneed-cemetery-plots-texas" element={<GuidePreneedCemeteryPlots />} />
                 <Route path="/cemetery-transfer-process-texas" element={<GuideCemeteryTransferProcess />} />
+                <Route path="/guides/planning-a-funeral-in-texas" element={<GuidePlanningFuneralTexas />} />
                 {CITY_PAGES.map((c) => (
                   <Route key={c.slug} path={`/cemetery-plots-for-sale-${c.slug}`} element={<CityPlotsPage />} />
                 ))}
