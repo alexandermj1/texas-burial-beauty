@@ -3161,7 +3161,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               </>
             )}
     </>);
-    const recordControls = kind !== "buyer" ? <div className="flex items-center justify-end gap-2 border-t border-border/50 pt-4">
+    const recordControls = <div className="flex items-center justify-end gap-2 border-t border-border/50 pt-4">
       <Button type="button" size="sm" variant="ghost" className="text-amber-700" onClick={guard(selected.archived_at ? "Unarchive submission" : "Archive submission", async () => {
         const archiving = !selected.archived_at;
         const patch = { archived_at: archiving ? new Date().toISOString() : null, archived_by: archiving ? (adminName || "admin") : null } as any;
