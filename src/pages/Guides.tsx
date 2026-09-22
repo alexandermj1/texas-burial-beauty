@@ -56,6 +56,21 @@ interface Guide {
 
 export const guides: Guide[] = [
   {
+    slug: "guides/planning-a-funeral-in-texas",
+    issue: "Start here",
+    kicker: "The Starting-Point Guide",
+    title: "Planning a Funeral in",
+    titleAccent: "Texas",
+    dek: "Just lost someone and don't know what to do first? Your rights, real Dallas–Fort Worth prices, the exact words to use on the phone, and where families most often overspend.",
+    status: "live",
+    meta: "12 chapters · 14 min read",
+    panel: "bg-[hsl(16_50%_58%)]",
+    panelInk: "text-[hsl(40_30%_97%)]",
+    rule: "bg-[hsl(40_45%_82%)]",
+    hero: FLORAL.hibiscus,
+    accent: FOLIAGE.veined,
+  },
+  {
     slug: "sell-cemetery-plot-texas",
     issue: "Issue N°01",
     kicker: "The Seller's Edition",

@@ -39,6 +39,7 @@ const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPl
 const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
 const GuidePreneedCemeteryPlots = lazy(() => import("./pages/GuidePreneedCemeteryPlots"));
 const GuideCemeteryTransferProcess = lazy(() => import("./pages/GuideCemeteryTransferProcess"));
+const GuidePlanningFuneralTexas = lazy(() => import("./pages/GuidePlanningFuneralTexas"));
 const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
 import { CITY_PAGES } from "./pages/city-page-data";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
