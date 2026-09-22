@@ -3577,11 +3577,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })();
             const StageIcon = stage.icon;
 
+            const isBuyer = sKind === "buyer";
             const bgCls = isActive
               ? "bg-primary/15"
               : needsReply
-                // "Needs reply" is shown as a red row highlight instead of a tag.
-                ? "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
+                // Buyers needing reply get a cool sky tint; everyone else keeps the
+                // urgent terracotta. This makes buyer cards instantly recognisable.
+                ? isBuyer
+                  ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/70"
+                  : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
                 : beingWorked
                   ? "bg-accent/10 hover:bg-accent/15"
                   : stage.tint;
