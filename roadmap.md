@@ -63,7 +63,7 @@
 - [x] Add a rules-generated complex sample family, signer diagram, and broker pathway
 - [x] Enrich the chapter rail with restrained botanical detail and replace the dark closing panel
 - [x] Verify desktop/mobile presentation and publish
-- [ ] Request Google indexing for the live guide
+- [ ] Request Google indexing for the live guide — blocked until Search Console access is available
 
 ## Cemetery directory card redesign
 - [x] Generate 3 design directions (rejected — wants cemetery name prioritized, photos on only some cards)
@@ -83,4 +83,4 @@
 
 ## Quote email calculation
 - [x] Remove buyer commission from the quote calculation and deduction
-- [ ] Send a review email to alexandermaclarenjames@gmail.com
+- [ ] Send a review email to alexandermaclarenjames@gmail.com — needs the seller record and quote figures to use for the sample
