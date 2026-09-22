@@ -141,6 +141,24 @@ const TimelineStep = ({ n, title, children, last = false }: { n: string; title: 
   </motion.div>
 );
 
+const GuideStep = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 14 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-70px" }}
+    transition={{ duration: 0.45 }}
+    className="not-prose grid gap-4 border-t border-border py-9 sm:grid-cols-[5rem_1fr] sm:gap-7 md:py-11"
+  >
+    <span className="font-display text-5xl leading-none text-primary/70 sm:text-6xl">{String(n).padStart(2, "0")}</span>
+    <div>
+      <h3 className="mb-3 font-display text-2xl leading-tight text-foreground md:text-3xl">{title}</h3>
+      <div className="space-y-4 text-[1rem] leading-[1.8] text-foreground/75 [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:decoration-primary/30 [&_a]:underline-offset-4 [&_li]:pl-1 [&_ul]:ml-5 [&_ul]:list-disc [&_ul]:space-y-1.5">
+        {children}
+      </div>
+    </div>
+  </motion.div>
+);
+
 /** Photo break between major parts of the guide. */
 const PhotoBreak = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
   <motion.figure
@@ -639,14 +657,15 @@ const GuidePlanningFuneralTexas = () => {
                 eyebrow="Part 1"
                 title="Ten things that will help when planning a funeral in Texas"
               >
-                <h3>1. You have more time than it feels like</h3>
+                <GuideStep n={1} title="You have more time than it feels like">
                 <p>
                   Funeral homes can keep a body refrigerated while you think, so you don’t have to decide everything in
                   the first call. If your faith calls for a quick burial, say so straight away — funeral homes are used
                   to that. Otherwise, it’s fine to say: “We’d like a day to talk as a family before we decide.”
                 </p>
+                </GuideStep>
 
-                <h3>2. Check whether plans already exist</h3>
+                <GuideStep n={2} title="Check whether plans already exist">
                 <p>Before choosing anything, look for:</p>
                 <ul>
                   <li>
@@ -658,31 +677,35 @@ const GuidePlanningFuneralTexas = () => {
                   <li>Military service — veterans may be entitled to free burial.</li>
                   <li>Life insurance, or death benefits through an employer, union or association.</li>
                 </ul>
+                </GuideStep>
 
-                <h3>3. Know who has the right to decide</h3>
+                <GuideStep n={3} title="Know who has the right to decide">
                 <p>
                   Texas law sets the order. First comes anyone your loved one named in a signed written document.
                   Without one, it’s the surviving spouse, then an adult child, then a parent, then an adult brother or
                   sister, and so on. If the family disagrees, it helps to know who has the final say — and to agree
                   early on one person as the main contact with the funeral home.
                 </p>
+                </GuideStep>
 
-                <h3>4. You’re entitled to prices — and to compare</h3>
+                <GuideStep n={4} title="You’re entitled to prices — and to compare">
                 <p>
                   Under the federal <Ext href={FTC}>Funeral Rule</Ext>, every funeral home must give you prices over the
                   phone, hand you an itemised price list if you visit, and let you choose only the items you want. The
                   one fee you can’t refuse is the basic services fee for the funeral director and staff. Part 2 of this
                    guide gives you a <a href="#toolkit">script for those calls</a>, and our <In to="/cemetery-plot-cost-texas">Texas cemetery cost guide</In> explains the separate cemetery charges.
                 </p>
+                </GuideStep>
 
-                <h3>5. Bring someone with you</h3>
+                <GuideStep n={5} title="Bring someone with you">
                 <p>
                   If you meet a funeral home in person, take a friend or relative who’s a little less close to the loss.
                   They can take notes, ask questions, and say “Can we think about that?” when too much is being asked at
                   once. You can always leave without signing anything.
                 </p>
+                </GuideStep>
 
-                <h3>6. The simplest options cost the least — and you can still say goodbye</h3>
+                <GuideStep n={6} title="The simplest options cost the least — and you can still say goodbye">
                 <p>
                   Every funeral home must offer direct cremation (no viewing or ceremony at the funeral home) and
                   immediate burial (burial without a ceremony at the funeral home). These are usually the least
@@ -690,8 +713,9 @@ const GuidePlanningFuneralTexas = () => {
                   own memorial or celebration of life later — at home, a place of worship, a park or a favourite
                   restaurant.
                 </p>
+                </GuideStep>
 
-                <h3>7. You don’t have to buy everything from the funeral home</h3>
+                <GuideStep n={7} title="You don’t have to buy everything from the funeral home">
                 <ul>
                   <li>
                     Embalming is generally not required by law in Texas. It may be needed for a public viewing, but you
@@ -702,8 +726,9 @@ const GuidePlanningFuneralTexas = () => {
                   </li>
                   <li>For cremation, a simple container is enough. You don’t need a casket.</li>
                 </ul>
+                </GuideStep>
 
-                <h3>8. The cemetery is a separate bill</h3>
+                <GuideStep n={8} title="The cemetery is a separate bill">
                 <p>
                   If you choose burial, the cemetery charges separately for the plot, opening and closing the grave, a
                   vault or grave liner (often required by the cemetery, not by law), and the marker.
@@ -714,6 +739,7 @@ const GuidePlanningFuneralTexas = () => {
                   someone bought it years ago and no longer needs it. A cemetery broker can find one and handle the
                    transfer with the cemetery, so it’s worth checking with a broker first. Our <In to="/cemetery-plots-for-sale-texas">guide to buying a resale cemetery plot</In> explains what to verify before paying.
                 </p>
+                </GuideStep>
               </Section>
 
               <PhotoBreak
@@ -777,11 +803,11 @@ const GuidePlanningFuneralTexas = () => {
               />
 
               <Section id="help-costs" eyebrow="Part 1 continued" title="Help with the costs, and the paperwork after">
-                <h3>9. Ask about help with the costs</h3>
+                <GuideStep n={9} title="Ask about help with the costs">
                 <ul>
                   <li>
-                    <strong>Veterans:</strong> eligible veterans, and often spouses, can be buried at no cost in a VA
-                    national cemetery or a Texas State Veterans Cemetery. Call the VA at{" "}
+                    <strong>Veterans:</strong> eligible veterans, and often spouses, can be buried at no cost in a <Ext href={VA_BURIAL}>VA
+                    national cemetery</Ext> or a Texas State Veterans Cemetery. Call the VA at{" "}
                     <a href="tel:18008271000" className="font-medium text-primary underline decoration-primary/30 underline-offset-4">
                       800-827-1000
                     </a>
@@ -789,7 +815,7 @@ const GuidePlanningFuneralTexas = () => {
                   </li>
                   <li>
                     <strong>Social Security:</strong> a surviving spouse or child may qualify for a one-time $255 death
-                    payment and ongoing survivor benefits. Contact Social Security.
+                    payment and ongoing survivor benefits. Review <Ext href={SSA_SURVIVORS}>Social Security survivor benefits</Ext>.
                   </li>
                   <li>
                     <strong>If the death was caused by a crime:</strong> the Texas Crime Victims’ Compensation Program
@@ -804,12 +830,13 @@ const GuidePlanningFuneralTexas = () => {
                     for burial or cremation when families can’t pay, under rules each county sets.
                   </li>
                 </ul>
+                </GuideStep>
 
-                <h3>10. Order enough death certificates — and look after yourselves</h3>
+                <GuideStep n={10} title="Order enough death certificates — and look after yourselves">
                 <p>
                   You’ll need certified copies of the death certificate for banks, insurance, pensions, property and
                   utilities. The funeral home usually orders them; ordering several at once is easier than going back
-                  for more.
+                  for more. Texas also explains how to request certified copies through <Ext href={TEXAS_HEALTH_DEATH_CERTIFICATES}>Vital Statistics</Ext>.
                 </p>
                 <p>
                   And let people help. Friends can bring food, make calls and handle errands. There’s no right way to
@@ -817,6 +844,7 @@ const GuidePlanningFuneralTexas = () => {
                   <Upcoming>finding support in Dallas–Fort Worth</Upcoming> lists grief support by type of loss, and{" "}
                   <Upcoming>what is a death doula</Upcoming> explains the non-medical help available at the end of life.
                 </p>
+                </GuideStep>
               </Section>
 
               {/* ------------------- PHONE SCRIPT */}
