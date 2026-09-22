@@ -2405,7 +2405,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   )}
                   {!isAwaiting && (selected as any).reply_dismissed_at && (
                     <button
-                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: null } as any)}
+                      onClick={() => setReplyState(selected, null)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
                       title="Undo — re-enable Needs reply detection"
                     >
