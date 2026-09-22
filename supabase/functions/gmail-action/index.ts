@@ -206,10 +206,14 @@ Deno.serve(async (req) => {
     // Server-to-server calls (autopilot, scheduled jobs) present the
     // service-role key and skip the interactive admin/staff check.
     const internal = isInternalCall(req);
+    let actorId: string | null = null;
+    let actorEmail: string | null = null;
     if (!internal) {
       const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
       const { data: { user }, error: userErr } = await userClient.auth.getUser();
       if (userErr || !user) return json({ error: "Unauthorized" }, 401);
+      actorId = user.id;
+      actorEmail = user.email ?? null;
       const { data: roles } = await userClient
         .from("user_roles")
         .select("role")
