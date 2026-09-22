@@ -3194,12 +3194,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                  {recordControls}
               </div>
             ) : focusSplit ? (
-              <div className="grid grid-cols-12 gap-6 items-start">
-                <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
-                <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>
+              <div className="space-y-5">
+                <div className="grid grid-cols-12 gap-6 items-start">
+                  <div className="col-span-12 xl:col-span-7 min-w-0 space-y-5">{headBlock}{tailBlock}</div>
+                  <div className="col-span-12 xl:col-span-5 min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto xl:pr-1 space-y-5">{emailBlock}</div>
+                </div>
+                {recordControls}
               </div>
             ) : (
-              <>{headBlock}{emailBlock}{tailBlock}</>
+              <>{headBlock}{emailBlock}{tailBlock}{recordControls}</>
             )}
           </motion.div>
     );
