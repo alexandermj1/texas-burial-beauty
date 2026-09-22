@@ -358,8 +358,8 @@ Deno.serve(async (req) => {
       try {
         await admin.from("customer_activity_log").insert({
           submission_id: input.submissionId || null,
-          actor_user_id: user.id,
-          actor_name: input.actorName || user.email || "Admin",
+          actor_user_id: actorId,
+          actor_name: input.actorName || actorEmail || "Admin",
           action_type: "email_sent",
           action_summary: `Sent email to ${input.to} — ${input.subject || "(no subject)"}`,
           details: {
