@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import GuidesCarousel from "@/components/GuidesCarousel";
+import { ALL_TEXAS_REGIONS } from "@/data/metroRegions";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
@@ -41,6 +42,7 @@ const VA_BURIAL = "https://www.va.gov/burials-memorials/eligibility/";
 const SSA_SURVIVORS = "https://www.ssa.gov/survivor";
 const TEXAS_HEALTH_DEATH_CERTIFICATES = "https://www.dshs.texas.gov/vital-statistics/death-records";
 const PRICE_SHEET = "/downloads/funeral-price-comparison-sheet.pdf";
+const MetroCemeteryMap = lazy(() => import("@/components/MetroCemeteryMap"));
 
 /* ------------------------------------------------------------------ */
 /* Small shared pieces                                                 */
@@ -78,6 +80,7 @@ const SECTIONS: { id: string; label: string }[] = [
   { id: "three-things", label: "Three things to know" },
   { id: "ten-things", label: "Ten things that help" },
   { id: "own-vs-need", label: "Own a plot vs. need a plot" },
+  { id: "cemetery-map", label: "Find cemeteries near you" },
   { id: "toolkit", label: "The phone call" },
   { id: "rights", label: "Three rights you have" },
   { id: "sheet", label: "Price comparison sheet" },
@@ -159,28 +162,40 @@ const GuideStep = ({ n, title, children }: { n: number; title: string; children:
   </motion.div>
 );
 
-/** Photo break between major parts of the guide. */
-const PhotoBreak = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
+type PhotoLayout = "cinematic" | "portrait" | "split" | "postcard" | "strip" | "window";
+
+/** Editorial photo break with intentionally varied compositions. */
+const PhotoBreak = ({ src, alt, caption, layout = "cinematic" }: { src: string; alt: string; caption: string; layout?: PhotoLayout }) => (
   <motion.figure
     initial={{ opacity: 0, scale: 0.985 }}
     whileInView={{ opacity: 1, scale: 1 }}
     viewport={{ once: true, margin: "-80px" }}
     transition={{ duration: 0.7 }}
-    className="my-12"
+    className={`my-12 md:my-16 ${layout === "portrait" ? "md:ml-auto md:w-[72%]" : layout === "postcard" ? "md:mr-auto md:w-[82%]" : ""}`}
   >
-    <div className="relative overflow-hidden rounded-3xl shadow-lg">
-      <img src={src} alt={alt} loading="lazy" className="h-64 w-full object-cover md:h-96" />
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/10 to-transparent" />
-      <img
-        src={hibiscusCoral.url}
-        alt=""
-        aria-hidden
-        className="pointer-events-none absolute right-4 top-4 w-20 rotate-12 opacity-90 drop-shadow-md md:w-24"
-      />
-      <figcaption className="absolute bottom-0 left-0 max-w-2xl p-6 font-display text-lg leading-snug text-background md:p-8 md:text-2xl">
-        {caption}
-      </figcaption>
-    </div>
+    {layout === "split" ? (
+      <div className="grid overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[1.25fr_0.75fr]">
+        <img src={src} alt={alt} loading="lazy" className="h-64 w-full object-cover md:h-80" />
+        <figcaption className="flex items-center p-7 font-display text-xl leading-snug text-foreground md:p-9 md:text-2xl">{caption}</figcaption>
+      </div>
+    ) : layout === "strip" ? (
+      <div>
+        <img src={src} alt={alt} loading="lazy" className="h-40 w-full rounded-xl object-cover md:h-52" />
+        <figcaption className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground">{caption}</figcaption>
+      </div>
+    ) : layout === "window" ? (
+      <div className="grid items-end gap-5 md:grid-cols-[0.7fr_1.3fr]">
+        <figcaption className="order-2 border-l-2 border-primary/35 pl-5 font-display text-xl leading-snug text-foreground md:order-1 md:pb-6 md:text-2xl">{caption}</figcaption>
+        <img src={src} alt={alt} loading="lazy" className="order-1 h-72 w-full rounded-t-[5rem] object-cover md:order-2 md:h-[26rem]" />
+      </div>
+    ) : (
+      <div className={`relative overflow-hidden shadow-lg ${layout === "portrait" ? "rounded-t-[6rem] rounded-b-2xl" : layout === "postcard" ? "rotate-[-0.7deg] rounded-lg border-[10px] border-card" : "rounded-3xl"}`}>
+        <img src={src} alt={alt} loading="lazy" className={`w-full object-cover ${layout === "portrait" ? "h-[28rem] md:h-[36rem]" : layout === "postcard" ? "h-72 md:h-80" : "h-64 md:h-96"}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/10 to-transparent" />
+        {layout === "cinematic" && <img src={hibiscusCoral.url} alt="" aria-hidden className="pointer-events-none absolute right-4 top-4 w-20 rotate-12 opacity-90 drop-shadow-md md:w-24" />}
+        <figcaption className="absolute bottom-0 left-0 max-w-2xl p-6 font-display text-lg leading-snug text-background md:p-8 md:text-2xl">{caption}</figcaption>
+      </div>
+    )}
   </motion.figure>
 );
 

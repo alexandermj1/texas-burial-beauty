@@ -80,6 +80,9 @@
 - [x] Replace highlighted FAQ cards with restrained accordion rows
 - [x] Replace bespoke related-guide cards with the existing guide carousel
 - [x] Verify the final desktop and mobile article presentation
+- [ ] Vary how metro-area photos are integrated throughout the article
+- [ ] Add the statewide cemetery map with clickable metro-area sorting
+- [ ] Verify the revised photography and map on desktop and mobile
 
 ## Quote email calculation
 - [x] Remove buyer commission from the quote calculation and deduction
