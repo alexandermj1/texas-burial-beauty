@@ -31,6 +31,8 @@ import metroAustin from "@/assets/parks/local/park-23.jpg";
 import metroSanAntonio from "@/assets/parks/local/park-57.jpg";
 import metroEastTexas from "@/assets/parks/local/park-36.jpg";
 import metroWestTexas from "@/assets/parks/local/park-50.jpg";
+import heroBotanicalRight from "@/assets/flowers/hero-botanical-right.png";
+import heroBotanicalLeft from "@/assets/flowers/hero-botanical-left.png";
 
 const PATH = "/guides/planning-a-funeral-in-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -444,14 +446,10 @@ const GuidePlanningFuneralTexas = () => {
         >
           <div className="absolute -right-20 -top-12 h-72 w-72 rounded-full border border-primary/10 md:h-[29rem] md:w-[29rem]" />
           <div className="absolute -right-12 -top-8 h-60 w-60 rounded-full border border-primary/15 md:h-[25rem] md:w-[25rem]" />
-          <img src={bananaLeaf.url} alt="" className="absolute -right-14 -top-20 w-52 rotate-[-24deg] opacity-55 sm:w-64 md:-right-20 md:w-[24rem]" />
-          <img src={palmFan.url} alt="" className="absolute right-20 top-0 hidden w-48 rotate-[14deg] opacity-35 md:block lg:right-40 lg:w-60" />
-          <img src={hibiscusCoral.url} alt="" className="absolute right-2 top-36 w-24 rotate-[5deg] opacity-95 drop-shadow-sm sm:right-8 sm:w-32 md:right-14 md:top-48 md:w-40" />
-          <img src={plumeriaCluster.url} alt="" className="absolute right-24 top-20 hidden w-20 rotate-[-8deg] opacity-90 sm:block md:right-48 md:w-24" />
+          <img src={heroBotanicalRight} alt="" className="absolute -right-20 -top-12 w-52 opacity-90 sm:w-64 md:-right-16 md:w-[24rem] lg:w-[27rem]" />
 
           <div className="absolute -bottom-28 -left-24 h-72 w-72 rounded-full border border-primary/10 md:h-96 md:w-96" />
-          <img src={leafVeined.url} alt="" className="absolute -bottom-16 -left-16 w-40 rotate-[-8deg] opacity-35 md:w-56" />
-          <img src={pinkBranch.url} alt="" className="absolute -bottom-14 left-3 hidden w-44 rotate-[8deg] opacity-50 md:block lg:left-12 lg:w-56" />
+          <img src={heroBotanicalLeft} alt="" className="absolute -bottom-32 -left-24 w-52 opacity-75 sm:w-64 md:-bottom-44 md:-left-20 md:w-[25rem]" />
         </motion.div>
 
         <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
