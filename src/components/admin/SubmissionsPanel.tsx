@@ -2372,7 +2372,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   Inventory came up at {plotMatchMap[selected.id].cemetery || "their cemetery"}.
                 </span>
                 <button
-                  onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                  onClick={() => setReplyState(selected, new Date().toISOString())}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
                   title="Removes the Potential Plot Match tag and Needs reply. It returns only if this buyer emails again or new inventory appears."
                 >
