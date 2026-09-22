@@ -172,6 +172,10 @@ const TexasQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
 
   const sumPlots = plots.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
   const totalForSave = totalOverride ? Number(totalOverride) : sumPlots;
+  // quote_amount is stored PER SPACE (see src/lib/quoteFigures.ts) so reminder
+  // emails quote the same number as the original sales-price email.
+  const plotCountForSave = Math.max(1, plots.length);
+  const netPerSpaceForSave = totalForSave > 0 ? Math.round(totalForSave / plotCountForSave) : 0;
 
   const startEditing = () => {
     setEditedBody(generatedBody);
@@ -182,7 +186,8 @@ const TexasQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
   const handleSaveDraft = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalForSave > 0 ? totalForSave : null,
+      quote_amount: netPerSpaceForSave > 0 ? netPerSpaceForSave : null,
+      plot_count: plotCountForSave,
       transfer_fee_amount: feeCap ? Number(feeCap) : null,
       quote_message: customMessage || null,
     } as any);
@@ -193,7 +198,8 @@ const TexasQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
   const handleMarkSent = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalForSave > 0 ? totalForSave : null,
+      quote_amount: netPerSpaceForSave > 0 ? netPerSpaceForSave : null,
+      plot_count: plotCountForSave,
       transfer_fee_amount: feeCap ? Number(feeCap) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),

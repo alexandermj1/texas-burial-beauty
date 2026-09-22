@@ -199,6 +199,9 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
 
   const countNum = Math.max(1, Math.round(Number(plotCount) || 1));
   const totalNet = quote ? Number(quote) * countNum : 0;
+  // Stored convention (see src/lib/quoteFigures.ts): quote_amount is the net
+  // PER SPACE, so follow-up emails repeat the same figure the seller was sent.
+  const netPerSpace = quote ? Number(quote) : 0;
 
   const subject = buildSubject(submission);
   const body = buildBody(submission, quote, transferFee, customMessage, countNum);
@@ -206,7 +209,8 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const handleSaveAndOpenEmail = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalNet > 0 ? totalNet : null,
+      quote_amount: netPerSpace > 0 ? netPerSpace : null,
+      plot_count: countNum,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
@@ -223,7 +227,8 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const handleSaveOnly = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalNet > 0 ? totalNet : null,
+      quote_amount: netPerSpace > 0 ? netPerSpace : null,
+      plot_count: countNum,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
