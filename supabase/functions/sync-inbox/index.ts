@@ -414,7 +414,9 @@ Deno.serve(async (req) => {
     const isIndeedSender = (email: string, name: string | null) => {
       const e = (email || "").toLowerCase();
       const n = (name || "").toLowerCase();
-      return e.endsWith("@indeed.com") || e.endsWith(".indeed.com") || e.includes("indeed.com") || n === "indeed" || n.startsWith("indeed ");
+      const domain = e.split("@")[1] || "";
+      // Job-board mail comes from indeed.com, subdomains, and indeedemail.com.
+      return domain.includes("indeed") || n === "indeed" || n.startsWith("indeed ");
     };
     const INTERNAL_DOMAINS_INSERT = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
     const isInternalAddr = (e: string) =>
