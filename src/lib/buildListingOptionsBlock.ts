@@ -91,11 +91,6 @@ export async function buildListingOptionsBlock(opts: {
   const commissionTotal = Math.round(saleSubtotal * 0.15);
   const totalSale = saleSubtotal + fee;
   const totalProceeds = saleSubtotal - commissionTotal;
-  // Buyer's fee: 15% of the sales price INCLUDING the cemetery transfer fee
-  // (matches clause 4.1 of the listing agreement).
-  const buyerFeePerSpace = Math.round(grossPerSpace * 0.15);
-  const buyerFeeTotal = Math.round(totalSale * 0.15);
-
   const cemLabel = properCase(seller.cemetery || "your cemetery");
 
 

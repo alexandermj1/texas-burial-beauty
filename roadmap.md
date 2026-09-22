@@ -79,8 +79,8 @@
 - [x] Add useful internal and authoritative external links
 - [x] Replace highlighted FAQ cards with restrained accordion rows
 - [x] Replace bespoke related-guide cards with the existing guide carousel
-- [ ] Verify the final desktop and mobile article presentation
+- [x] Verify the final desktop and mobile article presentation
 
 ## Quote email calculation
-- [ ] Remove buyer commission from the quote calculation and deduction
+- [x] Remove buyer commission from the quote calculation and deduction
 - [ ] Send a review email to alexandermaclarenjames@gmail.com
