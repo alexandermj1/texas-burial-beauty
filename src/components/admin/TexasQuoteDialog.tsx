@@ -186,7 +186,8 @@ const TexasQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
   const handleSaveDraft = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalForSave > 0 ? totalForSave : null,
+      quote_amount: netPerSpaceForSave > 0 ? netPerSpaceForSave : null,
+      plot_count: plotCountForSave,
       transfer_fee_amount: feeCap ? Number(feeCap) : null,
       quote_message: customMessage || null,
     } as any);
@@ -197,7 +198,8 @@ const TexasQuoteDialog = ({ submission, open, onClose, onSave }: Props) => {
   const handleMarkSent = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalForSave > 0 ? totalForSave : null,
+      quote_amount: netPerSpaceForSave > 0 ? netPerSpaceForSave : null,
+      plot_count: plotCountForSave,
       transfer_fee_amount: feeCap ? Number(feeCap) : null,
       quote_message: customMessage || null,
       quote_sent_at: new Date().toISOString(),
