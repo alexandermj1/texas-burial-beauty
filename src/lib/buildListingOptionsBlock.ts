@@ -217,7 +217,7 @@ export async function buildListingOptionsBlock(opts: {
         ${multi ? `<td style="padding:14px 0 0 18px;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(totalProceeds)}</td>` : ""}
       </tr>
     </table>
-    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price. The buyer additionally pays a 15% buyer's fee calculated on this sales price, transfer fee included (${fmtUsd(buyerFeePerSpace)} per space${multi ? `, ${fmtUsd(buyerFeeTotal)} across all ${plotCount} spaces` : ""}) — that fee is charged to the buyer and never comes out of your proceeds.</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price.</p>
 
 
   </td></tr>
@@ -258,7 +258,7 @@ ${tierCards}
       <!-- HOW IT WORKS -->
       ${section("How this works", `
         ${p(`Our process is simple: you authorize us to sell your property at (or above) an agreed minimum price, and we handle everything from there — marketing, buyer negotiations, cemetery paperwork, and the closing itself. Because we can complete a sale the moment a qualified buyer commits, without coming back to you for approval on each offer, your property stays competitive with buyers who need to move quickly.`, true)}
-        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you. Separately, the buyer pays a 15% buyer's fee, calculated on the full sale price including the cemetery transfer fee, along with any optional buyer services. Those buyer-side charges are billed to the buyer, so they never touch your proceeds.`, true)}
+        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you.`, true)}
       `)}
 
       <!-- WHY PRE-AUTH -->
