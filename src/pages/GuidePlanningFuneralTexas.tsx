@@ -1057,6 +1057,11 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               {/* ------------------- LOCAL HELP */}
+              <PhotoBreak
+                src={photoBluebonnet}
+                alt="Bluebonnets beside a Texas lake"
+                caption="Texas families help each other through this. Here is who to call."
+              />
               <Section id="local-help" eyebrow="Dallas–Fort Worth" title="Local help">
                 <ul>
                   <li>
