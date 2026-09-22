@@ -20,11 +20,7 @@ import Seo from "@/components/Seo";
 import GuidesCarousel from "@/components/GuidesCarousel";
 import { ALL_TEXAS_REGIONS } from "@/data/metroRegions";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
-import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
-import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
-import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import metroDallas from "@/assets/parks/local/park-30.jpg";
 import metroHouston from "@/assets/parks/local/park-47.jpg";
 import metroAustin from "@/assets/parks/local/park-23.jpg";
@@ -446,7 +442,7 @@ const GuidePlanningFuneralTexas = () => {
         >
           <div className="absolute -right-20 -top-12 h-72 w-72 rounded-full border border-primary/10 md:h-[29rem] md:w-[29rem]" />
           <div className="absolute -right-12 -top-8 h-60 w-60 rounded-full border border-primary/15 md:h-[25rem] md:w-[25rem]" />
-          <img src={heroBotanicalRight} alt="" className="absolute -right-20 -top-12 w-52 opacity-90 sm:w-64 md:-right-16 md:w-[24rem] lg:w-[27rem]" />
+          <img src={heroBotanicalRight} alt="" className="absolute -right-24 -top-28 w-44 opacity-80 sm:-right-20 sm:-top-12 sm:w-64 md:-right-16 md:w-[24rem] md:opacity-90 lg:w-[27rem]" />
 
           <div className="absolute -bottom-28 -left-24 h-72 w-72 rounded-full border border-primary/10 md:h-96 md:w-96" />
           <img src={heroBotanicalLeft} alt="" className="absolute -bottom-32 -left-24 w-52 opacity-75 sm:w-64 md:-bottom-44 md:-left-20 md:w-[25rem]" />
