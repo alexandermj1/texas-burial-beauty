@@ -337,6 +337,22 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [confirmDeleteFor, setConfirmDeleteFor] = useState<Submission | null>(null);
   const [deleteText, setDeleteText] = useState("");
   const [trashOpen, setTrashOpen] = useState(false);
+
+  // Needs reply is computed per submission, but the list shows one card per
+  // PERSON (duplicates collapsed). Dismissing on a single row therefore left the
+  // tag alive on the person's other submissions. Always apply the reply state to
+  // every live submission that shares the same email address.
+  const setReplyState = async (sub: Submission, dismissedAt: string | null) => {
+    await onUpdate(sub.id, { reply_dismissed_at: dismissedAt } as any);
+    const em = (sub.email || "").trim().toLowerCase();
+    if (!em) return;
+    for (const dup of submissions) {
+      if (dup.id === sub.id) continue;
+      if ((dup as any).deleted_at) continue;
+      if ((dup.email || "").trim().toLowerCase() !== em) continue;
+      await onUpdate(dup.id, { reply_dismissed_at: dismissedAt } as any);
+    }
+  };
   // Map of submission_id -> latest PAID listing transaction (tier + amount + when + description).
   const [paidMap, setPaidMap] = useState<Record<string, { tier: string; amountCents: number; paidAt: string; description: string }>>({});
   // Map of submission_id -> listing agreement signing state (for the "LA signed" tag).
