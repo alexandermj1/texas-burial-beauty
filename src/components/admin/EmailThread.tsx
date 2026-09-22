@@ -199,12 +199,32 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
         <h4 className="text-sm font-medium text-foreground">
           Email thread <span className="text-muted-foreground font-normal">({emails.length})</span>
         </h4>
-        {awaiting && (
-          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            Needs reply
-          </span>
-        )}
+        {awaiting && (() => {
+          const lastInbound = [...emails].reverse().find((m) => !isOutgoing(m.from_email));
+          const dismissed = !!replyDismissedAt && !!lastInbound && new Date(replyDismissedAt) >= new Date(lastInbound.received_at);
+          return dismissed ? (
+            <button
+              type="button"
+              onClick={toggleReplyNeeded}
+              disabled={togglingReply}
+              title="Marked as not needing a reply. Click to put it back in Needs reply."
+              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border hover:bg-muted/70 transition-colors"
+            >
+              Reply resolved
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleReplyNeeded}
+              disabled={togglingReply}
+              title="Click to take this out of Needs reply"
+              className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white hover:bg-rose-700 transition-colors"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              Needs reply
+            </button>
+          );
+        })()}
         {replyTarget && !composeNew && (
           <button
             type="button"
