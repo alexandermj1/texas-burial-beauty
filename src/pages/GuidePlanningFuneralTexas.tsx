@@ -18,7 +18,15 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import transferBotanical from "@/assets/transfer-guide-botanical.png";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import photoSparkman from "@/assets/featured/sparkman-fountain-garden.jpg";
+import photoRestland from "@/assets/featured/restland-hero-lawn.jpg";
+import photoBluebonnet from "@/assets/featured/bluebonnet-hero-lake.jpg";
 
 const PATH = "/guides/planning-a-funeral-in-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -87,13 +95,11 @@ const Section = ({
 }) => (
   <section id={id} className="relative scroll-mt-28 border-t border-border/60 py-10 md:py-14">
     <img
-      src={transferBotanical}
+      src={pinkBranch.url}
       alt=""
       aria-hidden
-      width={1024}
-      height={1024}
       loading="lazy"
-      className="pointer-events-none absolute -right-24 -top-16 hidden w-56 opacity-[0.09] lg:block"
+      className="pointer-events-none absolute -right-20 -top-14 hidden w-52 rotate-12 opacity-[0.14] lg:block"
     />
     <div className="relative">
       <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
@@ -109,15 +115,49 @@ const Section = ({
 );
 
 const StepCard = ({ n, title, children }: { n: string; title: string; children: React.ReactNode }) => (
-  <div className="relative rounded-xl border border-border/70 bg-card/60 p-6">
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-40px" }}
+    transition={{ duration: 0.45 }}
+    className="relative overflow-hidden rounded-xl border border-border/70 bg-card/60 p-6 shadow-sm transition-shadow hover:shadow-md"
+  >
+    <span className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/[0.07]" />
     <div className="mb-3 flex items-center gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm text-primary">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
         {n}
       </span>
       <h3 className="m-0 font-display text-xl leading-tight text-foreground">{title}</h3>
     </div>
     <p className="m-0 text-[0.98rem] leading-[1.75] text-foreground/75">{children}</p>
-  </div>
+  </motion.div>
+);
+
+/** Full-bleed photo break between major parts of the guide. */
+const PhotoBreak = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
+  <motion.figure
+    initial={{ opacity: 0, scale: 0.985 }}
+    whileInView={{ opacity: 1, scale: 1 }}
+    viewport={{ once: true, margin: "-80px" }}
+    transition={{ duration: 0.7 }}
+    className="relative left-1/2 my-14 w-[100vw] max-w-[100vw] -translate-x-1/2"
+  >
+    <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
+      <div className="relative overflow-hidden rounded-3xl shadow-lg">
+        <img src={src} alt={alt} loading="lazy" className="h-64 w-full object-cover md:h-96" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/10 to-transparent" />
+        <img
+          src={hibiscusCoral.url}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute -right-4 -top-4 w-20 rotate-12 opacity-90 drop-shadow-md md:w-24"
+        />
+        <figcaption className="absolute bottom-0 left-0 max-w-2xl p-6 font-display text-lg leading-snug text-background md:p-8 md:text-2xl">
+          {caption}
+        </figcaption>
+      </div>
+    </div>
+  </motion.figure>
 );
 
 const Cta = ({
@@ -259,23 +299,27 @@ const FAQS = [
   },
 ];
 
-const SERIES: { title: string; dek: string; to?: string }[] = [
+const SERIES: { title: string; dek: string; to: string }[] = [
   {
     title: "Who actually owns a cemetery plot in Texas",
     dek: "Who can use or sell a plot a loved one owned.",
     to: "/cemetery-transfer-process-texas",
   },
   {
-    title: "Help with funeral costs after a crime in Texas",
-    dek: "The Crime Victims' Compensation Program and who to call in your county.",
+    title: "How much does a cemetery plot cost in Texas?",
+    dek: "Real price ranges for plots, opening and closing, and markers.",
+    to: "/cemetery-plot-cost-texas",
   },
   {
-    title: "After a loss: finding support in Dallas–Fort Worth",
-    dek: "Grief support, most of it free, organised by type of loss.",
+    title: "Cemetery plots for sale in Texas",
+    dek: "How buying a resale plot works, and what to check first.",
+    to: "/cemetery-plots-for-sale-texas",
   },
-  { title: "What is a death doula?", dek: "Non-medical support at the end of life, and the free help hospices offer." },
-  { title: "Paying for your own funeral in Texas", dek: "For when you're ready to think about your own plans." },
-  { title: "Choosing a hospice in Texas", dek: "For families facing that decision now." },
+  {
+    title: "How to sell a cemetery plot in Texas",
+    dek: "For families who own a plot they won't use.",
+    to: "/sell-cemetery-plot-texas",
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -360,7 +404,7 @@ const GuidePlanningFuneralTexas = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background [&>footer]:mt-auto">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-background [&>footer]:mt-auto">
       <Seo
         title="Planning a Funeral in Texas: Where to Start | TCB"
         description="Just lost someone and don't know what to do first? A plain-English Texas guide: your rights, real DFW prices, phone scripts, and where families overspend."
@@ -373,13 +417,63 @@ const GuidePlanningFuneralTexas = () => {
       {/* ---------------------------------------------------------- HERO */}
       <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-16 pt-28 md:pb-24">
         <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(hsl(var(--stone)/0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-        <img
-          src={transferBotanical}
+        {/* Warm colour washes */}
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
+        {/* Floral arrangement — same flowers as the other guides */}
+        <motion.img
+          src={bananaLeaf.url}
           alt=""
           aria-hidden
-          width={1024}
-          height={1024}
-          className="pointer-events-none absolute -right-24 top-6 w-[430px] opacity-50 md:right-0 md:w-[540px] lg:right-4 lg:w-[620px]"
+          initial={{ opacity: 0, y: 16, rotate: -24 }}
+          animate={{ opacity: 0.55, y: 0, rotate: -18 }}
+          transition={{ duration: 0.9 }}
+          className="pointer-events-none absolute -right-16 -top-10 w-72 md:right-4 md:w-96"
+        />
+        <motion.img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, y: 20, rotate: 14 }}
+          animate={{ opacity: 0.5, y: 0, rotate: 8 }}
+          transition={{ duration: 0.9, delay: 0.1 }}
+          className="pointer-events-none absolute -bottom-16 right-24 hidden w-64 md:block lg:right-40"
+        />
+        <motion.img
+          src={hibiscusCoral.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
+          animate={{ opacity: 0.9, scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="pointer-events-none absolute bottom-6 right-6 w-28 sm:w-36 md:bottom-10 md:right-16 md:w-44"
+        />
+        <motion.img
+          src={plumeriaCluster.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
+          animate={{ opacity: 0.85, scale: 1, rotate: 4 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="pointer-events-none absolute right-40 top-16 hidden w-24 md:block lg:right-72 lg:w-28"
+        />
+        <motion.img
+          src={leafVeined.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, y: -14, rotate: -30 }}
+          animate={{ opacity: 0.45, y: 0, rotate: -22 }}
+          transition={{ duration: 0.9, delay: 0.15 }}
+          className="pointer-events-none absolute -left-10 top-24 hidden w-44 lg:block"
+        />
+        <motion.img
+          src={pinkBranch.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, x: -16, rotate: 12 }}
+          animate={{ opacity: 0.5, x: 0, rotate: 6 }}
+          transition={{ duration: 0.9, delay: 0.25 }}
+          className="pointer-events-none absolute -left-14 bottom-0 hidden w-56 lg:block"
         />
         <span className="absolute bottom-0 left-0 h-1 w-1/3 bg-primary/50" />
         <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
@@ -417,7 +511,7 @@ const GuidePlanningFuneralTexas = () => {
 
       <main>
         <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="grid gap-10 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-16">
+          <div className="grid gap-10 lg:grid-cols-[220px_minmax(0,720px)] lg:justify-center lg:gap-14 xl:grid-cols-[240px_minmax(0,760px)] xl:gap-20">
             {/* ------------------------------------------------ TOC */}
             <div className="pt-8 lg:pt-12">
               <nav aria-label="Table of contents" className="lg:sticky lg:top-28">
@@ -493,12 +587,31 @@ const GuidePlanningFuneralTexas = () => {
                       t: "You only have to buy what you want.",
                       d: "Apart from one basic fee, everything a funeral home offers is optional.",
                     },
-                  ].map((c) => (
-                    <div key={c.t} className="rounded-xl border border-border/70 bg-card/60 p-6">
-                      <c.icon className="mb-4 h-5 w-5 text-primary" />
+                  ].map((c, i) => (
+                    <motion.div
+                      key={c.t}
+                      initial={{ opacity: 0, y: 18 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-60px" }}
+                      transition={{ duration: 0.5, delay: i * 0.12 }}
+                      className={`rounded-xl border p-6 shadow-sm transition-transform hover:-translate-y-1 ${
+                        i === 0
+                          ? "border-primary/30 bg-primary/[0.07]"
+                          : i === 1
+                            ? "border-accent/40 bg-accent/[0.10]"
+                            : "border-border/70 bg-secondary/50"
+                      }`}
+                    >
+                      <span
+                        className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full ${
+                          i === 1 ? "bg-accent/25 text-accent-foreground" : "bg-primary/12 text-primary"
+                        }`}
+                      >
+                        <c.icon className="h-5 w-5" />
+                      </span>
                       <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{c.t}</h3>
                       <p className="text-[0.95rem] leading-[1.7] text-foreground/70">{c.d}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </section>
@@ -671,6 +784,12 @@ const GuidePlanningFuneralTexas = () => {
                 ]}
               />
 
+              <PhotoBreak
+                src={photoRestland}
+                alt="Tree-shaded cemetery lawn in Dallas–Fort Worth"
+                caption="Settle the plot question early, and the most expensive decision is off the table."
+              />
+
               <Section id="help-costs" eyebrow="Part 1 continued" title="Help with the costs, and the paperwork after">
                 <h3>9. Ask about help with the costs</h3>
                 <ul>
@@ -715,6 +834,11 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               {/* ------------------- PHONE SCRIPT */}
+              <PhotoBreak
+                src={photoSparkman}
+                alt="Fountain garden at a Dallas cemetery"
+                caption="A few calm phone calls can save a family thousands of dollars."
+              />
               <Section id="toolkit" eyebrow="Part 2 · Your toolkit" title="The phone call: what to say">
                 <p>
                   Many families never compare prices because they don’t know what to say. You don’t need to explain
@@ -937,6 +1061,11 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               {/* ------------------- LOCAL HELP */}
+              <PhotoBreak
+                src={photoBluebonnet}
+                alt="Bluebonnets beside a Texas lake"
+                caption="Texas families help each other through this. Here is who to call."
+              />
               <Section id="local-help" eyebrow="Dallas–Fort Worth" title="Local help">
                 <ul>
                   <li>
@@ -999,44 +1128,19 @@ const GuidePlanningFuneralTexas = () => {
               <Section id="series" eyebrow="Keep reading" title="Other guides in this series">
                 <p>If your situation involves any of these, our other guides go into more detail:</p>
                 <div className="not-prose mt-8 grid gap-4 sm:grid-cols-2">
-                  {SERIES.map((g) => {
-                    const body = (
-                      <>
-                        <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{g.title}</h3>
-                        <p className="text-sm leading-relaxed text-foreground/65">{g.dek}</p>
-                        <p
-                          className={`mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${
-                            g.to ? "text-primary" : "text-muted-foreground"
-                          }`}
-                        >
-                          {g.to ? (
-                            <>
-                              Read the guide <ArrowUpRight className="h-3.5 w-3.5" />
-                            </>
-                          ) : (
-                            "Coming soon"
-                          )}
-                        </p>
-                      </>
-                    );
-                    return g.to ? (
-                      <Link
-                        key={g.title}
-                        to={g.to}
-                        className="rounded-xl border border-border/70 bg-card/60 p-6 transition-colors hover:border-primary/40 hover:bg-primary/[0.04]"
-                      >
-                        {body}
-                      </Link>
-                    ) : (
-                      <div
-                        key={g.title}
-                        aria-disabled
-                        className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-6"
-                      >
-                        {body}
-                      </div>
-                    );
-                  })}
+                  {SERIES.filter((g) => g.to).map((g) => (
+                    <Link
+                      key={g.title}
+                      to={g.to!}
+                      className="group rounded-xl border border-border/70 bg-card/60 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md"
+                    >
+                      <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{g.title}</h3>
+                      <p className="text-sm leading-relaxed text-foreground/65">{g.dek}</p>
+                      <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                        Read the guide <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </p>
+                    </Link>
+                  ))}
                 </div>
               </Section>
 
