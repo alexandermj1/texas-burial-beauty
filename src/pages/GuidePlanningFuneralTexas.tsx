@@ -404,7 +404,7 @@ const GuidePlanningFuneralTexas = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background [&>footer]:mt-auto">
+    <div className="flex min-h-screen flex-col overflow-x-clip bg-background [&>footer]:mt-auto">
       <Seo
         title="Planning a Funeral in Texas: Where to Start | TCB"
         description="Just lost someone and don't know what to do first? A plain-English Texas guide: your rights, real DFW prices, phone scripts, and where families overspend."
