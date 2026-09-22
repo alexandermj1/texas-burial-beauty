@@ -169,7 +169,7 @@ const PhotoBreak = ({ src, alt, caption, layout = "cinematic" }: { src: string; 
     whileInView={{ opacity: 1, scale: 1 }}
     viewport={{ once: true, margin: "-80px" }}
     transition={{ duration: 0.7 }}
-    className={`my-12 md:my-16 ${layout === "portrait" ? "md:ml-auto md:w-[72%]" : layout === "postcard" ? "md:mr-auto md:w-[82%]" : ""}`}
+    className="my-12 w-full md:my-16"
   >
     {layout === "split" ? (
       <div className="grid overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[1.25fr_0.75fr]">
@@ -182,9 +182,10 @@ const PhotoBreak = ({ src, alt, caption, layout = "cinematic" }: { src: string; 
         <figcaption className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground">{caption}</figcaption>
       </div>
     ) : layout === "window" ? (
-      <div className="grid items-end gap-5 md:grid-cols-[0.7fr_1.3fr]">
-        <figcaption className="order-2 border-l-2 border-primary/35 pl-5 font-display text-xl leading-snug text-foreground md:order-1 md:pb-6 md:text-2xl">{caption}</figcaption>
-        <img src={src} alt={alt} loading="lazy" className="order-1 h-72 w-full rounded-t-[5rem] object-cover md:order-2 md:h-[26rem]" />
+      <div className="relative overflow-hidden rounded-t-[5rem] rounded-b-2xl shadow-lg">
+        <img src={src} alt={alt} loading="lazy" className="h-72 w-full object-cover md:h-[26rem]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+        <figcaption className="absolute bottom-0 left-0 max-w-2xl border-l-2 border-primary/60 p-6 font-display text-xl leading-snug text-background md:m-8 md:p-0 md:pl-5 md:text-2xl">{caption}</figcaption>
       </div>
     ) : (
       <div className={`relative overflow-hidden shadow-lg ${layout === "portrait" ? "rounded-t-[6rem] rounded-b-2xl" : layout === "postcard" ? "rotate-[-0.7deg] rounded-lg border-[10px] border-card" : "rounded-3xl"}`}>
@@ -491,7 +492,7 @@ const GuidePlanningFuneralTexas = () => {
 
       <main>
         <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-5xl">
             {/* ------------------------------------------------ TOC */}
             <nav aria-label="Table of contents" className="pt-8 lg:pt-10">
               <button
