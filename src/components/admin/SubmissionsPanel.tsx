@@ -1084,9 +1084,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return bt - at;
     };
     // "Needs reply" always wins the top of the list — an unanswered inbound email is
-    // the most time-sensitive thing in the panel. Brand-new form submissions come
-    // right after, then tagged rows, then everything else.
-    const awaitingRows = matches.filter(s => awaitingAll[s.id]).sort(byLatestInbound);
+    // the most time-sensitive thing in the panel. Within Needs reply, buyer leads are
+    // floated to the very top so the team can respond to active buyers first.
+    // Brand-new form submissions come right after, then tagged rows, then everything else.
+    const awaitingRows = matches.filter(s => awaitingAll[s.id]).sort((a, b) => {
+      const aBuyer = resolveKind(a.customer_kind, a.source) === "buyer" ? 1 : 0;
+      const bBuyer = resolveKind(b.customer_kind, b.source) === "buyer" ? 1 : 0;
+      if (aBuyer !== bBuyer) return bBuyer - aBuyer; // buyers first
+      return byLatestInbound(a, b);
+    });
     const freshRows = matches.filter(s => isNew(s) && !awaitingAll[s.id]).sort(byNewest);
     const rest = matches.filter(s => !awaitingAll[s.id] && !isNew(s));
     const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
@@ -3571,11 +3577,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })();
             const StageIcon = stage.icon;
 
+            const isBuyer = sKind === "buyer";
             const bgCls = isActive
               ? "bg-primary/15"
               : needsReply
-                // "Needs reply" is shown as a red row highlight instead of a tag.
-                ? "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
+                // Buyers needing reply get a stronger cool sky tint; everyone else
+                // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
+                ? isBuyer
+                  ? "bg-[hsl(var(--status-new))]/15 hover:bg-[hsl(var(--status-new))]/25"
+                  : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
                 : beingWorked
                   ? "bg-accent/10 hover:bg-accent/15"
                   : stage.tint;
@@ -3702,7 +3712,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls}`}
+                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${needsReply && isBuyer ? "border-l-[3px] border-l-[hsl(var(--status-new))]" : ""}`}
                 >
                   {/* Stage rail — colour + fill height show how far along they are */}
                   <span
@@ -3730,7 +3740,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
                         {needsReply && (
-                          <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-[hsl(var(--status-reply))] text-white shrink-0">
+                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-new))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
                             Reply
                           </span>
                         )}
@@ -3762,7 +3772,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       return (
                         <>
                           {headline && needsReply && (
-                            <p className="text-xs font-semibold text-[hsl(var(--status-reply))] leading-snug">
+                            <p className={`text-xs font-semibold leading-snug ${isBuyer ? "text-[hsl(var(--status-new))]" : "text-[hsl(var(--status-reply))]"}`}>
                               {label && <span className="text-primary/80 font-medium">{label} · </span>}
                               {headline}
                             </p>
@@ -3816,7 +3826,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     )}
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-muted-foreground/30 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-transform ${needsReply && isBuyer ? "text-[hsl(var(--status-new))]/60" : "text-muted-foreground/30"} ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
 
 
