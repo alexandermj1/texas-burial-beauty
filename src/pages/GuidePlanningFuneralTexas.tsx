@@ -761,6 +761,7 @@ const GuidePlanningFuneralTexas = () => {
                 src={metroAustin}
                 alt="Landscaped cemetery grounds representing the Austin metro area"
                 caption="Ten steady steps beat one panicked afternoon — take them in order."
+                layout="split"
               />
 
               {/* ------------------- OWN VS NEED */}
@@ -811,10 +812,46 @@ const GuidePlanningFuneralTexas = () => {
                 ]}
               />
 
+              <section
+                id="cemetery-map"
+                className="relative left-1/2 my-16 w-[min(calc(100vw-3rem),1280px)] -translate-x-1/2 scroll-mt-28 border-y border-border/60 py-12 md:my-20 md:py-16"
+              >
+                <div className="mb-8 max-w-3xl">
+                  <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
+                    <span className="h-px w-10 bg-primary/40" /> Texas cemetery map
+                  </p>
+                  <h2 className="font-display text-3xl leading-[1.08] text-foreground md:text-[2.4rem]">
+                    Find a cemetery near your family
+                  </h2>
+                  <p className="mt-4 max-w-2xl text-[1rem] leading-[1.8] text-foreground/70">
+                    Choose a metro area to focus the map, search by cemetery or city, or enter an address to sort the nearest options first.
+                  </p>
+                </div>
+                <Suspense
+                  fallback={
+                    <div className="grid h-[28rem] place-items-center rounded-2xl border border-border bg-card text-sm text-muted-foreground">
+                      Loading Texas cemetery map…
+                    </div>
+                  }
+                >
+                  <MetroCemeteryMap
+                    regions={ALL_TEXAS_REGIONS}
+                    metro="Texas"
+                    searchable
+                    fullBleed={false}
+                    hideTitle
+                    compact
+                    metroTabs
+                    widget
+                  />
+                </Suspense>
+              </section>
+
               <PhotoBreak
                 src={metroHouston}
                 alt="Tree-shaded cemetery grounds representing Greater Houston"
                 caption="Settle the plot question early, and the most expensive decision is off the table."
+                layout="portrait"
               />
 
               <Section id="help-costs" eyebrow="Part 1 continued" title="Help with the costs, and the paperwork after">
@@ -867,6 +904,7 @@ const GuidePlanningFuneralTexas = () => {
                 src={metroDallas}
                 alt="Landscaped cemetery grounds representing Dallas–Fort Worth"
                 caption="A few calm phone calls can save a family thousands of dollars."
+                layout="cinematic"
               />
               <Section id="toolkit" eyebrow="Part 2 · Your toolkit" title="The phone call: what to say">
                 <p>
@@ -953,6 +991,7 @@ const GuidePlanningFuneralTexas = () => {
                 src={metroSanAntonio}
                 alt="Mature trees across cemetery grounds representing San Antonio"
                 caption="Your rights don't expire at the funeral home door — they travel with you."
+                layout="window"
               />
 
               {/* ------------------- COMPARISON SHEET */}
@@ -1033,6 +1072,7 @@ const GuidePlanningFuneralTexas = () => {
                 src={metroEastTexas}
                 alt="Cemetery lawns and monuments representing East Texas"
                 caption="The families who overspend aren't careless — they're rushed. Slow the moment down."
+                layout="strip"
               />
 
               {/* ------------------- PRICES */}
@@ -1106,6 +1146,7 @@ const GuidePlanningFuneralTexas = () => {
                 src={metroWestTexas}
                 alt="Peaceful cemetery grounds representing West Texas"
                 caption="Texas families help each other through this. Here is who to call."
+                layout="postcard"
               />
               <Section id="local-help" eyebrow="Dallas–Fort Worth" title="Local help">
                 <ul>
