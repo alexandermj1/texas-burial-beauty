@@ -67,7 +67,20 @@
 
 ## Cemetery directory card redesign
 - [x] Generate 3 design directions (rejected — wants cemetery name prioritized, photos on only some cards)
-- [ ] Regenerate directions: name-first hierarchy, photos on select anchor cards only
-- [ ] Implement the chosen card style on the Texas cemetery directory page
-- [ ] Use uploaded cemetery photos where available
-- [ ] Verify desktop and mobile presentation
+- [x] Regenerate directions: name-first hierarchy, photos on select anchor cards only
+- [x] Implement the chosen card style on the Texas cemetery directory page
+- [x] Use uploaded cemetery photos where available
+- [x] Verify desktop and mobile presentation
+
+## Planning a funeral guide redesign
+- [x] Use the cemetery directory's metro-area imagery throughout the article
+- [x] Redesign the first-48-hours section as an editorial timeline
+- [x] Redesign all ten steps with clearer numbered hierarchy
+- [x] Add useful internal and authoritative external links
+- [x] Replace highlighted FAQ cards with restrained accordion rows
+- [x] Replace bespoke related-guide cards with the existing guide carousel
+- [ ] Verify the final desktop and mobile article presentation
+
+## Quote email calculation
+- [ ] Remove buyer commission from the quote calculation and deduction
+- [ ] Send a review email to alexandermaclarenjames@gmail.com
