@@ -113,7 +113,7 @@ const Section = ({
         {eyebrow}
       </p>
       <h2 className="mb-7 font-display text-3xl leading-[1.08] text-foreground md:text-[2.4rem]">{title}</h2>
-      <div className="prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground">
+      <div className={`prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground ${id === "ten-things" || id === "help-costs" ? "[&_h3]:border-t [&_h3]:border-border [&_h3]:pt-8 [&_h3]:text-[1.65rem] md:[&_h3]:text-3xl" : ""}`}>
         {children}
       </div>
     </div>
@@ -610,26 +610,26 @@ const GuidePlanningFuneralTexas = () => {
                   Everything else can be sequenced. Here is the order that saves Texas families the most money and
                   stress, based on what we’ve seen go wrong:
                 </p>
-                <div className="not-prose mt-8 grid gap-4 md:grid-cols-3">
-                  <StepCard n="1" title="Day 1: secure the paperwork, not the package">
+                <div className="not-prose relative mt-10 rounded-2xl border border-border/70 bg-card/35 px-6 pb-2 pt-8 md:px-10 md:pt-10">
+                  <div className="mb-10 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                    <span className="h-px flex-1 bg-primary/25" /> A calm order of decisions <span className="h-px flex-1 bg-primary/25" />
+                  </div>
+                  <TimelineStep n="1" title="Day 1: secure the paperwork, not the package">
                     Find out who has the legal right to decide (see item 3 below), and look for any prepaid contract,
                     plot deed, or Appointment of Agent form before you sit down with anyone selling you something.
                     Families who discover a prepaid contract after the arrangement meeting have sometimes bought — and
                     paid for — services twice.
-                  </StepCard>
-                  <StepCard n="2" title="Day 2: price the funeral home, price the cemetery separately">
-                    These are two different bills from two different businesses, and Texas families routinely negotiate
-                    the first while accepting the second at face value. Get the funeral home’s numbers by phone using
-                    the script in Part 2 — then call the cemetery (or a cemetery broker) with the same mindset. The plot
-                    decision is often the single largest line item in a burial, and it’s the one most families research
-                    least.
-                  </StepCard>
-                  <StepCard n="3" title="Day 3 and after: the service itself">
+                  </TimelineStep>
+                  <TimelineStep n="2" title="Day 2: price the funeral home, price the cemetery separately">
+                    These are two different bills from two different businesses. Get the funeral home’s numbers using
+                    the <a href="#toolkit" className="font-medium text-primary underline decoration-primary/30 underline-offset-4">phone script below</a>, then compare the cemetery separately. You can also browse the <In to="/cemeteries">Texas cemetery directory</In> before making the plot decision.
+                  </TimelineStep>
+                  <TimelineStep n="3" title="Day 3 and after: the service itself" last>
                     Once the body is cared for, the prices are compared, and the decision-maker is settled, the ceremony
                     choices — viewing, service, obituary, flowers — can be made without anyone’s clock running but
                     yours. A funeral home that pressures you to decide everything in the first meeting is telling you
                     something about itself.
-                  </StepCard>
+                  </TimelineStep>
                 </div>
               </Section>
 
@@ -653,7 +653,7 @@ const GuidePlanningFuneralTexas = () => {
                     A prepaid funeral contract or burial insurance. In Texas, the family handling arrangements is
                     entitled to a copy of any prepaid agreement the funeral home holds for the person who died. Ask.
                   </li>
-                  <li>A cemetery plot they already own, or a family plot.</li>
+                  <li>A cemetery plot they already own, or a family plot. If the paperwork is missing, start with our <In to="/cemetery-transfer-process-texas">Texas cemetery ownership and transfer guide</In>.</li>
                   <li>Written wishes, a will, or an Appointment of Agent form naming who should decide.</li>
                   <li>Military service — veterans may be entitled to free burial.</li>
                   <li>Life insurance, or death benefits through an employer, union or association.</li>
@@ -672,7 +672,7 @@ const GuidePlanningFuneralTexas = () => {
                   Under the federal <Ext href={FTC}>Funeral Rule</Ext>, every funeral home must give you prices over the
                   phone, hand you an itemised price list if you visit, and let you choose only the items you want. The
                   one fee you can’t refuse is the basic services fee for the funeral director and staff. Part 2 of this
-                  guide gives you a script for those calls.
+                   guide gives you a <a href="#toolkit">script for those calls</a>, and our <In to="/cemetery-plot-cost-texas">Texas cemetery cost guide</In> explains the separate cemetery charges.
                 </p>
 
                 <h3>5. Bring someone with you</h3>
@@ -712,13 +712,13 @@ const GuidePlanningFuneralTexas = () => {
                   If you need a plot, consider a resale plot. Plots bought from their current owners are typically
                   around 30% less expensive than buying directly from the cemetery. A resale plot has never been used —
                   someone bought it years ago and no longer needs it. A cemetery broker can find one and handle the
-                  transfer with the cemetery, so it’s worth checking with a broker first.
+                   transfer with the cemetery, so it’s worth checking with a broker first. Our <In to="/cemetery-plots-for-sale-texas">guide to buying a resale cemetery plot</In> explains what to verify before paying.
                 </p>
               </Section>
 
               <PhotoBreak
-                src={photoBluebonnetColonnade.url}
-                alt="The lake and colonnade walkway at Bluebonnet Hills Memorial Park in Colleyville, Texas"
+                src={metroAustin}
+                alt="Landscaped cemetery grounds representing the Austin metro area"
                 caption="Ten steady steps beat one panicked afternoon — take them in order."
               />
 
@@ -771,8 +771,8 @@ const GuidePlanningFuneralTexas = () => {
               />
 
               <PhotoBreak
-                src={photoRestland}
-                alt="Tree-shaded cemetery lawn in Dallas–Fort Worth"
+                src={metroHouston}
+                alt="Tree-shaded cemetery grounds representing Greater Houston"
                 caption="Settle the plot question early, and the most expensive decision is off the table."
               />
 
@@ -821,8 +821,8 @@ const GuidePlanningFuneralTexas = () => {
 
               {/* ------------------- PHONE SCRIPT */}
               <PhotoBreak
-                src={photoSparkman}
-                alt="Fountain garden at a Dallas cemetery"
+                src={metroDallas}
+                alt="Landscaped cemetery grounds representing Dallas–Fort Worth"
                 caption="A few calm phone calls can save a family thousands of dollars."
               />
               <Section id="toolkit" eyebrow="Part 2 · Your toolkit" title="The phone call: what to say">
@@ -907,8 +907,8 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               <PhotoBreak
-                src={photoSparkmanOak.url}
-                alt="Mature oak trees shading the lawns at Sparkman-Hillcrest Memorial Park in Dallas, Texas"
+                src={metroSanAntonio}
+                alt="Mature trees across cemetery grounds representing San Antonio"
                 caption="Your rights don't expire at the funeral home door — they travel with you."
               />
 
@@ -987,8 +987,8 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               <PhotoBreak
-                src={photoRestlandMonuments.url}
-                alt="Lawn monuments among the trees at Restland Funeral Home and Memorial Park in Dallas, Texas"
+                src={metroEastTexas}
+                alt="Cemetery lawns and monuments representing East Texas"
                 caption="The families who overspend aren't careless — they're rushed. Slow the moment down."
               />
 
@@ -1060,8 +1060,8 @@ const GuidePlanningFuneralTexas = () => {
 
               {/* ------------------- LOCAL HELP */}
               <PhotoBreak
-                src={photoBluebonnet}
-                alt="Bluebonnets beside a Texas lake"
+                src={metroWestTexas}
+                alt="Peaceful cemetery grounds representing West Texas"
                 caption="Texas families help each other through this. Here is who to call."
               />
               <Section id="local-help" eyebrow="Dallas–Fort Worth" title="Local help">
@@ -1095,7 +1095,7 @@ const GuidePlanningFuneralTexas = () => {
 
               {/* ------------------- FAQ */}
               <Section id="faq" eyebrow="Questions" title="Frequently asked questions">
-                <div className="not-prose divide-y divide-border/70 overflow-hidden rounded-xl border border-border">
+                <div className="not-prose divide-y divide-border border-y border-border">
                   {FAQS.map((f, i) => {
                     const open = openFaq === i;
                     return (
@@ -1105,7 +1105,7 @@ const GuidePlanningFuneralTexas = () => {
                             type="button"
                             aria-expanded={open}
                             onClick={() => setOpenFaq(open ? null : i)}
-                            className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-display text-lg text-foreground hover:bg-muted/30"
+                            className="flex w-full items-center justify-between gap-6 px-0 py-6 text-left text-base font-semibold text-foreground transition-colors hover:text-primary md:text-lg"
                           >
                             {f.q}
                             <ChevronDown
@@ -1114,31 +1114,11 @@ const GuidePlanningFuneralTexas = () => {
                           </button>
                         </h3>
                         {open && (
-                          <p className="px-6 pb-6 text-[0.98rem] leading-[1.8] text-foreground/75">{f.a}</p>
+                          <p className="max-w-3xl pb-7 pr-10 text-[0.98rem] leading-[1.8] text-foreground/75">{f.a}</p>
                         )}
                       </div>
                     );
                   })}
-                </div>
-              </Section>
-
-              {/* ------------------- SERIES */}
-              <Section id="series" eyebrow="Keep reading" title="Other guides in this series">
-                <p>If your situation involves any of these, our other guides go into more detail:</p>
-                <div className="not-prose mt-8 grid gap-4 sm:grid-cols-2">
-                  {SERIES.filter((g) => g.to).map((g) => (
-                    <Link
-                      key={g.title}
-                      to={g.to!}
-                      className="group rounded-xl border border-border/70 bg-card/60 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md"
-                    >
-                      <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{g.title}</h3>
-                      <p className="text-sm leading-relaxed text-foreground/65">{g.dek}</p>
-                      <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                        Read the guide <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </p>
-                    </Link>
-                  ))}
                 </div>
               </Section>
 
@@ -1174,6 +1154,9 @@ const GuidePlanningFuneralTexas = () => {
               </p>
             </article>
           </div>
+        </div>
+        <div id="series" className="scroll-mt-28">
+          <GuidesCarousel />
         </div>
       </main>
 
