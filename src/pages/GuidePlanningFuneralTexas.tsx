@@ -780,6 +780,12 @@ const GuidePlanningFuneralTexas = () => {
                 ]}
               />
 
+              <PhotoBreak
+                src={photoRestland}
+                alt="Tree-shaded cemetery lawn in Dallas–Fort Worth"
+                caption="Settle the plot question early, and the most expensive decision is off the table."
+              />
+
               <Section id="help-costs" eyebrow="Part 1 continued" title="Help with the costs, and the paperwork after">
                 <h3>9. Ask about help with the costs</h3>
                 <ul>
