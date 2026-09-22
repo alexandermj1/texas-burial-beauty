@@ -3740,7 +3740,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
                         {needsReply && (
-                          <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-[hsl(var(--status-reply))] text-white shrink-0">
+                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-new))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
                             Reply
                           </span>
                         )}
