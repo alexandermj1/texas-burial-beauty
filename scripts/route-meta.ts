@@ -122,4 +122,11 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Who inherits a Texas cemetery plot, who must sign its transfer, and how spousal rights, heirs and cemetery rules work together.",
     type: "article",
   },
+  {
+    path: "/guides/planning-a-funeral-in-texas",
+    title: "Planning a Funeral in Texas: Where to Start | TCB",
+    description:
+      "Just lost someone and don't know what to do first? A plain-English Texas guide: your rights, real DFW prices, phone scripts, and where families overspend.",
+    type: "article",
+  },
 ];
