@@ -27,6 +27,9 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import photoSparkman from "@/assets/featured/sparkman-fountain-garden.jpg";
 import photoRestland from "@/assets/featured/restland-hero-lawn.jpg";
 import photoBluebonnet from "@/assets/featured/bluebonnet-hero-lake.jpg";
+import photoSparkmanOak from "@/assets/sparkman/sparkman-oak-lawn.jpg.asset.json";
+import photoRestlandMonuments from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
+import photoBluebonnetColonnade from "@/assets/bluebonnet/bluebonnet-lake-colonnade.jpg.asset.json";
 
 const PATH = "/guides/planning-a-funeral-in-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -106,8 +109,8 @@ const Section = ({
         <span className="h-px w-10 bg-primary/40" />
         {eyebrow}
       </p>
-      <h2 className="mb-7 max-w-3xl font-display text-3xl leading-[1.08] text-foreground md:text-[2.4rem]">{title}</h2>
-      <div className="prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-9 [&_h3]:max-w-3xl [&_h3]:font-display [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:max-w-3xl [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground">
+      <h2 className="mb-7 font-display text-3xl leading-[1.08] text-foreground md:text-[2.4rem]">{title}</h2>
+      <div className="prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:rounded-r-xl [&_h3]:border-l-4 [&_h3]:border-primary [&_h3]:bg-primary/[0.07] [&_h3]:py-3 [&_h3]:pl-5 [&_h3]:pr-4 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground">
         {children}
       </div>
     </div>
@@ -133,29 +136,27 @@ const StepCard = ({ n, title, children }: { n: string; title: string; children: 
   </motion.div>
 );
 
-/** Full-bleed photo break between major parts of the guide. */
+/** Photo break between major parts of the guide. */
 const PhotoBreak = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
   <motion.figure
     initial={{ opacity: 0, scale: 0.985 }}
     whileInView={{ opacity: 1, scale: 1 }}
     viewport={{ once: true, margin: "-80px" }}
     transition={{ duration: 0.7 }}
-    className="relative left-1/2 my-14 w-[100vw] max-w-[100vw] -translate-x-1/2"
+    className="my-12"
   >
-    <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
-      <div className="relative overflow-hidden rounded-3xl shadow-lg">
-        <img src={src} alt={alt} loading="lazy" className="h-64 w-full object-cover md:h-96" />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/10 to-transparent" />
-        <img
-          src={hibiscusCoral.url}
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute -right-4 -top-4 w-20 rotate-12 opacity-90 drop-shadow-md md:w-24"
-        />
-        <figcaption className="absolute bottom-0 left-0 max-w-2xl p-6 font-display text-lg leading-snug text-background md:p-8 md:text-2xl">
-          {caption}
-        </figcaption>
-      </div>
+    <div className="relative overflow-hidden rounded-3xl shadow-lg">
+      <img src={src} alt={alt} loading="lazy" className="h-64 w-full object-cover md:h-96" />
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/10 to-transparent" />
+      <img
+        src={hibiscusCoral.url}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute right-4 top-4 w-20 rotate-12 opacity-90 drop-shadow-md md:w-24"
+      />
+      <figcaption className="absolute bottom-0 left-0 max-w-2xl p-6 font-display text-lg leading-snug text-background md:p-8 md:text-2xl">
+        {caption}
+      </figcaption>
     </div>
   </motion.figure>
 );
@@ -428,7 +429,7 @@ const GuidePlanningFuneralTexas = () => {
           initial={{ opacity: 0, y: 16, rotate: -24 }}
           animate={{ opacity: 0.55, y: 0, rotate: -18 }}
           transition={{ duration: 0.9 }}
-          className="pointer-events-none absolute -right-16 -top-10 w-72 md:right-4 md:w-96"
+          className="pointer-events-none absolute right-0 top-0 w-64 md:w-96"
         />
         <motion.img
           src={palmFan.url}
@@ -437,7 +438,7 @@ const GuidePlanningFuneralTexas = () => {
           initial={{ opacity: 0, y: 20, rotate: 14 }}
           animate={{ opacity: 0.5, y: 0, rotate: 8 }}
           transition={{ duration: 0.9, delay: 0.1 }}
-          className="pointer-events-none absolute -bottom-16 right-24 hidden w-64 md:block lg:right-40"
+          className="pointer-events-none absolute bottom-0 right-24 hidden w-64 md:block lg:right-40"
         />
         <motion.img
           src={hibiscusCoral.url}
@@ -464,7 +465,7 @@ const GuidePlanningFuneralTexas = () => {
           initial={{ opacity: 0, y: -14, rotate: -30 }}
           animate={{ opacity: 0.45, y: 0, rotate: -22 }}
           transition={{ duration: 0.9, delay: 0.15 }}
-          className="pointer-events-none absolute -left-10 top-24 hidden w-44 lg:block"
+          className="pointer-events-none absolute left-0 top-24 hidden w-44 lg:block"
         />
         <motion.img
           src={pinkBranch.url}
@@ -473,7 +474,7 @@ const GuidePlanningFuneralTexas = () => {
           initial={{ opacity: 0, x: -16, rotate: 12 }}
           animate={{ opacity: 0.5, x: 0, rotate: 6 }}
           transition={{ duration: 0.9, delay: 0.25 }}
-          className="pointer-events-none absolute -left-14 bottom-0 hidden w-56 lg:block"
+          className="pointer-events-none absolute left-0 bottom-0 hidden w-56 lg:block"
         />
         <span className="absolute bottom-0 left-0 h-1 w-1/3 bg-primary/50" />
         <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
@@ -511,7 +512,7 @@ const GuidePlanningFuneralTexas = () => {
 
       <main>
         <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto max-w-4xl">
             {/* ------------------------------------------------ TOC */}
             <nav aria-label="Table of contents" className="pt-8 lg:pt-10">
               <button
@@ -549,11 +550,11 @@ const GuidePlanningFuneralTexas = () => {
             {/* ------------------------------------------------ ARTICLE */}
             <article className="min-w-0 pb-10">
               <div className="border-b border-border py-10 md:py-12">
-                <p className="max-w-3xl text-xl leading-[1.75] text-foreground/85 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-primary">
+                <p className="text-xl leading-[1.75] text-foreground/85 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-primary">
                   If someone you love has just died, we’re very sorry. You may now be facing decisions you’ve never made
                   before, at the moment you least feel able to make them.
                 </p>
-                <p className="mt-6 max-w-3xl text-[1.05rem] leading-[1.8] text-foreground/75">
+                <p className="mt-6 text-[1.05rem] leading-[1.8] text-foreground/75">
                   This guide won’t tell you what kind of funeral to have. It explains how things work, gives you the
                   exact words to use when you call funeral homes, and shows you where families most often end up
                   spending more than they meant to — so you can make choices that feel right, without being rushed.
@@ -732,6 +733,12 @@ const GuidePlanningFuneralTexas = () => {
                   transfer with the cemetery, so it’s worth checking with a broker first.
                 </p>
               </Section>
+
+              <PhotoBreak
+                src={photoBluebonnetColonnade.url}
+                alt="The lake and colonnade walkway at Bluebonnet Hills Memorial Park in Colleyville, Texas"
+                caption="Ten steady steps beat one panicked afternoon — take them in order."
+              />
 
               {/* ------------------- OWN VS NEED */}
               <Section
@@ -917,6 +924,12 @@ const GuidePlanningFuneralTexas = () => {
                 </p>
               </Section>
 
+              <PhotoBreak
+                src={photoSparkmanOak.url}
+                alt="Mature oak trees shading the lawns at Sparkman-Hillcrest Memorial Park in Dallas, Texas"
+                caption="Your rights don't expire at the funeral home door — they travel with you."
+              />
+
               {/* ------------------- COMPARISON SHEET */}
               <Section id="sheet" eyebrow="Print this" title="Price comparison sheet">
                 <p>Print this or copy it onto paper, and fill it in as you call.</p>
@@ -990,6 +1003,12 @@ const GuidePlanningFuneralTexas = () => {
                   ))}
                 </ol>
               </Section>
+
+              <PhotoBreak
+                src={photoRestlandMonuments.url}
+                alt="Lawn monuments among the trees at Restland Funeral Home and Memorial Park in Dallas, Texas"
+                caption="The families who overspend aren't careless — they're rushed. Slow the moment down."
+              />
 
               {/* ------------------- PRICES */}
               <Section
