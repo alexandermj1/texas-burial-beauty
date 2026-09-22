@@ -227,7 +227,8 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
   const handleSaveOnly = async () => {
     setSaving(true);
     await onSave(submission.id, {
-      quote_amount: totalNet > 0 ? totalNet : null,
+      quote_amount: netPerSpace > 0 ? netPerSpace : null,
+      plot_count: countNum,
       transfer_fee_amount: transferFee ? Number(transferFee) : null,
       cemetery_retail: retail ? Number(retail) : null,
       quote_message: customMessage || null,
