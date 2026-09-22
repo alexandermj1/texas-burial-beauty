@@ -288,8 +288,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const [autoSynced, setAutoSynced] = useState(false);
   /** A prepared PDF shown inline so it can be checked without leaving the page. */
   const [pdfPreview, setPdfPreview] = useState<{ url: string; title: string; source?: FileViewerSource } | null>(null);
-  /** The send-document-request review flow. */
-  const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(null);
+  /** The send-document-request review flow.
+   *  This panel can be unmounted underneath the broker (a list refresh, a tab
+   *  flipping back to Email), which used to make the review window vanish a
+   *  moment after it opened. The open state is remembered for this submission
+   *  so the window simply comes back instead of disappearing mid-send. */
+  const reviewKey = `docreq-review-${submissionId}`;
+  const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(() => {
+    try { return sessionStorage.getItem(reviewKey) ? { step: 1 as const } : null; } catch { return null; }
+  });
+  useEffect(() => {
+    try {
+      if (review) sessionStorage.setItem(reviewKey, "1");
+      else sessionStorage.removeItem(reviewKey);
+    } catch { /* private mode — the window just will not be remembered */ }
+  }, [review, reviewKey]);
   /** The broker's own touches on this request: who it greets and what it says. */
   const [greetName, setGreetName] = useState("");
   const [emailNote, setEmailNote] = useState("");
@@ -3263,7 +3276,12 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       {/* ── Send document request: review → preview → confirm ── */}
       <Dialog open={!!review} onOpenChange={(o) => !o && setReview(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent
+          className="max-w-3xl"
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Mail className="w-4 h-4" /> {review?.step === 1 ? "Check the request" : "This is exactly what they'll get"}
