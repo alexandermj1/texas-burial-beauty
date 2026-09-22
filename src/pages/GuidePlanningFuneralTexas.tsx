@@ -431,98 +431,68 @@ const GuidePlanningFuneralTexas = () => {
       <Navbar forceScrolled />
 
       {/* ---------------------------------------------------------- HERO */}
-      <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-16 pt-28 md:pb-24">
-        <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(hsl(var(--stone)/0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-        {/* Warm colour washes */}
-        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl" />
-        <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
-        {/* Floral arrangement — same flowers as the other guides */}
-        <motion.img
-          src={bananaLeaf.url}
-          alt=""
+      <header className="relative overflow-hidden border-b border-border/60 bg-secondary/35 pb-12 pt-24 md:pb-16 md:pt-28">
+        <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(hsl(var(--stone)/0.22)_1px,transparent_1px)] [background-size:24px_24px]" />
+
+        {/* One composed botanical sanctuary, anchored around the reading field. */}
+        <motion.div
           aria-hidden
-          initial={{ opacity: 0, y: 16, rotate: -24 }}
-          animate={{ opacity: 0.55, y: 0, rotate: -18 }}
-          transition={{ duration: 0.9 }}
-          className="pointer-events-none absolute right-0 top-0 w-64 md:w-96"
-        />
-        <motion.img
-          src={palmFan.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, y: 20, rotate: 14 }}
-          animate={{ opacity: 0.5, y: 0, rotate: 8 }}
-          transition={{ duration: 0.9, delay: 0.1 }}
-          className="pointer-events-none absolute bottom-0 right-24 hidden w-64 md:block lg:right-40"
-        />
-        <motion.img
-          src={hibiscusCoral.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
-          animate={{ opacity: 0.9, scale: 1, rotate: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="pointer-events-none absolute bottom-6 right-6 w-28 sm:w-36 md:bottom-10 md:right-16 md:w-44"
-        />
-        <motion.img
-          src={plumeriaCluster.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
-          animate={{ opacity: 0.85, scale: 1, rotate: 4 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="pointer-events-none absolute right-40 top-16 hidden w-24 md:block lg:right-72 lg:w-28"
-        />
-        <motion.img
-          src={leafVeined.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, y: -14, rotate: -30 }}
-          animate={{ opacity: 0.45, y: 0, rotate: -22 }}
-          transition={{ duration: 0.9, delay: 0.15 }}
-          className="pointer-events-none absolute left-0 top-24 hidden w-44 lg:block"
-        />
-        <motion.img
-          src={pinkBranch.url}
-          alt=""
-          aria-hidden
-          initial={{ opacity: 0, x: -16, rotate: 12 }}
-          animate={{ opacity: 0.5, x: 0, rotate: 6 }}
-          transition={{ duration: 0.9, delay: 0.25 }}
-          className="pointer-events-none absolute left-0 bottom-0 hidden w-56 lg:block"
-        />
-        <span className="absolute bottom-0 left-0 h-1 w-1/3 bg-primary/50" />
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="pointer-events-none absolute inset-0"
+        >
+          <div className="absolute -right-20 -top-12 h-72 w-72 rounded-full border border-primary/10 md:h-[29rem] md:w-[29rem]" />
+          <div className="absolute -right-12 -top-8 h-60 w-60 rounded-full border border-primary/15 md:h-[25rem] md:w-[25rem]" />
+          <img src={bananaLeaf.url} alt="" className="absolute -right-14 -top-20 w-52 rotate-[-24deg] opacity-55 sm:w-64 md:-right-20 md:w-[24rem]" />
+          <img src={palmFan.url} alt="" className="absolute right-20 top-0 hidden w-48 rotate-[14deg] opacity-35 md:block lg:right-40 lg:w-60" />
+          <img src={hibiscusCoral.url} alt="" className="absolute right-2 top-36 w-24 rotate-[5deg] opacity-95 drop-shadow-sm sm:right-8 sm:w-32 md:right-14 md:top-48 md:w-40" />
+          <img src={plumeriaCluster.url} alt="" className="absolute right-24 top-20 hidden w-20 rotate-[-8deg] opacity-90 sm:block md:right-48 md:w-24" />
+
+          <div className="absolute -bottom-28 -left-24 h-72 w-72 rounded-full border border-primary/10 md:h-96 md:w-96" />
+          <img src={leafVeined.url} alt="" className="absolute -bottom-16 -left-16 w-40 rotate-[-8deg] opacity-35 md:w-56" />
+          <img src={pinkBranch.url} alt="" className="absolute -bottom-14 left-3 hidden w-44 rotate-[8deg] opacity-50 md:block lg:left-12 lg:w-56" />
+        </motion.div>
+
         <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
           <Link
             to="/guides"
-            className="mb-10 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground transition-colors hover:text-foreground"
+            className="mb-7 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground transition-colors hover:text-foreground md:mb-9"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> All guides
           </Link>
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="mb-7 flex items-center gap-4">
-              <span className="h-px w-16 bg-primary/40" />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-primary">
-                The Starting-Point Guide
-              </p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="relative mx-auto max-w-[62rem] px-0 text-center sm:px-12 md:px-20"
+          >
+            <div className="mb-6 inline-flex items-center gap-3 md:mb-7">
+              <span className="h-px w-8 bg-primary/40" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">The Starting-Point Guide</p>
+              <span className="h-px w-8 bg-primary/40" />
             </div>
-            <h1 className="max-w-4xl font-display text-[2.5rem] leading-[1.02] text-foreground sm:text-5xl md:text-6xl lg:text-[4.4rem]">
+            <h1 className="mx-auto max-w-[58rem] font-display text-[2.35rem] font-semibold leading-[1.05] text-foreground sm:text-5xl md:text-[3.75rem] lg:text-[4.2rem]">
               Planning a Funeral in Texas When You{" "}
-              <span className="italic text-primary">Don’t Know Where to Start</span>
+              <span className="italic font-normal text-primary">Don’t Know Where to Start</span>
             </h1>
-            <p className="mt-8 max-w-3xl text-lg font-light leading-relaxed text-foreground/75 md:text-xl">
+            <p className="mx-auto mt-7 max-w-2xl text-base leading-[1.75] text-foreground/80 sm:text-lg md:mt-8 md:text-xl">
               If someone you love has just died, this guide explains how things work, gives you the exact words to use
               when you call funeral homes, and shows you where families most often overspend.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/70 pt-6 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground/80">By Simon James, Texas Cemetery Brokers</span>
+            <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-border/80 pt-5 text-xs text-muted-foreground sm:text-sm md:mt-8">
+              <span className="font-medium text-foreground/85">By Simon James, Texas Cemetery Brokers</span>
+              <span aria-hidden className="hidden h-1 w-1 rounded-full bg-primary/45 sm:block" />
               <span>September 2026</span>
+              <span aria-hidden className="hidden h-1 w-1 rounded-full bg-primary/45 sm:block" />
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5" /> 14 min read
               </span>
             </div>
           </motion.div>
         </div>
+        <span className="absolute bottom-0 left-1/2 h-px w-32 -translate-x-1/2 bg-primary/50" />
       </header>
 
       <main>
