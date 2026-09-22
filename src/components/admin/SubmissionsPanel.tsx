@@ -3171,7 +3171,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         toast({ title: archiving ? "Moved to archive" : "Restored to pipeline" });
       })}>{selected.archived_at ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}{selected.archived_at ? "Unarchive" : "Archive"}</Button>
       <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={guard("Delete submission", () => { setConfirmDeleteFor(selected); setDeleteText(""); })}><Trash2 className="h-3.5 w-3.5" />Delete</Button>
-    </div> : null;
+    </div>;
     return (
           <motion.div
             key={selected.id}
