@@ -295,14 +295,27 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
    *  so the window simply comes back instead of disappearing mid-send. */
   const reviewKey = `docreq-review-${submissionId}`;
   const [review, setReview] = useState<null | { step: 1 | 2; html?: string; subject?: string; loading?: boolean }>(() => {
-    try { return sessionStorage.getItem(reviewKey) ? { step: 1 as const } : null; } catch { return null; }
+    // Only resume a review that was genuinely interrupted moments ago. A stale
+    // flag left behind by a closed tab used to pop this window open on its own.
+    try {
+      const at = Number(sessionStorage.getItem(reviewKey) || 0);
+      if (at && Date.now() - at < 3 * 60 * 1000) return { step: 1 as const };
+      sessionStorage.removeItem(reviewKey);
+      return null;
+    } catch { return null; }
   });
   useEffect(() => {
     try {
-      if (review) sessionStorage.setItem(reviewKey, "1");
+      if (review) sessionStorage.setItem(reviewKey, String(Date.now()));
       else sessionStorage.removeItem(reviewKey);
     } catch { /* private mode — the window just will not be remembered */ }
   }, [review, reviewKey]);
+  // Once the request has gone out, never auto-reopen the send window.
+  useEffect(() => {
+    if (!requestedAt) return;
+    try { sessionStorage.removeItem(reviewKey); } catch { /* ignore */ }
+  }, [requestedAt, reviewKey]);
+
   /** The broker's own touches on this request: who it greets and what it says. */
   const [greetName, setGreetName] = useState("");
   const [emailNote, setEmailNote] = useState("");
