@@ -2384,7 +2384,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             {/* Reply state + custom tag — Texas only */}
             {subRegion(selected) === "texas" && kind === "buyer" && (() => {
-              const isAwaiting = !!awaitingMap[selected.id];
+              // The list collapses duplicates into one person, so treat the person
+              // as awaiting if ANY of their submissions is tagged (including a
+              // plot-match driven one).
+              const selEmail = (selected.email || "").trim().toLowerCase();
+              const isAwaiting = !!awaitingAll[selected.id] || (!!selEmail && submissions.some(s =>
+                !(s as any).deleted_at && (s.email || "").trim().toLowerCase() === selEmail && !!awaitingAll[s.id]));
               const currentTag = ((selected as any).custom_tag || "").trim();
               return (
                 <div className="bg-card rounded-xl border border-border/50 p-3 flex flex-wrap items-center gap-2">
