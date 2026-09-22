@@ -81,6 +81,39 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
   // When the listing agreement for this submission is signed, the LA email tag
   // flips to a green "Listing agreement signed" chip.
   const [laSignedAt, setLaSignedAt] = useState<string | null>(null);
+  // Whether the team has dismissed the "Needs reply" flag on this file. A newer
+  // inbound email than the dismissal always re-flags it (matches the list).
+  const [replyDismissedAt, setReplyDismissedAt] = useState<string | null>(null);
+  const [togglingReply, setTogglingReply] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadDismissal = async () => {
+      const { data } = await supabase
+        .from("contact_submissions" as any)
+        .select("reply_dismissed_at")
+        .eq("id", submissionId)
+        .maybeSingle();
+      if (!cancelled) setReplyDismissedAt((data as any)?.reply_dismissed_at ?? null);
+    };
+    loadDismissal();
+    const ch = supabase.channel(`reply_state:${submissionId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contact_submissions", filter: `id=eq.${submissionId}` }, () => loadDismissal())
+      .subscribe();
+    return () => { cancelled = true; ch.unsubscribe(); supabase.removeChannel(ch); };
+  }, [submissionId]);
+
+  const toggleReplyNeeded = async () => {
+    if (togglingReply) return;
+    setTogglingReply(true);
+    const next = replyDismissedAt ? null : new Date().toISOString();
+    setReplyDismissedAt(next);
+    await supabase
+      .from("contact_submissions" as any)
+      .update({ reply_dismissed_at: next } as any)
+      .eq("id", submissionId);
+    setTogglingReply(false);
+  };
 
   // The guided stage buttons (e.g. "Build and send quote") open the very same
   // composer a broker would use by hand, with the requested pack already open.
