@@ -74,10 +74,10 @@
     --status-new-fg: 200 50% 26%;
     --status-new-border: 200 40% 80%;
 
-    --status-buyer: 165 50% 60%;        /* light minty sage — buyer cards needing reply */
-    --status-buyer-soft: 165 55% 93%;
-    --status-buyer-fg: 165 45% 28%;
-    --status-buyer-border: 165 45% 82%;
+    --status-buyer: 18 60% 46%;        /* warm hibiscus-coral — buyer cards needing reply */
+    --status-buyer-soft: 18 55% 94%;
+    --status-buyer-fg: 16 55% 26%;
+    --status-buyer-border: 18 50% 82%;
 
     --status-docs: 155 32% 38%;          /* moss — success/attachments */
     --status-docs-soft: 152 30% 92%;

@@ -3584,7 +3584,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 // Buyers needing reply get a light minty sage tint; everyone else
                 // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
                 ? isBuyer
-                  ? "bg-[hsl(var(--status-buyer))]/15 hover:bg-[hsl(var(--status-buyer))]/25"
+                  ? "bg-[hsl(var(--status-buyer))]/10 hover:bg-[hsl(var(--status-buyer))]/18"
                   : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
                 : beingWorked
                   ? "bg-accent/10 hover:bg-accent/15"
