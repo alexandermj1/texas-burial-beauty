@@ -299,23 +299,27 @@ const FAQS = [
   },
 ];
 
-const SERIES: { title: string; dek: string; to?: string }[] = [
+const SERIES: { title: string; dek: string; to: string }[] = [
   {
     title: "Who actually owns a cemetery plot in Texas",
     dek: "Who can use or sell a plot a loved one owned.",
     to: "/cemetery-transfer-process-texas",
   },
   {
-    title: "Help with funeral costs after a crime in Texas",
-    dek: "The Crime Victims' Compensation Program and who to call in your county.",
+    title: "How much does a cemetery plot cost in Texas?",
+    dek: "Real price ranges for plots, opening and closing, and markers.",
+    to: "/cemetery-plot-cost-texas",
   },
   {
-    title: "After a loss: finding support in Dallas–Fort Worth",
-    dek: "Grief support, most of it free, organised by type of loss.",
+    title: "Cemetery plots for sale in Texas",
+    dek: "How buying a resale plot works, and what to check first.",
+    to: "/cemetery-plots-for-sale-texas",
   },
-  { title: "What is a death doula?", dek: "Non-medical support at the end of life, and the free help hospices offer." },
-  { title: "Paying for your own funeral in Texas", dek: "For when you're ready to think about your own plans." },
-  { title: "Choosing a hospice in Texas", dek: "For families facing that decision now." },
+  {
+    title: "How to sell a cemetery plot in Texas",
+    dek: "For families who own a plot they won't use.",
+    to: "/sell-cemetery-plot-texas",
+  },
 ];
 
 /* ------------------------------------------------------------------ */
