@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
-  ArrowUpRight,
   Check,
   ChevronDown,
   Clock,
@@ -18,18 +17,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import GuidesCarousel from "@/components/GuidesCarousel";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
-import photoSparkman from "@/assets/featured/sparkman-fountain-garden.jpg";
-import photoRestland from "@/assets/featured/restland-hero-lawn.jpg";
-import photoBluebonnet from "@/assets/featured/bluebonnet-hero-lake.jpg";
-import photoSparkmanOak from "@/assets/sparkman/sparkman-oak-lawn.jpg.asset.json";
-import photoRestlandMonuments from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
-import photoBluebonnetColonnade from "@/assets/bluebonnet/bluebonnet-lake-colonnade.jpg.asset.json";
+import metroDallas from "@/assets/parks/local/park-30.jpg";
+import metroHouston from "@/assets/parks/local/park-47.jpg";
+import metroAustin from "@/assets/parks/local/park-23.jpg";
+import metroSanAntonio from "@/assets/parks/local/park-57.jpg";
+import metroEastTexas from "@/assets/parks/local/park-36.jpg";
+import metroWestTexas from "@/assets/parks/local/park-50.jpg";
 
 const PATH = "/guides/planning-a-funeral-in-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -37,6 +37,9 @@ const FULL = `${SITE}${PATH}`;
 const FTC = "https://www.ftc.gov/business-guidance/resources/complying-funeral-rule";
 const TFSC = "https://www.tfsc.texas.gov/";
 const REPORT_FRAUD = "https://reportfraud.ftc.gov/";
+const VA_BURIAL = "https://www.va.gov/burials-memorials/eligibility/";
+const SSA_SURVIVORS = "https://www.ssa.gov/survivor";
+const TEXAS_HEALTH_DEATH_CERTIFICATES = "https://www.dshs.texas.gov/vital-statistics/death-records";
 const PRICE_SHEET = "/downloads/funeral-price-comparison-sheet.pdf";
 
 /* ------------------------------------------------------------------ */
@@ -110,29 +113,49 @@ const Section = ({
         {eyebrow}
       </p>
       <h2 className="mb-7 font-display text-3xl leading-[1.08] text-foreground md:text-[2.4rem]">{title}</h2>
-      <div className="prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:rounded-r-xl [&_h3]:border-l-4 [&_h3]:border-primary [&_h3]:bg-primary/[0.07] [&_h3]:py-3 [&_h3]:pl-5 [&_h3]:pr-4 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground">
+      <div className={`prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground ${id === "ten-things" || id === "help-costs" ? "[&_h3]:border-t [&_h3]:border-border [&_h3]:pt-8 [&_h3]:text-[1.65rem] md:[&_h3]:text-3xl" : ""}`}>
         {children}
       </div>
     </div>
   </section>
 );
 
-const StepCard = ({ n, title, children }: { n: string; title: string; children: React.ReactNode }) => (
+const TimelineStep = ({ n, title, children, last = false }: { n: string; title: string; children: React.ReactNode; last?: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: "-40px" }}
     transition={{ duration: 0.45 }}
-    className="relative overflow-hidden rounded-xl border border-border/70 bg-card/60 p-6 shadow-sm transition-shadow hover:shadow-md"
+    className="relative grid gap-5 pb-10 md:grid-cols-[5.5rem_1fr] md:gap-8 md:pb-14"
   >
-    <span className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/[0.07]" />
-    <div className="mb-3 flex items-center gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
-        {n}
+    {!last && <span className="absolute bottom-0 left-6 top-12 hidden w-px bg-border md:block" />}
+    <div className="relative flex items-start">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-background text-sm font-semibold text-primary shadow-sm">
+        {n.padStart(2, "0")}
       </span>
-      <h3 className="m-0 font-display text-xl leading-tight text-foreground">{title}</h3>
     </div>
-    <p className="m-0 text-[0.98rem] leading-[1.75] text-foreground/75">{children}</p>
+    <div className="border-b border-border/70 pb-9 md:pb-12">
+      <h3 className="m-0 mb-3 font-display text-2xl leading-tight text-foreground md:text-[1.7rem]">{title}</h3>
+      <div className="text-[1rem] leading-[1.8] text-foreground/72">{children}</div>
+    </div>
+  </motion.div>
+);
+
+const GuideStep = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 14 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-70px" }}
+    transition={{ duration: 0.45 }}
+    className="not-prose grid gap-4 border-t border-border py-9 sm:grid-cols-[5rem_1fr] sm:gap-7 md:py-11"
+  >
+    <span className="font-display text-5xl leading-none text-primary/70 sm:text-6xl">{String(n).padStart(2, "0")}</span>
+    <div>
+      <h3 className="mb-3 font-display text-2xl leading-tight text-foreground md:text-3xl">{title}</h3>
+      <div className="space-y-4 text-[1rem] leading-[1.8] text-foreground/75 [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:decoration-primary/30 [&_a]:underline-offset-4 [&_li]:pl-1 [&_ul]:ml-5 [&_ul]:list-disc [&_ul]:space-y-1.5">
+        {children}
+      </div>
+    </div>
   </motion.div>
 );
 
@@ -297,29 +320,6 @@ const FAQS = [
   {
     q: "What financial help is available for funeral costs in Texas?",
     a: "Eligible veterans (and often spouses) can be buried at no cost in a VA national cemetery or Texas State Veterans Cemetery — call the VA at 800-827-1000. A surviving spouse or child may qualify for Social Security's one-time $255 death payment plus survivor benefits. If the death was caused by a crime, Texas Crime Victims' Compensation can pay up to $6,500 toward the funeral (1-800-983-9933). And Texas counties provide burial or cremation when families can't pay.",
-  },
-];
-
-const SERIES: { title: string; dek: string; to: string }[] = [
-  {
-    title: "Who actually owns a cemetery plot in Texas",
-    dek: "Who can use or sell a plot a loved one owned.",
-    to: "/cemetery-transfer-process-texas",
-  },
-  {
-    title: "How much does a cemetery plot cost in Texas?",
-    dek: "Real price ranges for plots, opening and closing, and markers.",
-    to: "/cemetery-plot-cost-texas",
-  },
-  {
-    title: "Cemetery plots for sale in Texas",
-    dek: "How buying a resale plot works, and what to check first.",
-    to: "/cemetery-plots-for-sale-texas",
-  },
-  {
-    title: "How to sell a cemetery plot in Texas",
-    dek: "For families who own a plot they won't use.",
-    to: "/sell-cemetery-plot-texas",
   },
 ];
 
@@ -628,26 +628,26 @@ const GuidePlanningFuneralTexas = () => {
                   Everything else can be sequenced. Here is the order that saves Texas families the most money and
                   stress, based on what we’ve seen go wrong:
                 </p>
-                <div className="not-prose mt-8 grid gap-4 md:grid-cols-3">
-                  <StepCard n="1" title="Day 1: secure the paperwork, not the package">
+                <div className="not-prose relative mt-10 rounded-2xl border border-border/70 bg-card/35 px-6 pb-2 pt-8 md:px-10 md:pt-10">
+                  <div className="mb-10 flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                    <span className="h-px flex-1 bg-primary/25" /> A calm order of decisions <span className="h-px flex-1 bg-primary/25" />
+                  </div>
+                  <TimelineStep n="1" title="Day 1: secure the paperwork, not the package">
                     Find out who has the legal right to decide (see item 3 below), and look for any prepaid contract,
                     plot deed, or Appointment of Agent form before you sit down with anyone selling you something.
                     Families who discover a prepaid contract after the arrangement meeting have sometimes bought — and
                     paid for — services twice.
-                  </StepCard>
-                  <StepCard n="2" title="Day 2: price the funeral home, price the cemetery separately">
-                    These are two different bills from two different businesses, and Texas families routinely negotiate
-                    the first while accepting the second at face value. Get the funeral home’s numbers by phone using
-                    the script in Part 2 — then call the cemetery (or a cemetery broker) with the same mindset. The plot
-                    decision is often the single largest line item in a burial, and it’s the one most families research
-                    least.
-                  </StepCard>
-                  <StepCard n="3" title="Day 3 and after: the service itself">
+                  </TimelineStep>
+                  <TimelineStep n="2" title="Day 2: price the funeral home, price the cemetery separately">
+                    These are two different bills from two different businesses. Get the funeral home’s numbers using
+                    the <a href="#toolkit" className="font-medium text-primary underline decoration-primary/30 underline-offset-4">phone script below</a>, then compare the cemetery separately. You can also browse the <In to="/cemeteries">Texas cemetery directory</In> before making the plot decision.
+                  </TimelineStep>
+                  <TimelineStep n="3" title="Day 3 and after: the service itself" last>
                     Once the body is cared for, the prices are compared, and the decision-maker is settled, the ceremony
                     choices — viewing, service, obituary, flowers — can be made without anyone’s clock running but
                     yours. A funeral home that pressures you to decide everything in the first meeting is telling you
                     something about itself.
-                  </StepCard>
+                  </TimelineStep>
                 </div>
               </Section>
 
@@ -657,50 +657,55 @@ const GuidePlanningFuneralTexas = () => {
                 eyebrow="Part 1"
                 title="Ten things that will help when planning a funeral in Texas"
               >
-                <h3>1. You have more time than it feels like</h3>
+                <GuideStep n={1} title="You have more time than it feels like">
                 <p>
                   Funeral homes can keep a body refrigerated while you think, so you don’t have to decide everything in
                   the first call. If your faith calls for a quick burial, say so straight away — funeral homes are used
                   to that. Otherwise, it’s fine to say: “We’d like a day to talk as a family before we decide.”
                 </p>
+                </GuideStep>
 
-                <h3>2. Check whether plans already exist</h3>
+                <GuideStep n={2} title="Check whether plans already exist">
                 <p>Before choosing anything, look for:</p>
                 <ul>
                   <li>
                     A prepaid funeral contract or burial insurance. In Texas, the family handling arrangements is
                     entitled to a copy of any prepaid agreement the funeral home holds for the person who died. Ask.
                   </li>
-                  <li>A cemetery plot they already own, or a family plot.</li>
+                  <li>A cemetery plot they already own, or a family plot. If the paperwork is missing, start with our <In to="/cemetery-transfer-process-texas">Texas cemetery ownership and transfer guide</In>.</li>
                   <li>Written wishes, a will, or an Appointment of Agent form naming who should decide.</li>
                   <li>Military service — veterans may be entitled to free burial.</li>
                   <li>Life insurance, or death benefits through an employer, union or association.</li>
                 </ul>
+                </GuideStep>
 
-                <h3>3. Know who has the right to decide</h3>
+                <GuideStep n={3} title="Know who has the right to decide">
                 <p>
                   Texas law sets the order. First comes anyone your loved one named in a signed written document.
                   Without one, it’s the surviving spouse, then an adult child, then a parent, then an adult brother or
                   sister, and so on. If the family disagrees, it helps to know who has the final say — and to agree
                   early on one person as the main contact with the funeral home.
                 </p>
+                </GuideStep>
 
-                <h3>4. You’re entitled to prices — and to compare</h3>
+                <GuideStep n={4} title="You’re entitled to prices — and to compare">
                 <p>
                   Under the federal <Ext href={FTC}>Funeral Rule</Ext>, every funeral home must give you prices over the
                   phone, hand you an itemised price list if you visit, and let you choose only the items you want. The
                   one fee you can’t refuse is the basic services fee for the funeral director and staff. Part 2 of this
-                  guide gives you a script for those calls.
+                   guide gives you a <a href="#toolkit">script for those calls</a>, and our <In to="/cemetery-plot-cost-texas">Texas cemetery cost guide</In> explains the separate cemetery charges.
                 </p>
+                </GuideStep>
 
-                <h3>5. Bring someone with you</h3>
+                <GuideStep n={5} title="Bring someone with you">
                 <p>
                   If you meet a funeral home in person, take a friend or relative who’s a little less close to the loss.
                   They can take notes, ask questions, and say “Can we think about that?” when too much is being asked at
                   once. You can always leave without signing anything.
                 </p>
+                </GuideStep>
 
-                <h3>6. The simplest options cost the least — and you can still say goodbye</h3>
+                <GuideStep n={6} title="The simplest options cost the least — and you can still say goodbye">
                 <p>
                   Every funeral home must offer direct cremation (no viewing or ceremony at the funeral home) and
                   immediate burial (burial without a ceremony at the funeral home). These are usually the least
@@ -708,8 +713,9 @@ const GuidePlanningFuneralTexas = () => {
                   own memorial or celebration of life later — at home, a place of worship, a park or a favourite
                   restaurant.
                 </p>
+                </GuideStep>
 
-                <h3>7. You don’t have to buy everything from the funeral home</h3>
+                <GuideStep n={7} title="You don’t have to buy everything from the funeral home">
                 <ul>
                   <li>
                     Embalming is generally not required by law in Texas. It may be needed for a public viewing, but you
@@ -720,8 +726,9 @@ const GuidePlanningFuneralTexas = () => {
                   </li>
                   <li>For cremation, a simple container is enough. You don’t need a casket.</li>
                 </ul>
+                </GuideStep>
 
-                <h3>8. The cemetery is a separate bill</h3>
+                <GuideStep n={8} title="The cemetery is a separate bill">
                 <p>
                   If you choose burial, the cemetery charges separately for the plot, opening and closing the grave, a
                   vault or grave liner (often required by the cemetery, not by law), and the marker.
@@ -730,13 +737,14 @@ const GuidePlanningFuneralTexas = () => {
                   If you need a plot, consider a resale plot. Plots bought from their current owners are typically
                   around 30% less expensive than buying directly from the cemetery. A resale plot has never been used —
                   someone bought it years ago and no longer needs it. A cemetery broker can find one and handle the
-                  transfer with the cemetery, so it’s worth checking with a broker first.
+                   transfer with the cemetery, so it’s worth checking with a broker first. Our <In to="/cemetery-plots-for-sale-texas">guide to buying a resale cemetery plot</In> explains what to verify before paying.
                 </p>
+                </GuideStep>
               </Section>
 
               <PhotoBreak
-                src={photoBluebonnetColonnade.url}
-                alt="The lake and colonnade walkway at Bluebonnet Hills Memorial Park in Colleyville, Texas"
+                src={metroAustin}
+                alt="Landscaped cemetery grounds representing the Austin metro area"
                 caption="Ten steady steps beat one panicked afternoon — take them in order."
               />
 
@@ -789,17 +797,17 @@ const GuidePlanningFuneralTexas = () => {
               />
 
               <PhotoBreak
-                src={photoRestland}
-                alt="Tree-shaded cemetery lawn in Dallas–Fort Worth"
+                src={metroHouston}
+                alt="Tree-shaded cemetery grounds representing Greater Houston"
                 caption="Settle the plot question early, and the most expensive decision is off the table."
               />
 
               <Section id="help-costs" eyebrow="Part 1 continued" title="Help with the costs, and the paperwork after">
-                <h3>9. Ask about help with the costs</h3>
+                <GuideStep n={9} title="Ask about help with the costs">
                 <ul>
                   <li>
-                    <strong>Veterans:</strong> eligible veterans, and often spouses, can be buried at no cost in a VA
-                    national cemetery or a Texas State Veterans Cemetery. Call the VA at{" "}
+                    <strong>Veterans:</strong> eligible veterans, and often spouses, can be buried at no cost in a <Ext href={VA_BURIAL}>VA
+                    national cemetery</Ext> or a Texas State Veterans Cemetery. Call the VA at{" "}
                     <a href="tel:18008271000" className="font-medium text-primary underline decoration-primary/30 underline-offset-4">
                       800-827-1000
                     </a>
@@ -807,7 +815,7 @@ const GuidePlanningFuneralTexas = () => {
                   </li>
                   <li>
                     <strong>Social Security:</strong> a surviving spouse or child may qualify for a one-time $255 death
-                    payment and ongoing survivor benefits. Contact Social Security.
+                    payment and ongoing survivor benefits. Review <Ext href={SSA_SURVIVORS}>Social Security survivor benefits</Ext>.
                   </li>
                   <li>
                     <strong>If the death was caused by a crime:</strong> the Texas Crime Victims’ Compensation Program
@@ -822,12 +830,13 @@ const GuidePlanningFuneralTexas = () => {
                     for burial or cremation when families can’t pay, under rules each county sets.
                   </li>
                 </ul>
+                </GuideStep>
 
-                <h3>10. Order enough death certificates — and look after yourselves</h3>
+                <GuideStep n={10} title="Order enough death certificates — and look after yourselves">
                 <p>
                   You’ll need certified copies of the death certificate for banks, insurance, pensions, property and
                   utilities. The funeral home usually orders them; ordering several at once is easier than going back
-                  for more.
+                  for more. Texas also explains how to request certified copies through <Ext href={TEXAS_HEALTH_DEATH_CERTIFICATES}>Vital Statistics</Ext>.
                 </p>
                 <p>
                   And let people help. Friends can bring food, make calls and handle errands. There’s no right way to
@@ -835,12 +844,13 @@ const GuidePlanningFuneralTexas = () => {
                   <Upcoming>finding support in Dallas–Fort Worth</Upcoming> lists grief support by type of loss, and{" "}
                   <Upcoming>what is a death doula</Upcoming> explains the non-medical help available at the end of life.
                 </p>
+                </GuideStep>
               </Section>
 
               {/* ------------------- PHONE SCRIPT */}
               <PhotoBreak
-                src={photoSparkman}
-                alt="Fountain garden at a Dallas cemetery"
+                src={metroDallas}
+                alt="Landscaped cemetery grounds representing Dallas–Fort Worth"
                 caption="A few calm phone calls can save a family thousands of dollars."
               />
               <Section id="toolkit" eyebrow="Part 2 · Your toolkit" title="The phone call: what to say">
@@ -925,8 +935,8 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               <PhotoBreak
-                src={photoSparkmanOak.url}
-                alt="Mature oak trees shading the lawns at Sparkman-Hillcrest Memorial Park in Dallas, Texas"
+                src={metroSanAntonio}
+                alt="Mature trees across cemetery grounds representing San Antonio"
                 caption="Your rights don't expire at the funeral home door — they travel with you."
               />
 
@@ -1005,8 +1015,8 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               <PhotoBreak
-                src={photoRestlandMonuments.url}
-                alt="Lawn monuments among the trees at Restland Funeral Home and Memorial Park in Dallas, Texas"
+                src={metroEastTexas}
+                alt="Cemetery lawns and monuments representing East Texas"
                 caption="The families who overspend aren't careless — they're rushed. Slow the moment down."
               />
 
@@ -1078,8 +1088,8 @@ const GuidePlanningFuneralTexas = () => {
 
               {/* ------------------- LOCAL HELP */}
               <PhotoBreak
-                src={photoBluebonnet}
-                alt="Bluebonnets beside a Texas lake"
+                src={metroWestTexas}
+                alt="Peaceful cemetery grounds representing West Texas"
                 caption="Texas families help each other through this. Here is who to call."
               />
               <Section id="local-help" eyebrow="Dallas–Fort Worth" title="Local help">
@@ -1113,7 +1123,7 @@ const GuidePlanningFuneralTexas = () => {
 
               {/* ------------------- FAQ */}
               <Section id="faq" eyebrow="Questions" title="Frequently asked questions">
-                <div className="not-prose divide-y divide-border/70 overflow-hidden rounded-xl border border-border">
+                <div className="not-prose divide-y divide-border border-y border-border">
                   {FAQS.map((f, i) => {
                     const open = openFaq === i;
                     return (
@@ -1123,7 +1133,7 @@ const GuidePlanningFuneralTexas = () => {
                             type="button"
                             aria-expanded={open}
                             onClick={() => setOpenFaq(open ? null : i)}
-                            className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-display text-lg text-foreground hover:bg-muted/30"
+                            className="flex w-full items-center justify-between gap-6 px-0 py-6 text-left text-base font-semibold text-foreground transition-colors hover:text-primary md:text-lg"
                           >
                             {f.q}
                             <ChevronDown
@@ -1132,31 +1142,11 @@ const GuidePlanningFuneralTexas = () => {
                           </button>
                         </h3>
                         {open && (
-                          <p className="px-6 pb-6 text-[0.98rem] leading-[1.8] text-foreground/75">{f.a}</p>
+                          <p className="max-w-3xl pb-7 pr-10 text-[0.98rem] leading-[1.8] text-foreground/75">{f.a}</p>
                         )}
                       </div>
                     );
                   })}
-                </div>
-              </Section>
-
-              {/* ------------------- SERIES */}
-              <Section id="series" eyebrow="Keep reading" title="Other guides in this series">
-                <p>If your situation involves any of these, our other guides go into more detail:</p>
-                <div className="not-prose mt-8 grid gap-4 sm:grid-cols-2">
-                  {SERIES.filter((g) => g.to).map((g) => (
-                    <Link
-                      key={g.title}
-                      to={g.to!}
-                      className="group rounded-xl border border-border/70 bg-card/60 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md"
-                    >
-                      <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{g.title}</h3>
-                      <p className="text-sm leading-relaxed text-foreground/65">{g.dek}</p>
-                      <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                        Read the guide <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </p>
-                    </Link>
-                  ))}
                 </div>
               </Section>
 
@@ -1192,6 +1182,9 @@ const GuidePlanningFuneralTexas = () => {
               </p>
             </article>
           </div>
+        </div>
+        <div id="series" className="scroll-mt-28">
+          <GuidesCarousel />
         </div>
       </main>
 
