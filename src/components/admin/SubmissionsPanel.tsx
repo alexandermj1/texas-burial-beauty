@@ -3772,7 +3772,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       return (
                         <>
                           {headline && needsReply && (
-                            <p className="text-xs font-semibold text-[hsl(var(--status-reply))] leading-snug">
+                            <p className={`text-xs font-semibold leading-snug ${isBuyer ? "text-[hsl(var(--status-new))]" : "text-[hsl(var(--status-reply))]"}`}>
                               {label && <span className="text-primary/80 font-medium">{label} · </span>}
                               {headline}
                             </p>
