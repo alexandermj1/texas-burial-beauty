@@ -1124,44 +1124,19 @@ const GuidePlanningFuneralTexas = () => {
               <Section id="series" eyebrow="Keep reading" title="Other guides in this series">
                 <p>If your situation involves any of these, our other guides go into more detail:</p>
                 <div className="not-prose mt-8 grid gap-4 sm:grid-cols-2">
-                  {SERIES.map((g) => {
-                    const body = (
-                      <>
-                        <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{g.title}</h3>
-                        <p className="text-sm leading-relaxed text-foreground/65">{g.dek}</p>
-                        <p
-                          className={`mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${
-                            g.to ? "text-primary" : "text-muted-foreground"
-                          }`}
-                        >
-                          {g.to ? (
-                            <>
-                              Read the guide <ArrowUpRight className="h-3.5 w-3.5" />
-                            </>
-                          ) : (
-                            "Coming soon"
-                          )}
-                        </p>
-                      </>
-                    );
-                    return g.to ? (
-                      <Link
-                        key={g.title}
-                        to={g.to}
-                        className="rounded-xl border border-border/70 bg-card/60 p-6 transition-colors hover:border-primary/40 hover:bg-primary/[0.04]"
-                      >
-                        {body}
-                      </Link>
-                    ) : (
-                      <div
-                        key={g.title}
-                        aria-disabled
-                        className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-6"
-                      >
-                        {body}
-                      </div>
-                    );
-                  })}
+                  {SERIES.filter((g) => g.to).map((g) => (
+                    <Link
+                      key={g.title}
+                      to={g.to!}
+                      className="group rounded-xl border border-border/70 bg-card/60 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.04] hover:shadow-md"
+                    >
+                      <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{g.title}</h3>
+                      <p className="text-sm leading-relaxed text-foreground/65">{g.dek}</p>
+                      <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                        Read the guide <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </p>
+                    </Link>
+                  ))}
                 </div>
               </Section>
 
