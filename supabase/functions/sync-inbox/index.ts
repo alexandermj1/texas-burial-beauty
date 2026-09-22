@@ -418,6 +418,8 @@ Deno.serve(async (req) => {
       const headers = msg.payload?.headers ?? [];
       const fromRaw = header(headers, "From");
       const { email: fromEmail, name: fromName } = parseFromHeader(fromRaw);
+      // Job-board mail (Indeed) is never customer mail — don't store it at all.
+      if (isIndeedSender(fromEmail, fromName)) return null;
       const subject = header(headers, "Subject");
       const toEmail = header(headers, "To");
       const messageDate = Number.parseInt(msg.internalDate ?? "", 10);
