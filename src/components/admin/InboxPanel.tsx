@@ -64,7 +64,13 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
     }
     if (errorMessage) toast({ title: "Failed to load emails", description: errorMessage, variant: "destructive" });
     else {
-      setEmails(rows as any);
+      // Never surface job-board mail (Indeed) in the admin inbox.
+      const visible = rows.filter((r) => {
+        const e = (r.from_email ?? "").toLowerCase();
+        const n = (r.from_name ?? "").toLowerCase();
+        return !(e.includes("indeed.com") || n === "indeed" || n.startsWith("indeed "));
+      });
+      setEmails(visible as any);
       const subIds = Array.from(new Set(rows.map(r => r.matched_submission_id).filter(Boolean)));
       if (subIds.length > 0) {
         const { data: subs } = await supabase
