@@ -18,7 +18,15 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import transferBotanical from "@/assets/transfer-guide-botanical.png";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import photoSparkman from "@/assets/featured/sparkman-fountain-garden.jpg";
+import photoRestland from "@/assets/featured/restland-hero-lawn.jpg";
+import photoBluebonnet from "@/assets/featured/bluebonnet-hero-lake.jpg";
 
 const PATH = "/guides/planning-a-funeral-in-texas";
 const SITE = "https://texascemeterybrokers.com";
