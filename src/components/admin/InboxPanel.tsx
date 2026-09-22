@@ -68,7 +68,8 @@ const InboxPanel = ({ onJumpToSubmission }: Props) => {
       const visible = rows.filter((r) => {
         const e = (r.from_email ?? "").toLowerCase();
         const n = (r.from_name ?? "").toLowerCase();
-        return !(e.includes("indeed.com") || n === "indeed" || n.startsWith("indeed "));
+        const domain = e.split("@")[1] || "";
+        return !(domain.includes("indeed") || n === "indeed" || n.startsWith("indeed "));
       });
       setEmails(visible as any);
       const subIds = Array.from(new Set(rows.map(r => r.matched_submission_id).filter(Boolean)));
