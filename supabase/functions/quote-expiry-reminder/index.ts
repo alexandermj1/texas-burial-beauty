@@ -34,8 +34,8 @@ const quoteLines = (netPerSpace: number, transferFee: number, plotCount: number)
   return {
     headline: count > 1 ? `${usd(total)} total for all ${count} spaces` : usd(perSpace),
     detail: [
-      count > 1 ? `${usd(netPerSpace)} per space before the one-time cemetery transfer fee` : null,
-      fee > 0 ? `includes the cemetery's ${usd(fee)} transfer fee, charged once${count > 1 ? " across the whole transfer — not once per space" : ""}` : null,
+      count > 1 ? `${usd(netPerSpace)} authorized price per space, excluding the transfer fee` : null,
+      fee > 0 ? `the total above includes the cemetery's ${usd(fee)} transfer fee, charged once${count > 1 ? " across the whole transfer — not once per space" : ""}` : null,
     ].filter(Boolean).join(" — "),
   };
 };
