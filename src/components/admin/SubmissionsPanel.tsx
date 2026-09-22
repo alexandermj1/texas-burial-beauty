@@ -2396,7 +2396,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <span className="text-[11px] uppercase tracking-wide text-muted-foreground mr-1">Reply state</span>
                   {isAwaiting && (
                     <button
-                      onClick={() => onUpdate(selected.id, { reply_dismissed_at: new Date().toISOString() } as any)}
+                      onClick={() => setReplyState(selected, new Date().toISOString())}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[hsl(var(--status-nodocs-soft))] text-[hsl(var(--status-nodocs-fg))] border border-[hsl(var(--status-nodocs-border))] hover:bg-[hsl(var(--status-nodocs-soft))]/70 transition-colors"
                       title="Removes the Needs reply tag. If the customer emails again, it will come back automatically."
                     >
