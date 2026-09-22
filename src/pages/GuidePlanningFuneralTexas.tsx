@@ -830,6 +830,11 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               {/* ------------------- PHONE SCRIPT */}
+              <PhotoBreak
+                src={photoSparkman}
+                alt="Fountain garden at a Dallas cemetery"
+                caption="A few calm phone calls can save a family thousands of dollars."
+              />
               <Section id="toolkit" eyebrow="Part 2 · Your toolkit" title="The phone call: what to say">
                 <p>
                   Many families never compare prices because they don’t know what to say. You don’t need to explain
