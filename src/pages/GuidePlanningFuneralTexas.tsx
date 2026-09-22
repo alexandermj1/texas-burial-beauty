@@ -115,15 +115,49 @@ const Section = ({
 );
 
 const StepCard = ({ n, title, children }: { n: string; title: string; children: React.ReactNode }) => (
-  <div className="relative rounded-xl border border-border/70 bg-card/60 p-6">
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-40px" }}
+    transition={{ duration: 0.45 }}
+    className="relative overflow-hidden rounded-xl border border-border/70 bg-card/60 p-6 shadow-sm transition-shadow hover:shadow-md"
+  >
+    <span className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/[0.07]" />
     <div className="mb-3 flex items-center gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm text-primary">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
         {n}
       </span>
       <h3 className="m-0 font-display text-xl leading-tight text-foreground">{title}</h3>
     </div>
     <p className="m-0 text-[0.98rem] leading-[1.75] text-foreground/75">{children}</p>
-  </div>
+  </motion.div>
+);
+
+/** Full-bleed photo break between major parts of the guide. */
+const PhotoBreak = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
+  <motion.figure
+    initial={{ opacity: 0, scale: 0.985 }}
+    whileInView={{ opacity: 1, scale: 1 }}
+    viewport={{ once: true, margin: "-80px" }}
+    transition={{ duration: 0.7 }}
+    className="relative left-1/2 my-14 w-[100vw] max-w-[100vw] -translate-x-1/2"
+  >
+    <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
+      <div className="relative overflow-hidden rounded-3xl shadow-lg">
+        <img src={src} alt={alt} loading="lazy" className="h-64 w-full object-cover md:h-96" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/55 via-foreground/10 to-transparent" />
+        <img
+          src={hibiscusCoral.url}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute -right-4 -top-4 w-20 rotate-12 opacity-90 drop-shadow-md md:w-24"
+        />
+        <figcaption className="absolute bottom-0 left-0 max-w-2xl p-6 font-display text-lg leading-snug text-background md:p-8 md:text-2xl">
+          {caption}
+        </figcaption>
+      </div>
+    </div>
+  </motion.figure>
 );
 
 const Cta = ({
