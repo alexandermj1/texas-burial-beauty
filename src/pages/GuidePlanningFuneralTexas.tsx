@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
-  ArrowUpRight,
   Check,
   ChevronDown,
   Clock,
@@ -18,18 +17,19 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import GuidesCarousel from "@/components/GuidesCarousel";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import leafVeined from "@/assets/flowers/leaf-veined.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
-import photoSparkman from "@/assets/featured/sparkman-fountain-garden.jpg";
-import photoRestland from "@/assets/featured/restland-hero-lawn.jpg";
-import photoBluebonnet from "@/assets/featured/bluebonnet-hero-lake.jpg";
-import photoSparkmanOak from "@/assets/sparkman/sparkman-oak-lawn.jpg.asset.json";
-import photoRestlandMonuments from "@/assets/restland/restland-lawn-monuments.jpg.asset.json";
-import photoBluebonnetColonnade from "@/assets/bluebonnet/bluebonnet-lake-colonnade.jpg.asset.json";
+import metroDallas from "@/assets/parks/local/park-30.jpg";
+import metroHouston from "@/assets/parks/local/park-47.jpg";
+import metroAustin from "@/assets/parks/local/park-23.jpg";
+import metroSanAntonio from "@/assets/parks/local/park-57.jpg";
+import metroEastTexas from "@/assets/parks/local/park-36.jpg";
+import metroWestTexas from "@/assets/parks/local/park-50.jpg";
 
 const PATH = "/guides/planning-a-funeral-in-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -37,6 +37,9 @@ const FULL = `${SITE}${PATH}`;
 const FTC = "https://www.ftc.gov/business-guidance/resources/complying-funeral-rule";
 const TFSC = "https://www.tfsc.texas.gov/";
 const REPORT_FRAUD = "https://reportfraud.ftc.gov/";
+const VA_BURIAL = "https://www.va.gov/burials-memorials/eligibility/";
+const SSA_SURVIVORS = "https://www.ssa.gov/survivor";
+const TEXAS_HEALTH_DEATH_CERTIFICATES = "https://www.dshs.texas.gov/vital-statistics/death-records";
 const PRICE_SHEET = "/downloads/funeral-price-comparison-sheet.pdf";
 
 /* ------------------------------------------------------------------ */
@@ -110,29 +113,31 @@ const Section = ({
         {eyebrow}
       </p>
       <h2 className="mb-7 font-display text-3xl leading-[1.08] text-foreground md:text-[2.4rem]">{title}</h2>
-      <div className="prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:rounded-r-xl [&_h3]:border-l-4 [&_h3]:border-primary [&_h3]:bg-primary/[0.07] [&_h3]:py-3 [&_h3]:pl-5 [&_h3]:pr-4 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground">
+      <div className="prose prose-lg max-w-none text-foreground/80 [&_h3]:mt-10 [&_h3]:font-display [&_h3]:text-xl [&_h3]:leading-snug [&_h3]:text-foreground md:[&_h3]:text-2xl [&_li]:leading-relaxed [&_p]:mb-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground">
         {children}
       </div>
     </div>
   </section>
 );
 
-const StepCard = ({ n, title, children }: { n: string; title: string; children: React.ReactNode }) => (
+const TimelineStep = ({ n, title, children, last = false }: { n: string; title: string; children: React.ReactNode; last?: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, margin: "-40px" }}
     transition={{ duration: 0.45 }}
-    className="relative overflow-hidden rounded-xl border border-border/70 bg-card/60 p-6 shadow-sm transition-shadow hover:shadow-md"
+    className="relative grid gap-5 pb-10 md:grid-cols-[5.5rem_1fr] md:gap-8 md:pb-14"
   >
-    <span className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/[0.07]" />
-    <div className="mb-3 flex items-center gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-display text-sm text-primary-foreground">
-        {n}
+    {!last && <span className="absolute bottom-0 left-6 top-12 hidden w-px bg-border md:block" />}
+    <div className="relative flex items-start">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-background text-sm font-semibold text-primary shadow-sm">
+        {n.padStart(2, "0")}
       </span>
-      <h3 className="m-0 font-display text-xl leading-tight text-foreground">{title}</h3>
     </div>
-    <p className="m-0 text-[0.98rem] leading-[1.75] text-foreground/75">{children}</p>
+    <div className="border-b border-border/70 pb-9 md:pb-12">
+      <h3 className="m-0 mb-3 font-display text-2xl leading-tight text-foreground md:text-[1.7rem]">{title}</h3>
+      <div className="text-[1rem] leading-[1.8] text-foreground/72">{children}</div>
+    </div>
   </motion.div>
 );
 
@@ -297,29 +302,6 @@ const FAQS = [
   {
     q: "What financial help is available for funeral costs in Texas?",
     a: "Eligible veterans (and often spouses) can be buried at no cost in a VA national cemetery or Texas State Veterans Cemetery — call the VA at 800-827-1000. A surviving spouse or child may qualify for Social Security's one-time $255 death payment plus survivor benefits. If the death was caused by a crime, Texas Crime Victims' Compensation can pay up to $6,500 toward the funeral (1-800-983-9933). And Texas counties provide burial or cremation when families can't pay.",
-  },
-];
-
-const SERIES: { title: string; dek: string; to: string }[] = [
-  {
-    title: "Who actually owns a cemetery plot in Texas",
-    dek: "Who can use or sell a plot a loved one owned.",
-    to: "/cemetery-transfer-process-texas",
-  },
-  {
-    title: "How much does a cemetery plot cost in Texas?",
-    dek: "Real price ranges for plots, opening and closing, and markers.",
-    to: "/cemetery-plot-cost-texas",
-  },
-  {
-    title: "Cemetery plots for sale in Texas",
-    dek: "How buying a resale plot works, and what to check first.",
-    to: "/cemetery-plots-for-sale-texas",
-  },
-  {
-    title: "How to sell a cemetery plot in Texas",
-    dek: "For families who own a plot they won't use.",
-    to: "/sell-cemetery-plot-texas",
   },
 ];
 
