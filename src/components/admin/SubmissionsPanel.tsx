@@ -3581,10 +3581,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const bgCls = isActive
               ? "bg-primary/15"
               : needsReply
-                // Buyers needing reply get a stronger sage tint; everyone else
+                // Buyers needing reply get a light minty sage tint; everyone else
                 // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
                 ? isBuyer
-                  ? "bg-[hsl(var(--status-followup))]/15 hover:bg-[hsl(var(--status-followup))]/25"
+                  ? "bg-[hsl(var(--status-buyer))]/15 hover:bg-[hsl(var(--status-buyer))]/25"
                   : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
                 : beingWorked
                   ? "bg-accent/10 hover:bg-accent/15"
@@ -3712,7 +3712,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${needsReply && isBuyer ? "border-l-[3px] border-l-[hsl(var(--status-followup))]" : ""}`}
+                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${needsReply && isBuyer ? "border-l-[3px] border-l-[hsl(var(--status-buyer))]" : ""}`}
                 >
                   {/* Stage rail — colour + fill height show how far along they are */}
                   <span
@@ -3740,7 +3740,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
                         {needsReply && (
-                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-followup))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
+                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
                             Reply
                           </span>
                         )}
@@ -3772,7 +3772,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       return (
                         <>
                           {headline && needsReply && (
-                            <p className={`text-xs font-semibold leading-snug ${isBuyer ? "text-[hsl(var(--status-followup))]" : "text-[hsl(var(--status-reply))]"}`}>
+                            <p className={`text-xs font-semibold leading-snug ${isBuyer ? "text-[hsl(var(--status-buyer))]" : "text-[hsl(var(--status-reply))]"}`}>
                               {label && <span className="text-primary/80 font-medium">{label} · </span>}
                               {headline}
                             </p>
@@ -3826,7 +3826,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     )}
                   </div>
-                  <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-transform ${needsReply && isBuyer ? "text-[hsl(var(--status-followup))]/60" : "text-muted-foreground/30"} ${isMobile && isActive ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-transform ${needsReply && isBuyer ? "text-[hsl(var(--status-buyer))]/60" : "text-muted-foreground/30"} ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
 
 
