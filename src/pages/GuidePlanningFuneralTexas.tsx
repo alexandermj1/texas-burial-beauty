@@ -379,13 +379,63 @@ const GuidePlanningFuneralTexas = () => {
       {/* ---------------------------------------------------------- HERO */}
       <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-16 pt-28 md:pb-24">
         <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(hsl(var(--stone)/0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-        <img
-          src={transferBotanical}
+        {/* Warm colour washes */}
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
+        {/* Floral arrangement — same flowers as the other guides */}
+        <motion.img
+          src={bananaLeaf.url}
           alt=""
           aria-hidden
-          width={1024}
-          height={1024}
-          className="pointer-events-none absolute -right-24 top-6 w-[430px] opacity-50 md:right-0 md:w-[540px] lg:right-4 lg:w-[620px]"
+          initial={{ opacity: 0, y: 16, rotate: -24 }}
+          animate={{ opacity: 0.55, y: 0, rotate: -18 }}
+          transition={{ duration: 0.9 }}
+          className="pointer-events-none absolute -right-16 -top-10 w-72 md:right-4 md:w-96"
+        />
+        <motion.img
+          src={palmFan.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, y: 20, rotate: 14 }}
+          animate={{ opacity: 0.5, y: 0, rotate: 8 }}
+          transition={{ duration: 0.9, delay: 0.1 }}
+          className="pointer-events-none absolute -bottom-16 right-24 hidden w-64 md:block lg:right-40"
+        />
+        <motion.img
+          src={hibiscusCoral.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.8, rotate: -8 }}
+          animate={{ opacity: 0.9, scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="pointer-events-none absolute bottom-6 right-6 w-28 sm:w-36 md:bottom-10 md:right-16 md:w-44"
+        />
+        <motion.img
+          src={plumeriaCluster.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
+          animate={{ opacity: 0.85, scale: 1, rotate: 4 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="pointer-events-none absolute right-40 top-16 hidden w-24 md:block lg:right-72 lg:w-28"
+        />
+        <motion.img
+          src={leafVeined.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, y: -14, rotate: -30 }}
+          animate={{ opacity: 0.45, y: 0, rotate: -22 }}
+          transition={{ duration: 0.9, delay: 0.15 }}
+          className="pointer-events-none absolute -left-10 top-24 hidden w-44 lg:block"
+        />
+        <motion.img
+          src={pinkBranch.url}
+          alt=""
+          aria-hidden
+          initial={{ opacity: 0, x: -16, rotate: 12 }}
+          animate={{ opacity: 0.5, x: 0, rotate: 6 }}
+          transition={{ duration: 0.9, delay: 0.25 }}
+          className="pointer-events-none absolute -left-14 bottom-0 hidden w-56 lg:block"
         />
         <span className="absolute bottom-0 left-0 h-1 w-1/3 bg-primary/50" />
         <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
