@@ -3826,7 +3826,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     )}
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-muted-foreground/30 shrink-0 mt-1 transition-transform ${isMobile && isActive ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-transform ${needsReply && isBuyer ? "text-[hsl(var(--status-new))]/60" : "text-muted-foreground/30"} ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.button>
 
 
