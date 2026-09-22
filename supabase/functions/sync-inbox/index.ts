@@ -411,6 +411,11 @@ Deno.serve(async (req) => {
       fetched.push(...results.filter((m): m is GmailMessage => !!m));
     }
 
+    const isIndeedSender = (email: string, name: string | null) => {
+      const e = (email || "").toLowerCase();
+      const n = (name || "").toLowerCase();
+      return e.endsWith("@indeed.com") || e.endsWith(".indeed.com") || e.includes("indeed.com") || n === "indeed" || n.startsWith("indeed ");
+    };
     const INTERNAL_DOMAINS_INSERT = ["texascemeterybrokers.com", "bayercemeterybrokers.com"];
     const isInternalAddr = (e: string) =>
       INTERNAL_DOMAINS_INSERT.some((d) => (e || "").toLowerCase().endsWith("@" + d)) || ["texascemeterybrokers@gmail.com"].includes((e || "").toLowerCase().trim());
@@ -454,7 +459,7 @@ Deno.serve(async (req) => {
         matched_submission_id: match?.id ?? null,
         match_confidence: autoMarker ? "excluded" : (match?.confidence ?? "none"),
       };
-    });
+    }).filter((r): r is NonNullable<typeof r> => !!r);
 
     let insertedCount = 0;
     let bayerCreated = 0;
