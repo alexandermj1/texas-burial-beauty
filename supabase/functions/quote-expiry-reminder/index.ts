@@ -32,10 +32,10 @@ const quoteLines = (netPerSpace: number, transferFee: number, plotCount: number)
   const perSpace = netPerSpace + fee;
   const total = netPerSpace * count + fee;
   return {
-    headline: count > 1 ? `${usd(perSpace)} per space` : usd(perSpace),
+    headline: count > 1 ? `${usd(total)} total for all ${count} spaces` : usd(perSpace),
     detail: [
-      count > 1 ? `${usd(total)} across all ${count} spaces` : null,
-      fee > 0 ? `includes the cemetery's ${usd(fee)} transfer fee, charged once${count > 1 ? " for the whole transfer, not per space" : ""}` : null,
+      count > 1 ? `${usd(netPerSpace)} authorized price per space, excluding the transfer fee` : null,
+      fee > 0 ? `the total above includes the cemetery's ${usd(fee)} transfer fee, charged once${count > 1 ? " across the whole transfer — not once per space" : ""}` : null,
     ].filter(Boolean).join(" — "),
   };
 };
@@ -102,8 +102,9 @@ Deno.serve(async (req) => {
   // One-off branded preview for the owner: sends a single sample email.
   if (previewEmail) {
     const sampleExpiry = dayFmt(new Date(Date.now() + 3 * 86_400_000).toISOString());
-    const html = buildQuoteReminderHtml("Patricia", "Restland Memorial Park", "$4,800", sampleExpiry, OUR_EMAIL);
-    const plain = buildPlain("Patricia", "Restland Memorial Park", "$4,800", sampleExpiry);
+    const sampleQuote = quoteLines(4_000, 800, 2);
+    const html = buildQuoteReminderHtml("Patricia", "Restland Memorial Park", sampleQuote, sampleExpiry, OUR_EMAIL);
+    const plain = buildPlain("Patricia", "Restland Memorial Park", sampleQuote, sampleExpiry);
     const raw = [`From: Texas Cemetery Brokers <${OUR_EMAIL}>`, `To: ${previewEmail}`, "Subject: Your minimum authorized sales price expires in 3 days - Restland Memorial Park", "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="tcb-quote"', "", "--tcb-quote", 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: 8bit", "", plain, "--tcb-quote", 'Content-Type: text/html; charset="UTF-8"', "Content-Transfer-Encoding: 8bit", "", html, "--tcb-quote--"].join("\r\n");
     const sentResponse = await fetch(`${GMAIL}/users/me/messages/send`, { method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" }, body: JSON.stringify({ raw: b64url(raw) }) });
     const responseText = await sentResponse.text();
