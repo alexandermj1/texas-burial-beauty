@@ -511,31 +511,28 @@ const GuidePlanningFuneralTexas = () => {
 
       <main>
         <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="grid gap-10 lg:grid-cols-[220px_minmax(0,720px)] lg:justify-center lg:gap-14 xl:grid-cols-[240px_minmax(0,760px)] xl:gap-20">
+          <div className="mx-auto max-w-3xl">
             {/* ------------------------------------------------ TOC */}
-            <div className="pt-8 lg:pt-12">
-              <nav aria-label="Table of contents" className="lg:sticky lg:top-28">
-                <button
-                  type="button"
-                  onClick={() => setTocOpen((v) => !v)}
-                  aria-expanded={tocOpen}
-                  className="flex w-full items-center justify-between rounded-lg border border-border bg-card/60 px-4 py-3 text-sm font-semibold text-foreground lg:hidden"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <ListChecks className="h-4 w-4 text-primary" /> In this guide
-                  </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${tocOpen ? "rotate-180" : ""}`} />
-                </button>
-                <p className="mb-4 hidden text-[10px] font-semibold uppercase tracking-[0.26em] text-foreground/45 lg:block">
-                  In this guide
-                </p>
-                <ul className={`${tocOpen ? "block" : "hidden"} mt-3 space-y-1 lg:mt-0 lg:block`}>
+            <nav aria-label="Table of contents" className="pt-8 lg:pt-10">
+              <button
+                type="button"
+                onClick={() => setTocOpen((v) => !v)}
+                aria-expanded={tocOpen}
+                className="flex w-full items-center justify-between rounded-xl border border-border bg-card/60 px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition-colors hover:border-primary/40"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <ListChecks className="h-4 w-4 text-primary" /> In this guide
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${tocOpen ? "rotate-180" : ""}`} />
+              </button>
+              {tocOpen && (
+                <ul className="mt-2 grid gap-x-6 gap-y-1 rounded-xl border border-border bg-card/60 p-4 shadow-sm sm:grid-cols-2">
                   {SECTIONS.map((s) => (
                     <li key={s.id}>
                       <a
                         href={`#${s.id}`}
                         onClick={() => setTocOpen(false)}
-                        className={`block border-l-2 py-1.5 pl-4 text-sm transition-colors ${
+                        className={`block border-l-2 py-1.5 pl-3 text-sm transition-colors ${
                           active === s.id
                             ? "border-primary font-medium text-primary"
                             : "border-border/70 text-muted-foreground hover:text-foreground"
@@ -546,8 +543,8 @@ const GuidePlanningFuneralTexas = () => {
                     </li>
                   ))}
                 </ul>
-              </nav>
-            </div>
+              )}
+            </nav>
 
             {/* ------------------------------------------------ ARTICLE */}
             <article className="min-w-0 pb-10">
