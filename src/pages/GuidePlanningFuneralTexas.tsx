@@ -473,7 +473,7 @@ const GuidePlanningFuneralTexas = () => {
 
       <main>
         <div className="container mx-auto max-w-[1280px] px-6 lg:px-10">
-          <div className="grid gap-10 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-16">
+          <div className="grid gap-10 lg:grid-cols-[220px_minmax(0,720px)] lg:justify-center lg:gap-14 xl:grid-cols-[240px_minmax(0,760px)] xl:gap-20">
             {/* ------------------------------------------------ TOC */}
             <div className="pt-8 lg:pt-12">
               <nav aria-label="Table of contents" className="lg:sticky lg:top-28">
@@ -549,12 +549,31 @@ const GuidePlanningFuneralTexas = () => {
                       t: "You only have to buy what you want.",
                       d: "Apart from one basic fee, everything a funeral home offers is optional.",
                     },
-                  ].map((c) => (
-                    <div key={c.t} className="rounded-xl border border-border/70 bg-card/60 p-6">
-                      <c.icon className="mb-4 h-5 w-5 text-primary" />
+                  ].map((c, i) => (
+                    <motion.div
+                      key={c.t}
+                      initial={{ opacity: 0, y: 18 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-60px" }}
+                      transition={{ duration: 0.5, delay: i * 0.12 }}
+                      className={`rounded-xl border p-6 shadow-sm transition-transform hover:-translate-y-1 ${
+                        i === 0
+                          ? "border-primary/30 bg-primary/[0.07]"
+                          : i === 1
+                            ? "border-accent/40 bg-accent/[0.10]"
+                            : "border-border/70 bg-secondary/50"
+                      }`}
+                    >
+                      <span
+                        className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full ${
+                          i === 1 ? "bg-accent/25 text-accent-foreground" : "bg-primary/12 text-primary"
+                        }`}
+                      >
+                        <c.icon className="h-5 w-5" />
+                      </span>
                       <h3 className="mb-2 font-display text-lg leading-snug text-foreground">{c.t}</h3>
                       <p className="text-[0.95rem] leading-[1.7] text-foreground/70">{c.d}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </section>
