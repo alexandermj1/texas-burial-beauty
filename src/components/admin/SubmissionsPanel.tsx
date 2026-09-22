@@ -1084,9 +1084,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return bt - at;
     };
     // "Needs reply" always wins the top of the list — an unanswered inbound email is
-    // the most time-sensitive thing in the panel. Brand-new form submissions come
-    // right after, then tagged rows, then everything else.
-    const awaitingRows = matches.filter(s => awaitingAll[s.id]).sort(byLatestInbound);
+    // the most time-sensitive thing in the panel. Within Needs reply, buyer leads are
+    // floated to the very top so the team can respond to active buyers first.
+    // Brand-new form submissions come right after, then tagged rows, then everything else.
+    const awaitingRows = matches.filter(s => awaitingAll[s.id]).sort((a, b) => {
+      const aBuyer = resolveKind(a.customer_kind, a.source) === "buyer" ? 1 : 0;
+      const bBuyer = resolveKind(b.customer_kind, b.source) === "buyer" ? 1 : 0;
+      if (aBuyer !== bBuyer) return bBuyer - aBuyer; // buyers first
+      return byLatestInbound(a, b);
+    });
     const freshRows = matches.filter(s => isNew(s) && !awaitingAll[s.id]).sort(byNewest);
     const rest = matches.filter(s => !awaitingAll[s.id] && !isNew(s));
     const taggedRows = rest.filter(s => !!((s as any).custom_tag || "").trim()).sort(byNewest);
