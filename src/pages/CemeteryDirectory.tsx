@@ -734,10 +734,22 @@ const CemeteryDirectory = () => {
             className="absolute -right-32 top-0 h-[590px] w-auto max-w-[38vw] object-contain object-right-top opacity-90 select-none drop-shadow-sm"
           />
         </div>
-        {/* On phones, let the frame wrap the title and search bar too. */}
-        <div className="absolute inset-x-0 top-16 h-[440px] md:hidden">
-          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-28 top-4 h-80 w-auto opacity-60 select-none" />
-          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-28 top-4 h-80 w-auto opacity-60 select-none" />
+        {/* On phones, small sprigs wrap around the search bar instead of towering side arrangements. */}
+        <div className="absolute inset-x-0 top-16 h-[440px] md:hidden pointer-events-none">
+          <img
+            src={searchSprig}
+            alt=""
+            width={320}
+            height={220}
+            className="absolute top-[232px] -left-10 w-24 opacity-80 select-none rotate-[168deg]"
+          />
+          <img
+            src={searchSprig}
+            alt=""
+            width={320}
+            height={220}
+            className="absolute top-[250px] -right-10 w-24 opacity-80 select-none rotate-[-12deg]"
+          />
         </div>
       </div>
       <Seo
@@ -750,7 +762,7 @@ const CemeteryDirectory = () => {
 
       {/* HERO — warm wash that feathers into the page */}
       <section className="relative z-30 overflow-visible">
-        <div className="relative z-10 container mx-auto px-6 pt-28 pb-10 md:pt-36 md:pb-5">
+        <div className="relative z-10 container mx-auto px-6 pt-28 pb-6 md:pt-36 md:pb-5">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-background/75 backdrop-blur ring-1 ring-primary/15 mb-4">
               <ShieldCheck className="w-3.5 h-3.5 text-primary" />
@@ -767,7 +779,7 @@ const CemeteryDirectory = () => {
               cemetery paperwork, transfer and title end to end.
             </p>
 
-            <div className="mt-6 md:mt-6">
+            <div className="mt-5 md:mt-6">
               <HeroSearch
                 region={region}
                 setRegion={setRegion}
@@ -794,7 +806,7 @@ const CemeteryDirectory = () => {
 
       {/* METRO AREAS — photo cards straight under the search (hidden while searching) */}
       {!isSearching && (
-      <section className="relative z-20 container mx-auto px-6 pt-4 pb-8 md:pt-2 md:pb-16">
+      <section className="relative z-20 container mx-auto px-6 pt-2 pb-8 md:pt-2 md:pb-16">
         <div className="text-center mb-4 md:mb-6">
           <p className="text-[11px] uppercase tracking-[0.22em] text-primary font-bold mb-1">Explore Texas</p>
           <h2 className="font-display text-2xl md:text-3xl tracking-tight text-foreground">
