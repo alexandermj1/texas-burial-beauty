@@ -23,7 +23,7 @@ export const useAdmin = () => {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [user?.id, authLoading]);
 
   return { isAdmin, loading: loading || authLoading };
 };

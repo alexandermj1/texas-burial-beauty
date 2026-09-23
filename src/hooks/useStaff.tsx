@@ -22,7 +22,7 @@ export const useStaff = () => {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, [user?.id, authLoading]);
 
   return { isStaff, loading: loading || authLoading };
 };
