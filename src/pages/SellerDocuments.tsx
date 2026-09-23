@@ -768,7 +768,7 @@ const SellerDocuments = () => {
 
       {/* Sticky progress header — always tells the seller where they are */}
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/85 backdrop-blur-md">
-        <div className="max-w-3xl mx-auto px-4 sm:px-5 py-2.5 flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <div className="text-[9px] sm:text-[10px] tracking-[0.26em] uppercase text-primary/80 truncate">
               Texas Cemetery Brokers
@@ -795,7 +795,7 @@ const SellerDocuments = () => {
         </div>
       </header>
 
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-5 pt-8 sm:pt-14 pb-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-24">
         {/* ---------------------------------------------------------------- */}
         {/* Hero                                                              */}
         {/* ---------------------------------------------------------------- */}
