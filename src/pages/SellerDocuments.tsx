@@ -1109,6 +1109,7 @@ const SellerDocuments = () => {
           </main>
         </div>
       </div>
+    </div>
   );
 };
 
