@@ -796,313 +796,319 @@ const SellerDocuments = () => {
       </header>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-24">
-        {/* ---------------------------------------------------------------- */}
-        {/* Hero                                                              */}
-        {/* ---------------------------------------------------------------- */}
-        <h1 className="font-display text-[30px] sm:text-5xl leading-[1.08] text-foreground">
-          {firstName ? `${firstName}, here's` : "Here's"} everything we need to{" "}
-          <em className="italic text-primary">complete your sale</em>.
-        </h1>
-        <p className="text-[14px] sm:text-sm text-muted-foreground max-w-xl leading-relaxed mt-4">
-          One page, one list. Upload from this computer, or tap <span className="text-foreground font-medium">Use my phone</span> on any
-          item and photograph it with your camera{packet?.cemetery ? ` — everything below is what ${packet.cemetery} requires` : ""}.
-        </p>
-
-        {packet?.seller_name && (
-          <p className="mt-3 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Private page for {packet.seller_name}
-          </p>
-        )}
-
-        {packet?.plot_description && (
-          <div className="mt-4 flex items-start gap-2 rounded-xl border border-border/60 bg-card/60 px-4 py-3 text-sm">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <div><span className="text-xs text-muted-foreground">Property covered by this request</span><p className="font-medium text-foreground">{packet.plot_description}</p></div>
-          </div>
-        )}
-
-        {packet?.broker_note && (
-          <div className="mt-6 rounded-2xl border-l-[3px] border-primary bg-primary/[0.06] px-5 py-4">
-            <Eyebrow>A note from your broker</Eyebrow>
-            <p className="text-[14px] text-foreground/90 leading-relaxed whitespace-pre-line mt-2">{packet.broker_note}</p>
-          </div>
-        )}
-
-        {/* ---------------------------------------------------------------- */}
-        {/* Context, folded away so the list is the first thing they act on   */}
-        {/* ---------------------------------------------------------------- */}
-        <div className="mt-6 space-y-2">
-          <details className="group rounded-2xl border border-border/60 bg-card/60 px-4 sm:px-5 py-4">
-            <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
-              <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-primary shrink-0" /> Why we need each of these
-              </span>
-              <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
-            </summary>
-            <p className="text-xs text-muted-foreground leading-relaxed mt-3">
-              Our team has already worked directly with {packet?.cemetery ?? "the cemetery"} to confirm this list. It is
-              the <span className="text-foreground">complete set of documents</span> you need in order to sell your
-              property — these would be required no matter how you sold it, privately or through a broker. The only item
-              unique to selling through us is the Limited Power of Attorney, which lets us do the running around for you.
-            </p>
-          </details>
-
-          <details className="group rounded-2xl border border-accent/40 bg-accent/10 px-4 sm:px-5 py-4">
-            <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
-              <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
-                <Mail className="w-4 h-4 shrink-0" /> Where the original paperwork goes
-              </span>
-              <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" />
-            </summary>
-            <p className="text-[13px] text-foreground/90 whitespace-pre-line mt-3 font-medium leading-relaxed">{MAIL_ADDRESS}</p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
-              {MAIL_REASON} Upload a photo of each item here first so we can start straight away, then post the originals
-              — apart from your photo ID, which we only ever need as a photograph. Originals stay with your file and are
-              returned to you if the sale does not complete.
-            </p>
-          </details>
-        </div>
-
-        {allDone && (
-          <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/[0.06] px-5 py-5 flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+        <div className="flex flex-col lg:flex-row lg:gap-10 xl:gap-14">
+          {/* ---------------------------------------------------------------- */}
+          {/* Left column — intro, context, and help (sticky on desktop)        */}
+          {/* ---------------------------------------------------------------- */}
+          <aside className="lg:w-80 xl:w-96 lg:sticky lg:top-28 lg:self-start space-y-6 mb-10 lg:mb-0">
             <div>
-              <p className="font-display text-lg text-foreground">That's everything — thank you.</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                We have every item on this list. Your broker is reviewing it now and will be in touch if anything needs a clearer copy.
+              <h1 className="font-display text-[30px] sm:text-4xl xl:text-5xl leading-[1.08] text-foreground">
+                {firstName ? `${firstName}, here's` : "Here's"} everything we need to{" "}
+                <em className="italic text-primary">complete your sale</em>.
+              </h1>
+              <p className="text-[14px] sm:text-sm text-muted-foreground leading-relaxed mt-4">
+                One page, one list. Upload from this computer, or tap <span className="text-foreground font-medium">Use my phone</span> on any
+                item and photograph it with your camera{packet?.cemetery ? ` — everything below is what ${packet.cemetery} requires` : ""}.
               </p>
+              {packet?.seller_name && (
+                <p className="mt-3 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Private page for {packet.seller_name}
+                </p>
+              )}
             </div>
-          </div>
-        )}
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Loading / error                                                   */}
-        {/* ---------------------------------------------------------------- */}
-        {loading && (
-          <div className="mt-10 space-y-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-28 rounded-2xl border border-border/50 bg-card/40 animate-pulse" />
-            ))}
-            <p className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
-              <Loader2 className="w-4 h-4 animate-spin" /> Opening your file…
-            </p>
-          </div>
-        )}
+            {packet?.plot_description && (
+              <div className="flex items-start gap-2 rounded-xl border border-border/60 bg-card/60 px-4 py-3 text-sm">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div><span className="text-xs text-muted-foreground">Property covered by this request</span><p className="font-medium text-foreground">{packet.plot_description}</p></div>
+              </div>
+            )}
 
-        {!loading && error && (
-          <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
-        )}
+            {packet?.broker_note && (
+              <div className="rounded-2xl border-l-[3px] border-primary bg-primary/[0.06] px-5 py-4">
+                <Eyebrow>A note from your broker</Eyebrow>
+                <p className="text-[14px] text-foreground/90 leading-relaxed whitespace-pre-line mt-2">{packet.broker_note}</p>
+              </div>
+            )}
 
-        {!loading && !error && (
-          <>
-            {packet?.listing_agreement?.signed && (
-              <div className="mt-8 rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 sm:p-5 flex items-start gap-3">
+            <Panel className="px-5 py-5 border-primary/25 bg-primary/[0.04]">
+              <Eyebrow>Still not sure about something?</Eyebrow>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
+                A broker will walk you through any item on this page — there is never a charge for asking.
+              </p>
+              <div className="mt-4 flex flex-col gap-2">
+                <a
+                  href="tel:+12142304740"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90"
+                >
+                  <Phone className="w-4 h-4" /> (214) 230-4740
+                </a>
+                <a
+                  href="mailto:info@texascemeterybrokers.com"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full border border-border bg-background text-[13px] font-medium text-foreground hover:border-primary/40"
+                >
+                  <Mail className="w-4 h-4" /> Email your broker
+                </a>
+              </div>
+            </Panel>
+          </aside>
+
+          {/* ---------------------------------------------------------------- */}
+          {/* Right column — documents and FAQ                                  */}
+          {/* ---------------------------------------------------------------- */}
+          <main className="flex-1 min-w-0 space-y-0">
+            {/* ---------------------------------------------------------------- */}
+            {/* Context, folded away so the list is the first thing they act on   */}
+            {/* ---------------------------------------------------------------- */}
+            <div className="space-y-2">
+              <details className="group rounded-2xl border border-border/60 bg-card/60 px-4 sm:px-5 py-4">
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
+                  <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-primary shrink-0" /> Why we need each of these
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-3">
+                  Our team has already worked directly with {packet?.cemetery ?? "the cemetery"} to confirm this list. It is
+                  the <span className="text-foreground">complete set of documents</span> you need in order to sell your
+                  property — these would be required no matter how you sold it, privately or through a broker. The only item
+                  unique to selling through us is the Limited Power of Attorney, which lets us do the running around for you.
+                </p>
+              </details>
+
+              <details className="group rounded-2xl border border-accent/40 bg-accent/10 px-4 sm:px-5 py-4">
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
+                  <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
+                    <Mail className="w-4 h-4 shrink-0" /> Where the original paperwork goes
+                  </span>
+                  <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="text-[13px] text-foreground/90 whitespace-pre-line mt-3 font-medium leading-relaxed">{MAIL_ADDRESS}</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+                  {MAIL_REASON} Upload a photo of each item here first so we can start straight away, then post the originals
+                  — apart from your photo ID, which we only ever need as a photograph. Originals stay with your file and are
+                  returned to you if the sale does not complete.
+                </p>
+              </details>
+            </div>
+
+            {allDone && (
+              <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/[0.06] px-5 py-5 flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-display text-[17px] sm:text-lg text-foreground">Listing Agreement signed</p>
+                  <p className="font-display text-lg text-foreground">That's everything — thank you.</p>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    We already have your signed Listing Agreement on file{packet.listing_agreement.signed_at ? ` from ${new Date(packet.listing_agreement.signed_at).toLocaleDateString()}` : ""}. You do not need to sign it again.
+                    We have every item on this list. Your broker is reviewing it now and will be in touch if anything needs a clearer copy.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* ------------------------------------------------------------ */}
-            {/* Power of attorney — the one thing unique to selling with us   */}
-            {/* ------------------------------------------------------------ */}
-            {poaList.length > 0 && (
-              <section className="mt-10">
-                <div className="flex items-baseline justify-between gap-3 mb-3">
-                  <Eyebrow>Sign with a notary</Eyebrow>
-                  {poaList.length > 1 && (
-                    <span className="text-[11px] text-muted-foreground">{poaList.length} signers</span>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {poaList.map((poa, i, all) => (
-                    <div key={poa.contract_id ?? i} className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 sm:p-5">
-                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                        {poa.notarized
-                          ? <Chip tone="solid" icon={CheckCircle2}>Received</Chip>
-                          : <Chip tone="primary" icon={Stamp}>Notary needed</Chip>}
-                        {all.length > 1 && <Chip tone="muted">{i + 1} of {all.length}</Chip>}
-                      </div>
-
-                      <p className="font-display text-xl text-foreground leading-snug">
-                        {poa.signer_name && all.length > 1
-                          ? `Limited Power of Attorney — ${poa.signer_name}`
-                          : "Your Limited Power of Attorney"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                        Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
-                        Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on
-                        {poa.signer_name && all.length > 1 ? ` ${poa.signer_name}'s` : " your"} behalf,
-                        request the transfer forms, and hand the paperwork to the buyer at closing — so you are not the one
-                        chasing the office, posting forms or taking time off work.
-                      </p>
-                      {all.length > 1 && (
-                        <p className="text-[11px] text-foreground/90 mt-2">
-                          Everyone named on the deed needs their own notarized copy — this one is
-                          for <span className="font-medium">{poa.signer_name ?? "this signer"}</span>.
-                        </p>
-                      )}
-
-                      <details className="group mt-3 rounded-xl bg-background/70 border border-border/60 px-4 py-3">
-                        <summary className="flex items-center justify-between gap-3 cursor-pointer list-none">
-                          <span className="text-[11px] font-medium text-foreground">It is deliberately limited — what it does and doesn't allow</span>
-                          <ChevronDown className="w-3.5 h-3.5 text-primary shrink-0 transition-transform group-open:rotate-180" />
-                        </summary>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
-                          It covers this plot and this sale only. It does not give us access to your money, your bank accounts or
-                          any other property, it does not let us accept an offer or set a price without your say-so, and it ends
-                          automatically when the sale completes. You can revoke it in writing at any time.
-                        </p>
-                      </details>
-
-                      <div className="mt-3 rounded-xl bg-background/70 border border-border/60 px-4 py-3.5">
-                        <p className="text-[11px] font-medium text-foreground">What to do — about 15 minutes</p>
-                        <ol className="mt-2 space-y-1.5 text-[12px] text-muted-foreground leading-relaxed list-decimal pl-4">
-                          <li>Open the PDF below and print every page. It is already filled in from your answers — nothing to complete.</li>
-                          <li>Do <span className="text-foreground">not</span> sign it yet. The notary has to watch you sign.</li>
-                          <li>Take it, with {poa.signer_name && all.length > 1 ? `${poa.signer_name}'s` : "your"} photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
-                          <li>Sign in front of them; they stamp and sign it.</li>
-                          <li>Photograph or scan every page and upload it here — then post the original to the address below.</li>
-                        </ol>
-                        {poa.pdf_url && (
-                          <div className="mt-3">
-                            <Action full icon={Stamp} onClick={() => void openPrivateFile(poa.pdf_url!, setError)}>
-                              Open the completed Power of Attorney
-                            </Action>
-                          </div>
-                        )}
-                      </div>
-
-                      {poa.mail_to && (
-                        <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3.5">
-                          <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
-                            <Mail className="w-3.5 h-3.5" /> Post the signed original to
-                          </p>
-                          <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{poa.mail_to}</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">{MAIL_REASON}</p>
-                          <MailTick
-                            submissionId={submissionId}
-                            itemKey={poa.mail_key ?? "D21::"}
-                            confirmedAt={poa.mailed_confirmed_at}
-                            onDone={load}
-                          />
-                        </div>
-                      )}
-
-                      <PoaUpload
-                        submissionId={submissionId}
-                        onDone={load}
-                        alreadyDone={!!poa.notarized}
-                        contractId={poa.contract_id}
-                        signerName={all.length > 1 ? poa.signer_name : null}
-                        principalKey={poa.principal_key}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
+            {/* ---------------------------------------------------------------- */}
+            {/* Loading / error                                                   */}
+            {/* ---------------------------------------------------------------- */}
+            {loading && (
+              <div className="mt-10 space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-28 rounded-2xl border border-border/50 bg-card/40 animate-pulse" />
+                ))}
+                <p className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Opening your file…
+                </p>
+              </div>
             )}
 
-            {/* ------------------------------------------------------------ */}
-            {/* Outstanding documents                                         */}
-            {/* ------------------------------------------------------------ */}
-            {(packet?.documents.length ?? 0) === 0 ? (
-              <div className="mt-10 rounded-2xl border border-border/60 bg-card/60 px-5 py-6 text-sm text-muted-foreground">
-                Nothing is outstanding right now — we'll email you the moment something is needed.
-              </div>
-            ) : (
+            {!loading && error && (
+              <div className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">{error}</div>
+            )}
+
+            {!loading && !error && (
               <>
-                {openDocs.length > 0 && (
+                {packet?.listing_agreement?.signed && (
+                  <div className="mt-8 rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 sm:p-5 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-display text-[17px] sm:text-lg text-foreground">Listing Agreement signed</p>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        We already have your signed Listing Agreement on file{packet.listing_agreement.signed_at ? ` from ${new Date(packet.listing_agreement.signed_at).toLocaleDateString()}` : ""}. You do not need to sign it again.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ------------------------------------------------------------ */}
+                {/* Power of attorney — the one thing unique to selling with us   */}
+                {/* ------------------------------------------------------------ */}
+                {poaList.length > 0 && (
                   <section className="mt-10">
                     <div className="flex items-baseline justify-between gap-3 mb-3">
-                      <Eyebrow>Still to send</Eyebrow>
-                      <span className="text-[11px] text-muted-foreground">
-                        {openDocs.length} {openDocs.length === 1 ? "item" : "items"}
-                      </span>
+                      <Eyebrow>Sign with a notary</Eyebrow>
+                      {poaList.length > 1 && (
+                        <span className="text-[11px] text-muted-foreground">{poaList.length} signers</span>
+                      )}
                     </div>
-                    <div className="space-y-3">
-                      {openDocs.map((d, i) => (
-                        <DocRow key={d.id} doc={d} submissionId={submissionId} onDone={load} index={i + 1} />
+                    <div className="space-y-4">
+                      {poaList.map((poa, i, all) => (
+                        <div key={poa.contract_id ?? i} className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 sm:p-5">
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                            {poa.notarized
+                              ? <Chip tone="solid" icon={CheckCircle2}>Received</Chip>
+                              : <Chip tone="primary" icon={Stamp}>Notary needed</Chip>}
+                            {all.length > 1 && <Chip tone="muted">{i + 1} of {all.length}</Chip>}
+                          </div>
+
+                          <p className="font-display text-xl text-foreground leading-snug">
+                            {poa.signer_name && all.length > 1
+                              ? `Limited Power of Attorney — ${poa.signer_name}`
+                              : "Your Limited Power of Attorney"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                            Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
+                            Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on
+                            {poa.signer_name && all.length > 1 ? ` ${poa.signer_name}'s` : " your"} behalf,
+                            request the transfer forms, and hand the paperwork to the buyer at closing — so you are not the one
+                            chasing the office, posting forms or taking time off work.
+                          </p>
+                          {all.length > 1 && (
+                            <p className="text-[11px] text-foreground/90 mt-2">
+                              Everyone named on the deed needs their own notarized copy — this one is
+                              for <span className="font-medium">{poa.signer_name ?? "this signer"}</span>.
+                            </p>
+                          )}
+
+                          <details className="group mt-3 rounded-xl bg-background/70 border border-border/60 px-4 py-3">
+                            <summary className="flex items-center justify-between gap-3 cursor-pointer list-none">
+                              <span className="text-[11px] font-medium text-foreground">It is deliberately limited — what it does and doesn't allow</span>
+                              <ChevronDown className="w-3.5 h-3.5 text-primary shrink-0 transition-transform group-open:rotate-180" />
+                            </summary>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+                              It covers this plot and this sale only. It does not give us access to your money, your bank accounts or
+                              any other property, it does not let us accept an offer or set a price without your say-so, and it ends
+                              automatically when the sale completes. You can revoke it in writing at any time.
+                            </p>
+                          </details>
+
+                          <div className="mt-3 rounded-xl bg-background/70 border border-border/60 px-4 py-3.5">
+                            <p className="text-[11px] font-medium text-foreground">What to do — about 15 minutes</p>
+                            <ol className="mt-2 space-y-1.5 text-[12px] text-muted-foreground leading-relaxed list-decimal pl-4">
+                              <li>Open the PDF below and print every page. It is already filled in from your answers — nothing to complete.</li>
+                              <li>Do <span className="text-foreground">not</span> sign it yet. The notary has to watch you sign.</li>
+                              <li>Take it, with {poa.signer_name && all.length > 1 ? `${poa.signer_name}'s` : "your"} photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
+                              <li>Sign in front of them; they stamp and sign it.</li>
+                              <li>Photograph or scan every page and upload it here — then post the original to the address below.</li>
+                            </ol>
+                            {poa.pdf_url && (
+                              <div className="mt-3">
+                                <Action full icon={Stamp} onClick={() => void openPrivateFile(poa.pdf_url!, setError)}>
+                                  Open the completed Power of Attorney
+                                </Action>
+                              </div>
+                            )}
+                          </div>
+
+                          {poa.mail_to && (
+                            <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3.5">
+                              <p className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+                                <Mail className="w-3.5 h-3.5" /> Post the signed original to
+                              </p>
+                              <p className="text-xs text-foreground/90 whitespace-pre-line mt-2 font-medium">{poa.mail_to}</p>
+                              <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">{MAIL_REASON}</p>
+                              <MailTick
+                                submissionId={submissionId}
+                                itemKey={poa.mail_key ?? "D21::"}
+                                confirmedAt={poa.mailed_confirmed_at}
+                                onDone={load}
+                              />
+                            </div>
+                          )}
+
+                          <PoaUpload
+                            submissionId={submissionId}
+                            onDone={load}
+                            alreadyDone={!!poa.notarized}
+                            contractId={poa.contract_id}
+                            signerName={all.length > 1 ? poa.signer_name : null}
+                            principalKey={poa.principal_key}
+                          />
+                        </div>
                       ))}
                     </div>
                   </section>
                 )}
 
-                {doneDocs.length > 0 && (
-                  <section className="mt-8">
-                    <details className="group" open={openDocs.length === 0}>
-                      <summary className="flex items-center justify-between gap-3 cursor-pointer list-none rounded-2xl border border-primary/25 bg-primary/[0.04] px-4 sm:px-5 py-3.5">
-                        <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                          {doneDocs.length} {doneDocs.length === 1 ? "item" : "items"} already received
-                        </span>
-                        <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
-                      </summary>
-                      <div className="space-y-3 mt-3">
-                        {doneDocs.map((d) => (
-                          <DocRow key={d.id} doc={d} submissionId={submissionId} onDone={load} />
-                        ))}
-                      </div>
-                    </details>
-                  </section>
+                {/* ------------------------------------------------------------ */}
+                {/* Outstanding documents                                         */}
+                {/* ------------------------------------------------------------ */}
+                {(packet?.documents.length ?? 0) === 0 ? (
+                  <div className="mt-10 rounded-2xl border border-border/60 bg-card/60 px-5 py-6 text-sm text-muted-foreground">
+                    Nothing is outstanding right now — we'll email you the moment something is needed.
+                  </div>
+                ) : (
+                  <>
+                    {openDocs.length > 0 && (
+                      <section className="mt-10">
+                        <div className="flex items-baseline justify-between gap-3 mb-3">
+                          <Eyebrow>Still to send</Eyebrow>
+                          <span className="text-[11px] text-muted-foreground">
+                            {openDocs.length} {openDocs.length === 1 ? "item" : "items"}
+                          </span>
+                        </div>
+                        <div className="space-y-3">
+                          {openDocs.map((d, i) => (
+                            <DocRow key={d.id} doc={d} submissionId={submissionId} onDone={load} index={i + 1} />
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {doneDocs.length > 0 && (
+                      <section className="mt-8">
+                        <details className="group" open={openDocs.length === 0}>
+                          <summary className="flex items-center justify-between gap-3 cursor-pointer list-none rounded-2xl border border-primary/25 bg-primary/[0.04] px-4 sm:px-5 py-3.5">
+                            <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                              {doneDocs.length} {doneDocs.length === 1 ? "item" : "items"} already received
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
+                          </summary>
+                          <div className="space-y-3 mt-3">
+                            {doneDocs.map((d) => (
+                              <DocRow key={d.id} doc={d} submissionId={submissionId} onDone={load} />
+                            ))}
+                          </div>
+                        </details>
+                      </section>
+                    )}
+                  </>
                 )}
               </>
             )}
-          </>
-        )}
 
-        {/* ---------------------------------------------------------------- */}
-        {/* FAQ                                                               */}
-        {/* ---------------------------------------------------------------- */}
-        <section className="mt-14">
-          <div className="mb-3"><Eyebrow>Your questions, answered</Eyebrow></div>
-          <div className="space-y-2">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group rounded-2xl border border-border/60 bg-card/60 px-4 sm:px-5 py-4">
-                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
-                  <span className="font-display text-[15px] sm:text-base text-foreground leading-snug">{f.q}</span>
-                  <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
-                </summary>
-                <p className="text-xs text-muted-foreground leading-relaxed mt-3 whitespace-pre-line">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
+            {/* ---------------------------------------------------------------- */}
+            {/* FAQ                                                               */}
+            {/* ---------------------------------------------------------------- */}
+            <section className="mt-14">
+              <div className="mb-3"><Eyebrow>Your questions, answered</Eyebrow></div>
+              <div className="space-y-2">
+                {FAQ.map((f) => (
+                  <details key={f.q} className="group rounded-2xl border border-border/60 bg-card/60 px-4 sm:px-5 py-4">
+                    <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
+                      <span className="font-display text-[15px] sm:text-base text-foreground leading-snug">{f.q}</span>
+                      <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-3 whitespace-pre-line">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Help                                                              */}
-        {/* ---------------------------------------------------------------- */}
-        <Panel className="mt-8 px-5 py-5 border-primary/25 bg-primary/[0.04]">
-          <Eyebrow>Still not sure about something?</Eyebrow>
-          <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
-            A broker will walk you through any item on this page — there is never a charge for asking.
-          </p>
-          <div className="mt-4 flex flex-col sm:flex-row gap-2">
-            <a
-              href="tel:+12142304740"
-              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90"
-            >
-              <Phone className="w-4 h-4" /> (214) 230-4740
-            </a>
-            <a
-              href="mailto:info@texascemeterybrokers.com"
-              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full border border-border bg-background text-[13px] font-medium text-foreground hover:border-primary/40"
-            >
-              <Mail className="w-4 h-4" /> Email your broker <ArrowRight className="w-3.5 h-3.5 opacity-60" />
-            </a>
-          </div>
-        </Panel>
-
-        <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed inline-flex items-start gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-primary mt-px shrink-0" />
-          Your documents are stored privately and used only to transfer this plot.
-        </p>
+            <p className="mt-6 text-[11px] text-muted-foreground leading-relaxed inline-flex items-start gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary mt-px shrink-0" />
+              Your documents are stored privately and used only to transfer this plot.
+            </p>
+          </main>
+        </div>
       </div>
-    </div>
   );
 };
 
