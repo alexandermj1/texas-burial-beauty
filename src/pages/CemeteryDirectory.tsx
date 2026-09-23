@@ -779,7 +779,7 @@ const CemeteryDirectory = () => {
               cemetery paperwork, transfer and title end to end.
             </p>
 
-            <div className="mt-6 md:mt-6">
+            <div className="mt-5 md:mt-6">
               <HeroSearch
                 region={region}
                 setRegion={setRegion}
