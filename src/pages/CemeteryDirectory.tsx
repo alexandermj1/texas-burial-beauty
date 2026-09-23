@@ -734,10 +734,22 @@ const CemeteryDirectory = () => {
             className="absolute -right-32 top-0 h-[590px] w-auto max-w-[38vw] object-contain object-right-top opacity-90 select-none drop-shadow-sm"
           />
         </div>
-        {/* On phones, let the frame wrap the title and search bar too. */}
-        <div className="absolute inset-x-0 top-16 h-[440px] md:hidden">
-          <img src={heroBotanicalLeft} alt="" width={1024} height={1408} className="absolute -left-28 top-4 h-80 w-auto opacity-60 select-none" />
-          <img src={heroBotanicalRight} alt="" width={1024} height={1408} className="absolute -right-28 top-4 h-80 w-auto opacity-60 select-none" />
+        {/* On phones, small sprigs wrap around the search bar instead of towering side arrangements. */}
+        <div className="absolute inset-x-0 top-16 h-[440px] md:hidden pointer-events-none">
+          <img
+            src={searchSprig}
+            alt=""
+            width={320}
+            height={220}
+            className="absolute top-[232px] -left-10 w-24 opacity-80 select-none rotate-[168deg]"
+          />
+          <img
+            src={searchSprig}
+            alt=""
+            width={320}
+            height={220}
+            className="absolute top-[250px] -right-10 w-24 opacity-80 select-none rotate-[-12deg]"
+          />
         </div>
       </div>
       <Seo
