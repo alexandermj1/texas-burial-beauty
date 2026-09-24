@@ -94,12 +94,31 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
     if (!open) return;
     setLoading(true);
     (async () => {
-      const { data } = await supabase
-        .from("contact_submissions")
-        .select("id,name,cemetery,cemetery_city,lawn,section,space_numbers,property_type,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,cemetery_retail,buyer_fees,quote_responded_at,sold_at,reserved_until,listing_live_at,la_signed_at,contracts_completed_at,listing_number,customer_kind")
-        .eq("quote_response", "accepted")
-        .is("deleted_at", null)
-        .is("archived_at", null);
+      const [{ data }, { data: cemData }] = await Promise.all([
+        supabase
+          .from("contact_submissions")
+          .select("id,name,cemetery,cemetery_city,lawn,section,space_numbers,property_type,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,cemetery_retail,buyer_fees,quote_responded_at,sold_at,reserved_until,listing_live_at,la_signed_at,contracts_completed_at,documents_requested_at,documents_completed_at,listing_number,customer_kind")
+          .eq("quote_response", "accepted")
+          .is("deleted_at", null)
+          .is("archived_at", null),
+        supabase.from("texas_cemeteries").select("name,canonical_name,city,region").is("deleted_at", null),
+      ]);
+      // Metro area lookup: match on cemetery name (or canonical name), fall back to city.
+      const byName = new Map<string, string>();
+      const byCity = new Map<string, string>();
+      for (const c of (cemData as any[]) || []) {
+        const region = c.region || "";
+        if (!region) continue;
+        for (const n of [c.name, c.canonical_name]) {
+          const k = String(n || "").trim().toLowerCase();
+          if (k && !byName.has(k)) byName.set(k, region);
+        }
+        const ck = String(c.city || "").trim().toLowerCase();
+        if (ck && !byCity.has(ck)) byCity.set(ck, region);
+      }
+      const metroOf = (s: any): string =>
+        byName.get(String(s.cemetery || "").trim().toLowerCase()) ||
+        byCity.get(String(s.cemetery_city || "").trim().toLowerCase()) || "";
       const out: Row[] = ((data as any[]) || [])
         .filter((s) => s.customer_kind !== "buyer")
         .map((s) => {
