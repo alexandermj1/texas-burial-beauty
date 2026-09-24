@@ -69,6 +69,7 @@ const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "seller", label: "Seller" },
   { key: "cemetery", label: "Cemetery" },
   { key: "city", label: "City" },
+  { key: "metro", label: "Metro area" },
   { key: "location", label: "Lawn / section / spaces" },
   { key: "propertyType", label: "Type" },
   { key: "plots", label: "Spaces", num: true },
@@ -148,6 +149,8 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
             pctRetail: retail && f.buyerPricePerSpace ? Math.round((f.buyerPricePerSpace / retail) * 100) : null,
             acceptedAt: s.quote_responded_at,
             status: statusOf(s),
+            stage: stageOf(s),
+            metro: metroOf(s),
             listingNumber: s.listing_number || "",
           };
         });
