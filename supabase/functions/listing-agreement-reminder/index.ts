@@ -44,8 +44,8 @@ export function buildBody(firstName: string, cemetery: string | null, link: stri
   });
   const plain = [
     `Dear ${firstName},`, "",
-    `This is a reminder that your listing agreement${cemetery ? ` for your property at ${cemetery}` : ""} is ready to sign online. It takes less than a minute to complete.`, "",
-    "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so the correct paperwork can be prepared for you.", "",
+    `Just a quick reminder that your listing agreement${cemetery ? ` for your property at ${cemetery}` : ""} is ready to sign online. It takes less than a minute to complete.`, "",
+    "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so we can get the right paperwork ready for you.", "",
     `Sign your listing agreement: ${link}`, "",
     `If the link does not work, please reply to this email or call ${PHONE_LABEL}. If you have already signed, please disregard this reminder.`, "",
     "Texas Cemetery Brokers",
