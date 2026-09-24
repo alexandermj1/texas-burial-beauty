@@ -26,6 +26,8 @@ type Row = {
   pctRetail: number | null;
   acceptedAt: string | null;
   status: string;
+  stage: string;
+  metro: string;
   listingNumber: string;
 };
 
@@ -40,6 +42,27 @@ const statusOf = (s: any): string => {
   if (s.listing_live_at) return "Listed";
   if (s.la_signed_at || s.contracts_completed_at) return "Agreement signed";
   return "Accepted";
+};
+
+// Where the seller sits in the process after accepting — most advanced milestone wins.
+const stageOf = (s: any): string => {
+  if (s.sold_at) return "Sold";
+  if (s.contracts_completed_at) return "Completed";
+  if (s.listing_live_at) return "Listed";
+  if (s.la_signed_at) return "Agreement signed";
+  if (s.documents_completed_at) return "Docs returned";
+  if (s.documents_requested_at) return "Docs requested";
+  return "Quote accepted";
+};
+
+const STAGE_CLS: Record<string, string> = {
+  "Quote accepted": "bg-amber-500/10 text-amber-700",
+  "Docs requested": "bg-sky-500/10 text-sky-700",
+  "Docs returned": "bg-sky-600/15 text-sky-800",
+  "Agreement signed": "bg-primary/10 text-primary",
+  "Listed": "bg-emerald-500/10 text-emerald-700",
+  "Completed": "bg-emerald-600/15 text-emerald-800",
+  "Sold": "bg-emerald-600/20 text-emerald-900",
 };
 
 const COLS: { key: Key; label: string; num?: boolean }[] = [
