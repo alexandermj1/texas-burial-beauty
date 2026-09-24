@@ -72,13 +72,10 @@ const buildBody = (s: Submission, quote: string, transferFee: string, customMess
   const perPlotAmount = formatMoney(perPlotNet) || "[Quote Amount]";
   const quoteAmount = formatMoney(totalNet) || "[Quote Amount]";
   const transferFeeAmount = formatMoney(transferFee) || "[Transfer Fee Amount]";
-  const totalFeeAmount = isFinite(feeNum) && feeNum > 0 ? formatMoney(feeNum * count) : "";
   const grossAmount =
     perPlotNet > 0 && isFinite(feeNum) && feeNum > 0
-      ? formatMoney((perPlotNet + feeNum) * count)
+      ? formatMoney(totalNet + feeNum)
       : "";
-  const perPlotGross =
-    perPlotNet > 0 && isFinite(feeNum) && feeNum > 0 ? formatMoney(perPlotNet + feeNum) : "";
 
   const customBlock = customMessage.trim()
     ? `\n${customMessage.trim()}\n`
@@ -86,10 +83,9 @@ const buildBody = (s: Submission, quote: string, transferFee: string, customMess
 
   const breakdown = multi
     ? `\nBreakdown for your ${count} spaces:
-• Guaranteed net proceeds per space: ${perPlotAmount}
-• Total guaranteed net proceeds (${count} spaces): ${quoteAmount}${perPlotGross ? `
-• Authorized sales price per space: ${perPlotGross}${grossAmount ? ` (total ${grossAmount})` : ""}` : ""}${totalFeeAmount ? `
-• Transfer fees we cover: ${transferFeeAmount} per space (${totalFeeAmount} in total)` : ""}
+• Your proceeds per space: ${perPlotAmount}
+• Your total proceeds for all ${count} spaces: ${quoteAmount}${grossAmount ? `
+• Total sales price: ${grossAmount}, made up of your ${quoteAmount} proceeds plus one ${transferFeeAmount} cemetery transfer fee` : ""}
 `
     : "";
 
@@ -97,13 +93,13 @@ const buildBody = (s: Submission, quote: string, transferFee: string, customMess
 
 Thank you for considering Texas Cemetery Brokers for the sale of your ${noun} at ${propertyDesc}. We understand that selling cemetery property is a unique and often specialized process, and navigating the market for cemetery plots can be complex.
 
-After a thorough evaluation of your specific propert${multi ? "ies" : "y"}, considering ${multi ? "their" : "its"} features, current market conditions, and recent comparable sales, we are pleased to offer you an authorized sales price of ${grossAmount || quoteAmount}${multi ? ` for all ${count} spaces` : ""}${grossAmount ? ` (inclusive of the cemetery's transfer fee${multi ? "s" : ""} of ${totalFeeAmount || transferFeeAmount})` : ""}, giving you a guaranteed net proceeds amount of ${quoteAmount}${multi ? ` (${perPlotAmount} per space)` : ""}.
+After a thorough evaluation of your specific propert${multi ? "ies" : "y"}, considering ${multi ? "their" : "its"} features, current market conditions, and recent comparable sales, we are pleased to offer you a suggested sales price of ${grossAmount || quoteAmount}${multi ? ` for all ${count} spaces` : ""}. You would receive ${quoteAmount}${multi ? ` in total (${perPlotAmount} per space)` : ""}. Our selling commission has already been accounted for in that proceeds figure.${grossAmount ? ` The remaining ${transferFeeAmount} is one cemetery transfer fee paid by the buyer and passed to the cemetery.` : ""}
 ${breakdown}${customBlock}
 We offer the following DOUBLE GUARANTEE, designed to provide you with certainty and peace of mind:
 
-1) Your Net Proceeds Guarantee: When your propert${multi ? "ies sell" : "y sells"} through us, you are guaranteed to receive this exact ${quoteAmount}${multi ? ` for all ${count} spaces` : ""}. This is the precise amount you will walk away with, free and clear, after all selling expenses — including our commission and the cemetery's transfer fee${multi ? "s" : ""} — have been accounted for.
+1) Your Net Proceeds Guarantee: When your propert${multi ? "ies sell" : "y sells"} through us, you are guaranteed to receive this exact ${quoteAmount}${multi ? ` for all ${count} spaces` : ""}. This is the precise amount you will walk away with after our selling commission has been accounted for.
 
-2) Transfer Fee Coverage Guarantee: We also guarantee to cover the cemetery's transfer fee up to the current prevailing rate of ${transferFeeAmount} per space. The authorized sales price${grossAmount ? ` of ${grossAmount}` : ""} above includes ${multi && totalFeeAmount ? `these transfer fees (${totalFeeAmount} in total)` : `this ${transferFeeAmount} transfer fee`}, which ${multi ? "are" : "is"} then deducted, leaving your guaranteed net proceeds of ${quoteAmount}.
+2) Transfer Fee Guarantee: The ${transferFeeAmount} cemetery transfer fee is paid separately by the buyer and passed to the cemetery. It is not deducted from your ${quoteAmount} proceeds. For multiple spaces sold together, the cemetery fee is included once for the transfer, not once per space.
 
 Fees paid by the buyer (not by you): in addition to the sales price, the buyer pays a buyer's fee of 15% of the sales price for handling the purchase, paperwork and cemetery coordination, plus the cemetery's transfer fee and any optional buyer services they elect. These are charged to the buyer and never reduce your guaranteed net proceeds.
 
