@@ -163,7 +163,7 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase();
     let r = rows.filter((x) => (status === "all" || x.status === status) &&
-      (!needle || [x.seller, x.cemetery, x.city, x.location, x.propertyType, x.listingNumber].join(" ").toLowerCase().includes(needle)));
+      (!needle || [x.seller, x.cemetery, x.city, x.metro, x.location, x.propertyType, x.stage, x.listingNumber].join(" ").toLowerCase().includes(needle)));
     const { key, dir } = sort;
     r = [...r].sort((a, b) => {
       const av = a[key], bv = b[key];
@@ -268,13 +268,13 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
               </tbody>
               <tfoot className="sticky bottom-0 bg-card border-t border-border font-semibold text-foreground">
                 <tr>
-                  <td className="px-3 py-2.5" colSpan={5}>Totals ({view.length})</td>
+                  <td className="px-3 py-2.5" colSpan={6}>Totals ({view.length})</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{totals.plots}</td>
                   <td colSpan={2} />
                   <td className="px-3 py-2.5 text-right tabular-nums">{money(totals.seller)}</td>
                   <td />
                   <td className="px-3 py-2.5 text-right tabular-nums">{money(totals.buyer)}</td>
-                  <td colSpan={4} />
+                  <td colSpan={5} />
                 </tr>
               </tfoot>
             </table>
