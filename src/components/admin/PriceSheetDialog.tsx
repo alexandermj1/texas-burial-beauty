@@ -81,6 +81,7 @@ const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "retail", label: "Retail / space", num: true },
   { key: "pctRetail", label: "Buyer % of retail", num: true },
   { key: "status", label: "Status" },
+  { key: "stage", label: "Stage" },
   { key: "acceptedAt", label: "Accepted" },
 ];
 
@@ -205,6 +206,8 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
       case "acceptedAt": return fmtDate(r.acceptedAt);
       case "seller": return <span className="font-medium text-foreground">{r.seller}{r.listingNumber && <span className="ml-1 text-[10px] text-muted-foreground">#{r.listingNumber}</span>}</span>;
       case "status": return <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary whitespace-nowrap">{r.status}</span>;
+      case "stage": return <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${STAGE_CLS[r.stage] || "bg-muted text-muted-foreground"}`}>{r.stage}</span>;
+      case "metro": return r.metro || "—";
       default: return (r[key] as any) || "—";
     }
   };
