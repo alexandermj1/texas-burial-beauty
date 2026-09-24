@@ -1680,8 +1680,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 plotCount,
                 buyerFees,
               });
-              const quoteTotal = figures.totalInclFee;
-              const quotePerPlot = figures.perSpaceInclFee;
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const deedLocation = sharedDeedLocation;
               const deedLocationSource = aiFacts.find((fact) => ["Section", "Block", "Lot", "Space", "Plot type"].includes(fact.label))?.source;
@@ -1780,13 +1778,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                       <div className="border-t border-border pt-4">
                          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
-                          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
-                           {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Cemetery transfer fee (once)",v:fmtMoney(figures.transferFee)},{l:"Quoted per space (incl. fee)",v:fmtMoney(quotePerPlot)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
+                           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+                            {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Price per plot",v:fmtMoney(figures.netPerSpace)},{l:`Price for all ${plotCount} plot${plotCount === 1 ? "" : "s"}`,v:fmtMoney(figures.netTotal)},{l:"Cemetery transfer fee (once)",v:fmtMoney(figures.transferFee)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
                          </div>
                          {figures.hasQuote && <div className="mb-3 rounded-lg border border-border/70 bg-muted/20 p-3">
                            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Exactly as quoted to the seller</p>
                            <p className="mt-1 text-sm font-semibold leading-snug text-foreground">{figures.headline}</p>
-                           <p className="mt-1 text-xs text-muted-foreground">Authorized minimum net of the transfer fee: {fmtMoney(figures.netPerSpace)} per space{plotCount > 1 ? ` · ${fmtMoney(figures.netTotal)} across all ${plotCount} spaces` : ""}. Reminder emails quote the same figures.</p>
+                            <p className="mt-1 text-xs text-muted-foreground">The one-time {fmtMoney(figures.transferFee)} cemetery transfer fee is separate and paid by the buyer. Reminder emails use the same property prices.</p>
                           </div>}
                           {/* Only relevant once they have accepted — before that the buyer price is noise. */}
                           {figures.hasQuote && seller.quote_response === "accepted" && <details className="group mb-4 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5">

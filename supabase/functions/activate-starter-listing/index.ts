@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     // Look up cemetery/name for the confirmation UI + emails.
     const { data: submission } = await supabase
       .from("contact_submissions")
-      .select("id, name, email, cemetery, quote_amount, quote_sent_at, quote_response, accepted_quote_amount, plot_count")
+      .select("id, name, email, cemetery, quote_amount, quote_sent_at, quote_response, accepted_quote_amount")
       .eq("id", tx.submission_id)
       .maybeSingle();
 
@@ -109,12 +109,11 @@ Deno.serve(async (req) => {
       };
       if ((submission as any)?.quote_response !== "accepted") {
         const perSpace = Number((submission as any)?.quote_amount ?? 0) || 0;
-        const plots = Math.max(1, Number((submission as any)?.plot_count ?? 1) || 1);
         starterPatch.quote_response = "accepted";
         starterPatch.quote_responded_at = nowIso;
         starterPatch.acceptance_channel = "listing_selection";
         starterPatch.accepted_quote_amount =
-          (submission as any)?.accepted_quote_amount ?? (perSpace > 0 ? perSpace * plots : null);
+          (submission as any)?.accepted_quote_amount ?? (perSpace > 0 ? perSpace : null);
       }
       await supabase.from("contact_submissions").update(starterPatch as any).eq("id", tx.submission_id);
 

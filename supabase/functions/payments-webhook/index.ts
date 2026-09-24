@@ -197,17 +197,16 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
     // Paying for a listing is an acceptance of the quoted price.
     const { data: sub } = await db()
       .from("contact_submissions")
-      .select("quote_response, quote_amount, accepted_quote_amount, plot_count")
+      .select("quote_response, quote_amount, accepted_quote_amount")
       .eq("id", tx.submission_id)
       .maybeSingle();
     if (sub && (sub as any).quote_response !== "accepted") {
       const perSpace = Number((sub as any).quote_amount ?? 0) || 0;
-      const plots = Math.max(1, Number((sub as any).plot_count ?? 1) || 1);
       patch.quote_response = "accepted";
       patch.quote_responded_at = nowIso;
       patch.acceptance_channel = "listing_payment";
       patch.accepted_quote_amount =
-        (sub as any).accepted_quote_amount ?? (perSpace > 0 ? perSpace * plots : null);
+        (sub as any).accepted_quote_amount ?? (perSpace > 0 ? perSpace : null);
     }
     await db().from("contact_submissions").update(patch).eq("id", tx.submission_id);
   }

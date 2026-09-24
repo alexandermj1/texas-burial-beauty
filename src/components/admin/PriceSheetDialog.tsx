@@ -73,9 +73,9 @@ const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "location", label: "Lawn / section / spaces" },
   { key: "propertyType", label: "Type" },
   { key: "plots", label: "Spaces", num: true },
-  { key: "netPerSpace", label: "Seller net / space", num: true },
+  { key: "netPerSpace", label: "Price / space", num: true },
   { key: "transferFee", label: "Transfer fee", num: true },
-  { key: "sellerTotal", label: "Seller total", num: true },
+  { key: "sellerTotal", label: "Price · all spaces", num: true },
   { key: "buyerPerSpace", label: "Buyer price / space", num: true },
   { key: "buyerTotal", label: "Buyer total", num: true },
   { key: "retail", label: "Retail / space", num: true },
@@ -143,7 +143,7 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
             plots: f.plotCount,
             netPerSpace: f.netPerSpace,
             transferFee: f.transferFee,
-            sellerTotal: f.totalInclFee,
+            sellerTotal: f.netTotal,
             buyerPerSpace: f.buyerPricePerSpace,
             buyerTotal: f.buyerPriceTotal,
             retail,
@@ -281,7 +281,7 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
           )}
         </div>
         <p className="px-5 py-2 border-t border-border text-[10px] text-muted-foreground">
-          Seller total includes the transfer fee once. Buyer price = (seller net + transfer fee) + 15% buyer's premium, plus any added fees. Red % means above the 70%-of-retail ceiling. Click a row to open that seller.
+          Property price excludes the one-time cemetery transfer fee. Buyer price includes that fee, the 15% buyer's premium, and any added fees. Red % means above the 70%-of-retail ceiling. Click a row to open that seller.
         </p>
       </div>
     </div>
