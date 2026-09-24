@@ -94,3 +94,8 @@
 - [x] Keep paid and free listing selections from multiplying accepted per-plot prices
 - [x] Align Price Sheet per-plot and all-plots columns with the saved quote
 - [x] Verify corrected records and both acceptance paths
+
+## Website opening animation
+- [ ] Replace the sparse opening with a modern branded floral composition
+- [ ] Remove the gradient and use the existing parchment, sage, and hibiscus palette
+- [ ] Verify the complete reveal and handoff on desktop and mobile
