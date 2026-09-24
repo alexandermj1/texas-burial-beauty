@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     const ids = [...new Set((contracts ?? []).map((c) => c.submission_id as string))];
     const { data: subs } = ids.length
       ? await db.from("contact_submissions")
-        .select("id,name,email,cemetery,source,customer_kind,customer_profile_id,la_signed_at,archived_at,closed_at,sold_at,deleted_at,document_followup_paused_at")
+        .select("id,name,email,cemetery,source,quote_sent_at,customer_kind,customer_profile_id,la_signed_at,archived_at,closed_at,sold_at,deleted_at,document_followup_paused_at")
         .in("id", ids)
       : { data: [] as any[] };
     const subById = new Map((subs ?? []).map((s: any) => [s.id, s]));
@@ -129,7 +129,9 @@ Deno.serve(async (req) => {
       if (sub.la_signed_at) { skip("already-signed"); continue; }
       if (sub.document_followup_paused_at) { skip("reminders-paused"); continue; }
       // Sellers only — buyers and general enquiries never get this.
-      if (sub.source !== "seller_quote") { skip("not-a-seller"); continue; }
+      // General contact-form enquiries count only once we have quoted them as a seller.
+      const isSeller = sub.source === "seller_quote" || (sub.source === "contact" && sub.quote_sent_at);
+      if (!isSeller) { skip("not-a-seller"); continue; }
       if (sub.customer_kind && sub.customer_kind !== "seller") { skip("not-a-seller"); continue; }
       if (handled.has(email)) { skip("duplicate-person"); continue; }
       if (remindedSubs.has(sub.id) || remindedEmails.has(email)) { skip("already-sent"); continue; }
