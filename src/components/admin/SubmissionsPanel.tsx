@@ -29,6 +29,8 @@ import { useAuth } from "@/hooks/useAuth";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
+import PriceSheetDialog from "./PriceSheetDialog";
+import { FileSpreadsheet } from "lucide-react";
 
 import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
@@ -271,6 +273,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const { countFor, listingsAt } = useActiveListings();
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [priceSheetOpen, setPriceSheetOpen] = useState(false);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
   
   const isMobile = useIsMobile();
@@ -3288,6 +3291,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             >
               <Building2 className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => setPriceSheetOpen(true)}
+              title="Price sheet — every accepted listing with prices, sortable"
+              className="h-8 px-3 rounded-full text-xs font-medium border bg-card text-muted-foreground border-border hover:text-foreground inline-flex items-center gap-1.5"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> Price sheet
+            </button>
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
               onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
@@ -3480,6 +3490,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       )}
 
 
+      <PriceSheetDialog open={priceSheetOpen} onClose={() => setPriceSheetOpen(false)} onOpenSubmission={(id) => setSelectedId(id)} />
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <AddSubmissionDialog
         open={addOpen}
