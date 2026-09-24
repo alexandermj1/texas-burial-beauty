@@ -26,6 +26,8 @@ type Row = {
   pctRetail: number | null;
   acceptedAt: string | null;
   status: string;
+  stage: string;
+  metro: string;
   listingNumber: string;
 };
 
@@ -42,10 +44,32 @@ const statusOf = (s: any): string => {
   return "Accepted";
 };
 
+// Where the seller sits in the process after accepting — most advanced milestone wins.
+const stageOf = (s: any): string => {
+  if (s.sold_at) return "Sold";
+  if (s.contracts_completed_at) return "Completed";
+  if (s.listing_live_at) return "Listed";
+  if (s.la_signed_at) return "Agreement signed";
+  if (s.documents_completed_at) return "Docs returned";
+  if (s.documents_requested_at) return "Docs requested";
+  return "Quote accepted";
+};
+
+const STAGE_CLS: Record<string, string> = {
+  "Quote accepted": "bg-amber-500/10 text-amber-700",
+  "Docs requested": "bg-sky-500/10 text-sky-700",
+  "Docs returned": "bg-sky-600/15 text-sky-800",
+  "Agreement signed": "bg-primary/10 text-primary",
+  "Listed": "bg-emerald-500/10 text-emerald-700",
+  "Completed": "bg-emerald-600/15 text-emerald-800",
+  "Sold": "bg-emerald-600/20 text-emerald-900",
+};
+
 const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "seller", label: "Seller" },
   { key: "cemetery", label: "Cemetery" },
   { key: "city", label: "City" },
+  { key: "metro", label: "Metro area" },
   { key: "location", label: "Lawn / section / spaces" },
   { key: "propertyType", label: "Type" },
   { key: "plots", label: "Spaces", num: true },
@@ -57,6 +81,7 @@ const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "retail", label: "Retail / space", num: true },
   { key: "pctRetail", label: "Buyer % of retail", num: true },
   { key: "status", label: "Status" },
+  { key: "stage", label: "Stage" },
   { key: "acceptedAt", label: "Accepted" },
 ];
 
@@ -71,12 +96,31 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
     if (!open) return;
     setLoading(true);
     (async () => {
-      const { data } = await supabase
-        .from("contact_submissions")
-        .select("id,name,cemetery,cemetery_city,lawn,section,space_numbers,property_type,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,cemetery_retail,buyer_fees,quote_responded_at,sold_at,reserved_until,listing_live_at,la_signed_at,contracts_completed_at,listing_number,customer_kind")
-        .eq("quote_response", "accepted")
-        .is("deleted_at", null)
-        .is("archived_at", null);
+      const [{ data }, { data: cemData }] = await Promise.all([
+        supabase
+          .from("contact_submissions")
+          .select("id,name,cemetery,cemetery_city,lawn,section,space_numbers,property_type,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,cemetery_retail,buyer_fees,quote_responded_at,sold_at,reserved_until,listing_live_at,la_signed_at,contracts_completed_at,documents_requested_at,documents_completed_at,listing_number,customer_kind")
+          .eq("quote_response", "accepted")
+          .is("deleted_at", null)
+          .is("archived_at", null),
+        supabase.from("texas_cemeteries").select("name,canonical_name,city,region").is("deleted_at", null),
+      ]);
+      // Metro area lookup: match on cemetery name (or canonical name), fall back to city.
+      const byName = new Map<string, string>();
+      const byCity = new Map<string, string>();
+      for (const c of (cemData as any[]) || []) {
+        const region = c.region || "";
+        if (!region) continue;
+        for (const n of [c.name, c.canonical_name]) {
+          const k = String(n || "").trim().toLowerCase();
+          if (k && !byName.has(k)) byName.set(k, region);
+        }
+        const ck = String(c.city || "").trim().toLowerCase();
+        if (ck && !byCity.has(ck)) byCity.set(ck, region);
+      }
+      const metroOf = (s: any): string =>
+        byName.get(String(s.cemetery || "").trim().toLowerCase()) ||
+        byCity.get(String(s.cemetery_city || "").trim().toLowerCase()) || "";
       const out: Row[] = ((data as any[]) || [])
         .filter((s) => s.customer_kind !== "buyer")
         .map((s) => {
@@ -106,6 +150,8 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
             pctRetail: retail && f.buyerPricePerSpace ? Math.round((f.buyerPricePerSpace / retail) * 100) : null,
             acceptedAt: s.quote_responded_at,
             status: statusOf(s),
+            stage: stageOf(s),
+            metro: metroOf(s),
             listingNumber: s.listing_number || "",
           };
         });
@@ -117,7 +163,7 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase();
     let r = rows.filter((x) => (status === "all" || x.status === status) &&
-      (!needle || [x.seller, x.cemetery, x.city, x.location, x.propertyType, x.listingNumber].join(" ").toLowerCase().includes(needle)));
+      (!needle || [x.seller, x.cemetery, x.city, x.metro, x.location, x.propertyType, x.stage, x.listingNumber].join(" ").toLowerCase().includes(needle)));
     const { key, dir } = sort;
     r = [...r].sort((a, b) => {
       const av = a[key], bv = b[key];
@@ -160,6 +206,8 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
       case "acceptedAt": return fmtDate(r.acceptedAt);
       case "seller": return <span className="font-medium text-foreground">{r.seller}{r.listingNumber && <span className="ml-1 text-[10px] text-muted-foreground">#{r.listingNumber}</span>}</span>;
       case "status": return <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary whitespace-nowrap">{r.status}</span>;
+      case "stage": return <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${STAGE_CLS[r.stage] || "bg-muted text-muted-foreground"}`}>{r.stage}</span>;
+      case "metro": return r.metro || "—";
       default: return (r[key] as any) || "—";
     }
   };
@@ -220,13 +268,13 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
               </tbody>
               <tfoot className="sticky bottom-0 bg-card border-t border-border font-semibold text-foreground">
                 <tr>
-                  <td className="px-3 py-2.5" colSpan={5}>Totals ({view.length})</td>
+                  <td className="px-3 py-2.5" colSpan={6}>Totals ({view.length})</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{totals.plots}</td>
                   <td colSpan={2} />
                   <td className="px-3 py-2.5 text-right tabular-nums">{money(totals.seller)}</td>
                   <td />
                   <td className="px-3 py-2.5 text-right tabular-nums">{money(totals.buyer)}</td>
-                  <td colSpan={4} />
+                  <td colSpan={5} />
                 </tr>
               </tfoot>
             </table>
