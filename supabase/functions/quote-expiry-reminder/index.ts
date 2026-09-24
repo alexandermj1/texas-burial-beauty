@@ -34,9 +34,9 @@ const quoteLines = (netPerSpace: number, transferFee: number, plotCount: number)
   return {
     headline: count > 1 ? `${usd(total)} total for all ${count} spaces` : usd(perSpace),
     detail: [
-      count > 1 ? `${usd(netPerSpace)} authorized price per space, excluding the transfer fee` : null,
-      fee > 0 ? `the total above includes the cemetery's ${usd(fee)} transfer fee, charged once${count > 1 ? " across the whole transfer — not once per space" : ""}` : null,
-    ].filter(Boolean).join(" — "),
+      count > 1 ? `${usd(netPerSpace)} per space (${usd(netPerSpace * count)} for the property)` : fee > 0 ? `${usd(netPerSpace)} for the property` : null,
+      fee > 0 ? `plus one ${usd(fee)} cemetery transfer fee paid by the buyer` : null,
+    ].filter(Boolean).join("; "),
   };
 };
 const dayFmt = (iso: string) => new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "America/Chicago" });
