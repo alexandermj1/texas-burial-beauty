@@ -88,3 +88,9 @@
 - [x] Remove buyer commission from the quote calculation and deduction
 - [x] Clarify the property price, one-time cemetery fee, and seller proceeds without changing the figures
 - [x] Send the revised customer quote email to alexandermaclarenjames@gmail.com for review
+
+## Multi-plot accepted prices
+- [ ] Correct John Gaylord and the other exact multiplied-total records
+- [x] Keep paid and free listing selections from multiplying accepted per-plot prices
+- [x] Align Price Sheet per-plot and all-plots columns with the saved quote
+- [ ] Verify corrected records and both acceptance paths
