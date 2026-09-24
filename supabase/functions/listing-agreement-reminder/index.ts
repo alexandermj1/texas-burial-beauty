@@ -30,8 +30,8 @@ export function buildBody(firstName: string, cemetery: string | null, link: stri
     preheader: "Your listing agreement is ready to sign online — it takes less than a minute.",
     greeting: `Dear ${firstName},`,
     paragraphs: [
-      `This is a reminder that your listing agreement${cemetery ? ` for your property at <strong>${esc(cemetery)}</strong>` : ""} is ready to sign online. It takes less than a minute to complete.`,
-      "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so the correct paperwork can be prepared for you.",
+      `Just a quick reminder that your listing agreement${cemetery ? ` for your property at <strong>${esc(cemetery)}</strong>` : ""} is ready to sign online. It takes less than a minute to complete.`,
+      "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so we can get the right paperwork ready for you.",
     ],
     panel: cemetery ? { label: "Property", value: cemetery } : undefined,
     callout: {
