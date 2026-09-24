@@ -131,12 +131,6 @@ export async function buildListingOptionsBlock(opts: {
       });
 
   const spaceWord = plotCount === 1 ? "space" : "spaces";
-  const acrossLine = plotCount > 1
-    ? ` <span style="color:${BRAND_INK_MUTED};font-weight:500;">(${fmtUsd(totalSale)} across all ${plotCount} spaces)</span>`
-    : "";
-  const proceedsTotalLine = plotCount > 1
-    ? ` <span style="color:${BRAND_INK_MUTED};">(${fmtUsd(totalProceeds)} total)</span>`
-    : "";
   const deadline = escapeHtml(nextOfferDeadline());
 
   const tierCards = links.map(({ tier, url, free }) => buildListingCard(tier, url, free, cemLabel)).join("\n");
@@ -174,46 +168,39 @@ export async function buildListingOptionsBlock(opts: {
     <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:800;">Our Suggested Sales Price</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border-radius:8px;margin:14px 0 16px;">
       <tr><td style="padding:18px 20px;">
-        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price${transferFee > 0 ? " (incl. cemetery transfer fee)" : ""}</p>
+        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price</p>
         ${plotCount > 1
-          ? `<p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(totalSale)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">total for all ${plotCount} spaces</span></p><p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:9px 0 0;">${fmtUsd(salePerSpace)} per space before the one-time cemetery transfer fee${fee > 0 ? `; the cemetery's ${fmtUsd(fee)} fee is included once in the ${fmtUsd(totalSale)} total, not once per space` : ""}.</p>`
-          : `<p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(grossPerSpace)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">per space</span></p>`}
+          ? `<p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(totalSale)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">total for all ${plotCount} spaces</span></p><p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:9px 0 0;">This total is made up of ${fmtUsd(salePerSpace)} per space (${fmtUsd(saleSubtotal)} for the property)${fee > 0 ? ` plus one ${fmtUsd(fee)} cemetery transfer fee` : ""}.</p>`
+          : `<p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(grossPerSpace)}</p>${fee > 0 ? `<p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:9px 0 0;">This total is made up of ${fmtUsd(salePerSpace)} for the property plus the cemetery's ${fmtUsd(fee)} transfer fee.</p>` : ""}`}
       </td></tr>
     </table>
-    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the price we suggest listing at to stay in line with other listings at this location, and the minimum figure at which you authorize us to complete a sale on your behalf.${transferFee > 0 ? ` It is quoted inclusive of the cemetery's transfer fee of ${fmtUsd(transferFee)}, which is paid by the buyer${plotCount > 1 ? " and is charged once per transfer rather than per space" : ""}, and is shown separately in the breakdown below.` : ""} In practice we always pursue the highest achievable price — the final sale may close at this figure or above it, and any amount above the suggested price flows through to your proceeds on the same terms.</p>
+    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the minimum sales price you authorize us to accept. We always pursue the highest achievable price, so the property may sell for more and your proceeds would increase on the same terms.${transferFee > 0 ? ` The ${fmtUsd(transferFee)} cemetery fee is paid by the buyer and passed to the cemetery; it is not money taken from your proceeds.` : ""}</p>
 
   </td></tr>
 </table>`.trim();
 
   // ── PROCEEDS BREAKDOWN ROW ────────────────────────────────────────
   const multi = plotCount > 1;
-  const proceedsRow = (label: string, value: string, totalValue?: string) => `
+  const proceedsRow = (label: string, value: string) => `
 <tr>
   <td style="padding:10px 0;border-bottom:1px solid ${BRAND_BORDER};font-family:${SANS};font-size:14px;color:${BRAND_INK_MUTED};">${label}</td>
   <td style="padding:10px 0;border-bottom:1px solid ${BRAND_BORDER};font-family:${SERIF};font-size:15px;color:${BRAND_INK};font-weight:600;text-align:right;">${value}</td>
-  ${multi ? `<td style="padding:10px 0 10px 18px;border-bottom:1px solid ${BRAND_BORDER};font-family:${SERIF};font-size:15px;color:${BRAND_INK};font-weight:600;text-align:right;">${totalValue ?? "—"}</td>` : ""}
 </tr>`;
 
   const proceedsCard = `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${BRAND_BORDER};border-radius:10px;margin:0 0 22px;background:${BRAND_CARD_BG};">
   <tr><td style="padding:22px 24px;">
-    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 12px;font-weight:800;">Your Proceeds${multi ? ` — Per Space and All ${plotCount} Spaces` : " Per Space"}</p>
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 5px;font-weight:800;">What You Receive</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:0 0 10px;">The cemetery fee is kept separate because it belongs to the cemetery. Your proceeds are calculated only from the property price.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      ${multi ? `<tr>
-        <td style="padding:0 0 6px;"></td>
-        <td style="padding:0 0 6px;font-family:${SANS};font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:${BRAND_INK_FAINT};text-align:right;">Per space</td>
-        <td style="padding:0 0 6px 18px;font-family:${SANS};font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:${BRAND_INK_FAINT};text-align:right;">All ${plotCount} spaces</td>
-      </tr>` : ""}
-      ${proceedsRow(`Sales price${transferFee > 0 ? " (incl. transfer fee)" : ""}`, fmtUsd(grossPerSpace), fmtUsd(totalSale))}
-      ${transferFee > 0 ? proceedsRow(`Cemetery transfer fee (paid by the buyer${multi ? ", charged once" : ""})`, `–${fmtUsd(transferFee)}`, `–${fmtUsd(fee)}`) : ""}
-      ${proceedsRow("Our commission (15%)", `–${fmtUsd(commissionPerSpace)}`, `–${fmtUsd(commissionTotal)}`)}
+      ${proceedsRow(`Property price${multi ? ` (${fmtUsd(salePerSpace)} × ${plotCount} spaces)` : ""}`, fmtUsd(saleSubtotal))}
+      ${proceedsRow("Our selling commission (15%)", `–${fmtUsd(commissionTotal)}`)}
       <tr>
-        <td style="padding:14px 0 0;font-family:${SANS};font-size:14px;color:${BRAND_INK};font-weight:600;">Your proceeds</td>
-        <td style="padding:14px 0 0;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(proceedsPerSpace)}</td>
-        ${multi ? `<td style="padding:14px 0 0 18px;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(totalProceeds)}</td>` : ""}
+        <td style="padding:14px 0 0;font-family:${SANS};font-size:14px;color:${BRAND_INK};font-weight:600;">You receive${multi ? ` for all ${plotCount} spaces` : ""}</td>
+        <td style="padding:14px 0 0;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(totalProceeds)}</td>
       </tr>
     </table>
-    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">Or more if the property sells above the suggested sales price.</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">${multi ? `${fmtUsd(proceedsPerSpace)} per space after commission. ` : ""}You receive more if the property sells above the suggested price.</p>
 
 
   </td></tr>
@@ -266,7 +253,7 @@ ${tierCards}
       <tr><td style="padding:26px 40px 4px;">
         ${eyebrow("Section")}
         ${h2("Your proceeds")}
-        ${p(`Upon sale, our brokerage commission of 15% of the final sale price is deducted, and the balance is remitted to you. At the suggested sales price, that means:`, true)}
+        ${p(`Only two figures determine what you receive: the property price and our 15% selling commission. The cemetery transfer fee is paid separately by the buyer and does not reduce your proceeds.`, true)}
         ${proceedsCard}
       </td></tr>
 

@@ -86,4 +86,5 @@
 
 ## Quote email calculation
 - [x] Remove buyer commission from the quote calculation and deduction
-- [ ] Send a review email to alexandermaclarenjames@gmail.com — needs the seller record and quote figures to use for the sample
+- [x] Clarify the property price, one-time cemetery fee, and seller proceeds without changing the figures
+- [x] Send the revised customer quote email to alexandermaclarenjames@gmail.com for review
