@@ -1,6 +1,8 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useOutlet } from "react-router-dom";
+import botanicalLeft from "@/assets/flowers/hero-botanical-left.png";
+import botanicalRight from "@/assets/flowers/hero-botanical-right.png";
 
 const BRAND = "Texas Cemetery Brokers";
 
@@ -16,7 +18,7 @@ const PageTransition = () => {
   const shouldShowSplash = isHome && !hasShownSplash;
 
   const [splashVisible, setSplashVisible] = useState(shouldShowSplash);
-  const splashHoldMs = shouldReduceMotion ? 150 : 2900;
+  const splashHoldMs = shouldReduceMotion ? 150 : 3200;
 
   useEffect(() => {
     if (!shouldShowSplash) return;
@@ -63,18 +65,18 @@ const PageTransition = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Home-only first-load splash — Apple-minimal */}
+      {/* Home-only first-load splash — modern Texas botanical editorial */}
       <AnimatePresence>
         {splashVisible && (
           <motion.div
             key="splash"
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-background pointer-events-none px-6 overflow-hidden"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background pointer-events-none overflow-hidden"
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
             exit={
               shouldReduceMotion
                 ? { opacity: 0 }
-                : { opacity: 0, scale: 1.02, filter: "blur(8px)" }
+                : { opacity: 0, scale: 1.025 }
             }
             transition={
               shouldReduceMotion
@@ -82,75 +84,71 @@ const PageTransition = () => {
                 : { duration: 0.9, ease: [0.65, 0, 0.35, 1] }
             }
           >
-            {/* Soft, single radial glow — no dots, no grid */}
-            {!shouldReduceMotion && (
+            <motion.div
+              aria-hidden
+              className="absolute left-0 top-0 h-2 w-full bg-accent"
+              initial={shouldReduceMotion ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <motion.div
+              aria-hidden
+              className="absolute bottom-0 left-0 h-[18vh] w-full bg-sage-light/70"
+              initial={shouldReduceMotion ? false : { y: "100%" }}
+              animate={{ y: 0 }}
+              transition={{ duration: 1.15, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            />
+
+            <motion.div
+              aria-hidden
+              className="absolute -left-16 -bottom-10 w-[16rem] origin-bottom-left sm:-left-16 sm:-bottom-24 sm:w-[31rem] lg:w-[38rem]"
+              initial={shouldReduceMotion ? false : { x: "-28%", y: "18%", rotate: -8, opacity: 0 }}
+              animate={{ x: 0, y: 0, rotate: -2, opacity: 1 }}
+              exit={{ x: "-35%", y: "18%", rotate: -8, opacity: 0 }}
+              transition={{ duration: 1.25, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img src={botanicalLeft} alt="" className="w-full drop-shadow-xl" />
+            </motion.div>
+
+            <motion.div
+              aria-hidden
+              className="absolute -right-20 -top-10 w-[17rem] origin-top-right sm:-right-16 sm:-top-24 sm:w-[32rem] lg:w-[39rem]"
+              initial={shouldReduceMotion ? false : { x: "30%", y: "-18%", rotate: 9, opacity: 0 }}
+              animate={{ x: 0, y: 0, rotate: 1, opacity: 1 }}
+              exit={{ x: "35%", y: "-18%", rotate: 8, opacity: 0 }}
+              transition={{ duration: 1.3, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img src={botanicalRight} alt="" className="w-full drop-shadow-xl" />
+            </motion.div>
+
+            <div className="relative z-10 flex max-w-[92vw] flex-col items-center px-5 text-center text-foreground">
+              {/* A survey plat + location marker: cemetery property, professionally brokered. */}
+              <motion.div
+                className="mb-6 flex items-center gap-3 sm:mb-8"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.35 }}
+              >
+                <span className="h-px w-10 bg-accent/60 sm:w-16" />
+                <span className="text-[10px] font-semibold uppercase text-primary sm:text-xs">Cemetery property brokerage</span>
+                <span className="h-px w-10 bg-accent/60 sm:w-16" />
+              </motion.div>
+
               <motion.div
                 aria-hidden
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(ellipse 55% 45% at 50% 50%, hsl(var(--sage) / 0.10), transparent 70%)",
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.2 }}
-              />
-            )}
+                className="relative mb-7 flex h-20 w-20 items-center justify-center rounded-full border border-primary/25 bg-card shadow-soft sm:h-24 sm:w-24"
+                initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.78, rotate: -6 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{ duration: 0.9, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <svg viewBox="0 0 72 72" fill="none" className="h-12 w-12 text-primary sm:h-14 sm:w-14">
+                  <motion.path d="M17 12h29l9 9v39H17z M46 12v10h9 M25 31h22 M25 39h22 M25 47h13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" initial={shouldReduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, delay: 0.7 }} />
+                  <motion.path d="M48 43c0-4 3-7 7-7s7 3 7 7c0 6-7 13-7 13s-7-7-7-13z" fill="hsl(var(--accent))" stroke="hsl(var(--background))" strokeWidth="1.5" initial={shouldReduceMotion ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 1.25 }} />
+                  <circle cx="55" cy="43" r="2" fill="hsl(var(--background))" />
+                </svg>
+              </motion.div>
 
-            <div className="relative flex flex-col items-center text-foreground max-w-full">
-              {/* Minimalist arch monument — draws itself in */}
-              {!shouldReduceMotion && (
-                <motion.svg
-                  width="64"
-                  height="80"
-                  viewBox="0 0 64 80"
-                  fill="none"
-                  className="mb-8 sm:mb-10 text-foreground/70"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                >
-                  {/* Arched marker silhouette */}
-                  <motion.path
-                    d="M12 78 L12 32 Q12 8 32 8 Q52 8 52 32 L52 78"
-                    stroke="currentColor"
-                    strokeWidth="1.25"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                  {/* Center engraved line */}
-                  <motion.line
-                    x1="32"
-                    y1="34"
-                    x2="32"
-                    y2="58"
-                    stroke="currentColor"
-                    strokeWidth="0.75"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 0.6 }}
-                    transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
-                  />
-                  {/* Ground line */}
-                  <motion.line
-                    x1="0"
-                    y1="79"
-                    x2="64"
-                    y2="79"
-                    stroke="currentColor"
-                    strokeWidth="0.75"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.2, delay: 0.05, ease: "easeOut" }}
-                  />
-                </motion.svg>
-              )}
-
-              {/* Wordmark — large, serif, calm */}
-              <h1 className="font-display tracking-tight text-center leading-[1.05] text-3xl sm:text-5xl md:text-6xl lg:text-7xl flex flex-wrap justify-center gap-x-[0.32em] max-w-[92vw]">
+              <h1 className="flex max-w-[92vw] flex-wrap justify-center gap-x-[0.3em] font-display text-4xl leading-[1.03] sm:text-6xl md:text-7xl lg:text-8xl">
                 {words.map((word, wi) => (
                   <span key={`${word}-${wi}`} className="inline-flex overflow-hidden pb-[0.08em]">
                     {word.split("").map((char, ci) => (
@@ -160,12 +158,12 @@ const PageTransition = () => {
                         initial={
                           shouldReduceMotion
                             ? { y: 0, opacity: 1 }
-                            : { y: "105%", opacity: 0 }
+                            : { y: "110%", opacity: 0, rotate: 2 }
                         }
-                        animate={{ y: "0%", opacity: 1 }}
+                        animate={{ y: "0%", opacity: 1, rotate: 0 }}
                         transition={{
-                          duration: 0.85,
-                          delay: 0.5 + wi * 0.12 + ci * 0.025,
+                          duration: 0.78,
+                          delay: 0.82 + wi * 0.1 + ci * 0.018,
                           ease: [0.22, 1, 0.36, 1],
                         }}
                       >
@@ -176,24 +174,16 @@ const PageTransition = () => {
                 ))}
               </h1>
 
-              {/* Hairline divider drawing out */}
               <motion.div
-                aria-hidden
-                className="mt-7 sm:mt-9 h-px bg-foreground/25"
-                initial={shouldReduceMotion ? { width: 80 } : { width: 0 }}
-                animate={{ width: 80 }}
-                transition={{ duration: 0.9, delay: 1.45, ease: [0.22, 1, 0.36, 1] }}
-              />
-
-              {/* Tagline */}
-              <motion.span
-                className="mt-5 text-[10px] sm:text-xs uppercase tracking-[0.4em] text-muted-foreground"
+                className="mt-7 flex items-center gap-3 sm:mt-9"
                 initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 1.7, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.7, delay: 1.65, ease: [0.22, 1, 0.36, 1] }}
               >
-                Serving all of Texas
-              </motion.span>
+                <span className="h-2 w-2 rounded-full bg-accent" />
+                <span className="text-xs font-medium uppercase text-muted-foreground sm:text-sm">Serving all of Texas</span>
+                <span className="h-2 w-2 rounded-full bg-primary" />
+              </motion.div>
             </div>
           </motion.div>
         )}

@@ -98,4 +98,6 @@
 ## Website opening animation
 - [ ] Replace the sparse opening with a modern branded floral composition
 - [ ] Remove the gradient and use the existing parchment, sage, and hibiscus palette
+- [ ] Include a refined cemetery-property brokerage and transfer motif
 - [ ] Verify the complete reveal and handoff on desktop and mobile
+- [ ] Keep the finished opening in preview until Alexander approves publishing
