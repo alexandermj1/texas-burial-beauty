@@ -1,10 +1,8 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useOutlet } from "react-router-dom";
-import hibiscus from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
-import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
-import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import botanicalLeft from "@/assets/flowers/hero-botanical-left.png";
+import botanicalRight from "@/assets/flowers/hero-botanical-right.png";
 
 const BRAND = "Texas Cemetery Brokers";
 
@@ -103,26 +101,24 @@ const PageTransition = () => {
 
             <motion.div
               aria-hidden
-              className="absolute -left-24 -bottom-16 sm:-left-20 sm:-bottom-28 w-[20rem] sm:w-[34rem] lg:w-[42rem] origin-bottom-left"
+              className="absolute -left-16 -bottom-10 w-[16rem] origin-bottom-left sm:-left-16 sm:-bottom-24 sm:w-[31rem] lg:w-[38rem]"
               initial={shouldReduceMotion ? false : { x: "-28%", y: "18%", rotate: -8, opacity: 0 }}
               animate={{ x: 0, y: 0, rotate: -2, opacity: 1 }}
               exit={{ x: "-35%", y: "18%", rotate: -8, opacity: 0 }}
               transition={{ duration: 1.25, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
             >
-              <img src={bananaLeaf.url} alt="" className="absolute bottom-0 left-0 w-[66%] -rotate-6" />
-              <img src={hibiscus.url} alt="" className="relative ml-[20%] w-[72%] rotate-6 drop-shadow-xl" />
+              <img src={botanicalLeft} alt="" className="w-full drop-shadow-xl" />
             </motion.div>
 
             <motion.div
               aria-hidden
-              className="absolute -right-28 -top-20 sm:-right-16 sm:-top-28 w-[21rem] sm:w-[36rem] lg:w-[43rem] origin-top-right"
+              className="absolute -right-20 -top-10 w-[17rem] origin-top-right sm:-right-16 sm:-top-24 sm:w-[32rem] lg:w-[39rem]"
               initial={shouldReduceMotion ? false : { x: "30%", y: "-18%", rotate: 9, opacity: 0 }}
               animate={{ x: 0, y: 0, rotate: 1, opacity: 1 }}
               exit={{ x: "35%", y: "-18%", rotate: 8, opacity: 0 }}
               transition={{ duration: 1.3, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             >
-              <img src={palmFan.url} alt="" className="absolute right-0 top-0 w-[74%] rotate-12 opacity-90" />
-              <img src={pinkBranch.url} alt="" className="relative ml-[2%] mt-[13%] w-[76%] -rotate-6 drop-shadow-lg" />
+              <img src={botanicalRight} alt="" className="w-full drop-shadow-xl" />
             </motion.div>
 
             <div className="relative z-10 flex max-w-[92vw] flex-col items-center px-5 text-center text-foreground">
