@@ -27,30 +27,28 @@ const SEND_GRACE_MS = 30 * 60_000;
 export function buildBody(firstName: string, cemetery: string | null, link: string) {
   const html = brandedEmail({
     eyebrow: "Your listing agreement",
-    preheader: "Your agreement is ready to sign online — it takes about five minutes.",
+    preheader: "Your listing agreement is ready to sign online — it takes less than a minute.",
     greeting: `Dear ${firstName},`,
     paragraphs: [
-      `I wanted to follow up on the listing agreement we sent over${cemetery ? ` for your property at <strong>${esc(cemetery)}</strong>` : ""}. It is still waiting for your signature, and it only takes about five minutes to complete online.`,
-      "The agreement simply lets us market your property and find a buyer on your behalf. You approve every offer before anything is final.",
-      "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so we can prepare exactly the right paperwork for you and nothing more.",
+      `This is a reminder that your listing agreement${cemetery ? ` for your property at <strong>${esc(cemetery)}</strong>` : ""} is ready to sign online. It takes less than a minute to complete.`,
+      "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so the correct paperwork can be prepared for you.",
     ],
     panel: cemetery ? { label: "Property", value: cemetery } : undefined,
     callout: {
-      label: "Ready when you are",
+      label: "Sign online",
       body: "The link below opens your agreement. Fill in your details, add your initials to each section, sign, and you are done.",
       buttonHref: link,
-      buttonLabel: "Review & sign your agreement",
+      buttonLabel: "Sign your listing agreement",
     },
-    closing: `If something is not working, or you would rather go through it together, just reply to this email or call <a href="${PHONE_HREF}" style="color:#7c3a2e;text-decoration:none;"><strong>${PHONE_LABEL}</strong></a>. If you have already signed a paper copy, please ignore this note.`,
+    closing: `If the link does not work, please reply to this email or call <a href="${PHONE_HREF}" style="color:#7c3a2e;text-decoration:none;"><strong>${PHONE_LABEL}</strong></a>. If you have already signed, please disregard this reminder.`,
   });
   const plain = [
     `Dear ${firstName},`, "",
-    `I wanted to follow up on the listing agreement we sent over${cemetery ? ` for your property at ${cemetery}` : ""}. It is still waiting for your signature, and it only takes about five minutes to complete online.`, "",
-    "The agreement simply lets us market your property and find a buyer on your behalf. You approve every offer before anything is final.", "",
-    "Once it is signed, you will be taken straight to a few short questions about the ownership of the property.", "",
-    `Review and sign your agreement: ${link}`, "",
-    `If something is not working, reply to this email or call ${PHONE_LABEL}. If you have already signed a paper copy, please ignore this note.`, "",
-    "Warm regards,", "Alexander James", "Cemetery Salesperson", "Texas Cemetery Brokers",
+    `This is a reminder that your listing agreement${cemetery ? ` for your property at ${cemetery}` : ""} is ready to sign online. It takes less than a minute to complete.`, "",
+    "Once it is signed, you will be taken straight to a few short questions about the ownership of the property, so the correct paperwork can be prepared for you.", "",
+    `Sign your listing agreement: ${link}`, "",
+    `If the link does not work, please reply to this email or call ${PHONE_LABEL}. If you have already signed, please disregard this reminder.`, "",
+    "Texas Cemetery Brokers",
   ].join("\n");
   return { html, plain };
 }
