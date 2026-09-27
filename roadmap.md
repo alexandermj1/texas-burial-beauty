@@ -94,3 +94,8 @@
 - [x] Keep paid and free listing selections from multiplying accepted per-plot prices
 - [x] Align Price Sheet per-plot and all-plots columns with the saved quote
 - [x] Verify corrected records and both acceptance paths
+
+## AI Seller Agent
+- [ ] Restrict the AI agent to sellers only
+- [ ] Study recent staff email replies to build the tone/protocol knowledge base
+- [ ] Update the plan with the knowledge base findings
