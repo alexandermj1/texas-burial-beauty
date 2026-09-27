@@ -96,6 +96,6 @@
 - [x] Verify corrected records and both acceptance paths
 
 ## AI Seller Agent
-- [ ] Restrict the AI agent to sellers only
-- [ ] Study recent staff email replies to build the tone/protocol knowledge base
-- [ ] Update the plan with the knowledge base findings
+- [x] Restrict the AI agent to sellers only
+- [x] Study recent staff email replies to build the tone/protocol knowledge base
+- [x] Update the plan with the knowledge base findings

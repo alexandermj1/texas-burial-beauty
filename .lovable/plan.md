@@ -19,9 +19,18 @@ New email / note / upload / stage change
  on the record      in admin           with reason
 ```
 
+### 0. Sellers only
+- The agent only ever works on seller submissions: seller quote forms, or contact forms that have received a quote. Buyers, general enquiries, partners and job-site emails are hard-excluded before the AI even sees them. Those submissions stay fully manual.
+
 ### 1. One company playbook the AI follows
-- A single maintained "TCB Playbook" covering fee structure (55% target, 70% ceiling, 15% buyer fee, transfer fee once), stages, document rules and why each document is needed, POA and heirship logic, tone and wording rules (no hand-written feel, never promise offer reviews), cemetery-specific rules, and what must never be said.
-- Built from what already exists: the quote engine, ownership rules engine, document-request explanations, email templates and past approved replies. The old AI reply prompt gets replaced so it can't fall out of date again.
+- **Already drafted from 600 real staff replies to sellers.** It covers tone (opening with "Dear [First Name]," and closing with "Warm regards"/"Best regards", short paragraphs, always explaining why an extra step is needed), what we say at each stage, fees and transfer fees, each required document and why (wet-ink notarized POA mailed to Glendale, spousal consent, heirship, general POA), standard answers (price below retail, minimum authorized price, lost deed, selling single spaces), how problems get resolved (notary cost, mismatched signatures, Google Drive links, wills that don't name the plot), when to call or pause (hospice, angry sellers, 11-heir files, Dignity cemeteries with a deceased owner), and phrases to use or avoid (no legal advice, no guaranteed timelines, no blank forms).
+- The draft is then merged with the rules that live in code (55% target, 70% ceiling, one-time transfer fee, 15% buyer fee on the full price, document rules engine). The old AI reply prompt gets replaced so it can't fall out of date again.
+- **Owner decisions needed before launch.** Staff replies contradict each other on these points:
+  1. Set-your-own-price fee: $399 or $499?
+  2. Listing speed statistics: Pro 21% or 22% faster, Featured 61% or 62% faster.
+  3. Do we offer direct cash purchases? Some replies say yes, others say no.
+  4. How we describe the 15%: seller commission, buyer fee, or both. The current quote email says buyer-paid.
+  5. Which phone number to give out: 214-230-4740 only, or the 310/213 numbers too?
 - An admin "Playbook" page where you can read and edit the rules in plain English. Every change is versioned.
 
 ### 2. Background agent run on every seller event
