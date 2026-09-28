@@ -1,0 +1,1 @@
+- AI Seller Agent: seller-agent edge function + ai_playbook/ai_agent_* tables; latest ai_playbook version is the single prompt source; actions are proposed and only executed on staff approval (why: safe rollout, one source of truth).

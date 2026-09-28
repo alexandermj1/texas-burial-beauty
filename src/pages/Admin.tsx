@@ -27,6 +27,7 @@ import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipe
 import InboxPanel from "@/components/admin/InboxPanel";
 // TEMPORARY test ground — remove this import, the tab entry and the render line to retire it.
 import RulesPlaygroundPanel from "@/components/admin/RulesPlaygroundPanel";
+import AiAgentPanel from "@/components/admin/AiAgentPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
@@ -72,7 +73,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground" | "ai_agent">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -494,6 +495,7 @@ const Admin = () => {
       : []),
     // TEMPORARY test ground for the document rules.
     { key: "rules_playground", label: "Rules Playground", Icon: FlaskConical },
+    { key: "ai_agent", label: "AI Agent", Icon: FlaskConical },
   ];
 
   // Staff users only get Submissions and Map — even if they also carry the
@@ -513,7 +515,7 @@ const Admin = () => {
     tab === "listings" ? "Search listings..." :
     "Search anything...";
 
-  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing" && tab !== "map" && tab !== "activity_monitor" && tab !== "tasks";
+  const showSearch = tab !== "performance" && tab !== "customers" && tab !== "inventory_requests" && tab !== "ca_inventory" && tab !== "email_marketing" && tab !== "map" && tab !== "activity_monitor" && tab !== "tasks" && tab !== "ai_agent";
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-sand-light/60 via-background to-sage-light/40 dark:from-background dark:via-background dark:to-background">
@@ -991,6 +993,7 @@ const Admin = () => {
 
           <TeamTasksStartup onOpenList={() => setTeamMsgTasks(true)} />
           {tab === "rules_playground" && <RulesPlaygroundPanel />}
+          {tab === "ai_agent" && <AiAgentPanel onOpenSubmission={(id) => { setFocusSubmissionId(id); setTab("submissions"); }} />}
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}

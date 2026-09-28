@@ -99,3 +99,6 @@
 - [x] Restrict the AI agent to sellers only
 - [x] Study recent staff email replies to build the tone/protocol knowledge base
 - [x] Update the plan with the knowledge base findings
+- [x] Phase 1: playbook, seller-only agent, approval inbox (shadow/approval mode)
+- [ ] Phase 2: automatic triggers (new email/note/upload) + scheduled sweep — after a week of reviewing proposals
+- [ ] Phase 3: turn on autonomous sending per action type once approval rates are high
