@@ -113,6 +113,173 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_agent_actions: {
+        Row: {
+          action_type: string
+          confidence: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by_name: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          email_body: string | null
+          email_subject: string | null
+          email_to: string | null
+          error: string | null
+          executed_at: string | null
+          gmail_thread_id: string | null
+          id: string
+          note_body: string | null
+          original_email_body: string | null
+          reason: string | null
+          run_id: string | null
+          status: string
+          submission_id: string
+        }
+        Insert: {
+          action_type: string
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by_name?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email_body?: string | null
+          email_subject?: string | null
+          email_to?: string | null
+          error?: string | null
+          executed_at?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          note_body?: string | null
+          original_email_body?: string | null
+          reason?: string | null
+          run_id?: string | null
+          status?: string
+          submission_id: string
+        }
+        Update: {
+          action_type?: string
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by_name?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email_body?: string | null
+          email_subject?: string | null
+          email_to?: string | null
+          error?: string | null
+          executed_at?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          note_body?: string | null
+          original_email_body?: string | null
+          reason?: string | null
+          run_id?: string | null
+          status?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agent_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_actions_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_runs: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          error: string | null
+          human_reason: string | null
+          id: string
+          needs_human: boolean
+          next_step: string | null
+          playbook_version: number | null
+          reasoning: string | null
+          stage_summary: string | null
+          status: string
+          submission_id: string
+          trigger: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          error?: string | null
+          human_reason?: string | null
+          id?: string
+          needs_human?: boolean
+          next_step?: string | null
+          playbook_version?: number | null
+          reasoning?: string | null
+          stage_summary?: string | null
+          status?: string
+          submission_id: string
+          trigger: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          error?: string | null
+          human_reason?: string | null
+          id?: string
+          needs_human?: boolean
+          next_step?: string | null
+          playbook_version?: number | null
+          reasoning?: string | null
+          stage_summary?: string | null
+          status?: string
+          submission_id?: string
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_runs_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_agent_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by_name: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by_name?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by_name?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       ai_draft_edits: {
         Row: {
           actor_name: string | null
@@ -179,6 +346,39 @@ export type Database = {
           template_id?: string | null
           training_notes?: string | null
           was_sent?: boolean
+        }
+        Relationships: []
+      }
+      ai_playbook: {
+        Row: {
+          change_note: string | null
+          content: string
+          created_at: string
+          created_by_name: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          content: string
+          created_at?: string
+          created_by_name?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          content?: string
+          created_at?: string
+          created_by_name?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          version?: number
         }
         Relationships: []
       }
@@ -632,6 +832,7 @@ export type Database = {
           acceptance_channel: string | null
           accepted_quote_amount: number | null
           admin_notes: string | null
+          ai_paused_at: string | null
           ai_summary: string | null
           ai_summary_at: string | null
           ai_summary_key: string | null
@@ -756,6 +957,7 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_paused_at?: string | null
           ai_summary?: string | null
           ai_summary_at?: string | null
           ai_summary_key?: string | null
@@ -880,6 +1082,7 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_paused_at?: string | null
           ai_summary?: string | null
           ai_summary_at?: string | null
           ai_summary_key?: string | null
