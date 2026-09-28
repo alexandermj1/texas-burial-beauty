@@ -3,8 +3,9 @@
 // human). Phase 1 runs in shadow/approval mode: nothing is sent to a customer
 // until a staff member approves the proposed action.
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.49.4";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { z } from "npm:zod@3.23.8";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 
 const MODEL = "openai/gpt-6-astra";
@@ -29,7 +30,7 @@ const clip = (v: unknown, n: number) => {
 const stripQuoted = (t: string) => t.replace(/\nOn .{5,160}wrote:[\s\S]*$/, "").replace(/(^|\n)>.*(?=\n|$)/g, "");
 
 /** Seller-only guard: buyers, general enquiries and partners never reach the AI. */
-export const isSeller = (s: Sub) => {
+const isSeller = (s: Sub) => {
   const kind = String(s.customer_kind ?? "").toLowerCase();
   if (kind.includes("buyer") || kind.includes("general") || kind.includes("partner")) return false;
   return s.source === "seller_quote" || (s.source === "contact" && !!s.quote_sent_at) || kind.includes("seller");
