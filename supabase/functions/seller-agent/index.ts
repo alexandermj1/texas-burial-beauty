@@ -119,6 +119,7 @@ const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owne
 // The quote stores the authorised sale price per space excluding one transfer fee.
 // Match the admin quote ceiling: buyer pays 115% of (price + transfer fee).
 function higherQuote(sub: Sub) {
+  if (sub.quote_amount == null || sub.cemetery_retail == null || sub.transfer_fee_amount == null) return null;
   const current = Number(sub.quote_amount);
   const retail = Number(sub.cemetery_retail);
   const fee = Number(sub.transfer_fee_amount);
@@ -141,7 +142,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
-  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (!sub.accepted_quote_amount && higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
+  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   return { allowed: out, liveLink };
 }
 
@@ -650,7 +651,7 @@ Deno.serve(async (req) => {
             quote_amount: increased,
             quote_message: String(act.email_body ?? "").slice(0, 1500) || null,
             ownership_answers: { ...answers, autopilot: { ...prep, netPerPlot: increased, authorizedMinTotal: increased * Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1) } },
-          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).is("accepted_quote_amount", null).is("la_signed_at", null).select("id").single();
+          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).neq("quote_response", "accepted").is("accepted_quote_amount", null).is("la_signed_at", null).is("archived_at", null).is("deleted_at", null).select("id").single();
           if (e) throw new Error(e.message);
           await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
