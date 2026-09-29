@@ -25,7 +25,7 @@ export const isIncoming = (from_email: string | null | undefined): boolean => {
 // ---------------------------------------------------------------------------
 // Classify key outgoing emails so the admin thread can show a coloured tag
 // (quote = purple, listing agreement = terracotta/amber, POA = blue).
-export type EmailKind = "quote" | "listing_agreement" | "poa" | "family_tree" | "document_request" | "auto_followup";
+export type EmailKind = "quote" | "listing_agreement" | "poa" | "family_tree" | "document_request" | "auto_followup" | "ai_agent";
 
 export const EMAIL_KIND_META: Record<EmailKind, { label: string; className: string }> = {
   quote: {
@@ -52,6 +52,10 @@ export const EMAIL_KIND_META: Record<EmailKind, { label: string; className: stri
     label: "Auto follow-up",
     className: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40",
   },
+  ai_agent: {
+    label: "Sent by AI",
+    className: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/40",
+  },
 };
 
 export const EMAIL_KIND_RING: Record<EmailKind, string> = {
@@ -61,6 +65,7 @@ export const EMAIL_KIND_RING: Record<EmailKind, string> = {
   family_tree: "bg-emerald-500/5 border-emerald-500/40 ring-1 ring-emerald-500/20",
   document_request: "bg-teal-500/5 border-teal-500/40 ring-1 ring-teal-500/20",
   auto_followup: "bg-rose-500/5 border-rose-500/40 ring-1 ring-rose-500/20",
+  ai_agent: "bg-indigo-500/5 border-indigo-500/40 ring-1 ring-indigo-500/20",
 };
 
 /** Drop the quoted history from a reply so tags reflect the new message only. */
@@ -95,6 +100,7 @@ export const classifyEmailKind = (
   if (marker === "family_tree") return "family_tree";
   if (marker === "quote") return "quote";
   if (marker === "auto_followup") return "auto_followup";
+  if (marker === "ai_agent") return "ai_agent";
   if (/data-family-tree=["']1["']/i.test(b)) return "family_tree";
   if (/data-listing-agreement=["']1["']/i.test(b)) return "listing_agreement";
   if (/data-listing-options=["']1["']/i.test(b)) return "quote";
