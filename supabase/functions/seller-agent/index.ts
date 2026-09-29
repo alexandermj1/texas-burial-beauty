@@ -321,7 +321,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           action: "send", to: sub.email, subject: act.email_subject || "Your cemetery property", body: act.email_body,
           htmlBody: `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${act.email_body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`,
-          ...(act.gmail_thread_id ? { threadId: act.gmail_thread_id } : {}), submissionId: sub.id, actorName: `${user.name} (AI draft)`,
+          ...(act.gmail_thread_id ? { threadId: act.gmail_thread_id } : {}), submissionId: sub.id, actorName: `AI agent (approved by ${user.name})`,
         }),
       });
       const text = await res.text();

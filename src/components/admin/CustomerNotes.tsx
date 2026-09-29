@@ -403,17 +403,18 @@ const CustomerNotes = ({ customerId, submissionId }: Props) => {
               const replies = notes.filter(r => r.parent_note_id === n.id).sort((a, b) => a.created_at.localeCompare(b.created_at));
               const renderNote = (note: Note, isReply = false) => {
                 const isMine = note.author_user_id === user?.id;
-                const color = colorFor(note.author_user_id || note.author_name || "x");
+                const isAi = /^AI agent/i.test(note.author_name || "");
+                const color = isAi ? "hsl(239 60% 55%)" : colorFor(note.author_user_id || note.author_name || "x");
                 const edited = note.updated_at && note.updated_at !== note.created_at;
                 return (
-                  <div key={note.id} className={`rounded-lg p-3 border border-border/50 ${isReply ? "ml-6 mt-2 bg-muted/20" : "bg-muted/40"}`}>
+                  <div key={note.id} className={`rounded-lg p-3 border ${isAi ? "border-indigo-500/40 bg-indigo-500/5 ring-1 ring-indigo-500/15" : "border-border/50"} ${isReply ? "ml-6 mt-2" : ""} ${isAi ? "" : isReply ? "bg-muted/20" : "bg-muted/40"}`}>
                     <div className="flex items-start gap-2.5">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style={{ background: color }}>
-                        {(note.author_name || "?").charAt(0).toUpperCase()}
+                        {isAi ? "AI" : (note.author_name || "?").charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <p className="text-xs font-medium text-foreground">{note.author_name || "Unknown"}</p>
+                          <p className="text-xs font-medium text-foreground flex items-center gap-1.5">{note.author_name || "Unknown"}{isAi && <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/40">Done by AI</span>}</p>
                           {(() => { const w = formatWhen(note.created_at); return (
                             <p className="text-[10px] text-muted-foreground" title={w.exact}>{w.rel} · {w.exact}{edited ? " · edited" : ""}</p>
                           ); })()}
