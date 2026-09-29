@@ -25,6 +25,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   open_document_request: { label: "Document request", Icon: FileText, approve: "Open document request" },
   fix_document_request: { label: "Fix document request", Icon: FileText, approve: "Fix, resync & email seller" },
   update_document_items: { label: "Update document checklist", Icon: FileText, approve: "Apply to checklist" },
+  update_quote_spaces: { label: "Correct quote spaces", Icon: DollarSign, approve: "Update   resend_quote_free_listing: { label open quote" },
   resend_quote_free_listing: { label: "Resend quote — free listing (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
@@ -101,7 +102,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
         </div>
       ) : <pre className="whitespace-pre-wrap text-sm text-foreground bg-muted/40 rounded-lg p-3 font-sans">{a.email_body}</pre>)}
-      {["update_fields", "fix_document_request"].includes(a.action_type) && a.payload?.fields && (
+      {["update_fields", "fix_document_request", "update_quote_spaces"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {Object.entries(a.payload.fields).map(([k, v]) => <li key={k}><span className="text-muted-foreground">{k.replace(/_/g, " ")}:</span> {v}</li>)}
         </ul>

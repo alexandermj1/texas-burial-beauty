@@ -171,9 +171,9 @@ const SendQuoteDialog = ({ submission, open, onClose, onSave, directoryTransferF
         Number(String((submission as any).spaces ?? "").replace(/[^0-9.]/g, "")) ||
         1;
       const count = Math.max(1, Math.round(rawCount));
-      // quote_amount is stored as the TOTAL net; the input holds the per-space net.
+      // quote_amount is stored PER SPACE (see quoteFigures.ts), so changing the space count keeps the price per space.
       const savedTotal = submission.quote_amount ? Number(submission.quote_amount) : 0;
-      const savedPerPlot = savedTotal > 0 ? String(Math.round(savedTotal / count)) : "";
+      const savedPerPlot = savedTotal > 0 ? String(Math.round(savedTotal)) : "";
       setPlotCount(String(count));
       setRetail(retailStr);
       setQuote(savedPerPlot || computeQuoteFromRetail(retailStr, dirFeeFromTable || submission.transfer_fee_amount || directoryFee));

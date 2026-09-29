@@ -633,7 +633,7 @@ Deno.serve(async (req) => {
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
+    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);
