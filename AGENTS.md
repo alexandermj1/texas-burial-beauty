@@ -1,1 +1,2 @@
 - AI Seller Agent: seller-agent edge function + ai_playbook/ai_agent_* tables; latest ai_playbook version is the single prompt source; actions are proposed and only executed on staff approval (why: safe rollout, one source of truth).
+- AI agent actions must execute through the same edge functions/dialogs staff use (autopilot, send-contract-link, SendQuoteDialog, document-request review) and are gated by allowedActions() at proposal and execution — why: AI-made records must be identical to human ones.

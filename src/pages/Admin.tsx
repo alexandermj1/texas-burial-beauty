@@ -27,7 +27,6 @@ import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipe
 import InboxPanel from "@/components/admin/InboxPanel";
 // TEMPORARY test ground — remove this import, the tab entry and the render line to retire it.
 import RulesPlaygroundPanel from "@/components/admin/RulesPlaygroundPanel";
-import AiAgentPanel from "@/components/admin/AiAgentPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
 import HelpButton from "@/components/admin/HelpButton";
@@ -495,7 +494,6 @@ const Admin = () => {
       : []),
     // TEMPORARY test ground for the document rules.
     { key: "rules_playground", label: "Rules Playground", Icon: FlaskConical },
-    { key: "ai_agent", label: "AI Agent", Icon: FlaskConical },
   ];
 
   // Staff users only get Submissions and Map — even if they also carry the
@@ -993,7 +991,6 @@ const Admin = () => {
 
           <TeamTasksStartup onOpenList={() => setTeamMsgTasks(true)} />
           {tab === "rules_playground" && <RulesPlaygroundPanel />}
-          {tab === "ai_agent" && <AiAgentPanel onOpenSubmission={(id) => { setFocusSubmissionId(id); setTab("submissions"); }} />}
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}
