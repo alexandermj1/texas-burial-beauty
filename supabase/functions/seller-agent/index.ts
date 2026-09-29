@@ -73,7 +73,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     plot_description: sub.plot_description, section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers,
     plot_count: sub.plot_count ?? sub.spaces, deed_owner_names: sub.deed_owner_names, relationship_to_owner: sub.relationship_to_owner,
     seller_message: clip(sub.message, 1500), details: clip(sub.details, 800),
-    quote_per_space_excl_transfer_fee: sub.quote_amount, accepted_per_space: sub.accepted_quote_amount,
+    quote_per_space_excl_transfer_fee: sub.quote_amount, cemetery_retail_per_space: sub.cemetery_retail, accepted_per_space: sub.accepted_quote_amount,
     transfer_fee_once: sub.transfer_fee_amount, quote_sent_at: sub.quote_sent_at, quote_response: sub.quote_response,
     listing_tier: sub.listing_tier ?? sub.listing_option, listing_paid_at: sub.listing_paid_at,
     listing_agreement_signed_at: sub.la_signed_at, family_tree_sent_at: answers.questionsSentAt ?? null,
@@ -116,6 +116,17 @@ const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
 const FIELD_LABEL: Record<string, string> = { phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
 const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city"];
+// The quote stores the authorised sale price per space excluding one transfer fee.
+// Match the admin quote ceiling: buyer pays 115% of (price + transfer fee).
+function higherQuote(sub: Sub) {
+  if (sub.quote_amount == null || sub.cemetery_retail == null || sub.transfer_fee_amount == null) return null;
+  const current = Number(sub.quote_amount);
+  const retail = Number(sub.cemetery_retail);
+  const fee = Number(sub.transfer_fee_amount);
+  if (!(Number.isFinite(current) && current > 0 && Number.isFinite(retail) && retail > 0 && Number.isFinite(fee) && fee >= 0)) return null;
+  const proposed = Math.round(current * 1.1 * 100) / 100;
+  return (proposed + fee) * 1.15 <= retail * 0.70 + 0.005 ? proposed : null;
+}
 
 /** Which admin-panel actions are valid on this record RIGHT NOW — computed with the same milestones the panel uses. */
 function allowedActions(sub: Sub, contracts: any[]) {
@@ -125,13 +136,13 @@ function allowedActions(sub: Sub, contracts: any[]) {
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
   const liveLink = la.find((c) => ["sent", "viewed"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()));
   const out = new Set(["reply_email", "add_note", "flag_human", "update_fields"]);
-  // Quotes are staff-only for now — the AI never proposes or sends them.
+  // All customer-facing quote changes still require staff approval.
   if (accepted && !signed && !la.some((c) => ["sent", "viewed"].includes(c.status))) out.add("send_listing_agreement");
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
-  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); }
+  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   return { allowed: out, liveLink };
 }
 
@@ -145,7 +156,8 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with the $99 waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to click the free Starter option; we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the free Starter option in the quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this instead of flag_human for fee waivers.
 - update_quote_spaces: simple quote corrections, ONLY when the seller (or the deed scan) shows the quote has the wrong spaces in the SAME section/lawn — they want to add a space, take one out, or we copied the space numbers/count from the deed wrongly. The per-space price stays EXACTLY the same; only the count / space numbers change. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and opens the normal Send quote screen prefilled, so staff send it exactly like any quote (listing agreement and family tree follow as usual). Put a one-line summary in reason (e.g. "Adds space 5 in Section 12 at the same $2,100 per space"). Do NOT also write a reply_email.
-- Quotes: apart from resend_quote_free_listing and update_quote_spaces you NEVER send or propose quotes or valuations. New valuations, a different section/garden, or a price change: flag_human with the reason.
+ - increase_quote_ten_percent: ONLY when a seller clearly asks for a higher quote, an existing unaccepted quote is on file, and this action is ALLOWED NOW. Propose it with one short reason and body as a SHORT introductory paragraph above the quote explaining we revisited their request. The server calculates the exact 10% increase and strictly checks the 70%-of-retail buyer total including the transfer fee and 15% buyer fee. Staff approval opens the normal seller quote packet; it is not emailed until staff checks the price, deed owners, property description and presses Send. Never propose for a plain decline, an existing accepted quote, a demand for a specific different figure, a price dispute/complaint, or a plot-count discrepancy. Never pair it with reply_email.
+ - Quotes: apart from resend_quote_free_listing, update_quote_spaces and increase_quote_ten_percent you NEVER send or propose quotes or valuations. New valuations, a different section/garden, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
@@ -195,8 +207,8 @@ RULES FOR YOUR OUTPUT
 - Use flag_human for anything in "Hand to a human", or when confidence is below 0.7. When you flag a human, propose NOTHING else — no reply, no holding email ("we'll call you back"), no note. The seller must stay in Needs reply so staff can see it.
 - DEED ALREADY SENT, NO QUOTE YET: if the seller has sent the deed (and any other paperwork, e.g. an affidavit) as attachments and no quote has gone out, reply that we have everything we need for now and are completing their valuation and coordinating with the cemetery. Do not ask for more, do not flag.
 - LONG LISTS OF QUESTIONS: if a seller sends a very long list of clearly AI-generated or template questions (many numbered questions, legal/contract style), politely decline in a short reply_email: thank them, say we are not able to answer a questionnaire of that length, and that if they need that level of detail they may prefer to work with another company. Do not answer the questions, do not flag.
-- SELLER DECLINES THE QUOTE (price too low, decided to sell elsewhere, keeping them): reply_email politely — thank them, say we understand, and wish them the best of luck selling. Keep the door open in one line ("if anything changes, we're happy to help"). Do not argue or push. Only if they say the price is too low AND the quote looks clearly low, or the cemetery is one where we need inventory (e.g. Sparkman-Hillcrest), you may add that we'll take another look at the valuation — never promise a new figure. Do not flag for a plain decline.
-- WANTS MORE FOR THE PROPERTY: If they hope for more but are not asking us to make a binding change now, reply that we can take another look. Explain that it is in our interest to sell for the highest price we can achieve too, and that the quote reflects what we believe the current resale market at their cemetery will bear. Never promise a higher number. If they request an actual revised quote/price decision, flag staff; do not change the price yourself. Do not confuse this with a simple same-area space correction, which uses update_quote_spaces.
+- SELLER DECLINES THE QUOTE (decided to sell elsewhere, keeping them, does not request a revision): reply_email politely — thank them, say we understand, and wish them the best of luck selling. Keep the door open in one line ("if anything changes, we're happy to help"). Do not argue or push. A direct request for a higher revised quote is handled separately below; a plain decline alone does not trigger it.
+- WANTS MORE FOR THE PROPERTY: If they clearly ask us to improve their existing quote and increase_quote_ten_percent is ALLOWED NOW, propose that action alone. If it is not allowed, flag staff to decide whether the quote can change; never invent or promise a new number. A plain decline with no request for a revised offer gets a courteous reply, not a new quote. A disputed price, changed plots or a requested exact amount needs staff. Do not confuse this with a simple same-area space correction, which uses update_quote_spaces.
 - DOCUMENTS: If answering about a prepared POA, say it can be downloaded on the document page, signed IN FRONT of a notary, then mailed as a wet-ink original to the address on the page. An uploaded scan for review is optional; do NOT ask for one before mailing or imply they must wait for scan approval. If they ask about digital documents or BOTH emailing and posting them, include their personal document-page link for computer uploads or its QR code / "Use my phone" photos (tagged to checklist items), with email attachments as an alternative. If they are ALSO posting originals, give the mailing address, making clear uploads are optional and NOT required before posting. For posting-only questions, simply give mailing instructions without adding a scan-upload step. Do not introduce unmentioned services such as FedEx sending email. Never suggest we are waiting on a buyer or transfer when we are actually waiting on a POA original to make the LISTING live. Only include the case-specific document page when SELLER'S DOCUMENT PAGE says it is available.
 - LISTING VISIBILITY: if asked where an individual listing is, explain that we use searchable cemetery pages instead of individual plot pages; buyers who enquire are matched with our internal property list, also shared with mortuaries. Link the EXAMPLE AVAILABLE PROPERTY LIST; clearly label it as an example, not live inventory. This ordinary question needs no human review unless the seller disputes their actual marketing status.
 - REQUIRED DOCUMENTS: we cannot market or sell without the required ownership/transfer paperwork. We can keep the seller's details on file. If a refund, cancellation, hold or conflicting staff instruction is on the file, leave it to staff to decide whether the file can resume; no customer email from the AI until staff decides.
@@ -255,8 +267,7 @@ async function callModel(apiKey: string, instructions: string, input: string, ef
       input: [{ role: "user", content: media.length ? [{ type: "input_text", text: input }, ...media] : input }],
       stream: true,
       store: false,
-      reasoning: { effort, summary: "auto" },
-      include: ["reasoning.encrypted_content"],
+      reasoning: { effort },
     }),
   });
   if (!res.ok || !res.body) {
@@ -303,7 +314,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
     needs_human: Boolean(obj.needs_human),
     human_reason: obj.human_reason ? String(obj.human_reason) : null,
     actions: actions
-      .filter((a: any) => allowed.has(a?.type))
+      .filter((a: any) => allowed.has(a?.type) && (a?.type !== "increase_quote_ten_percent" || (typeof a.body === "string" && a.body.trim().length > 0)))
       .slice(0, 4)
       .map((a: any) => ({
         type: a.type as string,
@@ -358,9 +369,9 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const { allowed } = allowedActions(sub, ctx.contracts);
     // Only read the scans when there is something to check: the seller's latest message
     // questions the documents/plots/details, or staff asked for a manual review.
-    const lastText = `${lastMsg?.subject ?? ""} ${lastMsg?.body_text ?? ""}`.toLowerCase();
+    const lastText = String(ctx.context).slice(-3500).toLowerCase();
     const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer/.test(lastText);
-    const scans = (customerWaiting && wantsCheck) || trigger === "manual" ? await loadScans(db, sub) : { parts: [], names: [] };
+    const scans = (customerWaiting && wantsCheck) ? await loadScans(db, sub) : { parts: [], names: [] };
     const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, effort, scans.parts);
     const d = parseDecision(raw, allowed);
     // Handing to staff = nothing else. The seller stays in Needs reply.
@@ -376,7 +387,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     const rows = d.actions.map((a) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -475,6 +486,7 @@ Deno.serve(async (req) => {
     // execute (approve)
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", act.submission_id).maybeSingle();
     if (!sub || !isSeller(sub)) return json({ error: "Not a seller — refusing to act" }, 400);
+    if (sub.archived_at || sub.deleted_at || sub.closed_at || sub.sold_at || sub.ai_paused_at) return json({ error: "This seller record is closed, archived or paused" }, 409);
     const now = new Date().toISOString();
     let error: string | null = null;
 
@@ -627,6 +639,20 @@ Deno.serve(async (req) => {
           const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
           if (e) throw new Error(e.message);
           await aiNote(`Changed ${first(sub)}'s quote from ${beforeN} to ${n} space${n === 1 ? "" : "s"}${f.space_numbers ? ` (spaces ${beforeNums || "—"} → ${f.space_numbers})` : ""}, same price per space. ${user.name} opened the quote to send.`);
+        } else if (act.action_type === "increase_quote_ten_percent") {
+          const increased = higherQuote(sub);
+          if (increased === null || !sub.email) throw new Error("The quote no longer qualifies for a 10% increase below the buyer-price ceiling. Review it manually.");
+          const answers = { ...(sub.ownership_answers ?? {}) } as Record<string, any>;
+          const prep = { ...(answers.autopilot ?? {}) };
+          // Save a draft only. The normal staff seller-pack builder confirms the
+          // deed and makes the acceptance links; no quote is sent here.
+          const { error: e } = await db.from("contact_submissions").update({
+            quote_amount: increased,
+            quote_message: String(act.email_body ?? "").slice(0, 1500) || null,
+            ownership_answers: { ...answers, autopilot: { ...prep, netPerPlot: increased, authorizedMinTotal: increased * Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1) } },
+          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).or("quote_response.is.null,quote_response.neq.accepted").is("accepted_quote_amount", null).is("la_signed_at", null).is("archived_at", null).is("deleted_at", null).is("closed_at", null).is("sold_at", null).is("ai_paused_at", null).select("id").single();
+          if (e) throw new Error(e.message);
+          await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
@@ -639,7 +665,7 @@ Deno.serve(async (req) => {
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
+    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces", "increase_quote_ten_percent"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);

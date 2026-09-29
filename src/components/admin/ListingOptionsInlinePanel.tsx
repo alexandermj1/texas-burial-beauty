@@ -227,13 +227,34 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         }
         if (cancelled) return;
         const fee = row?.transfer_fee;
-        if (fee != null && fee !== "") setTransferFee(String(fee));
+        // A fee already saved on this submission is the confirmed quote fee.
+        // Do not let cemetery autofill replace it while revising the quote.
+        if ((seller.transfer_fee_amount == null || seller.transfer_fee_amount === "") && fee != null && fee !== "") setTransferFee(String(fee));
       } catch (e) {
         console.warn("transfer fee autofill failed", e);
       }
     })();
     return () => { cancelled = true; };
   }, [seller.id, seller.spaces, seller.cemetery, seller.transfer_fee_amount]);
+
+  // A reviewed AI revision uses the exact saved per-space price rather than
+  // silently reverting to the default 55% retail formula when this panel opens.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from("contact_submissions")
+        .select("quote_amount,cemetery_retail,plot_count,ownership_answers")
+        .eq("id", seller.id).maybeSingle();
+      if (cancelled || !data) return;
+      const saved = Number(data.quote_amount);
+      if (saved > 0) { setNetPerPlot(String(saved)); setNetTouched(true); }
+      if (Number(data.cemetery_retail) > 0) setRetail(String(data.cemetery_retail));
+      if (Number(data.plot_count) > 0) setPlotCount(String(data.plot_count));
+      const sales = Number((data.ownership_answers as any)?.autopilot?.salesPricePerPlot);
+      if (sales > 0) { setSalesPrice(String(sales)); setSalesTouched(true); }
+    })();
+    return () => { cancelled = true; };
+  }, [seller.id]);
 
   const applyRetail = (v: string, fee: number) => {
     const r = Number(v);
@@ -270,7 +291,8 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // The agreement, POAs and family tree are generated straight after the quote
   // is accepted, so the quote cannot go out without the wording they need.
   const canGenerate =
-    nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1 && plotDescription.trim().length > 2;
+    nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1 && plotDescription.trim().length > 2 &&
+    !exceedsBuyerCeiling(nppNum, retailNum, feeNum);
 
   const prepBlock = useMemo(
     () => ({
