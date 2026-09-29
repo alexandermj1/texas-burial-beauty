@@ -129,7 +129,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
-  if (sub.quote_sent_at && !accepted && !signed) out.add("resend_quote_free_listing");
+  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); }
   return { allowed: out, liveLink };
 }
 
@@ -142,7 +142,8 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with the $99 waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to click the free Starter option; we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the free Starter option in the quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this instead of flag_human for fee waivers.
-- Quotes: apart from resend_quote_free_listing you NEVER send or propose quotes or valuations. If a valuation is due or needs re-sending, flag_human with the reason — staff handle quotes.
+- update_quote_spaces: simple quote corrections, ONLY when the seller (or the deed scan) shows the quote has the wrong spaces in the SAME section/lawn — they want to add a space, take one out, or we copied the space numbers/count from the deed wrongly. The per-space price stays EXACTLY the same; only the count / space numbers change. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and opens the normal Send quote screen prefilled, so staff send it exactly like any quote (listing agreement and family tree follow as usual). Put a one-line summary in reason (e.g. "Adds space 5 in Section 12 at the same $2,100 per space"). Do NOT also write a reply_email.
+- Quotes: apart from resend_quote_free_listing and update_quote_spaces you NEVER send or propose quotes or valuations. New valuations, a different section/garden, or a price change: flag_human with the reason.
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
@@ -192,6 +193,8 @@ RULES FOR YOUR OUTPUT
 - Use flag_human for anything in "Hand to a human", or when confidence is below 0.7. When you flag a human, propose NOTHING else — no reply, no holding email ("we'll call you back"), no note. The seller must stay in Needs reply so staff can see it.
 - DEED ALREADY SENT, NO QUOTE YET: if the seller has sent the deed (and any other paperwork, e.g. an affidavit) as attachments and no quote has gone out, reply that we have everything we need for now and are completing their valuation and coordinating with the cemetery. Do not ask for more, do not flag.
 - LONG LISTS OF QUESTIONS: if a seller sends a very long list of clearly AI-generated or template questions (many numbered questions, legal/contract style), politely decline in a short reply_email: thank them, say we are not able to answer a questionnaire of that length, and that if they need that level of detail they may prefer to work with another company. Do not answer the questions, do not flag.
+- SELLER DECLINES THE QUOTE (price too low, decided to sell elsewhere, keeping them): reply_email politely — thank them, say we understand, and wish them the best of luck selling. Keep the door open in one line ("if anything changes, we're happy to help"). Do not argue or push. Only if they say the price is too low AND the quote looks clearly low, or the cemetery is one where we need inventory (e.g. Sparkman-Hillcrest), you may add that we'll take another look at the valuation — never promise a new figure. Do not flag for a plain decline.
+- SPACE CORRECTIONS on a sent quote (add/remove a space in the same area, space numbers copied wrong): use update_quote_spaces, don't flag.
 - NOTES (add_note and every note field): write like a colleague in one plain sentence, e.g. "Robert sent us his phone number: 281-788-6197." Never "Updated the record:", arrows, quotes around values or "Reason:".
 - Emails: plain text, following the tone rules, greeting "Dear <First Name>," and the standard sign-off. No markdown.
 - KEEP EVERY EXPLANATION SHORT AND PLAIN. Staff skim these on a busy panel:
@@ -303,8 +306,8 @@ function parseDecision(raw: string, allowed: Set<string>) {
         subject: a.subject ? String(a.subject).slice(0, 300) : null,
         body: a.body ? String(a.body).slice(0, 12000) : null,
         note: a.note ? String(a.note).slice(0, 4000) : null,
-        fields: (a.type === "update_fields" || a.type === "fix_document_request") && a.fields && typeof a.fields === "object"
-          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => (a.type === "fix_document_request" ? FIX_FIELDS : EDITABLE_FIELDS).includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
+        fields: ["update_fields", "fix_document_request", "update_quote_spaces"].includes(a.type) && a.fields && typeof a.fields === "object"
+          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => (a.type === "fix_document_request" ? FIX_FIELDS : a.type === "update_quote_spaces" ? ["spaces", "space_numbers", "section", "lawn"] : EDITABLE_FIELDS).includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
         items: a.type === "update_document_items" && Array.isArray(a.items)
           ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
@@ -317,7 +320,8 @@ function parseDecision(raw: string, allowed: Set<string>) {
       .filter((a: any) => a.type !== "update_document_items" || a.items?.length)
       .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length))
       .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body))
-      .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body),
+      .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body)
+      .filter((a: any) => a.type !== "update_quote_spaces" || (Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20)),
   };
 }
 
@@ -606,6 +610,17 @@ Deno.serve(async (req) => {
           const text = await res.text();
           if (!res.ok || /"error"/.test(text)) throw new Error(`Email failed (${res.status}): ${text.slice(0, 200)}`);
           await aiNote(`Re-sent ${first(sub)}'s quote with the listing fee waived — they click the free Starter option and we record it as Pro.`);
+        } else if (act.action_type === "update_quote_spaces") {
+          const f = (act.payload?.fields ?? {}) as Record<string, string>;
+          const n = Math.round(Number(f.spaces));
+          if (!(n >= 1 && n <= 20)) throw new Error("Number of spaces missing");
+          const beforeN = sub.plot_count ?? sub.spaces ?? "?";
+          const beforeNums = sub.space_numbers ?? "";
+          const patch: Record<string, unknown> = { plot_count: n, spaces: String(n) };
+          for (const k of ["space_numbers", "section", "lawn"]) if (f[k]) patch[k] = f[k];
+          const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          await aiNote(`Changed ${first(sub)}'s quote from ${beforeN} to ${n} space${n === 1 ? "" : "s"}${f.space_numbers ? ` (spaces ${beforeNums || "—"} → ${f.space_numbers})` : ""}, same price per space. ${user.name} opened the quote to send.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
@@ -618,7 +633,7 @@ Deno.serve(async (req) => {
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
+    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);
