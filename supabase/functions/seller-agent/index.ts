@@ -59,10 +59,10 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     db.from("email_messages").select("from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
     db.from("customer_notes").select("body,author_name,created_at").or(`submission_id.eq.${sub.id}${sub.customer_profile_id ? `,customer_profile_id.eq.${sub.customer_profile_id}` : ""}`).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
     sub.customer_profile_id
-      ? db.from("customer_files").select("file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
+      ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
     db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,sign_token,sign_token_expires_at,principal_key").eq("submission_id", sub.id).is("deleted_at", null),
-    db.from("submission_documents").select("doc_code,label,person_name,status,why,needs_notary,received_at").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
+    db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
     db.from("reminder_log").select("reminder_type,status,sent_at").eq("submission_id", sub.id).is("deleted_at", null).order("sent_at", { ascending: false }).limit(10),
   ]);
 
@@ -98,7 +98,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
     `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
     `CONTRACTS:\n${JSON.stringify((contracts.data ?? []).map(({ id: _i, sign_token: _t, ...c }: any) => c))}`,
-    `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, ...d }: any) => d))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
+    `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, file_url, file_urls, notes, ...d }: any) => ({ ...d, files_attached: (file_urls?.length ?? 0) || (file_url ? 1 : 0), notes: clip(notes, 200) })))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
     `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
@@ -108,8 +108,11 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
   return { contracts: (contracts.data ?? []) as any[], context, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
 }
 
+const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)[0] || "The seller";
 const SITE = "https://www.texascemeterybrokers.com";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
+const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
+const FIELD_LABEL: Record<string, string> = { phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
 const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city"];
 
 /** Which admin-panel actions are valid on this record RIGHT NOW — computed with the same milestones the panel uses. */
@@ -125,7 +128,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
-  if (sub.documents_requested_at && !sub.documents_completed_at) out.add("fix_document_request");
+  if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) out.add("resend_quote_free_listing");
   return { allowed: out, liveLink };
 }
@@ -142,6 +145,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - Quotes: apart from resend_quote_free_listing you NEVER send or propose quotes or valuations. If a valuation is due or needs re-sending, flag_human with the reason — staff handle quotes.
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
+- update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
 // Ownership / document questions — the AI answers these itself from the same
@@ -165,7 +169,7 @@ const DOC_CHECK_GUIDE = `CHECKING A DOCUMENT REQUEST WHEN THE SELLER SAYS SOMETH
 You can see the scans on file (deed, intake uploads, email attachments) attached below the record. Use them.
 - The document-request generator's rules are almost always right. When a request is wrong it is nearly always because the INPUT was wrong: (1) staff typed the wrong plot details (section/lot/spaces), (2) the family tree started from the wrong person — e.g. the deed had already been transferred to someone else, so the tree was answered about the previous owner, or (3) the seller misunderstood the family-tree questions about holding a POA for someone else. Known quirk: at Restland it can sometimes list more documents than needed.
 - Wrong plots: compare the deed scan, the seller's emails (did they tell us something different?) and the record. If the deed and/or their email clearly support the correction, propose fix_document_request with the corrected wording and a short confirmation email. If the deed contradicts the seller, reply politely quoting what the deed shows and ask them to confirm. If there is no readable deed, ask for a clear photo of it.
-- Deed in someone else's name / tree started from the wrong person, or POA confusion: the family tree answers must be corrected — flag_human with exactly what you found (who the deed names vs who the tree was answered about) and a brief holding reply if the seller is waiting.
+- Deed in someone else's name / tree started from the wrong person, or POA confusion: the family tree answers must be corrected — flag_human with exactly what you found (who the deed names vs who the tree was answered about). No holding reply.
 - Restland extra documents: flag_human noting which items look unnecessary; don't tell the seller to ignore items yourself.
 - Never guess from a blurry scan — say what you could and couldn't read.`;
 
@@ -185,7 +189,10 @@ RULES FOR YOUR OUTPUT
 - Only propose actions for this seller. Use only facts in the record; never invent prices, fees, documents or dates. Figures must match the record exactly.
 - If the seller's latest email is unanswered, propose a reply_email that answers it fully per the playbook.
 - If nothing needs saying (we already replied, waiting on them, a staff note says hold), propose no email; you may propose an add_note summarising status.
-- Use flag_human for anything in "Hand to a human", or when confidence is below 0.7. Do not also draft a reply in that case unless it is a brief holding reply that is clearly safe.
+- Use flag_human for anything in "Hand to a human", or when confidence is below 0.7. When you flag a human, propose NOTHING else — no reply, no holding email ("we'll call you back"), no note. The seller must stay in Needs reply so staff can see it.
+- DEED ALREADY SENT, NO QUOTE YET: if the seller has sent the deed (and any other paperwork, e.g. an affidavit) as attachments and no quote has gone out, reply that we have everything we need for now and are completing their valuation and coordinating with the cemetery. Do not ask for more, do not flag.
+- LONG LISTS OF QUESTIONS: if a seller sends a very long list of clearly AI-generated or template questions (many numbered questions, legal/contract style), politely decline in a short reply_email: thank them, say we are not able to answer a questionnaire of that length, and that if they need that level of detail they may prefer to work with another company. Do not answer the questions, do not flag.
+- NOTES (add_note and every note field): write like a colleague in one plain sentence, e.g. "Robert sent us his phone number: 281-788-6197." Never "Updated the record:", arrows, quotes around values or "Reason:".
 - Emails: plain text, following the tone rules, greeting "Dear <First Name>," and the standard sign-off. No markdown.
 - KEEP EVERY EXPLANATION SHORT AND PLAIN. Staff skim these on a busy panel:
   - stage_summary: one line, max 12 words, e.g. "Quote accepted, agreement signed, waiting on the deed."
@@ -299,7 +306,15 @@ function parseDecision(raw: string, allowed: Set<string>) {
         fields: (a.type === "update_fields" || a.type === "fix_document_request") && a.fields && typeof a.fields === "object"
           ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => (a.type === "fix_document_request" ? FIX_FIELDS : EDITABLE_FIELDS).includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
+        items: a.type === "update_document_items" && Array.isArray(a.items)
+          ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
+              id: String(i.id), state: DOC_STATES.includes(i.state) ? i.state : null,
+              attach_file_ids: Array.isArray(i.attach_file_ids) ? i.attach_file_ids.map(String).slice(0, 6) : [],
+              note: i.note ? String(i.note).slice(0, 300) : null,
+            })).filter((i: any) => i.state || i.attach_file_ids.length)
+          : null,
       }))
+      .filter((a: any) => a.type !== "update_document_items" || a.items?.length)
       .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length))
       .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body))
       .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body),
@@ -338,6 +353,8 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const scans = (customerWaiting && wantsCheck) || trigger === "manual" ? await loadScans(db, sub) : { parts: [], names: [] };
     const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, effort, scans.parts);
     const d = parseDecision(raw, allowed);
+    // Handing to staff = nothing else. The seller stays in Needs reply.
+    if (d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human")) d.actions = d.actions.filter((a) => a.type === "flag_human");
     const needsHuman = d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human");
     await db.from("ai_agent_runs").update({
       status: "done", stage_summary: d.stage_summary, next_step: d.next_step, reasoning: d.reasoning,
@@ -353,7 +370,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: a.fields ? { fields: a.fields } : null,
+      payload: a.fields ? { fields: a.fields } : a.items ? { items: a.items } : null,
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
       rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: null });
@@ -464,7 +481,7 @@ Deno.serve(async (req) => {
       });
       const text = await res.text();
       if (!res.ok || /"error"/.test(text)) error = `Email failed (${res.status}): ${text.slice(0, 300)}`;
-      else await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Sent an email to the seller: "${act.email_subject || "Your cemetery property"}". Reason: ${act.reason}`, author_name: `AI agent (approved by ${user.name})` });
+      else await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Emailed ${first(sub)}: ${act.reason}`, author_name: `AI agent (approved by ${user.name})` });
     } else if (act.action_type === "add_note") {
       const { error: e } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `${act.note_body ?? act.reason}`, author_name: `AI agent (approved by ${user.name})` });
       if (e) error = e.message;
@@ -478,14 +495,14 @@ Deno.serve(async (req) => {
         if (act.action_type === "send_listing_agreement") {
           const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "listing_agreement" });
           if (r.status !== "sent") throw new Error(`Listing agreement not sent: ${r.reason ?? r.status}`);
-          await aiNote(`Sent the listing agreement for signing. Reason: ${act.reason}`);
+          await aiNote(`Sent ${first(sub)} the listing agreement to sign.`);
         } else if (act.action_type === "resend_signing_link") {
           await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${liveLink.sign_token}` });
-          await aiNote(`Re-sent the listing agreement signing link. Reason: ${act.reason}`);
+          await aiNote(`Re-sent ${first(sub)} the link to sign the listing agreement.`);
         } else if (act.action_type === "send_family_tree") {
           const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree" });
           if (r.status !== "sent") throw new Error(`Family tree not sent: ${r.reason ?? r.status}`);
-          await aiNote(`Sent the family tree questionnaire. Reason: ${act.reason}`);
+          await aiNote(`Sent ${first(sub)} the family tree questionnaire.`);
         } else if (act.action_type === "update_fields") {
           const fields = (act.payload?.fields ?? {}) as Record<string, string>;
           const patch = Object.fromEntries(Object.entries(fields).filter(([k]) => EDITABLE_FIELDS.includes(k)));
@@ -493,7 +510,46 @@ Deno.serve(async (req) => {
           const before = Object.fromEntries(Object.keys(patch).map((k) => [k, sub[k] ?? "—"]));
           const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
           if (e) throw new Error(e.message);
-          await aiNote(`Updated the record: ${Object.entries(patch).map(([k, v]) => `${k.replace(/_/g, " ")}: "${before[k]}" → "${v}"`).join("; ")}. Reason: ${act.reason}`);
+          await aiNote(Object.entries(patch).map(([k, v]) => before[k] === "—" || !String(before[k]).trim()
+            ? `${first(sub)} sent us their ${FIELD_LABEL[k] ?? k}: ${v}.`
+            : `Changed the ${FIELD_LABEL[k] ?? k} from ${before[k]} to ${v}.`).join(" "));
+        } else if (act.action_type === "update_document_items") {
+          const items = (act.payload?.items ?? []) as { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[];
+          const { data: rows } = await db.from("submission_documents").select("id,label,person_name,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).in("id", items.map((i) => i.id));
+          const done: string[] = [];
+          for (const it of items) {
+            const row = (rows ?? []).find((x) => x.id === it.id);
+            if (!row) continue;
+            const patch: Record<string, unknown> = {};
+            if (it.state) {
+              patch.manual_override = it.state; patch.required_state = it.state;
+              patch.status = ["received", "notarized"].includes(it.state) ? "received" : "pending";
+              if (patch.status === "received") patch.received_at = now;
+            }
+            const added: string[] = [];
+            if (it.attach_file_ids.length && sub.customer_profile_id) {
+              const { data: files } = await db.from("customer_files").select("id,file_name,file_path,mime_type").eq("customer_profile_id", sub.customer_profile_id).in("id", it.attach_file_ids).is("deleted_at", null);
+              const paths = [...(row.file_urls ?? [])];
+              for (const f of files ?? []) {
+                const { data: blob } = await db.storage.from("customer-files").download(f.file_path);
+                if (!blob) continue;
+                const path = `${sub.id}/ai-${Date.now()}-${String(f.file_name).replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+                const { error: ue } = await db.storage.from("portal-uploads").upload(path, blob, { contentType: f.mime_type || "application/octet-stream" });
+                if (ue) throw new Error(`Couldn't attach ${f.file_name}: ${ue.message}`);
+                paths.push(path); added.push(f.file_name);
+              }
+              if (added.length) { patch.file_urls = paths; patch.file_url = paths.at(-1); }
+            }
+            if (it.note) patch.notes = [row.notes, it.note].filter(Boolean).join(" · ");
+            if (!Object.keys(patch).length) continue;
+            const { error: e } = await db.from("submission_documents").update(patch).eq("id", row.id);
+            if (e) throw new Error(e.message);
+            const who = row.person_name ? ` for ${row.person_name}` : "";
+            const stateWord: Record<string, string> = { received: "received", notarized: "notarised original received", not_needed: "not needed", needed: "still needed", issued: "issued" };
+            done.push(`${row.label}${who}${it.state ? ` marked ${stateWord[it.state]}` : ""}${added.length ? `${it.state ? "," : ""} attached ${added.join(", ")}` : ""}`);
+          }
+          if (!done.length) throw new Error("None of those checklist items could be updated");
+          await aiNote(`Updated the document checklist: ${done.join("; ")}.`);
         } else if (act.action_type === "fix_document_request") {
           const fields = (act.payload?.fields ?? {}) as Record<string, string>;
           const next = String(fields.plot_description ?? "").trim();
@@ -549,7 +605,7 @@ Deno.serve(async (req) => {
           });
           const text = await res.text();
           if (!res.ok || /"error"/.test(text)) throw new Error(`Email failed (${res.status}): ${text.slice(0, 200)}`);
-          await aiNote(`Re-sent the quote with the listing fee waived: asked the seller to click the free Starter option; it will be recorded as Pro. Reason: ${act.reason}`);
+          await aiNote(`Re-sent ${first(sub)}'s quote with the listing fee waived — they click the free Starter option and we record it as Pro.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
