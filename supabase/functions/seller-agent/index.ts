@@ -202,7 +202,7 @@ RULES FOR YOUR OUTPUT
   - human_reason: one short sentence saying exactly what a person must decide.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
- "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null}]}`;
+ "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null}]}`;
 
 /** Scans on file (deed first) as image/PDF parts so the AI can read them. Kept small for cost. */
 async function loadScans(db: SupabaseClient, sub: Sub) {
@@ -584,7 +584,7 @@ Deno.serve(async (req) => {
           });
           const text = await res.text();
           const mailNote = !res.ok || /"error"/.test(text) ? ` The confirmation email FAILED (${res.status}) — please email the seller.` : ` Emailed the seller: "${act.email_subject || "Your document request has been updated"}".`;
-          await aiNote(`Corrected the document request: locations being sold "${before}" → "${next}"${Object.keys(patch).filter((k) => !["plot_description", "ownership_answers"].includes(k)).map((k) => `; ${k.replace(/_/g, " ")} → "${patch[k]}"`).join("")}. Rebuilt ${rebuilt} unsigned document${rebuilt === 1 ? "" : "s"} (signed copies untouched) so the documents page is live with the correction.${mailNote} Evidence: ${act.reason}`);
+          await aiNote(`Fixed the plots on ${first(sub)}'s document request: was ${before}, now ${next}. Updated ${rebuilt} unsigned document${rebuilt === 1 ? "" : "s"} on their documents page.${mailNote}`);
           if (mailNote.includes("FAILED")) throw new Error(`Record fixed and documents rebuilt, but the email failed: ${text.slice(0, 200)}`);
         } else if (act.action_type === "resend_quote_free_listing") {
           if (!act.email_body || !sub.email) throw new Error("Intro text or recipient missing");
