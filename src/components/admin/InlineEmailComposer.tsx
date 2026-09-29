@@ -443,13 +443,16 @@ const InlineEmailComposer = ({
 
 
   /** Insert (or replace) the quote block and return the resulting HTML. */
-  const insertQuoteBlock = (blockHtml: string) => {
+  const insertQuoteBlock = (blockHtml: string, intro?: string | null) => {
     const current = editorRef.current?.getHtml() ?? html;
     const stripped = current.replace(
       /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
       "",
     );
     editorRef.current?.setHtml(stripped);
+    if (intro?.trim() && !stripped.includes('data-ai-quote-intro="1"')) {
+      editorRef.current?.insertHtmlBeforeSignature(`<p data-ai-quote-intro="1" style="${P_STYLE}">${escapeHtml(intro.trim()).replace(/\n/g, "<br>")}</p>`);
+    }
     editorRef.current?.insertHtmlBeforeSignature(blockHtml);
     const next = editorRef.current?.getHtml() ?? blockHtml;
     setHtml(next);
@@ -457,20 +460,6 @@ const InlineEmailComposer = ({
     setListingBlockInserted(true);
     setSubject(quoteSubjectFor(sellerContext?.cemetery));
     return next;
-  };
-
-  // Staff-approved AI quote revisions may carry a short note. Put it above
-  // the actual branded quote, never inside its pricing/acceptance controls.
-  const insertQuoteIntro = (message: string) => {
-    const intro = message.trim();
-    if (!intro) return;
-    const current = editorRef.current?.getHtml() ?? html;
-    const marker = '<div data-ai-quote-intro="1"';
-    if (current.includes(marker)) return;
-    const paragraph = `<p data-ai-quote-intro="1" style="${P_STYLE}">${escapeHtml(intro).replace(/\n/g, "<br>")}</p>`;
-    editorRef.current?.insertHtmlBeforeSignature(paragraph);
-    setHtml(editorRef.current?.getHtml() ?? current);
-    setBodyTouched(true);
   };
 
   // `htmlOverride` lets a panel insert a block and send it in the same click
@@ -899,13 +888,11 @@ const InlineEmailComposer = ({
           sending={sending}
           onGenerated={async (blockHtml) => {
             const { data } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext.id).maybeSingle();
-            if (data?.quote_message) insertQuoteIntro(data.quote_message);
-            insertQuoteBlock(blockHtml);
+            insertQuoteBlock(blockHtml, data?.quote_message);
           }}
           onGeneratedAndSend={async (blockHtml) => {
             const { data } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext.id).maybeSingle();
-            if (data?.quote_message) insertQuoteIntro(data.quote_message);
-            const next = insertQuoteBlock(blockHtml);
+            const next = insertQuoteBlock(blockHtml, data?.quote_message);
             await send(next);
           }}
         />
