@@ -1170,8 +1170,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       deduped.push(s);
     }
 
+    if (aiFirst && !buyerView) {
+      const withAi = deduped.filter(x => aiPending.has(aiKey(x)));
+      return [...withAi, ...deduped.filter(x => !aiPending.has(aiKey(x)))];
+    }
     return deduped;
-  }, [submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [aiFirst, aiPending, submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
@@ -3347,12 +3351,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               <FileSpreadsheet className="w-4 h-4" /> Price sheet
             </button>
             <button
-              onClick={() => setAiOpen(true)}
-              title="AI Agent — suggestions waiting for approval, what the AI has done, playbook"
-              className="h-8 px-3 rounded-full text-xs font-semibold border bg-indigo-600 text-primary-foreground border-indigo-700 hover:bg-indigo-700 inline-flex items-center gap-1.5"
+              onClick={() => { setAiFirst(v => !v); loadAiPending(); }}
+              title={aiFirst ? "Back to the normal order" : "Bring every seller with an AI suggestion to the top of the list"}
+              className={`h-8 px-3 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 ${aiFirst ? "bg-indigo-800 text-primary-foreground border-indigo-900 ring-2 ring-indigo-300" : "bg-indigo-600 text-primary-foreground border-indigo-700 hover:bg-indigo-700"}`}
             >
               <Bot className="w-4 h-4" /> AI Agent
               {aiPending.size > 0 && <span className="ml-0.5 min-w-5 h-5 px-1 rounded-full bg-card text-indigo-700 text-[11px] font-bold inline-flex items-center justify-center">{aiPending.size}</span>}
+            </button>
+            <button
+              onClick={() => setAiOpen(true)}
+              title="Full AI queue, what the AI has done, and the playbook"
+              className="h-8 px-2.5 rounded-full text-xs font-medium border bg-card text-indigo-700 border-indigo-300 hover:bg-indigo-50 inline-flex items-center gap-1"
+            >
+              Queue
             </button>
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
@@ -3812,7 +3823,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
-                        {aiPending.has(s.id) && (aiPending.get(s.id)!.type === "flag_human"
+                        {aiPending.has(aiKey(s)) && (aiPending.get(aiKey(s))!.type === "flag_human"
                           ? <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 shrink-0" title="The AI looked at this record and thinks a person should check it — open to see why"><Bot className="w-3 h-3" />Needs checking</span>
                           : <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shrink-0" title="The AI has something ready on this record — open it to review"><Bot className="w-3 h-3" />AI can help</span>)}
                         {needsReply && (
@@ -3838,8 +3849,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    {aiPending.has(s.id) && (() => {
-                      const p = aiPending.get(s.id)!;
+                    {aiPending.has(aiKey(s)) && (() => {
+                      const p = aiPending.get(aiKey(s))!;
                       const isFlag = p.type === "flag_human";
                       return (
                         <p className={`text-xs leading-snug flex items-center gap-1.5 ${isFlag ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"}`}>
