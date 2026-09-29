@@ -451,10 +451,10 @@ const InlineEmailComposer = ({
       "",
     );
     editorRef.current?.setHtml(stripped);
-    if (intro?.trim()) {
-      editorRef.current?.insertHtmlBeforeSignature(`<p data-ai-quote-intro="1" style="${P_STYLE}">${escapeHtml(intro.trim()).replace(/\n/g, "<br>")}</p>`);
-    }
-    editorRef.current?.insertHtmlBeforeSignature(blockHtml);
+    const introHtml = intro?.trim()
+      ? `<p data-ai-quote-intro="1" style="${P_STYLE}">${escapeHtml(intro.trim()).replace(/\n/g, "<br>")}</p>`
+      : "";
+    editorRef.current?.insertHtmlBeforeSignature(introHtml + blockHtml);
     const next = editorRef.current?.getHtml() ?? blockHtml;
     setHtml(next);
     setBodyTouched(true);
