@@ -141,7 +141,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
-  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
+  if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (!sub.accepted_quote_amount && higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   return { allowed: out, liveLink };
 }
 
@@ -369,9 +369,9 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const { allowed } = allowedActions(sub, ctx.contracts);
     // Only read the scans when there is something to check: the seller's latest message
     // questions the documents/plots/details, or staff asked for a manual review.
-    const lastText = `${lastMsg?.subject ?? ""} ${lastMsg?.body_text ?? ""}`.toLowerCase();
+    const lastText = String(ctx.context).slice(-3500).toLowerCase();
     const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer/.test(lastText);
-    const scans = (customerWaiting && wantsCheck) || trigger === "manual" ? await loadScans(db, sub) : { parts: [], names: [] };
+    const scans = (customerWaiting && wantsCheck) ? await loadScans(db, sub) : { parts: [], names: [] };
     const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, effort, scans.parts);
     const d = parseDecision(raw, allowed);
     // Handing to staff = nothing else. The seller stays in Needs reply.
