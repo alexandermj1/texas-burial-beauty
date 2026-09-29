@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     // Look up cemetery/name for the confirmation UI + emails.
     const { data: submission } = await supabase
       .from("contact_submissions")
-      .select("id, name, email, cemetery, quote_amount, quote_sent_at, quote_response, accepted_quote_amount")
+      .select("id, name, email, cemetery, quote_amount, quote_sent_at, quote_response, accepted_quote_amount, ownership_answers")
       .eq("id", tx.submission_id)
       .maybeSingle();
 
@@ -101,9 +101,11 @@ Deno.serve(async (req) => {
 
       // Record the customer's free listing choice. Choosing a listing tier is
       // also an acceptance of the quoted price.
+      // Fee-waived sellers are told to click Starter; we record it as Pro.
+      const asPro = !!(submission as any)?.ownership_answers?.autopilot?.freeListingAsPro;
       const starterPatch: Record<string, unknown> = {
-        listing_tier: "starter",
-        listing_option: "starter",
+        listing_tier: asPro ? "pro" : "starter",
+        listing_option: asPro ? "pro" : "starter",
         listing_paid_at: nowIso,
         payment_received_at: nowIso,
       };
