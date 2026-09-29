@@ -138,6 +138,22 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
+// Ownership / document questions — the AI answers these itself from the same
+// rules the document-request generator uses, instead of handing them to staff.
+const OWNERSHIP_GUIDE = `OWNERSHIP AND DOCUMENT QUESTIONS — ANSWER THESE YOURSELF (do NOT flag a human for them)
+You know the exact rules our document-request generator uses. Use them to answer "what documents will I need / who has to sign / my parent passed away / I have a will" questions confidently and in general terms:
+- The current deed (or an affidavit of lost deed that matches cemetery records) is always needed.
+- Anyone alive named on the deed signs. For anyone named on the deed who has died: their surviving legal spouse at the time of death, plus their heirs at law, take their place.
+- Heirs at law: surviving children, then children of a deceased child, then children of a deceased grandchild. If there are none: surviving siblings, then surviving parents.
+- Affidavit of heirship whenever the heirs-at-law rule is used. Death certificate for any deceased person who would have signed. Marriage certificate when a surviving spouse is not named on the deed. Name-change documents when a deed name no longer matches the ID.
+- Every signer: photo ID. Limited POA to TCB (single if not married, joint if a married couple both sign). If someone signs for another person, their existing durable POA.
+- A probated will: "A certified copy of the probated will and the order admitting it to probate." We review wills as part of the file — you may say so; you do not need to interpret it.
+HOW TO RESPOND, BY STAGE:
+- Before the family tree is complete (no quote yet, quote sent, quote accepted, agreement unsigned): reassure them briefly and in general terms using the rules above, then explain that we work with the cemeteries and internally to work out exactly which documents their case needs, and we do that from our short ownership questionnaire (family tree). Gently point them to their one next step toward it: if there is no quote yet, the quote (we need cemetery, section/lot/space and the deed photo); if a quote is out, accepting it; if accepted, signing the listing agreement, which takes them straight to the questionnaire. Do not list a full document checklist before the family tree — say the exact list comes after the questionnaire.
+- After the family tree is complete: answer from DOCUMENT REQUEST ITEMS (authoritative) — explain what each item is and why, exactly as listed.
+- Only flag a human for ownership matters when: the seller wants a call, a will actually needs to be read against the ownership AFTER the family tree, deed holders who were not spouses of each other have died, or the rules truly cannot resolve it. A deceased owner, heirs, probate or a will being mentioned is NOT on its own a reason to flag — answer it.
+- Never tell the seller "our team will review and get back to you" for a question you can answer from these rules.`;
+
 const INSTRUCTIONS = (playbook: string) => `You are the TCB Seller Agent for Texas Cemetery Brokers. Your job: look at one seller's full record and decide the single best next step to move them through the selling process with as little staff time as possible, strictly following the playbook.
 
 ${playbook}
@@ -145,6 +161,8 @@ ${playbook}
 ${TOOLS_DOC}
 
 TONE FOR NEXT STEPS: move the seller forward gently. Mention only the one next step, once, softly ("Whenever you're ready…", "When it suits you…"). Never stack several steps, never use urgency ("please make sure", "as soon as possible", "you must"). If we already suggested a step and they have not replied, do not repeat it — reminders are handled automatically.
+
+${OWNERSHIP_GUIDE}
 
 RULES FOR YOUR OUTPUT
 - Only propose actions for this seller. Use only facts in the record; never invent prices, fees, documents or dates. Figures must match the record exactly.
