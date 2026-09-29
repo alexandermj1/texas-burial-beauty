@@ -3821,6 +3821,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
+                    {aiPending.has(s.id) && (
+                      <p className="text-xs leading-snug text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                        <Bot className="w-3 h-3 shrink-0" />
+                        <span className="truncate">AI {aiPending.get(s.id)} — open to review</span>
+                      </p>
+                    )}
+
                     {/* Line 2 — plain-language summary */}
                     {(() => {
                       const raw = summaryMap[s.id] || "";
