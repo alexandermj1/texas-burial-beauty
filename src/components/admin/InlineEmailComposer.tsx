@@ -445,12 +445,13 @@ const InlineEmailComposer = ({
   /** Insert (or replace) the quote block and return the resulting HTML. */
   const insertQuoteBlock = (blockHtml: string, intro?: string | null) => {
     const current = editorRef.current?.getHtml() ?? html;
-    const stripped = current.replace(
+    const withoutOldIntro = current.replace(/<p data-ai-quote-intro="1"[^>]*>[\s\S]*?<\/p>/g, "");
+    const stripped = withoutOldIntro.replace(
       /<div data-listing-options="1"[\s\S]*?<\/div>\s*(<p><br><\/p>)?/g,
       "",
     );
     editorRef.current?.setHtml(stripped);
-    if (intro?.trim() && !stripped.includes('data-ai-quote-intro="1"')) {
+    if (intro?.trim()) {
       editorRef.current?.insertHtmlBeforeSignature(`<p data-ai-quote-intro="1" style="${P_STYLE}">${escapeHtml(intro.trim()).replace(/\n/g, "<br>")}</p>`);
     }
     editorRef.current?.insertHtmlBeforeSignature(blockHtml);
