@@ -61,7 +61,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     sub.customer_profile_id
       ? db.from("customer_files").select("file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
-    db.from("contracts").select("kind,status,sent_at,viewed_at,signed_at,sign_token_expires_at,principal_key").eq("submission_id", sub.id).is("deleted_at", null),
+    db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,sign_token,sign_token_expires_at,principal_key").eq("submission_id", sub.id).is("deleted_at", null),
     db.from("submission_documents").select("label,person_name,status,why,needs_notary,received_at").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
     db.from("reminder_log").select("reminder_type,status,sent_at").eq("submission_id", sub.id).is("deleted_at", null).order("sent_at", { ascending: false }).limit(10),
   ]);
@@ -96,7 +96,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     `TODAY: ${new Date().toISOString()}`,
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
     `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
-    `CONTRACTS:\n${JSON.stringify(contracts.data ?? [])}`,
+    `CONTRACTS:\n${JSON.stringify((contracts.data ?? []).map(({ id: _i, sign_token: _t, ...c }: any) => c))}`,
     `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify(docs.data ?? [])}`,
     `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
@@ -104,12 +104,47 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     `EMAIL THREAD (oldest to newest):\n${emailList.map((e) => `--- ${e.when} ${e.from} | ${e.subject}\n${e.text}`).join("\n") || "(no emails)"}`,
   ].join("\n\n");
 
-  return { context, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
+  return { contracts: (contracts.data ?? []) as any[], context, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
 }
+
+const SITE = "https://www.texascemeterybrokers.com";
+const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city"];
+
+/** Which admin-panel actions are valid on this record RIGHT NOW — computed with the same milestones the panel uses. */
+function allowedActions(sub: Sub, contracts: any[]) {
+  const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
+  const la = contracts.filter((c) => c.kind === "listing_agreement" && c.status !== "void");
+  const signed = !!sub.la_signed_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status));
+  const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
+  const liveLink = la.find((c) => ["sent", "viewed"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()));
+  const out = new Set(["reply_email", "add_note", "flag_human", "update_fields"]);
+  if (!accepted) out.add("open_quote_dialog");
+  if (accepted && !signed && !la.some((c) => ["sent", "viewed"].includes(c.status))) out.add("send_listing_agreement");
+  if (accepted && !signed && liveLink) out.add("resend_signing_link");
+  if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
+  if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
+  return { allowed: out, liveLink };
+}
+
+const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves each one; each runs the exact same code staff use, so records, email tags, milestones and notifications are identical to a human doing it):
+- reply_email: plain-text reply in the seller's thread. Fields: subject, body.
+- add_note: internal team note on the profile. Field: note.
+- flag_human: hand to a person (phone, complaints, legal, refunds, cancellations, price changes, payment links, death/probate edge cases). Field: note.
+- update_fields: correct descriptive record fields ONLY from facts the seller or a document clearly states. Field: fields = object with keys from ${EDITABLE_FIELDS.join(", ")}. Never prices, stages, dates or names from guesses.
+- send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
+- resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
+- send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
+- open_quote_dialog: opens the staff Send Quote dialog for this seller (quotes are always prepared and sent by staff with the quote generator). Use when a valuation is due or needs re-sending. Put the reason in note.
+- open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
+Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
 const INSTRUCTIONS = (playbook: string) => `You are the TCB Seller Agent for Texas Cemetery Brokers. Your job: look at one seller's full record and decide the single best next step to move them through the selling process with as little staff time as possible, strictly following the playbook.
 
 ${playbook}
+
+${TOOLS_DOC}
+
+TONE FOR NEXT STEPS: move the seller forward gently. Mention only the one next step, once, softly ("Whenever you're ready…", "When it suits you…"). Never stack several steps, never use urgency ("please make sure", "as soon as possible", "you must"). If we already suggested a step and they have not replied, do not repeat it — reminders are handled automatically.
 
 RULES FOR YOUR OUTPUT
 - Only propose actions for this seller. Use only facts in the record; never invent prices, fees, documents or dates. Figures must match the record exactly.
@@ -119,7 +154,7 @@ RULES FOR YOUR OUTPUT
 - Emails: plain text, following the tone rules, greeting "Dear <First Name>," and the standard sign-off. No markdown.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
- "actions": [{"type": "reply_email"|"add_note"|"flag_human", "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null}]}`;
+ "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null}]}`;
 
 async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium") {
   const res = await fetch(GATEWAY, {
@@ -166,7 +201,7 @@ async function callModel(apiKey: string, instructions: string, input: string, ef
   return out;
 }
 
-function parseDecision(raw: string) {
+function parseDecision(raw: string, allowed: Set<string>) {
   const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
   const start = t.indexOf("{"), end = t.lastIndexOf("}");
   const obj = JSON.parse(t.slice(start, end + 1));
@@ -179,7 +214,7 @@ function parseDecision(raw: string) {
     needs_human: Boolean(obj.needs_human),
     human_reason: obj.human_reason ? String(obj.human_reason) : null,
     actions: actions
-      .filter((a: any) => ["reply_email", "add_note", "flag_human"].includes(a?.type))
+      .filter((a: any) => allowed.has(a?.type))
       .slice(0, 4)
       .map((a: any) => ({
         type: a.type as string,
@@ -188,7 +223,11 @@ function parseDecision(raw: string) {
         subject: a.subject ? String(a.subject).slice(0, 300) : null,
         body: a.body ? String(a.body).slice(0, 12000) : null,
         note: a.note ? String(a.note).slice(0, 4000) : null,
-      })),
+        fields: a.type === "update_fields" && a.fields && typeof a.fields === "object"
+          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => EDITABLE_FIELDS.includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
+          : null,
+      }))
+      .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length)),
   };
 }
 
@@ -216,8 +255,9 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger, playbook_version: playbook.version }).select("id").single();
   try {
     const ctx = await buildContext(db, sub);
-    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), ctx.context, effort);
-    const d = parseDecision(raw);
+    const { allowed } = allowedActions(sub, ctx.contracts);
+    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\n${ctx.context}`, effort);
+    const d = parseDecision(raw, allowed);
     const needsHuman = d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human");
     await db.from("ai_agent_runs").update({
       status: "done", stage_summary: d.stage_summary, next_step: d.next_step, reasoning: d.reasoning,
@@ -233,9 +273,10 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
+      payload: a.fields ? { fields: a.fields } : null,
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
-      rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId });
+      rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: null });
     }
     if (rows.length) await db.from("ai_agent_actions").insert(rows);
     return { status: "done", run_id: run!.id, effort, decision: d };
@@ -244,6 +285,17 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     await db.from("ai_agent_runs").update({ status: "error", error: msg.slice(0, 1000) }).eq("id", run!.id);
     throw e;
   }
+}
+
+/** Call another edge function as the system — the same functions staff buttons call. */
+async function callInternal(url: string, name: string, body: unknown): Promise<Record<string, any>> {
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const res = await fetch(`${url}/functions/v1/${name}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key }, body: JSON.stringify(body) });
+  const text = await res.text();
+  let parsed: Record<string, any> = {};
+  try { parsed = JSON.parse(text); } catch { /* */ }
+  if (!res.ok || parsed.error) throw new Error(`${name} failed (${res.status}): ${parsed.error ? JSON.stringify(parsed.error) : text.slice(0, 300)}`);
+  return parsed;
 }
 
 Deno.serve(async (req) => {
@@ -308,7 +360,7 @@ Deno.serve(async (req) => {
     }
 
     // execute (approve)
-    const { data: sub } = await db.from("contact_submissions").select("id,email,customer_profile_id,source,customer_kind,quote_sent_at").eq("id", act.submission_id).maybeSingle();
+    const { data: sub } = await db.from("contact_submissions").select("*").eq("id", act.submission_id).maybeSingle();
     if (!sub || !isSeller(sub)) return json({ error: "Not a seller — refusing to act" }, 400);
     const now = new Date().toISOString();
     let error: string | null = null;
@@ -330,15 +382,45 @@ Deno.serve(async (req) => {
     } else if (act.action_type === "add_note") {
       const { error: e } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `${act.note_body ?? act.reason}`, author_name: `AI agent (approved by ${user.name})` });
       if (e) error = e.message;
+    } else if (act.action_type !== "flag_human") {
+      // Re-check against the record as it is NOW — it may have moved on since the proposal.
+      const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
+      const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
+      if (!allowed.has(act.action_type)) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
+      const aiNote = async (body: string) => { await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body, author_name: `AI agent (approved by ${user.name})` }); };
+      try {
+        if (act.action_type === "send_listing_agreement") {
+          const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "listing_agreement" });
+          if (r.status !== "sent") throw new Error(`Listing agreement not sent: ${r.reason ?? r.status}`);
+          await aiNote(`Sent the listing agreement for signing. Reason: ${act.reason}`);
+        } else if (act.action_type === "resend_signing_link") {
+          await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${liveLink.sign_token}` });
+          await aiNote(`Re-sent the listing agreement signing link. Reason: ${act.reason}`);
+        } else if (act.action_type === "send_family_tree") {
+          const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree" });
+          if (r.status !== "sent") throw new Error(`Family tree not sent: ${r.reason ?? r.status}`);
+          await aiNote(`Sent the family tree questionnaire. Reason: ${act.reason}`);
+        } else if (act.action_type === "update_fields") {
+          const fields = (act.payload?.fields ?? {}) as Record<string, string>;
+          const patch = Object.fromEntries(Object.entries(fields).filter(([k]) => EDITABLE_FIELDS.includes(k)));
+          if (!Object.keys(patch).length) throw new Error("No valid fields to update");
+          const before = Object.fromEntries(Object.keys(patch).map((k) => [k, sub[k] ?? "—"]));
+          const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          await aiNote(`Updated the record: ${Object.entries(patch).map(([k, v]) => `${k.replace(/_/g, " ")}: "${before[k]}" → "${v}"`).join("; ")}. Reason: ${act.reason}`);
+        } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
+          await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
+        }
+      } catch (e) { error = String((e as Error).message).slice(0, 400); }
     }
 
     await db.from("ai_agent_actions").update(error
       ? { error }
       : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_at: now, executed_at: now, error: null }).eq("id", act.id);
     if (!error) {
-      await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace("_", " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
+      await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true });
+    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);
