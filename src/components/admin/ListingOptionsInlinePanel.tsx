@@ -227,7 +227,9 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
         }
         if (cancelled) return;
         const fee = row?.transfer_fee;
-        if (fee != null && fee !== "") setTransferFee(String(fee));
+        // A fee already saved on this submission is the confirmed quote fee.
+        // Do not let cemetery autofill replace it while revising the quote.
+        if ((seller.transfer_fee_amount == null || seller.transfer_fee_amount === "") && fee != null && fee !== "") setTransferFee(String(fee));
       } catch (e) {
         console.warn("transfer fee autofill failed", e);
       }
