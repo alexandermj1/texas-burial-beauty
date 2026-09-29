@@ -215,7 +215,7 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
     parts.push({ type: "input_text", text: `SCAN ${names.length} — ${f.document_type}: ${f.file_name} (uploaded ${f.created_at})` });
     parts.push(f.mime_type === "application/pdf"
       ? { type: "input_file", filename: f.file_name || "scan.pdf", file_data: `data:application/pdf;base64,${b64}` }
-      : { type: "input_image", image_url: `data:${f.mime_type};base64,${b64}` });
+      : { type: "input_image", image_url: `data:${blob.type && blob.type.startsWith("image/") ? blob.type : f.mime_type};base64,${b64}` });
   }
   return { parts, names };
 }
