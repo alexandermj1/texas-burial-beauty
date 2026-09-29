@@ -80,6 +80,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     family_tree_completed_at: answers.sellerConfirmedAt ?? null, documents_requested_at: sub.documents_requested_at,
     documents_completed_at: sub.documents_completed_at, listing_live_at: sub.listing_live_at, sold_at: sub.sold_at,
     stage: sub.texas_pipeline_stage ?? sub.pipeline_stage_override, ai_summary: sub.ai_summary,
+    family_tree_answers: (() => { const { autopilot: _a, ...rest } = answers; return clip(JSON.stringify(rest), 4000); })(),
   };
 
   const emailList = (emails.data ?? []).reverse().map((e) => ({
@@ -108,6 +109,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
 }
 
 const SITE = "https://www.texascemeterybrokers.com";
+const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city"];
 
 /** Which admin-panel actions are valid on this record RIGHT NOW — computed with the same milestones the panel uses. */
@@ -123,6 +125,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
+  if (sub.documents_requested_at && !sub.documents_completed_at) out.add("fix_document_request");
   return { allowed: out, liveLink };
 }
 
@@ -136,6 +139,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - open_quote_dialog: opens the staff Send Quote dialog for this seller (quotes are always prepared and sent by staff with the quote generator). Use when a valuation is due or needs re-sending. Put the reason in note.
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
+- fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
 // Ownership / document questions — the AI answers these itself from the same
@@ -154,6 +158,14 @@ HOW TO RESPOND, BY STAGE:
 - Only flag a human for ownership matters when: the seller wants a call, a will actually needs to be read against the ownership AFTER the family tree, deed holders who were not spouses of each other have died, or the rules truly cannot resolve it. A deceased owner, heirs, probate or a will being mentioned is NOT on its own a reason to flag — answer it.
 - Never tell the seller "our team will review and get back to you" for a question you can answer from these rules.`;
 
+const DOC_CHECK_GUIDE = `CHECKING A DOCUMENT REQUEST WHEN THE SELLER SAYS SOMETHING IS WRONG
+You can see the scans on file (deed, intake uploads, email attachments) attached below the record. Use them.
+- The document-request generator's rules are almost always right. When a request is wrong it is nearly always because the INPUT was wrong: (1) staff typed the wrong plot details (section/lot/spaces), (2) the family tree started from the wrong person — e.g. the deed had already been transferred to someone else, so the tree was answered about the previous owner, or (3) the seller misunderstood the family-tree questions about holding a POA for someone else. Known quirk: at Restland it can sometimes list more documents than needed.
+- Wrong plots: compare the deed scan, the seller's emails (did they tell us something different?) and the record. If the deed and/or their email clearly support the correction, propose fix_document_request with the corrected wording and a short confirmation email. If the deed contradicts the seller, reply politely quoting what the deed shows and ask them to confirm. If there is no readable deed, ask for a clear photo of it.
+- Deed in someone else's name / tree started from the wrong person, or POA confusion: the family tree answers must be corrected — flag_human with exactly what you found (who the deed names vs who the tree was answered about) and a brief holding reply if the seller is waiting.
+- Restland extra documents: flag_human noting which items look unnecessary; don't tell the seller to ignore items yourself.
+- Never guess from a blurry scan — say what you could and couldn't read.`;
+
 const INSTRUCTIONS = (playbook: string) => `You are the TCB Seller Agent for Texas Cemetery Brokers. Your job: look at one seller's full record and decide the single best next step to move them through the selling process with as little staff time as possible, strictly following the playbook.
 
 ${playbook}
@@ -163,6 +175,8 @@ ${TOOLS_DOC}
 TONE FOR NEXT STEPS: move the seller forward gently. Mention only the one next step, once, softly ("Whenever you're ready…", "When it suits you…"). Never stack several steps, never use urgency ("please make sure", "as soon as possible", "you must"). If we already suggested a step and they have not replied, do not repeat it — reminders are handled automatically.
 
 ${OWNERSHIP_GUIDE}
+
+${DOC_CHECK_GUIDE}
 
 RULES FOR YOUR OUTPUT
 - Only propose actions for this seller. Use only facts in the record; never invent prices, fees, documents or dates. Figures must match the record exactly.
@@ -174,14 +188,46 @@ RULES FOR YOUR OUTPUT
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null}]}`;
 
-async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium") {
+/** Scans on file (deed first) as image/PDF parts so the AI can read them. Kept small for cost. */
+async function loadScans(db: SupabaseClient, sub: Sub) {
+  if (!sub.customer_profile_id) return { parts: [] as any[], names: [] as string[] };
+  const { data } = await db.from("customer_files").select("file_name,file_path,mime_type,document_type,file_size,created_at")
+    .eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(40);
+  const ok = (f: any) => /^image\/(jpeg|png|webp)$/.test(f.mime_type ?? "") ? (f.file_size ?? 0) < 12_000_000 : f.mime_type === "application/pdf" && (f.file_size ?? 0) < 5_000_000;
+  const rank = (f: any) => /deed|certificate of ownership/i.test(f.document_type ?? "") ? 0 : /intake/i.test(f.document_type ?? "") ? 1 : /attachment/i.test(f.document_type ?? "") ? 2 : 9;
+  const seen = new Set<number>();
+  const picked = (data ?? []).filter(ok).filter((f) => !seen.has(f.file_size) && seen.add(f.file_size)).filter((f) => rank(f) < 9).sort((a, b) => rank(a) - rank(b)).slice(0, 4);
+  const parts: any[] = [], names: string[] = [];
+  for (const f of picked) {
+    // Phone photos are large: ask storage for a resized copy first, fall back to the original.
+    let blob: Blob | null = null;
+    if (f.mime_type !== "application/pdf") {
+      const { data: su } = await db.storage.from("customer-files").createSignedUrl(f.file_path, 120, { transform: { width: 1600, quality: 70 } });
+      if (su?.signedUrl) { const r = await fetch(su.signedUrl).catch(() => null); if (r?.ok) blob = await r.blob(); }
+    }
+    if (!blob && (f.file_size ?? 0) < 5_000_000) blob = (await db.storage.from("customer-files").download(f.file_path)).data;
+    if (!blob) continue;
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const b64 = btoa(bin);
+    if (!b64) continue;
+    names.push(`${f.document_type}: ${f.file_name}`);
+    parts.push({ type: "input_text", text: `SCAN ${names.length} — ${f.document_type}: ${f.file_name} (uploaded ${f.created_at})` });
+    parts.push(f.mime_type === "application/pdf"
+      ? { type: "input_file", filename: f.file_name || "scan.pdf", file_data: `data:application/pdf;base64,${b64}` }
+      : { type: "input_image", image_url: `data:${blob.type && blob.type.startsWith("image/") ? blob.type : f.mime_type};base64,${b64}` });
+  }
+  return { parts, names };
+}
+
+async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: any[] = []) {
   const res = await fetch(GATEWAY, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" },
     body: JSON.stringify({
       model: MODEL,
       instructions,
-      input: [{ role: "user", content: input }],
+      input: [{ role: "user", content: media.length ? [{ type: "input_text", text: input }, ...media] : input }],
       stream: true,
       store: false,
       reasoning: { effort, summary: "auto" },
@@ -241,11 +287,12 @@ function parseDecision(raw: string, allowed: Set<string>) {
         subject: a.subject ? String(a.subject).slice(0, 300) : null,
         body: a.body ? String(a.body).slice(0, 12000) : null,
         note: a.note ? String(a.note).slice(0, 4000) : null,
-        fields: a.type === "update_fields" && a.fields && typeof a.fields === "object"
-          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => EDITABLE_FIELDS.includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
+        fields: (a.type === "update_fields" || a.type === "fix_document_request") && a.fields && typeof a.fields === "object"
+          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => (a.type === "fix_document_request" ? FIX_FIELDS : EDITABLE_FIELDS).includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
       }))
-      .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length)),
+      .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length))
+      .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body)),
   };
 }
 
@@ -274,7 +321,9 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   try {
     const ctx = await buildContext(db, sub);
     const { allowed } = allowedActions(sub, ctx.contracts);
-    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\n${ctx.context}`, effort);
+    // Read the scans when a customer is waiting or staff asked — that's when checking the deed matters.
+    const scans = customerWaiting || trigger === "manual" ? await loadScans(db, sub) : { parts: [], names: [] };
+    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, effort, scans.parts);
     const d = parseDecision(raw, allowed);
     const needsHuman = d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human");
     await db.from("ai_agent_runs").update({
@@ -287,7 +336,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     const rows = d.actions.map((a) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: a.type === "reply_email" ? sub.email : null,
+      email_to: a.type === "reply_email" || a.type === "fix_document_request" ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -426,6 +475,42 @@ Deno.serve(async (req) => {
           const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
           if (e) throw new Error(e.message);
           await aiNote(`Updated the record: ${Object.entries(patch).map(([k, v]) => `${k.replace(/_/g, " ")}: "${before[k]}" → "${v}"`).join("; ")}. Reason: ${act.reason}`);
+        } else if (act.action_type === "fix_document_request") {
+          const fields = (act.payload?.fields ?? {}) as Record<string, string>;
+          const next = String(fields.plot_description ?? "").trim();
+          if (!next || !act.email_body || !sub.email) throw new Error("Corrected location or email missing");
+          const before = sub.plot_description ?? "—";
+          // 1) Save the corrected location everywhere — same shape as the staff "Locations being sold" editor.
+          const answers = { ...(sub.ownership_answers ?? {}) } as Record<string, any>;
+          answers.autopilot = { ...(answers.autopilot ?? {}), plotDescription: next, plotDescriptionUpdatedAt: now };
+          const patch: Record<string, unknown> = { plot_description: next, ownership_answers: answers };
+          for (const k of ["section", "lawn", "space_numbers"]) if (fields[k]) patch[k] = fields[k];
+          const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          // 2) Rebuild every unsigned prepared document so the live documents page shows it.
+          const { data: live } = await db.from("contracts").select("id,kind,status,fill_data,signed_at,notarized_at,completed_at").eq("submission_id", sub.id).is("deleted_at", null).neq("status", "void");
+          let rebuilt = 0;
+          for (const c of live ?? []) {
+            if (c.signed_at || c.notarized_at || c.completed_at || ["signed", "notarized", "completed"].includes(String(c.status))) continue;
+            const fd = (c.fill_data ?? {}) as Record<string, unknown>;
+            if (String(fd.plot_description ?? "").trim() === next) continue;
+            await callInternal(url, "generate-contract", { submission_id: sub.id, kind: c.kind, overrides: { ...fd, plot_description: next, supersede_contract_id: c.id } });
+            rebuilt++;
+          }
+          // 3) Tell the seller in their thread.
+          const res = await fetch(`${url}/functions/v1/gmail-action`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
+            body: JSON.stringify({
+              action: "send", to: sub.email, subject: act.email_subject || "Your document request has been updated", body: act.email_body,
+              htmlBody: `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${act.email_body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`,
+              ...(act.gmail_thread_id ? { threadId: act.gmail_thread_id } : {}), submissionId: sub.id, actorName: `AI agent (approved by ${user.name})`,
+            }),
+          });
+          const text = await res.text();
+          const mailNote = !res.ok || /"error"/.test(text) ? ` The confirmation email FAILED (${res.status}) — please email the seller.` : ` Emailed the seller: "${act.email_subject || "Your document request has been updated"}".`;
+          await aiNote(`Corrected the document request: locations being sold "${before}" → "${next}"${Object.keys(patch).filter((k) => !["plot_description", "ownership_answers"].includes(k)).map((k) => `; ${k.replace(/_/g, " ")} → "${patch[k]}"`).join("")}. Rebuilt ${rebuilt} unsigned document${rebuilt === 1 ? "" : "s"} (signed copies untouched) so the documents page is live with the correction.${mailNote} Evidence: ${act.reason}`);
+          if (mailNote.includes("FAILED")) throw new Error(`Record fixed and documents rebuilt, but the email failed: ${text.slice(0, 200)}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
