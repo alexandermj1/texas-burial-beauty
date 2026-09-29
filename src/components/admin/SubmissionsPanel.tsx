@@ -279,7 +279,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [addOpen, setAddOpen] = useState(false);
   const [priceSheetOpen, setPriceSheetOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [aiPending, setAiPending] = useState<Map<string, string>>(new Map());
+  const [aiPending, setAiPending] = useState<Map<string, { type: string; label: string }>>(new Map());
   const AI_ROW_LABEL: Record<string, string> = {
     reply_email: "drafted a reply",
     add_note: "left a status note",
@@ -293,10 +293,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   };
   const loadAiPending = useCallback(async () => {
     const { data } = await supabase.from("ai_agent_actions" as never).select("submission_id,action_type,reason,created_at").eq("status", "proposed").is("deleted_at", null).order("created_at", { ascending: false }).limit(500);
-    const m = new Map<string, string>();
+    const m = new Map<string, { type: string; label: string }>();
     for (const r of (data ?? []) as any[]) {
       if (m.has(r.submission_id)) continue; // newest first
-      m.set(r.submission_id, AI_ROW_LABEL[r.action_type] ?? "has a suggestion");
+      m.set(r.submission_id, { type: r.action_type, label: AI_ROW_LABEL[r.action_type] ?? "has a suggestion" });
     }
     setAiPending(m);
   }, []);
