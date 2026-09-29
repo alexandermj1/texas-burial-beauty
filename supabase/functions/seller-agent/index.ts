@@ -321,8 +321,11 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   try {
     const ctx = await buildContext(db, sub);
     const { allowed } = allowedActions(sub, ctx.contracts);
-    // Read the scans when a customer is waiting or staff asked — that's when checking the deed matters.
-    const scans = customerWaiting || trigger === "manual" ? await loadScans(db, sub) : { parts: [], names: [] };
+    // Only read the scans when there is something to check: the seller's latest message
+    // questions the documents/plots/details, or staff asked for a manual review.
+    const lastText = `${lastMsg?.subject ?? ""} ${lastMsg?.body_text ?? ""}`.toLowerCase();
+    const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer/.test(lastText);
+    const scans = (customerWaiting && wantsCheck) || trigger === "manual" ? await loadScans(db, sub) : { parts: [], names: [] };
     const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, effort, scans.parts);
     const d = parseDecision(raw, allowed);
     const needsHuman = d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human");
