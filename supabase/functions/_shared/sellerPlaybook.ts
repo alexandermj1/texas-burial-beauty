@@ -69,6 +69,13 @@ We do not normally buy property directly. At select cemeteries with far more buy
 - Blank forms: we don't provide blank legal templates outside an active listing file.
 - Unresponsive seller (much later): polite opt-out — "If you have decided on a different direction, we wish you well; we're happy to keep your file open."
 
+## Document-page and listing questions
+- When all documents except the mailed wet-ink notarised Limited POA are received: say the ORIGINAL must reach our office before the listing can go live. Do not imply that a buyer or transfer is already waiting. If arrival is not confirmed, say so; never say it is lost.
+- When the seller needs a Limited POA: our team has prepared it on their document page. They can download and print it there, sign it in front of a notary (not beforehand), upload a photo or scan for us to check, and then mail the wet-ink original to the Glendale office. Include THEIR document-page link from the record, not a generic site link.
+- When the seller wants to send documents: prefer their personal document page. They can upload from a computer or use the page's QR code / "Use my phone" option to photograph them; uploads are attached to the right checklist items so our team can review them faster. Include the case-specific page link. Emailing scans as attachments is also fine if easier. Ask them to let us check copies BEFORE posting any required originals, so errors can be caught first; never say there is no need to use the website.
+- If a family asks to proceed without required documents after an earlier refusal or refund: never suggest we can market, transfer or sell without them. We can keep the details on file, but required ownership/transfer documents must be completed before we can market or sell in compliance with Texas requirements and the cemetery. If an earlier refund, cancellation, hold, or staff instruction conflicts with resuming, flag for staff instead of promising to reopen the listing; do not send a holding email.
+- If a seller asks for an individual listing link: we do not publish individual plot listings on our website. We publish cemetery pages because buyers typically search for a cemetery, not a particular plot. After an enquiry our team helps buyers choose from an internal property list, which we also circulate to mortuaries. Show the EXAMPLE Available Property List at https://www.texascemeterybrokers.com/sample-listing-sheet.html and explain that it is a sample, NOT live inventory or proof that this seller's property is already listed. Do not invent a personal listing URL or a marketing-live date.
+
 ## Hand to a human (do NOT reply yourself)
 - The seller asks to speak to someone / requests a call.
 - Anger, complaints, disputes, threats, accusations about valuation.
