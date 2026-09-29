@@ -36,7 +36,7 @@ import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as Ai
 import { Bot } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
 
-import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus } from "lucide-react";
+import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus, EyeOff } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -236,6 +236,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  // "Hide buyers" — keeps buyer rows out of the main list so sellers/general
+  // contacts fill the screen. Remembers the choice across visits.
+  const [hideBuyers, setHideBuyers] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("tcb-hide-buyers") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("tcb-hide-buyers", hideBuyers ? "1" : "0");
+  }, [hideBuyers]);
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   // Bayer pipeline is temporarily hidden — submissions panel is Texas-only for now.
   // Keep the state + setter so the rest of the code (cemetery directory, filters,
@@ -1061,6 +1070,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const matches = submissions.filter(s => {
       // Archived submissions live in their own view and never appear in the pipeline.
       if (archivedView !== !!s.archived_at) return false;
+      // Hide-buyers view: buyer rows stay out unless the admin is explicitly
+      // in the buyers view (typed "buyer" in search or clicked the Buyers toggle).
+      if (hideBuyers && !buyerSearch && resolveKind(s.customer_kind, s.source) === "buyer") return false;
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
         // Exact match only — a submission only belongs to the clicked cemetery
@@ -1175,7 +1187,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return [...withAi, ...deduped.filter(x => !aiPending.has(aiKey(x)))];
     }
     return deduped;
-  }, [aiFirst, aiPending, submissions, archivedView, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [aiFirst, aiPending, submissions, archivedView, hideBuyers, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
@@ -3367,20 +3379,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
-              onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
+              onClick={() => {
+                // Three states: normal → buyers only → buyers hidden → normal.
+                if (kindFilter === "buyer") { setKindFilter("all"); setHideBuyers(true); setSelectedId(null); }
+                else if (hideBuyers) { setHideBuyers(false); }
+                else { setKindFilter("buyer"); setSelectedId(null); }
+              }}
               className={`h-8 pl-2 pr-2.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
                 kindFilter === "buyer"
                   ? "bg-emerald-600 text-white border-emerald-600"
+                  : hideBuyers
+                  ? "bg-slate-600 text-white border-slate-600"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
-              title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
+              title="Click once to show only buyers, again to hide buyers from the list, again to go back to normal"
             >
-              <ArrowUpFromLine className="w-4 h-4" />
-              Buyers
-              {buyerCount > 0 && (
-                <span className={`ml-0.5 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold leading-none grid place-items-center ${
-                  kindFilter === "buyer" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
-                }`}>
+              {hideBuyers ? <EyeOff className="w-4 h-4" /> : <ArrowUpFromLine className="w-4 h-4" />}
+              {hideBuyers ? "No buyers" : "Buyers"}
+              {kindFilter === "buyer" && buyerCount > 0 && (
+                <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold leading-none grid place-items-center bg-white/20 text-white">
                   {buyerCount}
                 </span>
               )}
