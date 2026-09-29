@@ -290,7 +290,7 @@ export default function ListingOptionsInlinePanel({ seller, onGenerated, onGener
   // is accepted, so the quote cannot go out without the wording they need.
   const canGenerate =
     nppNum > 0 && countNum > 0 && deedOwnersClean.length > 1 && plotDescription.trim().length > 2 &&
-    retailNum > 0 && !exceedsBuyerCeiling(nppNum, retailNum, feeNum);
+    !exceedsBuyerCeiling(nppNum, retailNum, feeNum);
 
   const prepBlock = useMemo(
     () => ({
