@@ -3797,7 +3797,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
-                        {aiPending.has(s.id) && <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/40 shrink-0" title="The AI has something ready on this record — open it to review"><Bot className="w-3 h-3" />AI can help</span>}
+                        {aiPending.has(s.id) && (aiPending.get(s.id)!.type === "flag_human"
+                          ? <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 shrink-0" title="The AI looked at this record and thinks a person should check it — open to see why"><Bot className="w-3 h-3" />Needs checking</span>
+                          : <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shrink-0" title="The AI has something ready on this record — open it to review"><Bot className="w-3 h-3" />AI can help</span>)}
                         {needsReply && (
                           <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
                             Reply
@@ -3821,12 +3823,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    {aiPending.has(s.id) && (
-                      <p className="text-xs leading-snug text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                        <Bot className="w-3 h-3 shrink-0" />
-                        <span className="truncate">AI {aiPending.get(s.id)} — open to review</span>
-                      </p>
-                    )}
+                    {aiPending.has(s.id) && (() => {
+                      const p = aiPending.get(s.id)!;
+                      const isFlag = p.type === "flag_human";
+                      return (
+                        <p className={`text-xs leading-snug flex items-center gap-1.5 ${isFlag ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"}`}>
+                          <Bot className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{isFlag ? `AI ${p.label} — open to see why` : `AI ${p.label} — open to review`}</span>
+                        </p>
+                      );
+                    })()}
 
                     {/* Line 2 — plain-language summary */}
                     {(() => {
