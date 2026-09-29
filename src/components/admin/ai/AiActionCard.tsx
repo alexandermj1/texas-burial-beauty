@@ -59,7 +59,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const approve = async () => {
     setBusy(true);
     try {
-      if (["reply_email", "fix_document_request"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
+      if (["reply_email", "fix_document_request", "resend_quote_free_listing"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
       const r = await callSellerAgent({ action: "execute", action_id: a.id });
@@ -94,7 +94,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
-      {["reply_email", "fix_document_request"].includes(a.action_type) && a.email_body !== null && (pending ? (
+      {["reply_email", "fix_document_request", "resend_quote_free_listing"].includes(a.action_type) && a.email_body !== null && (pending ? (
         <div className="space-y-2">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
