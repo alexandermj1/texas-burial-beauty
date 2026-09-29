@@ -114,7 +114,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         </ul>
       )}
       {!["reply_email", "increase_quote_ten_percent"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
-      {a.action_type === "increase_quote_ten_percent" && <p className="text-xs text-muted-foreground">Approval prepares the revised price and opens the seller pack; review the figures and click Send there. Nothing emails the seller yet.</p>}
+      {a.action_type === "increase_quote_ten_percent" && <p className="text-xs text-muted-foreground">Approval fills in the quote generator with the revised price and opens it. Check the fields and send the quote as normal; the text above then goes out as a separate follow-up email.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
         <div className="flex gap-2">

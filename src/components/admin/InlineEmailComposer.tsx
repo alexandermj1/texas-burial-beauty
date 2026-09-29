@@ -525,6 +525,21 @@ const InlineEmailComposer = ({
           .from("contact_submissions")
           .update({ quote_sent_at: new Date().toISOString() })
           .eq("id", sellerContext!.id);
+        // An AI-prepared revised quote carries its explanation separately: the
+        // quote email above is exactly the generator's output, and the short
+        // explanation follows as its own email in the same thread.
+        const { data: sub } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext!.id).maybeSingle();
+        const note = String((sub as any)?.quote_message ?? "").trim();
+        if (note && hasListingBlock) {
+          const sentThread = (data as any)?.threadId || threadId || undefined;
+          const noteHtml = wrapInBrandedShell(`<p style="${P_STYLE}">${escapeHtml(note).replace(/\n/g, "<br>")}</p>`);
+          const { data: d2, error: e2 } = await supabase.functions.invoke("gmail-action", {
+            body: { action: "send", to, subject: `Re: ${subject || "Your revised quote"}`, body: note, htmlBody: noteHtml,
+              threadId: sentThread, submissionId: sellerContext!.id, actorName: adminName ? `AI agent (approved by ${adminName})` : "AI agent" },
+          });
+          if (e2 || (d2 as any)?.error) toast({ title: "Quote sent, but the explanation email failed", description: e2?.message || (d2 as any)?.error, variant: "destructive" });
+          else await supabase.from("contact_submissions").update({ quote_message: null }).eq("id", sellerContext!.id);
+        }
       }
     } catch (e) {
       console.warn("quote_sent_at update failed", e);
@@ -887,13 +902,9 @@ const InlineEmailComposer = ({
           seller={sellerContext}
           hasGenerated={listingBlockInserted}
           sending={sending}
-          onGenerated={async (blockHtml) => {
-            const { data } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext.id).maybeSingle();
-            insertQuoteBlock(blockHtml, data?.quote_message);
-          }}
+          onGenerated={async (blockHtml) => { insertQuoteBlock(blockHtml); }}
           onGeneratedAndSend={async (blockHtml) => {
-            const { data } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext.id).maybeSingle();
-            const next = insertQuoteBlock(blockHtml, data?.quote_message);
+            const next = insertQuoteBlock(blockHtml);
             await send(next);
           }}
         />
