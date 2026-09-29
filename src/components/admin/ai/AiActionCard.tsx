@@ -23,6 +23,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   send_family_tree: { label: "Send family tree", Icon: Users, approve: "Send family tree" },
   open_quote_dialog: { label: "Send quote", Icon: DollarSign, approve: "Open quote dialog" },
   open_document_request: { label: "Document request", Icon: FileText, approve: "Open document request" },
+  fix_document_request: { label: "Fix document request", Icon: FileText, approve: "Fix, resync & email seller" },
 };
 
 export async function callSellerAgent(body: Record<string, unknown>) {
@@ -57,7 +58,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const approve = async () => {
     setBusy(true);
     try {
-      if (a.action_type === "reply_email" && (body !== a.email_body || subject !== a.email_subject)) {
+      if (["reply_email", "fix_document_request"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
       const r = await callSellerAgent({ action: "execute", action_id: a.id });
@@ -92,13 +93,13 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
-      {a.action_type === "reply_email" && (pending ? (
+      {["reply_email", "fix_document_request"].includes(a.action_type) && a.email_body !== null && (pending ? (
         <div className="space-y-2">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
         </div>
       ) : <pre className="whitespace-pre-wrap text-sm text-foreground bg-muted/40 rounded-lg p-3 font-sans">{a.email_body}</pre>)}
-      {a.action_type === "update_fields" && a.payload?.fields && (
+      {["update_fields", "fix_document_request"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {Object.entries(a.payload.fields).map(([k, v]) => <li key={k}><span className="text-muted-foreground">{k.replace(/_/g, " ")}:</span> {v}</li>)}
         </ul>
