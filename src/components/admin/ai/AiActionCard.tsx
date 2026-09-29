@@ -24,6 +24,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   open_quote_dialog: { label: "Send quote", Icon: DollarSign, approve: "Open quote dialog" },
   open_document_request: { label: "Document request", Icon: FileText, approve: "Open document request" },
   fix_document_request: { label: "Fix document request", Icon: FileText, approve: "Fix, resync & email seller" },
+  resend_quote_free_listing: { label: "Resend quote — free listing (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
 export async function callSellerAgent(body: Record<string, unknown>) {
