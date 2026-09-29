@@ -62,7 +62,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
       ? db.from("customer_files").select("file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
     db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,sign_token,sign_token_expires_at,principal_key").eq("submission_id", sub.id).is("deleted_at", null),
-    db.from("submission_documents").select("label,person_name,status,why,needs_notary,received_at").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
+    db.from("submission_documents").select("doc_code,label,person_name,status,why,needs_notary,received_at").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
     db.from("reminder_log").select("reminder_type,status,sent_at").eq("submission_id", sub.id).is("deleted_at", null).order("sent_at", { ascending: false }).limit(10),
   ]);
 
@@ -98,7 +98,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
     `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
     `CONTRACTS:\n${JSON.stringify((contracts.data ?? []).map(({ id: _i, sign_token: _t, ...c }: any) => c))}`,
-    `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify(docs.data ?? [])}`,
+    `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, ...d }: any) => d))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
     `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
@@ -126,6 +126,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
   if (sub.documents_requested_at && !sub.documents_completed_at) out.add("fix_document_request");
+  if (sub.quote_sent_at && !accepted && !signed) out.add("resend_quote_free_listing");
   return { allowed: out, liveLink };
 }
 
@@ -137,7 +138,8 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
-- Quotes: you NEVER send or propose quotes or valuations. If a valuation is due or needs re-sending, flag_human with the reason — staff handle quotes.
+- resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with the $99 waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to click the free Starter option; we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the free Starter option in the quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this instead of flag_human for fee waivers.
+- Quotes: apart from resend_quote_free_listing you NEVER send or propose quotes or valuations. If a valuation is due or needs re-sending, flag_human with the reason — staff handle quotes.
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
@@ -155,6 +157,7 @@ You know the exact rules our document-request generator uses. Use them to answer
 HOW TO RESPOND, BY STAGE:
 - Before the family tree is complete (no quote yet, quote sent, quote accepted, agreement unsigned): reassure them briefly and in general terms using the rules above, then explain that we work with the cemeteries and internally to work out exactly which documents their case needs, and we do that from our short ownership questionnaire (family tree). Gently point them to their one next step toward it: if there is no quote yet, the quote (we need cemetery, section/lot/space and the deed photo); if a quote is out, accepting it; if accepted, signing the listing agreement, which takes them straight to the questionnaire. Do not list a full document checklist before the family tree — say the exact list comes after the questionnaire.
 - After the family tree is complete: answer from DOCUMENT REQUEST ITEMS (authoritative) — explain what each item is and why, exactly as listed.
+- A deed in a deceased person's name is STANDARD and never a reason to flag, at any cemetery (including Dignity-owned ones like Laurel Land or Forest Park). We process it the normal way: the person who enquired accepts the quote and signs the listing agreement, then the family tree works out who must sign and which documents are needed.
 - Only flag a human for ownership matters when: the seller wants a call, a will actually needs to be read against the ownership AFTER the family tree, deed holders who were not spouses of each other have died, or the rules truly cannot resolve it. A deceased owner, heirs, probate or a will being mentioned is NOT on its own a reason to flag — answer it.
 - Never tell the seller "our team will review and get back to you" for a question you can answer from these rules.`;
 
@@ -298,7 +301,8 @@ function parseDecision(raw: string, allowed: Set<string>) {
           : null,
       }))
       .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length))
-      .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body)),
+      .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body))
+      .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body),
   };
 }
 
@@ -345,7 +349,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     const rows = d.actions.map((a) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: a.type === "reply_email" || a.type === "fix_document_request" ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -526,6 +530,26 @@ Deno.serve(async (req) => {
           const mailNote = !res.ok || /"error"/.test(text) ? ` The confirmation email FAILED (${res.status}) — please email the seller.` : ` Emailed the seller: "${act.email_subject || "Your document request has been updated"}".`;
           await aiNote(`Corrected the document request: locations being sold "${before}" → "${next}"${Object.keys(patch).filter((k) => !["plot_description", "ownership_answers"].includes(k)).map((k) => `; ${k.replace(/_/g, " ")} → "${patch[k]}"`).join("")}. Rebuilt ${rebuilt} unsigned document${rebuilt === 1 ? "" : "s"} (signed copies untouched) so the documents page is live with the correction.${mailNote} Evidence: ${act.reason}`);
           if (mailNote.includes("FAILED")) throw new Error(`Record fixed and documents rebuilt, but the email failed: ${text.slice(0, 200)}`);
+        } else if (act.action_type === "resend_quote_free_listing") {
+          if (!act.email_body || !sub.email) throw new Error("Intro text or recipient missing");
+          const { data: q } = await db.from("email_messages").select("body_html,subject,gmail_thread_id").eq("matched_submission_id", sub.id).ilike("from_email", "%texascemeterybrokers%").ilike("body_html", "%starter%").is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
+          if (!q?.body_html) throw new Error("Couldn't find the original quote email to resend");
+          const esc = act.email_body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+          const html = `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;margin-bottom:18px;">${esc}</div>${q.body_html}`;
+          // Mark first, so the Starter click is recorded as Pro (no cancellation fee, nothing to pay).
+          const answers = { ...(sub.ownership_answers ?? {}) } as Record<string, any>;
+          answers.autopilot = { ...(answers.autopilot ?? {}), freeListingAsPro: true, freeListingAsProAt: now };
+          const { error: e } = await db.from("contact_submissions").update({ ownership_answers: answers }).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          const res = await fetch(`${url}/functions/v1/gmail-action`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
+            body: JSON.stringify({ action: "send", to: sub.email, subject: act.email_subject || (q.subject?.startsWith("Re:") ? q.subject : `Re: ${q.subject}`), body: `${act.email_body}\n\n${q.body_html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}`, htmlBody: html,
+              ...((q.gmail_thread_id ?? act.gmail_thread_id) ? { threadId: q.gmail_thread_id ?? act.gmail_thread_id } : {}), submissionId: sub.id, actorName: `AI agent (approved by ${user.name})` }),
+          });
+          const text = await res.text();
+          if (!res.ok || /"error"/.test(text)) throw new Error(`Email failed (${res.status}): ${text.slice(0, 200)}`);
+          await aiNote(`Re-sent the quote with the listing fee waived: asked the seller to click the free Starter option; it will be recorded as Pro. Reason: ${act.reason}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
