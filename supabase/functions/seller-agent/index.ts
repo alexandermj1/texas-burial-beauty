@@ -121,7 +121,7 @@ RULES FOR YOUR OUTPUT
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "actions": [{"type": "reply_email"|"add_note"|"flag_human", "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null}]}`;
 
-async function callModel(apiKey: string, instructions: string, input: string) {
+async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium") {
   const res = await fetch(GATEWAY, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" },
@@ -131,7 +131,7 @@ async function callModel(apiKey: string, instructions: string, input: string) {
       input: [{ role: "user", content: input }],
       stream: true,
       store: false,
-      reasoning: { effort: "medium", summary: "auto" },
+      reasoning: { effort, summary: "auto" },
       include: ["reasoning.encrypted_content"],
     }),
   });
@@ -200,11 +200,23 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   if (sub.ai_paused_at) return { status: "skipped", reason: "AI paused for this seller" };
   if (sub.sold_at || sub.closed_at) return { status: "skipped", reason: "file closed" };
 
+  // Cost control: skip automatic runs when nothing new has happened since the last run.
+  const { data: lastRun } = await db.from("ai_agent_runs").select("created_at").eq("submission_id", sub.id).eq("status", "done").order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: lastMsg } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
+  if (trigger !== "manual" && lastRun) {
+    const { count: newNotes } = await db.from("customer_notes").select("id", { count: "exact", head: true }).eq("submission_id", sub.id).gt("created_at", lastRun.created_at).not("author_name", "ilike", "AI agent%");
+    const newMail = lastMsg && lastMsg.received_at > lastRun.created_at;
+    if (!newMail && !newNotes && (sub.updated_at ?? "") <= lastRun.created_at) return { status: "skipped", reason: "nothing new since last review" };
+  }
+  // Light reasoning for routine checks; deeper reasoning only when a customer is waiting on a reply.
+  const customerWaiting = !!lastMsg && !/texascemeterybrokers/i.test(lastMsg.from_email ?? "");
+  const effort: "low" | "medium" = customerWaiting ? "medium" : "low";
+
   const playbook = await loadPlaybook(db);
   const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger, playbook_version: playbook.version }).select("id").single();
   try {
     const ctx = await buildContext(db, sub);
-    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), ctx.context);
+    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), ctx.context, effort);
     const d = parseDecision(raw);
     const needsHuman = d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human");
     await db.from("ai_agent_runs").update({
@@ -226,7 +238,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId });
     }
     if (rows.length) await db.from("ai_agent_actions").insert(rows);
-    return { status: "done", run_id: run!.id, decision: d };
+    return { status: "done", run_id: run!.id, effort, decision: d };
   } catch (e) {
     const msg = String((e as Error).message ?? e);
     await db.from("ai_agent_runs").update({ status: "error", error: msg.slice(0, 1000) }).eq("id", run!.id);
@@ -308,13 +320,15 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
         body: JSON.stringify({
           action: "send", to: sub.email, subject: act.email_subject || "Your cemetery property", body: act.email_body,
+          htmlBody: `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${act.email_body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`,
           ...(act.gmail_thread_id ? { threadId: act.gmail_thread_id } : {}), submissionId: sub.id, actorName: `${user.name} (AI draft)`,
         }),
       });
       const text = await res.text();
-      if (!res.ok) error = `Email failed (${res.status}): ${text.slice(0, 300)}`;
+      if (!res.ok || /"error"/.test(text)) error = `Email failed (${res.status}): ${text.slice(0, 300)}`;
+      else await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Sent an email to the seller: "${act.email_subject || "Your cemetery property"}". Reason: ${act.reason}`, author_name: `AI agent (approved by ${user.name})` });
     } else if (act.action_type === "add_note") {
-      const { error: e } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `AI agent: ${act.note_body ?? act.reason}`, author_name: `AI agent (approved by ${user.name})` });
+      const { error: e } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `${act.note_body ?? act.reason}`, author_name: `AI agent (approved by ${user.name})` });
       if (e) error = e.message;
     }
 
