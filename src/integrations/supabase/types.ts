@@ -131,6 +131,7 @@ export type Database = {
           id: string
           note_body: string | null
           original_email_body: string | null
+          payload: Json | null
           reason: string | null
           run_id: string | null
           status: string
@@ -153,6 +154,7 @@ export type Database = {
           id?: string
           note_body?: string | null
           original_email_body?: string | null
+          payload?: Json | null
           reason?: string | null
           run_id?: string | null
           status?: string
@@ -175,6 +177,7 @@ export type Database = {
           id?: string
           note_body?: string | null
           original_email_body?: string | null
+          payload?: Json | null
           reason?: string | null
           run_id?: string | null
           status?: string
