@@ -123,7 +123,7 @@ function higherQuote(sub: Sub) {
   const current = Number(sub.quote_amount);
   const retail = Number(sub.cemetery_retail);
   const fee = Number(sub.transfer_fee_amount);
-  if (!(current > 0 && retail > 0 && Number.isFinite(fee) && fee >= 0)) return null;
+  if (!(Number.isFinite(current) && current > 0 && Number.isFinite(retail) && retail > 0 && Number.isFinite(fee) && fee >= 0)) return null;
   const proposed = Math.round(current * 1.1 * 100) / 100;
   return (proposed + fee) * 1.15 <= retail * 0.70 + 0.005 ? proposed : null;
 }
@@ -650,7 +650,7 @@ Deno.serve(async (req) => {
             quote_amount: increased,
             quote_message: String(act.email_body ?? "").slice(0, 1500) || null,
             ownership_answers: { ...answers, autopilot: { ...prep, netPerPlot: increased, authorizedMinTotal: increased * Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1) } },
-          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).or("quote_response.is.null,quote_response.neq.accepted").is("accepted_quote_amount", null).is("la_signed_at", null).is("archived_at", null).is("deleted_at", null).select("id").single();
+          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).or("quote_response.is.null,quote_response.neq.accepted").is("accepted_quote_amount", null).is("la_signed_at", null).is("archived_at", null).is("deleted_at", null).is("closed_at", null).is("sold_at", null).is("ai_paused_at", null).select("id").single();
           if (e) throw new Error(e.message);
           await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
