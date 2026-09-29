@@ -10,7 +10,7 @@ export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null;
-  payload?: { fields?: Record<string, string> } | null;
+  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[] } | null;
 };
 
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
@@ -24,6 +24,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   open_quote_dialog: { label: "Send quote", Icon: DollarSign, approve: "Open quote dialog" },
   open_document_request: { label: "Document request", Icon: FileText, approve: "Open document request" },
   fix_document_request: { label: "Fix document request", Icon: FileText, approve: "Fix, resync & email seller" },
+  update_document_items: { label: "Update document checklist", Icon: FileText, approve: "Apply to checklist" },
   resend_quote_free_listing: { label: "Resend quote — free listing (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
@@ -103,6 +104,11 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {["update_fields", "fix_document_request"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {Object.entries(a.payload.fields).map(([k, v]) => <li key={k}><span className="text-muted-foreground">{k.replace(/_/g, " ")}:</span> {v}</li>)}
+        </ul>
+      )}
+      {a.action_type === "update_document_items" && a.payload?.items && (
+        <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
+          {a.payload.items.map((i) => <li key={i.id}>{i.note ?? "Checklist item"}{i.state ? ` — mark ${i.state.replace(/_/g, " ")}` : ""}{i.attach_file_ids.length ? ` · attach ${i.attach_file_ids.length} file${i.attach_file_ids.length > 1 ? "s" : ""}` : ""}</li>)}
         </ul>
       )}
       {a.action_type !== "reply_email" && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
