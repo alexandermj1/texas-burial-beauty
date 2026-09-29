@@ -3379,20 +3379,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             </button>
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
-              onClick={() => { setKindFilter(k => (k === "buyer" ? "all" : "buyer")); setSelectedId(null); }}
+              onClick={() => {
+                // Three states: normal → buyers only → buyers hidden → normal.
+                if (kindFilter === "buyer") { setKindFilter("all"); setHideBuyers(true); setSelectedId(null); }
+                else if (hideBuyers) { setHideBuyers(false); }
+                else { setKindFilter("buyer"); setSelectedId(null); }
+              }}
               className={`h-8 pl-2 pr-2.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1.5 ${
                 kindFilter === "buyer"
                   ? "bg-emerald-600 text-white border-emerald-600"
+                  : hideBuyers
+                  ? "bg-slate-600 text-white border-slate-600"
                   : "bg-card text-muted-foreground border-border hover:text-foreground"
               }`}
-              title="Show only buyers, grouped by cemetery (tip: typing 'buyer' in the search bar does the same)"
+              title="Click once to show only buyers, again to hide buyers from the list, again to go back to normal"
             >
-              <ArrowUpFromLine className="w-4 h-4" />
-              Buyers
-              {buyerCount > 0 && (
-                <span className={`ml-0.5 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold leading-none grid place-items-center ${
-                  kindFilter === "buyer" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
-                }`}>
+              {hideBuyers ? <EyeOff className="w-4 h-4" /> : <ArrowUpFromLine className="w-4 h-4" />}
+              {hideBuyers ? "No buyers" : "Buyers"}
+              {kindFilter === "buyer" && buyerCount > 0 && (
+                <span className="ml-0.5 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold leading-none grid place-items-center bg-white/20 text-white">
                   {buyerCount}
                 </span>
               )}
