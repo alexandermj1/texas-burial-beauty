@@ -291,15 +291,30 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     open_document_request: "document request to review",
     fix_document_request: "suggests fixing the document request",
   };
+  // Keyed by seller (email, or id when no email) — the list merges duplicate
+  // submissions per email, so a suggestion on a sibling row must still tag
+  // the one row that is shown. Archived records are left out of the count.
+  const aiKey = (s: { id: string; email?: string | null }) => (s.email || "").trim().toLowerCase() || s.id;
   const loadAiPending = useCallback(async () => {
     const { data } = await supabase.from("ai_agent_actions" as never).select("submission_id,action_type,reason,created_at").eq("status", "proposed").is("deleted_at", null).order("created_at", { ascending: false }).limit(500);
+    const rows = (data ?? []) as any[];
+    const ids = [...new Set(rows.map((r) => r.submission_id))];
+    const subInfo = new Map<string, { email: string | null; archived: boolean }>();
+    if (ids.length) {
+      const { data: s } = await supabase.from("contact_submissions").select("id,email,archived_at,deleted_at").in("id", ids);
+      for (const x of (s ?? []) as any[]) subInfo.set(x.id, { email: x.email, archived: !!x.archived_at || !!x.deleted_at });
+    }
     const m = new Map<string, { type: string; label: string }>();
-    for (const r of (data ?? []) as any[]) {
-      if (m.has(r.submission_id)) continue; // newest first
-      m.set(r.submission_id, { type: r.action_type, label: AI_ROW_LABEL[r.action_type] ?? "has a suggestion" });
+    for (const r of rows) {
+      const info = subInfo.get(r.submission_id);
+      if (!info || info.archived) continue;
+      const k = aiKey({ id: r.submission_id, email: info.email });
+      if (m.has(k)) continue; // newest first
+      m.set(k, { type: r.action_type, label: AI_ROW_LABEL[r.action_type] ?? "has a suggestion" });
     }
     setAiPending(m);
   }, []);
+  const [aiFirst, setAiFirst] = useState(false);
   useEffect(() => { loadAiPending(); const t = setInterval(loadAiPending, 60000); return () => clearInterval(t); }, [loadAiPending]);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
   
