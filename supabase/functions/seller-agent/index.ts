@@ -120,7 +120,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
   const liveLink = la.find((c) => ["sent", "viewed"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()));
   const out = new Set(["reply_email", "add_note", "flag_human", "update_fields"]);
-  if (!accepted) out.add("open_quote_dialog");
+  // Quotes are staff-only for now — the AI never proposes or sends them.
   if (accepted && !signed && !la.some((c) => ["sent", "viewed"].includes(c.status))) out.add("send_listing_agreement");
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
@@ -137,7 +137,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
-- open_quote_dialog: opens the staff Send Quote dialog for this seller (quotes are always prepared and sent by staff with the quote generator). Use when a valuation is due or needs re-sending. Put the reason in note.
+- Quotes: you NEVER send or propose quotes or valuations. If a valuation is due or needs re-sending, flag_human with the reason — staff handle quotes.
 - open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
