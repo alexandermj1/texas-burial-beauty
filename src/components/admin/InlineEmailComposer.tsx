@@ -459,6 +459,20 @@ const InlineEmailComposer = ({
     return next;
   };
 
+  // Staff-approved AI quote revisions may carry a short note. Put it above
+  // the actual branded quote, never inside its pricing/acceptance controls.
+  const insertQuoteIntro = (message: string) => {
+    const intro = message.trim();
+    if (!intro) return;
+    const current = editorRef.current?.getHtml() ?? html;
+    const marker = '<div data-ai-quote-intro="1"';
+    if (current.includes(marker)) return;
+    const paragraph = `<p data-ai-quote-intro="1" style="${P_STYLE}">${escapeHtml(intro).replace(/\n/g, "<br>")}</p>`;
+    editorRef.current?.insertHtmlBeforeSignature(paragraph);
+    setHtml(editorRef.current?.getHtml() ?? current);
+    setBodyTouched(true);
+  };
+
   // `htmlOverride` lets a panel insert a block and send it in the same click
   // (React state updates are async, so the fresh HTML is passed straight in).
   const send = async (htmlOverride?: unknown) => {
@@ -883,8 +897,14 @@ const InlineEmailComposer = ({
           seller={sellerContext}
           hasGenerated={listingBlockInserted}
           sending={sending}
-          onGenerated={(blockHtml) => insertQuoteBlock(blockHtml)}
+          onGenerated={async (blockHtml) => {
+            const { data } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext.id).maybeSingle();
+            if (data?.quote_message) insertQuoteIntro(data.quote_message);
+            insertQuoteBlock(blockHtml);
+          }}
           onGeneratedAndSend={async (blockHtml) => {
+            const { data } = await supabase.from("contact_submissions").select("quote_message").eq("id", sellerContext.id).maybeSingle();
+            if (data?.quote_message) insertQuoteIntro(data.quote_message);
             const next = insertQuoteBlock(blockHtml);
             await send(next);
           }}
