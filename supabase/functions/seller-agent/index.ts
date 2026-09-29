@@ -73,7 +73,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     plot_description: sub.plot_description, section: sub.section, lawn: sub.lawn, space_numbers: sub.space_numbers,
     plot_count: sub.plot_count ?? sub.spaces, deed_owner_names: sub.deed_owner_names, relationship_to_owner: sub.relationship_to_owner,
     seller_message: clip(sub.message, 1500), details: clip(sub.details, 800),
-    quote_per_space_excl_transfer_fee: sub.quote_amount, accepted_per_space: sub.accepted_quote_amount,
+    quote_per_space_excl_transfer_fee: sub.quote_amount, cemetery_retail_per_space: sub.cemetery_retail, accepted_per_space: sub.accepted_quote_amount,
     transfer_fee_once: sub.transfer_fee_amount, quote_sent_at: sub.quote_sent_at, quote_response: sub.quote_response,
     listing_tier: sub.listing_tier ?? sub.listing_option, listing_paid_at: sub.listing_paid_at,
     listing_agreement_signed_at: sub.la_signed_at, family_tree_sent_at: answers.questionsSentAt ?? null,
@@ -387,7 +387,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     const rows = d.actions.map((a) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -638,6 +638,20 @@ Deno.serve(async (req) => {
           const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
           if (e) throw new Error(e.message);
           await aiNote(`Changed ${first(sub)}'s quote from ${beforeN} to ${n} space${n === 1 ? "" : "s"}${f.space_numbers ? ` (spaces ${beforeNums || "—"} → ${f.space_numbers})` : ""}, same price per space. ${user.name} opened the quote to send.`);
+        } else if (act.action_type === "increase_quote_ten_percent") {
+          const increased = higherQuote(sub);
+          if (increased === null || !sub.email) throw new Error("The quote no longer qualifies for a 10% increase below the buyer-price ceiling. Review it manually.");
+          const answers = { ...(sub.ownership_answers ?? {}) } as Record<string, any>;
+          const prep = { ...(answers.autopilot ?? {}) };
+          // Save a draft only. The normal staff seller-pack builder confirms the
+          // deed and makes the acceptance links; no quote is sent here.
+          const { error: e } = await db.from("contact_submissions").update({
+            quote_amount: increased,
+            quote_message: String(act.email_body ?? "").slice(0, 1500) || null,
+            ownership_answers: { ...answers, autopilot: { ...prep, netPerPlot: increased, authorizedMinTotal: increased * Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1) } },
+          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).is("accepted_quote_amount", null);
+          if (e) throw new Error(e.message);
+          await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
@@ -650,7 +664,7 @@ Deno.serve(async (req) => {
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
+    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces", "increase_quote_ten_percent"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);
