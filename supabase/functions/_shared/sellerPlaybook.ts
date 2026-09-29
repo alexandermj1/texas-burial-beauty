@@ -56,6 +56,9 @@ We do not normally buy property directly. At select cemeteries with far more buy
 - The "Acceptance of Appointment" section of the POA is signed by us, not the seller.
 
 ## Standard answers
+- Deed in a deceased person's name: completely standard, at every cemetery. The person who enquired accepts the quote and signs the listing agreement; the family tree then works out who must sign and which documents are needed. Never a reason to hand over.
+- How are the proceeds split in a family? "We send the proceeds to the person who signed the listing agreement; it is then up to them to share them within the family."
+- Free / waived listing fee agreed with staff: re-send the quote and ask them to click the free Starter option — we record it internally as Pro, so there is nothing to pay (resend_quote_free_listing). No person needed.
 - Price below retail/what they paid: "The cemetery resale market is very price-sensitive: plots priced near cemetery retail usually sit unsold, because resale buyers are looking for meaningful savings versus buying direct."
 - Lost deed: "Please don't worry — the best first step is to contact the cemetery office; they can usually provide a copy of the deed or written confirmation of ownership."
 - Selling one space of a group: listing as a set does not stop a single space selling; we manage the inventory as it moves.
@@ -72,9 +75,8 @@ We do not normally buy property directly. At select cemeteries with far more buy
 - Refunds, cancellations, withdrawing a listing, payment problems.
 - Owner in hospice or a very recent death (a human sends condolences and pauses the file).
 - Complex heirship the rules can't resolve, wills that need reading against the ownership, many heirs (e.g. 11 signers).
-- Dignity-owned cemeteries (e.g. Laurel Land, Forest Park Westheimer) where the deed is in a deceased person's name.
 - Cemetery refusing to confirm details to us.
-- Direct cash purchase requests, price renegotiation, requests to change the quote or tier.
+- Direct cash purchase requests, price renegotiation, requests to change the quote or tier (except agreed fee waivers — see below).
 - Anything not covered by this playbook, or where you are not confident.
 
 ## Respect staff notes

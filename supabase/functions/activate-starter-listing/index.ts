@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
 </td></tr>
 <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
 <p>Dear ${firstName},</p>
-<p>Thank you for selecting our <strong>Starter listing</strong> for your property at ${cemLabel}. Your listing is now active — there is no upfront cost for this tier.</p>
+<p>Thank you for selecting our <strong>${asPro ? "Pro listing" : "Starter listing"}</strong> for your property at ${cemLabel}. Your listing is now active — there is no upfront cost for this tier.</p>
 <p>Our next step is to send you the Exclusive Sales Agreement to sign, which formally lists your property with us. You will receive that in a separate email shortly.</p>
 <p>If you have additional documentation (deed, photos, cemetery letters), simply reply and attach them.</p>
 <p>Warm regards,<br><strong>Alexander James</strong><br>Cemetery Salesperson<br>Texas Cemetery Brokers</p>
@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
             body: {
               action: "send",
               to: tx.recipient_email,
-              subject: "Your Starter listing is active — Texas Cemetery Brokers",
+              subject: `Your ${asPro ? "Pro" : "Starter"} listing is active — Texas Cemetery Brokers`,
               htmlBody: html,
               body: html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(),
             },
