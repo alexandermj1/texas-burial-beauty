@@ -267,8 +267,7 @@ async function callModel(apiKey: string, instructions: string, input: string, ef
       input: [{ role: "user", content: media.length ? [{ type: "input_text", text: input }, ...media] : input }],
       stream: true,
       store: false,
-      reasoning: { effort, summary: "auto" },
-      include: ["reasoning.encrypted_content"],
+      reasoning: { effort },
     }),
   });
   if (!res.ok || !res.body) {
