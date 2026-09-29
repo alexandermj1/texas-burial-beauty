@@ -193,12 +193,19 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
   if (!sub.customer_profile_id) return { parts: [] as any[], names: [] as string[] };
   const { data } = await db.from("customer_files").select("file_name,file_path,mime_type,document_type,file_size,created_at")
     .eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(40);
-  const ok = (f: any) => /^(image\/(jpeg|png|webp)|application\/pdf)$/.test(f.mime_type ?? "") && (f.file_size ?? 0) < 4_000_000;
+  const ok = (f: any) => /^image\/(jpeg|png|webp)$/.test(f.mime_type ?? "") ? (f.file_size ?? 0) < 12_000_000 : f.mime_type === "application/pdf" && (f.file_size ?? 0) < 5_000_000;
   const rank = (f: any) => /deed|certificate of ownership/i.test(f.document_type ?? "") ? 0 : /intake/i.test(f.document_type ?? "") ? 1 : /attachment/i.test(f.document_type ?? "") ? 2 : 9;
-  const picked = (data ?? []).filter(ok).filter((f) => rank(f) < 9).sort((a, b) => rank(a) - rank(b)).slice(0, 4);
+  const seen = new Set<number>();
+  const picked = (data ?? []).filter(ok).filter((f) => !seen.has(f.file_size) && seen.add(f.file_size)).filter((f) => rank(f) < 9).sort((a, b) => rank(a) - rank(b)).slice(0, 4);
   const parts: any[] = [], names: string[] = [];
   for (const f of picked) {
-    const { data: blob } = await db.storage.from("customer-files").download(f.file_path);
+    // Phone photos are large: ask storage for a resized copy first, fall back to the original.
+    let blob: Blob | null = null;
+    if (f.mime_type !== "application/pdf") {
+      const { data: su } = await db.storage.from("customer-files").createSignedUrl(f.file_path, 120, { transform: { width: 1600, quality: 70 } });
+      if (su?.signedUrl) { const r = await fetch(su.signedUrl).catch(() => null); if (r?.ok) blob = await r.blob(); }
+    }
+    if (!blob && (f.file_size ?? 0) < 5_000_000) blob = (await db.storage.from("customer-files").download(f.file_path)).data;
     if (!blob) continue;
     const bytes = new Uint8Array(await blob.arrayBuffer());
     let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
