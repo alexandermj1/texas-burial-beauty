@@ -124,7 +124,7 @@ function higherQuote(sub: Sub) {
   const fee = Number(sub.transfer_fee_amount);
   if (!(current > 0 && retail > 0 && Number.isFinite(fee) && fee >= 0)) return null;
   const proposed = Math.round(current * 1.1 * 100) / 100;
-  return (proposed + fee) * 1.15 < retail * 0.70 - 0.005 ? proposed : null;
+  return (proposed + fee) * 1.15 <= retail * 0.70 + 0.005 ? proposed : null;
 }
 
 /** Which admin-panel actions are valid on this record RIGHT NOW — computed with the same milestones the panel uses. */
@@ -486,6 +486,7 @@ Deno.serve(async (req) => {
     // execute (approve)
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", act.submission_id).maybeSingle();
     if (!sub || !isSeller(sub)) return json({ error: "Not a seller — refusing to act" }, 400);
+    if (sub.archived_at || sub.deleted_at || sub.closed_at || sub.sold_at || sub.ai_paused_at) return json({ error: "This seller record is closed, archived or paused" }, 409);
     const now = new Date().toISOString();
     let error: string | null = null;
 
@@ -649,7 +650,7 @@ Deno.serve(async (req) => {
             quote_amount: increased,
             quote_message: String(act.email_body ?? "").slice(0, 1500) || null,
             ownership_answers: { ...answers, autopilot: { ...prep, netPerPlot: increased, authorizedMinTotal: increased * Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1) } },
-          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).is("accepted_quote_amount", null);
+          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).is("accepted_quote_amount", null).is("la_signed_at", null).select("id").single();
           if (e) throw new Error(e.message);
           await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
