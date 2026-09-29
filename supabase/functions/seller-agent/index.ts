@@ -80,6 +80,7 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     family_tree_completed_at: answers.sellerConfirmedAt ?? null, documents_requested_at: sub.documents_requested_at,
     documents_completed_at: sub.documents_completed_at, listing_live_at: sub.listing_live_at, sold_at: sub.sold_at,
     stage: sub.texas_pipeline_stage ?? sub.pipeline_stage_override, ai_summary: sub.ai_summary,
+    family_tree_answers: (() => { const { autopilot: _a, ...rest } = answers; return clip(JSON.stringify(rest), 4000); })(),
   };
 
   const emailList = (emails.data ?? []).reverse().map((e) => ({
