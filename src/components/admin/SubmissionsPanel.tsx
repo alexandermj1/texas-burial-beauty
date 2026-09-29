@@ -30,6 +30,10 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 import PriceSheetDialog from "./PriceSheetDialog";
+import AiAgentPanel from "./AiAgentPanel";
+import AiRecordCard from "./ai/AiRecordCard";
+import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
+import { Bot } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
 
 import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus } from "lucide-react";
@@ -274,6 +278,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [priceSheetOpen, setPriceSheetOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiPending, setAiPending] = useState<Set<string>>(new Set());
+  const loadAiPending = useCallback(async () => {
+    const { data } = await supabase.from("ai_agent_actions" as never).select("submission_id").eq("status", "proposed").is("deleted_at", null).limit(500);
+    setAiPending(new Set(((data ?? []) as any[]).map((r) => r.submission_id)));
+  }, []);
+  useEffect(() => { loadAiPending(); const t = setInterval(loadAiPending, 60000); return () => clearInterval(t); }, [loadAiPending]);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
   
   const isMobile = useIsMobile();
@@ -3195,6 +3206,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {kind !== "buyer" ? (
               <div className="space-y-5">
                 {headBlock}
+                <AiRecordCard
+                  submissionId={selected.id}
+                  pausedAt={(selected as any).ai_paused_at ?? null}
+                  customerProfileId={(selected as any).customer_profile_id ?? null}
+                  onOpenQuote={() => setQuoteOpen(true)}
+                  onOpenDocuments={() => setSellerWorkspaceTab("paperwork")}
+                  onRefresh={() => { loadAiPending(); onRefresh?.(); }}
+                />
                 {sellerWorkspaceNav}
                 {sellerWorkspaceTab === "email" && emailBlock}
                  {tailBlock}
@@ -3295,6 +3314,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               className="h-8 px-3 rounded-full text-xs font-medium border bg-card text-muted-foreground border-border hover:text-foreground inline-flex items-center gap-1.5"
             >
               <FileSpreadsheet className="w-4 h-4" /> Price sheet
+            </button>
+            <button
+              onClick={() => setAiOpen(true)}
+              title="AI Agent — suggestions waiting for approval, what the AI has done, playbook"
+              className="h-8 px-3 rounded-full text-xs font-semibold border bg-indigo-600 text-primary-foreground border-indigo-700 hover:bg-indigo-700 inline-flex items-center gap-1.5"
+            >
+              <Bot className="w-4 h-4" /> AI Agent
+              {aiPending.size > 0 && <span className="ml-0.5 min-w-5 h-5 px-1 rounded-full bg-card text-indigo-700 text-[11px] font-bold inline-flex items-center justify-center">{aiPending.size}</span>}
             </button>
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
@@ -3488,6 +3515,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       )}
 
 
+      <AiDialog open={aiOpen} onOpenChange={(o) => { setAiOpen(o); if (!o) loadAiPending(); }}>
+        <AiDialogContent className="max-w-6xl w-[96vw] h-[92vh] overflow-y-auto p-6">
+          <AiDialogTitle className="sr-only">AI Agent</AiDialogTitle>
+          <AiAgentPanel onOpenSubmission={(id) => { setAiOpen(false); setSelectedId(id); loadAiPending(); }} />
+        </AiDialogContent>
+      </AiDialog>
       <PriceSheetDialog open={priceSheetOpen} onClose={() => setPriceSheetOpen(false)} onOpenSubmission={(id) => setSelectedId(id)} />
       <BroadcastDialog open={broadcastOpen} onClose={() => setBroadcastOpen(false)} />
       <AddSubmissionDialog
@@ -3748,6 +3781,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
+                        {aiPending.has(s.id) && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/40 shrink-0" title="AI has a suggestion waiting"><Bot className="w-2.5 h-2.5" />AI</span>}
                         {needsReply && (
                           <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
                             Reply
