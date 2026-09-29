@@ -113,7 +113,8 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           {a.payload.items.map((i) => <li key={i.id}>{i.note ?? "Checklist item"}{i.state ? ` — mark ${i.state.replace(/_/g, " ")}` : ""}{i.attach_file_ids.length ? ` · attach ${i.attach_file_ids.length} file${i.attach_file_ids.length > 1 ? "s" : ""}` : ""}</li>)}
         </ul>
       )}
-      {a.action_type !== "reply_email" && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
+      {!["reply_email", "increase_quote_ten_percent"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
+      {a.action_type === "increase_quote_ten_percent" && <p className="text-xs text-muted-foreground">Approval prepares the revised price and opens the seller pack; review the figures and click Send there. Nothing emails the seller yet.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
         <div className="flex gap-2">
