@@ -184,6 +184,12 @@ RULES FOR YOUR OUTPUT
 - If nothing needs saying (we already replied, waiting on them, a staff note says hold), propose no email; you may propose an add_note summarising status.
 - Use flag_human for anything in "Hand to a human", or when confidence is below 0.7. Do not also draft a reply in that case unless it is a brief holding reply that is clearly safe.
 - Emails: plain text, following the tone rules, greeting "Dear <First Name>," and the standard sign-off. No markdown.
+- KEEP EVERY EXPLANATION SHORT AND PLAIN. Staff skim these on a busy panel:
+  - stage_summary: one line, max 12 words, e.g. "Quote accepted, agreement signed, waiting on the deed."
+  - next_step: max 10 words, e.g. "Reply confirming we received the deed."
+  - reasoning: 1-2 short sentences, plain words, no jargon, no restating the whole record.
+  - each action's reason: one short sentence, e.g. "She asked where to send the deed — reply with the address."
+  - human_reason: one short sentence saying exactly what a person must decide.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null}]}`;
@@ -393,13 +399,19 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === "sweep") {
-      // Sellers who wrote to us in the last 7 days and haven't had an agent run since.
+      // Needs-reply sellers only: the latest email on the record is FROM the customer
+      // (unanswered). Fetch recent mail both directions and keep only those.
       const since = new Date(Date.now() - 7 * 86400_000).toISOString();
       const { data: recent } = await db.from("email_messages").select("matched_submission_id,received_at,from_email")
-        .not("matched_submission_id", "is", null).gte("received_at", since).not("from_email", "ilike", "%texascemeterybrokers%")
-        .is("deleted_at", null).order("received_at", { ascending: false }).limit(200);
+        .not("matched_submission_id", "is", null).gte("received_at", since)
+        .is("deleted_at", null).order("received_at", { ascending: false }).limit(300);
       const latest = new Map<string, string>();
-      for (const r of recent ?? []) if (!latest.has(r.matched_submission_id!)) latest.set(r.matched_submission_id!, r.received_at);
+      for (const r of recent ?? []) {
+        if (latest.has(r.matched_submission_id!)) continue; // rows are newest-first
+        if (/texascemeterybrokers/i.test(r.from_email ?? "")) latest.set(r.matched_submission_id!, ""); // we replied — not needs-reply
+        else latest.set(r.matched_submission_id!, r.received_at);
+      }
+      for (const [sid, at] of [...latest]) if (!at) latest.delete(sid);
       const results: unknown[] = [];
       let processed = 0;
       for (const [sid, at] of latest) {

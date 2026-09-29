@@ -279,10 +279,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [addOpen, setAddOpen] = useState(false);
   const [priceSheetOpen, setPriceSheetOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [aiPending, setAiPending] = useState<Set<string>>(new Set());
+  const [aiPending, setAiPending] = useState<Map<string, string>>(new Map());
+  const AI_ROW_LABEL: Record<string, string> = {
+    reply_email: "drafted a reply",
+    add_note: "left a status note",
+    flag_human: "needs a person",
+    update_fields: "suggests a detail fix",
+    send_listing_agreement: "ready to send the agreement",
+    resend_signing_link: "can resend the signing link",
+    send_family_tree: "ready to send the family tree",
+    open_document_request: "document request to review",
+    fix_document_request: "suggests fixing the document request",
+  };
   const loadAiPending = useCallback(async () => {
-    const { data } = await supabase.from("ai_agent_actions" as never).select("submission_id").eq("status", "proposed").is("deleted_at", null).limit(500);
-    setAiPending(new Set(((data ?? []) as any[]).map((r) => r.submission_id)));
+    const { data } = await supabase.from("ai_agent_actions" as never).select("submission_id,action_type,reason,created_at").eq("status", "proposed").is("deleted_at", null).order("created_at", { ascending: false }).limit(500);
+    const m = new Map<string, string>();
+    for (const r of (data ?? []) as any[]) {
+      if (m.has(r.submission_id)) continue; // newest first
+      m.set(r.submission_id, AI_ROW_LABEL[r.action_type] ?? "has a suggestion");
+    }
+    setAiPending(m);
   }, []);
   useEffect(() => { loadAiPending(); const t = setInterval(loadAiPending, 60000); return () => clearInterval(t); }, [loadAiPending]);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
@@ -3781,7 +3797,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
-                        {aiPending.has(s.id) && <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/40 shrink-0" title="AI has a suggestion waiting"><Bot className="w-2.5 h-2.5" />AI</span>}
+                        {aiPending.has(s.id) && <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/40 shrink-0" title="The AI has something ready on this record — open it to review"><Bot className="w-3 h-3" />AI can help</span>}
                         {needsReply && (
                           <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
                             Reply
@@ -3804,6 +3820,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </span>
                       </div>
                     </div>
+
+                    {aiPending.has(s.id) && (
+                      <p className="text-xs leading-snug text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                        <Bot className="w-3 h-3 shrink-0" />
+                        <span className="truncate">AI {aiPending.get(s.id)} — open to review</span>
+                      </p>
+                    )}
 
                     {/* Line 2 — plain-language summary */}
                     {(() => {
