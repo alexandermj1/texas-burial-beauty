@@ -3257,7 +3257,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   submissionId={selected.id}
                   pausedAt={(selected as any).ai_paused_at ?? null}
                   customerProfileId={(selected as any).customer_profile_id ?? null}
-                  onOpenQuote={() => setQuoteOpen(true)}
+                  onOpenQuote={(action) => {
+                    if (action?.action_type === "increase_quote_ten_percent") {
+                      setAutoCompose({ templateId: "seller_listing_options", nonce: Date.now() });
+                      setSellerWorkspaceTab("email");
+                      setPendingWorkspaceAnchor(`email-thread-${selected.id}`);
+                    } else setQuoteOpen(true);
+                  }}
                   onOpenDocuments={() => setSellerWorkspaceTab("paperwork")}
                   onRefresh={() => { loadAiPending(); onRefresh?.(); }}
                 />

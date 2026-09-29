@@ -13,7 +13,7 @@ type Props = {
   submissionId: string;
   pausedAt: string | null;
   customerProfileId?: string | null;
-  onOpenQuote: () => void;
+  onOpenQuote: (action?: AiAction) => void;
   onOpenDocuments: () => void;
   onRefresh?: () => void;
 };
@@ -105,7 +105,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
       {pending.map((a) => (
         <AiActionCard key={a.id} action={a} compact onChanged={() => { load(); onRefresh?.(); }}
-          onOpen={(which) => (which === "quote" ? onOpenQuote() : onOpenDocuments())} />
+          onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
       ))}
 
       <div className="flex gap-2">
