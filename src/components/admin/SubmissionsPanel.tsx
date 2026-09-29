@@ -36,7 +36,7 @@ import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as Ai
 import { Bot } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
 
-import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus } from "lucide-react";
+import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus, EyeOff } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -236,6 +236,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  // "Hide buyers" — keeps buyer rows out of the main list so sellers/general
+  // contacts fill the screen. Remembers the choice across visits.
+  const [hideBuyers, setHideBuyers] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("tcb-hide-buyers") === "1";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("tcb-hide-buyers", hideBuyers ? "1" : "0");
+  }, [hideBuyers]);
   const [stageFilter, setStageFilter] = useState<BayerStage | "all">("all");
   // Bayer pipeline is temporarily hidden — submissions panel is Texas-only for now.
   // Keep the state + setter so the rest of the code (cemetery directory, filters,
