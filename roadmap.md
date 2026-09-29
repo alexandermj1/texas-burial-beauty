@@ -102,6 +102,6 @@
 - [x] Phase 1: playbook, seller-only agent, approval inbox (shadow/approval mode)
 - [ ] Phase 2: automatic triggers (new email/note/upload) + scheduled sweep — after a week of reviewing proposals
 - [ ] Phase 3: turn on autonomous sending per action type once approval rates are high
-- [ ] Add guarded 10% quote increases for sellers seeking more, using the existing quote email and acceptance chain
-- [ ] Send an isolated branded quote test to Alexander's address and verify its figures, intro and links
-- [ ] Reduce unnecessary AI input without switching models or dropping relevant context
+- [x] Add guarded 10% quote-increase proposals for sellers seeking more; staff review and send through the existing quote email and acceptance chain
+- [x] Send an isolated branded non-actionable quote preview to Alexander's address with an introduction and verified figures (no live payment links)
+- [x] Reduce unnecessary AI input/output (read scans only when needed; omit unused model reasoning summary) without switching models or dropping relevant context
