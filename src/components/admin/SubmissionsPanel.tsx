@@ -1070,6 +1070,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const matches = submissions.filter(s => {
       // Archived submissions live in their own view and never appear in the pipeline.
       if (archivedView !== !!s.archived_at) return false;
+      // Hide-buyers view: buyer rows stay out unless the admin is explicitly
+      // in the buyers view (typed "buyer" in search or clicked the Buyers toggle).
+      if (hideBuyers && !buyerSearch && resolveKind(s.customer_kind, s.source) === "buyer") return false;
       if (regionFilter !== "all" && subRegion(s) !== regionFilter) return false;
       if (regionFilter === "texas" && cemeteryCanon && !cemeteriesOpen) {
         // Exact match only — a submission only belongs to the clicked cemetery
