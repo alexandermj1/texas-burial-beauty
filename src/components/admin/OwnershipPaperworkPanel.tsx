@@ -20,9 +20,13 @@ import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
 import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
+import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 
 /** States that mean an item needs nothing further from the seller. */
 const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
+const sameCemetery = (a?: string | null, b?: string | null) =>
+  String(a ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+  === String(b ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
@@ -618,9 +622,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const frozen = !!requestedAt && rows.some((r) => r.doc_code && r.doc_code !== "REVIEW");
   const requirements = useMemo(() => {
     if (!frozen) return computedRequirements;
+    // Once staff deliberately reassigns the cemetery, its old C-* forms must
+    // disappear from the next request even though the sent checklist is frozen.
+    const cemeteryChanged = !!(answers as Record<string, unknown>).checklistCemetery
+      && !sameCemetery(String((answers as Record<string, unknown>).checklistCemetery), cemetery ?? "");
     const byKey = new Map(computedRequirements.map((r) => [reqDbKey(r), r]));
     const persisted = rows
-      .filter((r) => r.doc_code && r.doc_code !== "REVIEW")
+      .filter((r) => r.doc_code && r.doc_code !== "REVIEW" && !(cemeteryChanged && r.doc_code.startsWith("C-")))
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
       .map((r) => {
         const match = byKey.get(keyOf(r.doc_code, r.person_name));
@@ -644,7 +652,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const added = computedRequirements.filter((r) => !have.has(reqDbKey(r)));
     return [...persisted, ...added];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frozen, rows, computedRequirements]);
+  }, [frozen, rows, computedRequirements, answers, cemetery]);
 
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
@@ -838,10 +846,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   const persistAnswers = async (next: OwnershipAnswers) => {
     const withEmails = { ...next, people: withKnownEmails(next.people) } as OwnershipAnswers;
-    setAnswers(withEmails);
-    await supabase.from("contact_submissions")
+    const { error } = await supabase.from("contact_submissions")
       .update({ ownership_answers: withEmails as never, ownership_roster: (withEmails.people ?? []) as never })
       .eq("id", submissionId);
+    if (error) throw error;
+    setAnswers(withEmails);
   };
 
 
@@ -1049,11 +1058,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Same requirement, matched loosely on the person's name. */
   const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
 
-  /** Loose comparison of two cemetery names ("Rose Hill Burial Park" ≠ "Rose Hill Memorial Park"). */
-  const sameCemetery = (a?: string | null, b?: string | null) =>
-    String(a ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
-    === String(b ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-
   /**
    * The cemetery on a file can be corrected after the paperwork was built (the
    * seller named the wrong Rose Hill, say). A re-sync has to carry that change
@@ -1074,7 +1078,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       return !!was && !sameCemetery(was, current);
     });
     const markerWas = String((answers as Record<string, unknown>).checklistCemetery ?? "");
-    const changed = drifted.length > 0 || (!!markerWas && !sameCemetery(markerWas, current));
+    const changed = drifted.some((c) => !c.signed_at && !c.notarized_at && !c.completed_at
+      && !["signed", "notarized", "completed"].includes(String(c.status)))
+      || (!!markerWas && !sameCemetery(markerWas, current));
     if (!changed) {
       if (!markerWas) {
         await persistAnswers({ ...answers, checklistCemetery: current } as OwnershipAnswers);
@@ -1502,7 +1508,25 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: { action: "plan_packet", submission_id: submissionId, instruction, items: requirements.map((r) => ({ key: reqKey(r), label: r.label, person: r.personName ?? null })) },
       });
       if (error || data?.error) throw new Error(typeof data?.error === "string" ? data.error : error?.message ?? "AI failed");
-      const plan = data as { add_docs: { kind: string; label: string; why: string; person: string; person2: string; needsNotary: boolean }[]; remove_keys: string[]; plot_description: string; greeting_name: string; email_note: string; page_note: string; reason: string };
+      const plan = data as { add_docs: { kind: string; label: string; why: string; person: string; person2: string; needsNotary: boolean }[]; remove_keys: string[]; cemetery: string; plot_description: string; greeting_name: string; email_note: string; page_note: string; reason: string };
+      const newCemetery = String(plan.cemetery ?? "").trim();
+      const newPlot = String(plan.plot_description ?? "").trim();
+      if (newPlot) {
+        const { data: mislabeled, error: locationError } = await supabase.from("texas_cemeteries")
+          .select("name").ilike("name", newPlot).is("deleted_at", null).limit(1);
+        if (locationError) throw locationError;
+        if (mislabeled?.length || /^(forest lawn hollywood hills|restland memorial park)$/i.test(newPlot))
+          throw new Error(`“${newPlot}” is a cemetery, not a lot or space. Ask the AI to change the cemetery separately.`);
+      }
+      let selectedCemetery: { name: string; city: string | null } | null = null;
+      if (newCemetery && newCemetery !== cemetery) {
+        const { data: matches, error: cemeteryError } = await supabase.from("texas_cemeteries")
+          .select("name,city").ilike("name", newCemetery).is("deleted_at", null).limit(2);
+        if (cemeteryError) throw cemeteryError;
+        if (matches?.length !== 1) throw new Error(`Could not uniquely match “${newCemetery}” to a current cemetery. Choose one with “Match to different cemetery” on the record.`);
+        selectedCemetery = matches[0];
+        if (!window.confirm(`Move this seller from ${cemetery || "the current cemetery"} to ${selectedCemetery.name}? ${newPlot ? `Also replace Locations being sold with “${newPlot}”.` : "The existing plot wording will remain; check that it belongs at the new cemetery."} Unsigned prepared documents will be rebuilt; signed copies stay unchanged.`)) return;
+      }
       const done: string[] = [];
       const next = { ...(answers as Record<string, any>) } as Record<string, any>;
 
@@ -1533,7 +1557,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       }
 
       // Locations being sold
-      const newPlot = plan.plot_description.trim();
       const plotChanged = !!newPlot && newPlot !== plotDescription.trim();
       if (plotChanged) {
         next.autopilot = { ...(next.autopilot ?? {}), plotDescription: newPlot, plotDescriptionUpdatedAt: new Date().toISOString() };
@@ -1542,26 +1565,33 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       next.packetGreeting = plan.greeting_name || greetName.trim();
       next.packetEmailNote = plan.email_note;
-      next.packetNote = plan.page_note;
+      next.packetNote = plan.page_note || (selectedCemetery && (answers.packetNote ?? "").includes(cemetery ?? "")
+        ? (answers.packetNote ?? "").replaceAll(cemetery ?? "", selectedCemetery.name)
+        : plan.page_note);
       await persistAnswers(next as OwnershipAnswers);
-      if (plotChanged) {
+      if (selectedCemetery) {
+        await updateSubmissionCemetery(submissionId, selectedCemetery.name, selectedCemetery.city, plotChanged ? newPlot : undefined);
+        done.push(`matched the cemetery to ${selectedCemetery.name}`);
+        onSent?.();
+      }
+      if (plotChanged && !selectedCemetery) {
         const { error: e } = await supabase.from("contact_submissions").update({ plot_description: newPlot } as never).eq("id", submissionId);
         if (e) throw e;
         await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: newPlot });
-        setPlotDescription(newPlot);
       }
+      if (plotChanged) setPlotDescription(newPlot);
       if (done.length) {
         await supabase.from("customer_notes").insert({ submission_id: submissionId, body: `Updated the document request: ${done.join("; ")}.`, author_name: "AI agent (asked by staff)" } as never);
       }
       await load();
       setGreetName(next.packetGreeting);
       setEmailNote(plan.email_note);
-      setPageNote(plan.page_note);
+      setPageNote(next.packetNote);
       setAiAskOpen(false);
       setAiInstruction("");
       toast.success(done.length ? "AI updated the request" : "AI filled in the notes", { description: plan.reason || "Check it, then preview and send." });
       // Prepared forms fill in the background; preview waits for their PDFs.
-      setTimeout(() => setReview({ step: 1 }), 600);
+       setTimeout(() => setReview({ step: 1 }), 600);
     } catch (e) {
       toast.error("AI couldn't make that change", { description: e instanceof Error ? e.message : String(e) });
     } finally {
@@ -2914,30 +2944,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           })()}
 
           {/* ── Checklist ── */}
-          <div id="document-request-workflow" className="space-y-3 scroll-mt-28 rounded-lg border-2 border-primary/30 bg-primary/[0.04] p-4 shadow-sm">
+          <div id="document-request-workflow" className="min-w-0 space-y-3 scroll-mt-28 rounded-xl border border-[#d8e2eb] bg-[#f7fafd] p-3 sm:p-4 shadow-sm transition-colors duration-200">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <span className="text-sm font-semibold flex items-center gap-1.5"><FileText className="h-4 w-4 text-primary" />Step 2 · Document request</span>
                 <p className="mt-0.5 text-xs text-muted-foreground">Review the exact checklist before it is emailed to the seller.</p>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <Button size="sm" variant="ghost" onClick={() => setAiAskOpen((v) => !v)} className="text-primary">
+              <div className="flex min-w-0 w-full flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setAiAskOpen((v) => !v)} className="h-auto min-h-9 whitespace-normal border-[#bfd2e3] bg-white text-[#254969] hover:bg-[#eef5fa]">
                   ✦ Ask AI to change
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
+                <Button size="sm" variant="outline" onClick={() => setAddDocOpen(true)} className="h-auto min-h-9 whitespace-normal bg-white">
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
                 </Button>
-                <Button size="sm" variant="ghost" onClick={openPacketLink} title="Open the seller's document page in a new tab">
+                <Button size="sm" variant="outline" onClick={openPacketLink} title="Open the seller's document page in a new tab" className="h-auto min-h-9 whitespace-normal bg-white">
                   <Link2 className="w-3.5 h-3.5 mr-1" />Open seller page
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => void syncChecklist()} disabled={saving}>
+                <Button size="sm" variant="outline" onClick={() => void syncChecklist()} disabled={saving} className="h-auto min-h-9 whitespace-normal bg-white">
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
                   Sync checklist
                 </Button>
                 <Button
                   size="sm"
-                  className={requestedAt ? "bg-emerald-600 hover:bg-emerald-700 text-primary-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
+                  className="h-auto min-h-9 max-w-full whitespace-normal bg-[#254969] text-white hover:bg-[#1f3d59] sm:ml-auto"
                   onClick={() => setReview({ step: 1 })}
                   disabled={sending || !sellerEmail}
                   title={requestedAt

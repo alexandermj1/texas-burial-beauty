@@ -31,12 +31,12 @@ export async function rebuildUnsignedSubmissionDocuments(
       ...fillData,
       ...(changes.cemetery ? { cemetery: changes.cemetery } : {}),
       ...(countyState ? { county_state: countyState, county: countyState } : {}),
-      ...(changes.plotDescription ? { plot_description: changes.plotDescription } : {}),
+      ...(changes.plotDescription !== undefined ? { plot_description: changes.plotDescription } : {}),
       supersede_contract_id: contract.id,
     };
 
     const unchanged = (!changes.cemetery || String(fillData.cemetery ?? "").trim() === changes.cemetery.trim())
-      && (!changes.plotDescription || String(fillData.plot_description ?? "").trim() === changes.plotDescription.trim())
+      && (changes.plotDescription === undefined || String(fillData.plot_description ?? "").trim() === changes.plotDescription.trim())
       && (!countyState || String(fillData.county_state ?? fillData.county ?? "").trim() === countyState);
     if (unchanged) continue;
 

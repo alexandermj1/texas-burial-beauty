@@ -139,6 +139,29 @@
   }
 }
 
+/* Seller's private document workspace: the navy from our correspondence,
+   scoped so the public site's sage/terracotta identity stays untouched. */
+.seller-documents {
+  --background: 210 25% 99%;
+  --foreground: 213 28% 17%;
+  --card: 0 0% 100%;
+  --muted: 210 22% 95%;
+  --muted-foreground: 211 15% 39%;
+  --border: 210 18% 85%;
+  --input: 210 18% 85%;
+  --primary: 209 54% 32%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 209 54% 32%;
+  --accent: 16 40% 58%;
+}
+.seller-documents :is(.rounded-2xl, .rounded-xl, .rounded-full) { border-radius: 8px; }
+.seller-documents h1, .seller-documents .font-display { font-family: "DM Sans", sans-serif; letter-spacing: 0; }
+.seller-documents :is(button, a, summary) { transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease; }
+.seller-documents :is(button, a, summary):focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .seller-documents :is(button, a, summary) { transition: none; }
+}
+
 @layer base {
   * {
     @apply border-border;

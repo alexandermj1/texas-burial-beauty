@@ -434,10 +434,10 @@ async function checkDeed(db: SupabaseClient, apiKey: string, sub: Sub) {
 
 const PLAN_GUIDE = `A staff member tells you, in plain words, what to change on a seller's document request. Turn it into changes our admin screen applies with its normal tools. Return ONLY JSON:
 {"add_docs": [{"kind": "poa"|"joint_poa"|"affidavit_heirship"|"custom", "label": string ("" = standard name), "person": string (poa: who signs it; joint_poa: first signer), "person2": string (joint_poa second signer, else ""), "why": string (one plain sentence the seller sees), "needsNotary": boolean}],
- "remove_keys": string[] (exact keys from CURRENT CHECKLIST to take off), "plot_description": string (new exact plot wording, "" = no change, e.g. "Garden of Memories · Lot 12 · Spaces 3 & 4"),
+  "remove_keys": string[] (exact keys from CURRENT CHECKLIST to take off), "cemetery": string (new cemetery name ONLY when staff explicitly asks to change the cemetery, otherwise ""), "plot_description": string (new exact locations-being-sold wording ONLY when staff asks to change the plot/lot/space, "" = no change, e.g. "Garden of Memories · Lot 12 · Spaces 3 & 4"),
  "greeting_name": string, "email_note": string, "page_note": string, "reason": string (one short sentence for staff)}
 Kinds: poa = Limited POA to Texas Cemetery Brokers (we prepare it, notarised); joint_poa = one POA two spouses sign; affidavit_heirship = Affidavit of Heirship we prepare; custom = anything else the seller sends us (death certificate, marriage certificate, will, letters testamentary, divorce decree, photo ID, small estate affidavit, etc.) - give it a clear label and set needsNotary only if it must be notarised.
-Only do what staff asked; never add documents on your own. Never add a duplicate of an item already listed. When the request changes, email_note briefly says what changed since the last email (e.g. "We have added ... and updated the plot wording to ...").`;
+ A cemetery is NOT a plot description. "Forest Lawn Hollywood Hills" and "Bluebonnet Hills Memorial Park" are cemetery names: return them in cemetery, never plot_description. If staff asks to change the cemetery but gives no new lot/space wording, return plot_description as "". Never infer a cemetery change from a seller's request to change the plot wording; staff must explicitly ask for it. Only do what staff asked; never add documents on your own. Never add a duplicate of an item already listed. When the request changes, email_note briefly says what changed since the last email (e.g. "We have added ... and updated the plot wording to ...").`;
 
 const PACKET_GUIDE = `You fill in the three fields on our "Check the request" screen before a document request email goes to a seller.
 - greeting_name: the first name used after "Dear". Use the enquirer's real first name (from their own email sign-off if it differs from the record, e.g. "Don" for Donald). Never a surname, never "there" unless no name exists.
@@ -506,7 +506,7 @@ Deno.serve(async (req) => {
       const playbook = await loadPlaybook(db);
       const ctx = await buildContext(db, sub);
       const raw = await callModel(apiKey, `${PLAN_GUIDE}\n\n${PACKET_GUIDE.split("Return ONLY JSON")[0]}\n\nPLAYBOOK:\n${playbook.content}`,
-        `STAFF INSTRUCTION: ${body.instruction}\n\nCURRENT CHECKLIST (key | label | person):\n${body.items.map((i: any) => `${i.key} | ${i.label} | ${i.person ?? ""}`).join("\n")}\n\nCURRENT PLOT WORDING: ${sub.plot_description ?? "(empty)"}\n\n${ctx.context}`, "low");
+        `STAFF INSTRUCTION: ${body.instruction}\n\nCURRENT CHECKLIST (key | label | person):\n${body.items.map((i: any) => `${i.key} | ${i.label} | ${i.person ?? ""}`).join("\n")}\n\nCURRENT CEMETERY: ${sub.cemetery ?? "(empty)"}\nCURRENT LOCATIONS BEING SOLD: ${sub.plot_description ?? "(empty)"}\n\n${ctx.context}`, "low");
       const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
       const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
       const kinds = ["poa", "joint_poa", "affidavit_heirship", "custom"];
@@ -516,6 +516,7 @@ Deno.serve(async (req) => {
           kind: d.kind, label: clip(d.label ?? "", 200), why: clip(d.why ?? "", 400), person: clip(d.person ?? "", 120), person2: clip(d.person2 ?? "", 120), needsNotary: !!d.needsNotary,
         })).filter((d: any) => (d.kind !== "poa" || d.person) && (d.kind !== "joint_poa" || (d.person && d.person2)) && (d.kind !== "custom" || d.label)),
         remove_keys: (Array.isArray(r.remove_keys) ? r.remove_keys : []).map(String).filter((k: string) => keys.has(k)),
+        cemetery: clip(r.cemetery ?? "", 200),
         plot_description: clip(r.plot_description ?? "", 300),
         greeting_name: clip(r.greeting_name, 60), email_note: String(r.email_note ?? "").trim().slice(0, 1500), page_note: String(r.page_note ?? "").trim().slice(0, 1000),
         reason: clip(r.reason, 300),

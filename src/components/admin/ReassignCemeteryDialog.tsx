@@ -7,7 +7,7 @@ import { X, Search, Building2, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
-import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
+import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 
 interface Props {
   open: boolean;
@@ -76,35 +76,7 @@ const ReassignCemeteryDialog = ({ open, onClose, submissionId, currentCemetery, 
     if (row.name === currentCemetery) { onClose(); return; }
     setSaving(row.id);
     try {
-      const { data: sub, error: fetchErr } = await supabase
-        .from("contact_submissions" as any)
-        .select("cemetery, cemetery_original, cemetery_merge_history")
-        .eq("id", submissionId)
-        .maybeSingle();
-      if (fetchErr) throw fetchErr;
-      const prevCemetery = (sub as any)?.cemetery || currentCemetery || "";
-      const prevHistory = Array.isArray((sub as any)?.cemetery_merge_history)
-        ? (sub as any).cemetery_merge_history
-        : [];
-      const patch: any = {
-        cemetery: row.name,
-        cemetery_merge_history: [
-          ...prevHistory,
-          { at: new Date().toISOString(), from: prevCemetery, to: row.name, kind: "reassign" },
-        ],
-      };
-      if (!(sub as any)?.cemetery_original && (customerOriginal || prevCemetery)) {
-        patch.cemetery_original = customerOriginal || prevCemetery;
-      }
-      const { error } = await supabase
-        .from("contact_submissions" as any)
-        .update(patch)
-        .eq("id", submissionId);
-      if (error) throw error;
-      const rebuilt = await rebuildUnsignedSubmissionDocuments(submissionId, {
-        cemetery: row.name,
-        cemeteryCity: row.city,
-      });
+      const rebuilt = await updateSubmissionCemetery(submissionId, row.name, row.city);
       toast({
         title: "Cemetery updated everywhere",
         description: rebuilt
