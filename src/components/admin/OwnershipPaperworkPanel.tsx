@@ -1461,6 +1461,27 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
 
+  const [aiFilling, setAiFilling] = useState(false);
+  /** Ask the seller AI to fill the greeting and both notes (staff still preview and send). */
+  const fillPacketWithAi = async () => {
+    setAiFilling(true);
+    try {
+      const { items } = await buildPacketPayload();
+      const { data, error } = await supabase.functions.invoke("seller-agent", {
+        body: { action: "prepare_packet", submission_id: submissionId, items: items.map((i: any) => ({ label: String(i.label ?? ""), person: i.person ?? null, needsNotary: !!i.needsNotary })) },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      if (data.greeting_name) setGreetName(data.greeting_name);
+      setEmailNote(data.email_note ?? "");
+      setPageNote(data.page_note ?? "");
+      toast.success("AI filled in the greeting and notes", { description: data.reason || "Check them, then preview the email." });
+    } catch (e) {
+      toast.error("AI couldn't fill this in", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setAiFilling(false);
+    }
+  };
+
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {
     await persistAnswers({
@@ -3309,6 +3330,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           {review?.step === 1 && (
             <div className="space-y-3 max-h-[65vh] overflow-y-auto">
               <div className="rounded-md border p-3 space-y-2.5">
+                <div className="flex justify-end">
+                  <Button type="button" size="sm" variant="outline" onClick={fillPacketWithAi} disabled={aiFilling} className="h-7 text-xs">
+                    {aiFilling ? "AI is filling in…" : "✦ Fill with AI"}
+                  </Button>
+                </div>
                 <div>
                   <p className="text-xs font-semibold">Who the email greets</p>
                   <p className="text-[11px] text-muted-foreground mb-1.5">

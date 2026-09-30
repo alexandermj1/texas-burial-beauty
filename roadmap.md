@@ -105,4 +105,4 @@
 - [x] Add guarded 10% quote-increase proposals for sellers seeking more; staff review and send through the existing quote email and acceptance chain
 - [x] Send an isolated branded non-actionable quote preview to Alexander's address with an introduction and verified figures (no live payment links)
 - [x] Reduce unnecessary AI input/output (read scans only when needed; omit unused model reasoning summary) without switching models or dropping relevant context
-- [ ] AI: never auto-suggest document requests; keep ability to send them (with greeting/email note/page note) when staff ask
+- [x] AI: never auto-suggest document requests; keep ability to send them (with greeting/email note/page note) when staff ask
