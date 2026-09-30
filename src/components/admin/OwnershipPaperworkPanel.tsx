@@ -1555,6 +1555,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       next.packetGreeting = plan.greeting_name || greetName.trim();
       next.packetEmailNote = plan.email_note;
       next.packetNote = plan.page_note;
+       await persistAnswers(next as OwnershipAnswers);
        if (newCemetery && newCemetery !== cemetery) {
          const { data: selectedCemetery } = await supabase.from("texas_cemeteries")
            .select("name,city").ilike("name", newCemetery).is("deleted_at", null).maybeSingle();
@@ -1562,7 +1563,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
          await updateSubmissionCemetery(submissionId, selectedCemetery.name, selectedCemetery.city, plotChanged ? newPlot : undefined);
          done.push(`matched the cemetery to ${selectedCemetery.name}`);
        }
-       await persistAnswers(next as OwnershipAnswers);
        if (plotChanged && (!newCemetery || newCemetery === cemetery)) {
         const { error: e } = await supabase.from("contact_submissions").update({ plot_description: newPlot } as never).eq("id", submissionId);
         if (e) throw e;
