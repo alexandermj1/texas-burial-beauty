@@ -19,6 +19,10 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional() }),
   z.object({ action: z.literal("execute"), action_id: z.string().uuid() }),
   z.object({ action: z.literal("reject"), action_id: z.string().uuid() }),
+  z.object({ action: z.literal("prepare_packet"), submission_id: z.string().uuid(), items: z.array(z.object({ label: z.string().max(300), person: z.string().max(200).nullable().optional(), needsNotary: z.boolean().optional() })).max(40).optional() }),
+  z.object({ action: z.literal("verify_deed"), submission_id: z.string().uuid() }),
+  // Staff ask the AI to do one step now (still runs the exact staff code path).
+  z.object({ action: z.literal("do"), submission_id: z.string().uuid(), type: z.enum(["send_listing_agreement", "resend_signing_link", "send_family_tree"]) }),
 ]);
 
 type Sub = Record<string, any>;
@@ -140,7 +144,8 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (accepted && !signed && !la.some((c) => ["sent", "viewed"].includes(c.status))) out.add("send_listing_agreement");
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
-  if (answers.sellerConfirmedAt && !sub.documents_completed_at) out.add("open_document_request");
+  // Document requests are never proposed automatically — staff trigger them
+  // ("Fill with AI" on the Check the request screen).
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   return { allowed: out, liveLink };
@@ -158,7 +163,6 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - update_quote_spaces: simple quote corrections, ONLY when the seller (or the deed scan) shows the quote has the wrong spaces in the SAME section/lawn — they want to add a space, take one out, or we copied the space numbers/count from the deed wrongly. The per-space price stays EXACTLY the same; only the count / space numbers change. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and opens the normal Send quote screen prefilled, so staff send it exactly like any quote (listing agreement and family tree follow as usual). Put a one-line summary in reason (e.g. "Adds space 5 in Section 12 at the same $2,100 per space"). Do NOT also write a reply_email.
  - increase_quote_ten_percent: ONLY when a seller clearly asks for a higher quote, an existing unaccepted quote is on file, and this action is ALLOWED NOW. Propose it with one short reason and body as a SHORT introductory paragraph above the quote explaining we revisited their request. The server calculates the exact 10% increase and strictly checks the 70%-of-retail buyer total including the transfer fee and 15% buyer fee. Staff approval opens the normal seller quote packet; it is not emailed until staff checks the price, deed owners, property description and presses Send. Never propose for a plain decline, an existing accepted quote, a demand for a specific different figure, a price dispute/complaint, or a plot-count discrepancy. Never pair it with reply_email.
  - Quotes: apart from resend_quote_free_listing, update_quote_spaces and increase_quote_ten_percent you NEVER send or propose quotes or valuations. New valuations, a different section/garden, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
-- open_document_request: opens the staff document-request review for this seller (items, POAs and packet are built by the rules engine). Use when the family tree is complete and a request should go out or be updated. Put what should change in note.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
@@ -405,6 +409,33 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   }
 }
 
+/** Reads the deed scan and checks it against the names/plot wording the family tree
+ *  starts from. Fills empty fields from a clearly readable deed; reports conflicts. */
+async function checkDeed(db: SupabaseClient, apiKey: string, sub: Sub) {
+  const scans = await loadScans(db, sub);
+  if (!scans.parts.length) return { status: "no_deed" as const, summary: "No readable deed scan on file." };
+  const raw = await callModel(apiKey,
+    `You read a Texas cemetery deed / certificate of ownership and compare it with our record. Return ONLY JSON: {"readable": boolean, "is_deed": boolean, "owners": string[] (each grantee exactly as written, e.g. "Edward or Patricia Behne" is ONE entry), "plot_wording": string (e.g. "Section Garden of David · Lot 108 · Space 3 & 4"), "owners_match": boolean, "plot_match": boolean, "later_transfer": boolean (the scans show the rights were later transferred to someone else), "summary": string (one plain sentence for staff)}. Matching ignores case, punctuation, "and"/"or"/"&" and middle initials. If the record field is empty, set its match to true. Never guess from a blurry scan: set readable false.`,
+    `RECORD deed_owner_names: ${sub.deed_owner_names ?? "(empty)"}\nRECORD plot_description: ${sub.plot_description ?? "(empty)"}\nSCANS: ${scans.names.join("; ")}`,
+    "low", scans.parts);
+  const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
+  const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+  if (!r.readable || !r.is_deed) return { status: "no_deed" as const, summary: String(r.summary ?? "The deed scan could not be read.") };
+  if (r.later_transfer || !r.owners_match || !r.plot_match) return { status: "conflict" as const, summary: String(r.summary ?? "The deed does not match the record.") };
+  const patch: Record<string, string> = {};
+  const owners = Array.isArray(r.owners) ? r.owners.map(String).filter(Boolean).join(" & ") : "";
+  if (!String(sub.deed_owner_names ?? "").trim() && owners) patch.deed_owner_names = owners;
+  if (!String(sub.plot_description ?? "").trim() && r.plot_wording) patch.plot_description = String(r.plot_wording);
+  if (Object.keys(patch).length) await db.from("contact_submissions").update(patch).eq("id", sub.id);
+  return { status: Object.keys(patch).length ? "filled" as const : "match" as const, summary: String(r.summary ?? ""), patch };
+}
+
+const PACKET_GUIDE = `You fill in the three fields on our "Check the request" screen before a document request email goes to a seller.
+- greeting_name: the first name used after "Dear". Use the enquirer's real first name (from their own email sign-off if it differs from the record, e.g. "Don" for Donald). Never a surname, never "there" unless no name exists.
+- email_note: OPTIONAL short paragraph shown above the button in the email. Leave "" for a routine request. Only write 1-3 plain sentences when something needs explaining, e.g. a prepared Limited POA that must be signed in front of a notary and posted as a wet-ink original, a joint POA both spouses sign together, or a correction since an earlier request. Warm, not personal-sounding, no invented anecdotes, no urgency.
+- page_note: OPTIONAL note at the top of their document page. Leave "" when nothing special. Otherwise one or two sentences of practical guidance, e.g. "Please sign the power of attorney in front of a notary, not beforehand, then post the original to the address below."
+Follow the playbook tone. Never mention prices, fees you are unsure of, legal advice, or anything not in the record. Return ONLY JSON {"greeting_name": string, "email_note": string, "page_note": string, "reason": string (one short sentence for staff)}.`;
+
 /** Call another edge function as the system — the same functions staff buttons call. */
 async function callInternal(url: string, name: string, body: unknown): Promise<Record<string, any>> {
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -429,7 +460,8 @@ Deno.serve(async (req) => {
 
     const parsed = Body.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
-    const body = parsed.data;
+    let body = parsed.data as any;
+    let staffRequested = false;
 
     if (body.action === "run") {
       try {
@@ -438,6 +470,25 @@ Deno.serve(async (req) => {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
       }
+    }
+
+    if (body.action === "verify_deed") {
+      const { data: sub } = await db.from("contact_submissions").select("*").eq("id", body.submission_id).maybeSingle();
+      if (!sub) return json({ error: "Seller not found" }, 404);
+      return json(await checkDeed(db, apiKey, sub));
+    }
+
+    if (body.action === "prepare_packet") {
+      const { data: sub } = await db.from("contact_submissions").select("*").eq("id", body.submission_id).maybeSingle();
+      if (!sub || !isSeller(sub)) return json({ error: "Not a seller" }, 400);
+      const playbook = await loadPlaybook(db);
+      const ctx = await buildContext(db, sub);
+      const raw = await callModel(apiKey, `${PACKET_GUIDE}\n\nPLAYBOOK:\n${playbook.content}`, `ITEMS THIS REQUEST WILL ASK FOR:\n${JSON.stringify(body.items ?? [])}\n\n${ctx.context}`, "low");
+      const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
+      const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+      const out = { greeting_name: clip(r.greeting_name, 60), email_note: String(r.email_note ?? "").trim().slice(0, 1500), page_note: String(r.page_note ?? "").trim().slice(0, 1000), reason: clip(r.reason, 200) };
+      await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: "AI filled in the document request greeting and notes", details: out });
+      return json(out);
     }
 
     if (body.action === "sweep") {
@@ -472,6 +523,20 @@ Deno.serve(async (req) => {
         }
       }
       return json({ ok: true, processed, results });
+    }
+
+    if (body.action === "do") {
+      const { data: sub } = await db.from("contact_submissions").select("*").eq("id", body.submission_id).maybeSingle();
+      if (!sub) return json({ error: "Seller not found" }, 404);
+      const { data: cs } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
+      const { allowed } = allowedActions(sub, cs ?? []);
+      const signed = !!sub.la_signed_at;
+      if (!allowed.has(body.type) && !(body.type === "send_family_tree" && signed)) return json({ error: `That step doesn't apply to this record right now (${body.type.replace(/_/g, " ")}).` }, 409);
+      const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger: "staff_request", status: "done", stage_summary: `Staff asked the AI to ${body.type.replace(/_/g, " ")}`, confidence: 1 }).select("id").single();
+      const { data: row, error: insErr } = await db.from("ai_agent_actions").insert({ run_id: run!.id, submission_id: sub.id, action_type: body.type, reason: `Requested by ${user.name}`, confidence: 1 }).select("id").single();
+      if (insErr) return json({ error: insErr.message }, 500);
+      staffRequested = true;
+      body = { action: "execute", action_id: row!.id };
     }
 
     const { data: act } = await db.from("ai_agent_actions").select("*").eq("id", body.action_id).maybeSingle();
@@ -511,9 +576,18 @@ Deno.serve(async (req) => {
       // Re-check against the record as it is NOW — it may have moved on since the proposal.
       const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
-      if (!allowed.has(act.action_type)) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
+      if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
       const aiNote = async (body: string) => { await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body, author_name: `AI agent (approved by ${user.name})` }); };
       try {
+        if (act.action_type === "send_listing_agreement" || act.action_type === "send_family_tree") {
+          // The family tree starts from the deed owners — make sure they are right first.
+          const chk = await checkDeed(db, apiKey, sub);
+          if (chk.status === "conflict") throw new Error(`Deed check stopped this: ${chk.summary} Fix the deed owner names / plot wording, then approve again.`);
+          const { data: fresh } = await db.from("contact_submissions").select("deed_owner_names,plot_description").eq("id", sub.id).maybeSingle();
+          if (!String(fresh?.deed_owner_names ?? "").trim() || !String(fresh?.plot_description ?? "").trim()) throw new Error("Deed owner names and the exact plot wording must be filled in before the agreement or family tree goes out.");
+          if (chk.status === "filled") await aiNote(`Read the deed and filled in ${Object.keys(chk.patch ?? {}).map((k) => FIELD_LABEL[k] ?? k).join(" and ")}: ${chk.summary}`);
+          else if (chk.status === "match") await aiNote(`Checked the deed against the record before sending — ${chk.summary}`);
+        }
         if (act.action_type === "send_listing_agreement") {
           const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "listing_agreement" });
           if (r.status !== "sent") throw new Error(`Listing agreement not sent: ${r.reason ?? r.status}`);
@@ -522,7 +596,7 @@ Deno.serve(async (req) => {
           await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${liveLink.sign_token}` });
           await aiNote(`Re-sent ${first(sub)} the link to sign the listing agreement.`);
         } else if (act.action_type === "send_family_tree") {
-          const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree" });
+          const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree", ...(staffRequested ? { force: true } : {}) });
           if (r.status !== "sent") throw new Error(`Family tree not sent: ${r.reason ?? r.status}`);
           await aiNote(`Sent ${first(sub)} the family tree questionnaire.`);
         } else if (act.action_type === "update_fields") {
