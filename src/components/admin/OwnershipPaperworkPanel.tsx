@@ -20,6 +20,7 @@ import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
 import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
+import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 
 /** States that mean an item needs nothing further from the seller. */
 const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
@@ -1502,7 +1503,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: { action: "plan_packet", submission_id: submissionId, instruction, items: requirements.map((r) => ({ key: reqKey(r), label: r.label, person: r.personName ?? null })) },
       });
       if (error || data?.error) throw new Error(typeof data?.error === "string" ? data.error : error?.message ?? "AI failed");
-      const plan = data as { add_docs: { kind: string; label: string; why: string; person: string; person2: string; needsNotary: boolean }[]; remove_keys: string[]; plot_description: string; greeting_name: string; email_note: string; page_note: string; reason: string };
+       const plan = data as { add_docs: { kind: string; label: string; why: string; person: string; person2: string; needsNotary: boolean }[]; remove_keys: string[]; cemetery: string; plot_description: string; greeting_name: string; email_note: string; page_note: string; reason: string };
+       const newCemetery = String(plan.cemetery ?? "").trim();
+       const newPlot = String(plan.plot_description ?? "").trim();
+       if (newPlot && !/\b(section|garden|lawn|lot|space|block|crypt|niche|tier|plot|grave)\b/i.test(newPlot)) {
+         throw new Error(`“${newPlot}” looks like a cemetery name, not a plot location. Ask the AI to change the cemetery separately and give the lot/space wording.`);
+       }
+       if (newCemetery && newCemetery !== cemetery) {
+         const { data: matches, error: cemeteryError } = await supabase.from("texas_cemeteries")
+           .select("name,city").ilike("name", newCemetery).is("deleted_at", null).limit(2);
+         if (cemeteryError) throw cemeteryError;
+         if (matches?.length !== 1) throw new Error(`Could not uniquely match “${newCemetery}” to a current cemetery. Choose one with “Match to different cemetery” on the record.`);
+         if (!window.confirm(`Move this seller from ${cemetery || "the current cemetery"} to ${matches[0].name}? ${newPlot ? `Also replace Locations being sold with “${newPlot}”.` : "The existing plot wording will remain; check that it belongs at the new cemetery."} Unsigned prepared documents will be rebuilt; signed copies stay unchanged.`)) return;
+       }
       const done: string[] = [];
       const next = { ...(answers as Record<string, any>) } as Record<string, any>;
 
@@ -1533,7 +1546,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       }
 
       // Locations being sold
-      const newPlot = plan.plot_description.trim();
       const plotChanged = !!newPlot && newPlot !== plotDescription.trim();
       if (plotChanged) {
         next.autopilot = { ...(next.autopilot ?? {}), plotDescription: newPlot, plotDescriptionUpdatedAt: new Date().toISOString() };
@@ -1543,13 +1555,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       next.packetGreeting = plan.greeting_name || greetName.trim();
       next.packetEmailNote = plan.email_note;
       next.packetNote = plan.page_note;
-      await persistAnswers(next as OwnershipAnswers);
-      if (plotChanged) {
+       if (newCemetery && newCemetery !== cemetery) {
+         const { data: selectedCemetery } = await supabase.from("texas_cemeteries")
+           .select("name,city").ilike("name", newCemetery).is("deleted_at", null).maybeSingle();
+         if (!selectedCemetery) throw new Error("Cemetery is no longer available.");
+         await updateSubmissionCemetery(submissionId, selectedCemetery.name, selectedCemetery.city, plotChanged ? newPlot : undefined);
+         done.push(`matched the cemetery to ${selectedCemetery.name}`);
+       }
+       await persistAnswers(next as OwnershipAnswers);
+       if (plotChanged && (!newCemetery || newCemetery === cemetery)) {
         const { error: e } = await supabase.from("contact_submissions").update({ plot_description: newPlot } as never).eq("id", submissionId);
         if (e) throw e;
         await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: newPlot });
-        setPlotDescription(newPlot);
       }
+       if (plotChanged) setPlotDescription(newPlot);
       if (done.length) {
         await supabase.from("customer_notes").insert({ submission_id: submissionId, body: `Updated the document request: ${done.join("; ")}.`, author_name: "AI agent (asked by staff)" } as never);
       }
@@ -1561,7 +1580,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setAiInstruction("");
       toast.success(done.length ? "AI updated the request" : "AI filled in the notes", { description: plan.reason || "Check it, then preview and send." });
       // Prepared forms fill in the background; preview waits for their PDFs.
-      setTimeout(() => setReview({ step: 1 }), 600);
+       setTimeout(() => setReview({ step: 1 }), 600);
     } catch (e) {
       toast.error("AI couldn't make that change", { description: e instanceof Error ? e.message : String(e) });
     } finally {
