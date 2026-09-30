@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import { openFileViewer } from "@/lib/fileViewer";
-import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 
 /**
  * One curated page per seller, linked from a single email. Every document we
@@ -98,11 +97,6 @@ const openPrivateFile = async (url: string, setError: (message: string) => void)
 /* Small shared pieces of the design system used across this page              */
 /* -------------------------------------------------------------------------- */
 
-/** A quiet, rounded surface — the single card treatment used everywhere. */
-const Panel = ({ className = "", children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`rounded-2xl border border-border/60 bg-card/60 backdrop-blur-[2px] ${className}`}>{children}</div>
-);
-
 /** Section heading with the small uppercase eyebrow used across the brand. */
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <div className="text-[10px] tracking-[0.28em] uppercase text-primary/80">{children}</div>
@@ -166,7 +160,7 @@ const UploadGrid = ({
           className="group relative block aspect-square sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
           title={u.name}
         >
-          <button type="button" onClick={() => onOpen(u)} className="absolute inset-0 z-0" aria-label={`Open ${u.name}`} />
+          <Button variant="ghost" type="button" onClick={() => onOpen(u)} className="absolute inset-0 z-0 h-full w-full rounded-none" aria-label={`Open ${u.name}`} />
           {u.isImage ? (
             <img src={u.url} alt={alt} className="w-full h-full object-cover group-hover:opacity-90" />
           ) : (
@@ -174,7 +168,7 @@ const UploadGrid = ({
               <FileText className="w-5 h-5 text-primary" /> View file
             </span>
           )}
-          <button
+          <Button variant="ghost" size="icon"
             type="button"
             onClick={() => onRemove(u)}
             className="absolute z-10 top-1 right-1 rounded-full bg-background/90 p-1.5 text-destructive shadow"
@@ -182,7 +176,7 @@ const UploadGrid = ({
             aria-label={`Remove ${u.name}`}
           >
             <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       ))}
     </div>
