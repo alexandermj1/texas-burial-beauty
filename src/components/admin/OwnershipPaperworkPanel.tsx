@@ -1946,7 +1946,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       void setRowState(r, "issued").then(() => load());
     } catch (e) {
       setGenFailed((s) => new Set(s).add(reqKey(r)));
-      if (!silent) toast.error((e as Error).message);
+      toast.error(`${r.label} could not be prepared`, { description: (e as Error).message });
     } finally {
       setBusy(null);
     }
@@ -3546,6 +3546,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   })}
                 </div>
               )}
+
+              {outstanding.filter((r) => r.contractKind === "affidavit_heirship").map((r) => {
+                const prepared = contracts.some((c) => c.kind === "affidavit_heirship" && c.status !== "void");
+                return (
+                  <div key={reqKey(r)} className="rounded-md border p-3 space-y-2">
+                    <p className="text-xs font-semibold">{r.label}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {prepared ? "Blank affidavit prepared for the family to complete and sign before a notary. The PDF will be attached to the email." : genFailed.has(reqKey(r)) ? "The PDF could not be prepared. Prepare it before sending." : "Preparing the blank affidavit PDF…"}
+                    </p>
+                    <div className="flex gap-2">
+                      {prepared ? <Button size="sm" variant="outline" onClick={() => void openContractPdf(r)}>Check the affidavit</Button>
+                        : genFailed.has(reqKey(r)) ? <Button size="sm" variant="outline" onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>Prepare affidavit</Button> : null}
+                    </div>
+                  </div>
+                );
+              })}
 
 
               <div className="rounded-md border p-3">
