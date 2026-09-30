@@ -1080,7 +1080,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       return !!was && !sameCemetery(was, current);
     });
     const markerWas = String((answers as Record<string, unknown>).checklistCemetery ?? "");
-    const changed = drifted.length > 0 || (!!markerWas && !sameCemetery(markerWas, current));
+    const changed = drifted.some((c) => !c.signed_at && !c.notarized_at && !c.completed_at
+      && !["signed", "notarized", "completed"].includes(String(c.status)))
+      || (!!markerWas && !sameCemetery(markerWas, current));
     if (!changed) {
       if (!markerWas) {
         await persistAnswers({ ...answers, checklistCemetery: current } as OwnershipAnswers);
