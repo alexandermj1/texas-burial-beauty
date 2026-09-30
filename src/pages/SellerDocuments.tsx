@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import { openFileViewer } from "@/lib/fileViewer";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
@@ -134,11 +135,11 @@ const Action = ({
   children: React.ReactNode;
   full?: boolean;
 }) => (
-  <button
+  <Button
     type="button"
     onClick={onClick}
     disabled={disabled}
-    className={`inline-flex items-center justify-center gap-1.5 text-[13px] font-medium rounded-full min-h-[44px] px-4 transition-colors disabled:opacity-60 ${
+    className={`h-auto min-h-11 min-w-0 max-w-full whitespace-normal text-center leading-snug text-[13px] font-medium rounded-md px-4 py-2 transition-colors disabled:opacity-60 ${
       full ? "w-full sm:w-auto" : ""
     } ${
       variant === "primary"
@@ -147,7 +148,7 @@ const Action = ({
     }`}
   >
     {Icon && <Icon className="w-4 h-4" />}{children}
-  </button>
+  </Button>
 );
 
 /** Thumbnails of everything already sent for one item. */
@@ -228,10 +229,11 @@ const MailTick = ({
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={toggle}
       disabled={saving}
-      className={`mt-3 w-full text-left inline-flex items-start gap-2.5 rounded-xl border px-4 py-3 min-h-[44px] transition-colors disabled:opacity-60 ${
+      className={`mt-3 w-full h-auto whitespace-normal text-left justify-start inline-flex items-start gap-2.5 rounded-md border px-4 py-3 min-h-[44px] transition-colors disabled:opacity-60 ${
         confirmed ? "border-primary/40 bg-primary/[0.06]" : "border-border/70 bg-card/70 hover:border-primary/40"
       }`}
     >
@@ -243,7 +245,7 @@ const MailTick = ({
           ? "Thank you — we've told our team to expect the original in the post."
           : "Tick here to confirm you're posting the original to us."}
       </span>
-    </button>
+    </Button>
   );
 };
 
@@ -586,12 +588,12 @@ const DocRow = ({
               {!done && doc.mail_to && <Chip tone="accent" icon={Mail}>Original by post</Chip>}
 
               {guide && (
-                <button
+                <Button variant="ghost" size="sm" type="button"
                   onClick={() => setExpanded((v) => !v)}
                   className="text-[11px] text-primary inline-flex items-center gap-1 hover:underline py-1"
                 >
                   What is this? <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
-                </button>
+                </Button>
               )}
             </div>
 
@@ -758,16 +760,10 @@ const SellerDocuments = () => {
   const firstName = packet?.seller_name ? packet.seller_name.split(" ")[0] : "";
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Soft brand wash, kept behind everything and out of the way on phones */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-primary/[0.07] via-primary/[0.02] to-transparent" />
-      <div
-        className="hidden sm:block absolute -top-20 -right-20 w-80 h-80 opacity-[0.16] pointer-events-none"
-        style={{ backgroundImage: `url(${hibiscusCoral.url})`, backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
-      />
+    <div className="seller-documents min-h-screen bg-background text-foreground">
 
       {/* Sticky progress header — always tells the seller where they are */}
-      <header className="sticky top-0 z-30 border-b border-border/50 bg-background/85 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <div className="text-[9px] sm:text-[10px] tracking-[0.26em] uppercase text-primary/80 truncate">
@@ -795,21 +791,30 @@ const SellerDocuments = () => {
         </div>
       </header>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-24">
-        <div className="flex flex-col lg:flex-row lg:gap-10 xl:gap-14">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7 sm:pt-10 pb-24">
+        <div className="mb-7 sm:mb-10 max-w-4xl">
+          <Eyebrow>{packet?.cemetery || "Your property documents"}</Eyebrow>
+          <h1 className="mt-2 text-[29px] sm:text-[40px] leading-tight font-semibold text-foreground">
+            {firstName ? `${firstName}, your documents` : "Your documents"}
+          </h1>
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            {packet?.broker_note || "Review and send the documents needed for your sale."}
+          </p>
+          {packet?.plot_description && (
+            <p className="mt-4 flex items-start gap-2 border-l-2 border-primary pl-3 text-sm leading-relaxed">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span><span className="text-muted-foreground">Locations being sold: </span><strong className="font-medium break-words">{packet.plot_description}</strong></span>
+            </p>
+          )}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] gap-8 xl:gap-12 items-start">
           {/* ---------------------------------------------------------------- */}
           {/* Left column — intro, context, and help (sticky on desktop)        */}
           {/* ---------------------------------------------------------------- */}
-          <aside className="lg:w-80 xl:w-96 lg:sticky lg:top-28 lg:self-start space-y-6 mb-10 lg:mb-0">
-            <div>
-              <h1 className="font-display text-[30px] sm:text-4xl xl:text-5xl leading-[1.08] text-foreground">
-                {firstName ? `${firstName}, here's` : "Here's"} everything we need to{" "}
-                <em className="italic text-primary">complete your sale</em>.
-              </h1>
-              <p className="text-[14px] sm:text-sm text-muted-foreground leading-relaxed mt-4">
-                One page, one list. Upload from this computer, or tap <span className="text-foreground font-medium">Use my phone</span> on any
-                item and photograph it with your camera{packet?.cemetery ? ` — everything below is what ${packet.cemetery} requires` : ""}.
-              </p>
+          <aside className="order-2 lg:sticky lg:top-24 lg:self-start space-y-4">
+            <div className="border-t border-border pt-4">
+              <p className="text-sm font-semibold">Need a hand?</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mt-1">Your broker can help with any item on this list.</p>
               {packet?.seller_name && (
                 <p className="mt-3 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Private page for {packet.seller_name}
@@ -817,46 +822,28 @@ const SellerDocuments = () => {
               )}
             </div>
 
-            {packet?.plot_description && (
-              <div className="flex items-start gap-2 rounded-xl border border-border/60 bg-card/60 px-4 py-3 text-sm">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div><span className="text-xs text-muted-foreground">Property covered by this request</span><p className="font-medium text-foreground">{packet.plot_description}</p></div>
-              </div>
-            )}
-
-            {packet?.broker_note && (
-              <div className="rounded-2xl border-l-[3px] border-primary bg-primary/[0.06] px-5 py-4">
-                <Eyebrow>A note from your broker</Eyebrow>
-                <p className="text-[14px] text-foreground/90 leading-relaxed whitespace-pre-line mt-2">{packet.broker_note}</p>
-              </div>
-            )}
-
-            <Panel className="px-5 py-5 border-primary/25 bg-primary/[0.04]">
-              <Eyebrow>Still not sure about something?</Eyebrow>
-              <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
-                A broker will walk you through any item on this page — there is never a charge for asking.
-              </p>
-              <div className="mt-4 flex flex-col gap-2">
+            <div className="border-t border-border pt-4">
+              <div className="flex flex-col gap-2">
                 <a
                   href="tel:+12142304740"
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:bg-primary/90"
                 >
                   <Phone className="w-4 h-4" /> (214) 230-4740
                 </a>
                 <a
                   href="mailto:info@texascemeterybrokers.com"
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full border border-border bg-background text-[13px] font-medium text-foreground hover:border-primary/40"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-md border border-border bg-background text-[13px] font-medium text-foreground hover:border-primary/40"
                 >
                   <Mail className="w-4 h-4" /> Email your broker
                 </a>
               </div>
-            </Panel>
+            </div>
           </aside>
 
           {/* ---------------------------------------------------------------- */}
           {/* Right column — documents and FAQ                                  */}
           {/* ---------------------------------------------------------------- */}
-          <main className="flex-1 min-w-0 space-y-0">
+          <main className="order-1 min-w-0 space-y-0">
             {/* ---------------------------------------------------------------- */}
             {/* Context, folded away so the list is the first thing they act on   */}
             {/* ---------------------------------------------------------------- */}
