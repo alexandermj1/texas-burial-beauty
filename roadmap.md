@@ -1,5 +1,9 @@
 # Roadmap
 
+## Current request
+- [ ] Prepare and attach affidavits in AI-assisted document requests, with staff review before sending
+- [ ] Remove outdated Texas licensing claims from articles and FAQs without misrepresenting repealed law
+
 - [x] Map seller document, communication, and email infrastructure
 - [x] Design safe weekly follow-up eligibility and suppression rules
 - [x] Implement branded auto follow-up, scheduling, audit trail, and admin tag
