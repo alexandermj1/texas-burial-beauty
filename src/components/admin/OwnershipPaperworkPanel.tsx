@@ -1404,14 +1404,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // Only the POAs the current checklist still asks for. A POA removed by hand
     // must never reappear in the email, so there is deliberately no fallback to
     // "any prepared POA on this submission".
-    const sources = poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }));
+    const sources = poaRequirements.filter((r) => outstanding.includes(r)).map((r) => ({ r, c: preparedPoaFor(r) }));
 
     for (const { r, c: chosen } of sources) {
-      if (!chosen) continue;
+      if (!chosen) throw new Error(`${r.label} is still being prepared. Wait for its PDF before previewing or sending.`);
       const { data: c } = await supabase.from("contracts")
         .select("sign_token, signature_name, fill_data, filled_pdf_path").eq("id", chosen.id).maybeSingle();
-      if (!c) continue;
+      if (!c) throw new Error(`${r.label} could not be found. Prepare it before sending.`);
       const path = (c as { filled_pdf_path?: string | null }).filled_pdf_path ?? null;
+      if (!path) throw new Error(`${r.label} has no PDF yet. Prepare it before sending.`);
       const url = c.sign_token ? `${PUBLIC_SITE_URL}/sign/${c.sign_token}` : null;
       if (path && poas.some((p) => p.path === path)) continue;
       const name = (c as { signature_name?: string | null }).signature_name
@@ -1442,14 +1443,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // contracts) travels as a PDF attachment too, so the email carries every
     // paper they have to print and sign.
     const docs: { label: string; path: string }[] = [];
-    for (const r of requirements) {
+    for (const r of outstanding) {
       if (!r.contractKind || r.contractKind === "poa") continue;
       const match = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
-      if (!match) continue;
+      if (!match) throw new Error(`${r.label} is still being prepared. Wait for its PDF before previewing or sending.`);
       const { data: c } = await supabase.from("contracts")
         .select("filled_pdf_path").eq("id", match.id).maybeSingle();
       const path = (c as { filled_pdf_path?: string | null } | null)?.filled_pdf_path ?? null;
-      if (!path || docs.some((d) => d.path === path)) continue;
+      if (!path) throw new Error(`${r.label} has no PDF yet. Prepare it before sending.`);
+      if (docs.some((d) => d.path === path)) continue;
       docs.push({ label: r.label, path });
     }
 
@@ -1558,7 +1560,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setAiAskOpen(false);
       setAiInstruction("");
       toast.success(done.length ? "AI updated the request" : "AI filled in the notes", { description: plan.reason || "Check it, then preview and send." });
-      // New POAs fill themselves in the background; open the normal review to send.
+      // Prepared forms fill in the background; preview waits for their PDFs.
       setTimeout(() => setReview({ step: 1 }), 600);
     } catch (e) {
       toast.error("AI couldn't make that change", { description: e instanceof Error ? e.message : String(e) });
@@ -2047,18 +2049,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
   /**
-   * POAs build themselves. The family-tree answers tell us exactly who has to
-   * sign, and every field comes from those answers, so as soon as a POA appears
-   * on the checklist we fill it in the background. Nobody — us or the seller —
-   * has anything to "prepare"; it is only ever checked or edited.
+   * Prepare the forms we issue ourselves when they appear on the checklist.
+   * Affidavits remain blank for the family to swear to; the prepared PDF is
+   * nevertheless attached and available on their document page like a POA.
    */
   const autoPrepped = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!poaRequirements.length) return;
-    for (const r of poaRequirements) {
+    const preparedForms = requirements.filter((r) => r.contractKind === "poa" || r.contractKind === "affidavit_heirship");
+    if (!preparedForms.length) return;
+    for (const r of preparedForms) {
       const key = reqKey(r);
       if (autoPrepped.current.has(key)) continue;
-      if (preparedPoaFor(r) && !jointMismatch(r)) continue;
+      if (r.contractKind === "poa" && preparedPoaFor(r) && !jointMismatch(r)) continue;
+      if (r.contractKind === "affidavit_heirship" && contracts.some((c) => c.kind === "affidavit_heirship" && c.status !== "void")) continue;
       autoPrepped.current.add(key);
       void generateDoc(r, undefined, true);
     }
