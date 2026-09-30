@@ -22,7 +22,9 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("prepare_packet"), submission_id: z.string().uuid(), items: z.array(z.object({ label: z.string().max(300), person: z.string().max(200).nullable().optional(), needsNotary: z.boolean().optional() })).max(40).optional() }),
   z.object({ action: z.literal("verify_deed"), submission_id: z.string().uuid() }),
   // Staff ask the AI to do one step now (still runs the exact staff code path).
-  z.object({ action: z.literal("do"), submission_id: z.string().uuid(), type: z.enum(["send_listing_agreement", "resend_signing_link", "send_family_tree"]) }),
+  z.object({ action: z.literal("do"), submission_id: z.string().uuid(), type: z.enum(["send_listing_agreement", "resend_signing_link", "send_family_tree"]), deed_owner_names: z.string().trim().min(2).max(300).optional() }),
+  // Staff tell the AI what to change on a document request; the panel applies it with the staff code.
+  z.object({ action: z.literal("plan_packet"), submission_id: z.string().uuid(), instruction: z.string().trim().min(3).max(2000), items: z.array(z.object({ key: z.string().max(300), label: z.string().max(300), person: z.string().max(200).nullable().optional() })).max(60) }),
 ]);
 
 type Sub = Record<string, any>;
@@ -430,6 +432,13 @@ async function checkDeed(db: SupabaseClient, apiKey: string, sub: Sub) {
   return { status: Object.keys(patch).length ? "filled" as const : "match" as const, summary: String(r.summary ?? ""), patch };
 }
 
+const PLAN_GUIDE = `A staff member tells you, in plain words, what to change on a seller's document request. Turn it into changes our admin screen applies with its normal tools. Return ONLY JSON:
+{"add_docs": [{"kind": "poa"|"joint_poa"|"affidavit_heirship"|"custom", "label": string ("" = standard name), "person": string (poa: who signs it; joint_poa: first signer), "person2": string (joint_poa second signer, else ""), "why": string (one plain sentence the seller sees), "needsNotary": boolean}],
+ "remove_keys": string[] (exact keys from CURRENT CHECKLIST to take off), "plot_description": string (new exact plot wording, "" = no change, e.g. "Garden of Memories · Lot 12 · Spaces 3 & 4"),
+ "greeting_name": string, "email_note": string, "page_note": string, "reason": string (one short sentence for staff)}
+Kinds: poa = Limited POA to Texas Cemetery Brokers (we prepare it, notarised); joint_poa = one POA two spouses sign; affidavit_heirship = Affidavit of Heirship we prepare; custom = anything else the seller sends us (death certificate, marriage certificate, will, letters testamentary, divorce decree, photo ID, small estate affidavit, etc.) - give it a clear label and set needsNotary only if it must be notarised.
+Only do what staff asked; never add documents on your own. Never add a duplicate of an item already listed. When the request changes, email_note briefly says what changed since the last email (e.g. "We have added ... and updated the plot wording to ...").`;
+
 const PACKET_GUIDE = `You fill in the three fields on our "Check the request" screen before a document request email goes to a seller.
 - greeting_name: the first name used after "Dear". Use the enquirer's real first name (from their own email sign-off if it differs from the record, e.g. "Don" for Donald). Never a surname, never "there" unless no name exists.
 - email_note: OPTIONAL short paragraph shown above the button in the email. Leave "" for a routine request. Only write 1-3 plain sentences when something needs explaining, e.g. a prepared Limited POA that must be signed in front of a notary and posted as a wet-ink original, a joint POA both spouses sign together, or a correction since an earlier request. Warm, not personal-sounding, no invented anecdotes, no urgency.
@@ -491,6 +500,30 @@ Deno.serve(async (req) => {
       return json(out);
     }
 
+    if (body.action === "plan_packet") {
+      const { data: sub } = await db.from("contact_submissions").select("*").eq("id", body.submission_id).maybeSingle();
+      if (!sub || !isSeller(sub)) return json({ error: "Not a seller" }, 400);
+      const playbook = await loadPlaybook(db);
+      const ctx = await buildContext(db, sub);
+      const raw = await callModel(apiKey, `${PLAN_GUIDE}\n\n${PACKET_GUIDE.split("Return ONLY JSON")[0]}\n\nPLAYBOOK:\n${playbook.content}`,
+        `STAFF INSTRUCTION: ${body.instruction}\n\nCURRENT CHECKLIST (key | label | person):\n${body.items.map((i: any) => `${i.key} | ${i.label} | ${i.person ?? ""}`).join("\n")}\n\nCURRENT PLOT WORDING: ${sub.plot_description ?? "(empty)"}\n\n${ctx.context}`, "low");
+      const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
+      const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+      const kinds = ["poa", "joint_poa", "affidavit_heirship", "custom"];
+      const keys = new Set(body.items.map((i: any) => i.key));
+      const out = {
+        add_docs: (Array.isArray(r.add_docs) ? r.add_docs : []).filter((d: any) => kinds.includes(d?.kind)).slice(0, 15).map((d: any) => ({
+          kind: d.kind, label: clip(d.label ?? "", 200), why: clip(d.why ?? "", 400), person: clip(d.person ?? "", 120), person2: clip(d.person2 ?? "", 120), needsNotary: !!d.needsNotary,
+        })).filter((d: any) => (d.kind !== "poa" || d.person) && (d.kind !== "joint_poa" || (d.person && d.person2)) && (d.kind !== "custom" || d.label)),
+        remove_keys: (Array.isArray(r.remove_keys) ? r.remove_keys : []).map(String).filter((k: string) => keys.has(k)),
+        plot_description: clip(r.plot_description ?? "", 300),
+        greeting_name: clip(r.greeting_name, 60), email_note: String(r.email_note ?? "").trim().slice(0, 1500), page_note: String(r.page_note ?? "").trim().slice(0, 1000),
+        reason: clip(r.reason, 300),
+      };
+      await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `AI planned document request changes: ${body.instruction.slice(0, 200)}`, details: out });
+      return json(out);
+    }
+
     if (body.action === "sweep") {
       // Needs-reply sellers only: the latest email on the record is FROM the customer
       // (unanswered). Fetch recent mail both directions and keep only those.
@@ -536,6 +569,11 @@ Deno.serve(async (req) => {
       const { data: row, error: insErr } = await db.from("ai_agent_actions").insert({ run_id: run!.id, submission_id: sub.id, action_type: body.type, reason: `Requested by ${user.name}`, confidence: 1 }).select("id").single();
       if (insErr) return json({ error: insErr.message }, 500);
       staffRequested = true;
+      // Staff told the AI who the deed is in — the family tree starts from these names.
+      if (body.deed_owner_names && body.type !== "resend_signing_link") {
+        await db.from("contact_submissions").update({ deed_owner_names: body.deed_owner_names }).eq("id", sub.id);
+        await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Set the deed owner names to ${body.deed_owner_names} (the family tree starts from them), as ${user.name} asked.`, author_name: `AI agent (asked by ${user.name})` });
+      }
       body = { action: "execute", action_id: row!.id };
     }
 
