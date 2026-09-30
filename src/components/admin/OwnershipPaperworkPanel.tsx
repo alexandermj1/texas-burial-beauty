@@ -1404,14 +1404,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // Only the POAs the current checklist still asks for. A POA removed by hand
     // must never reappear in the email, so there is deliberately no fallback to
     // "any prepared POA on this submission".
-    const sources = poaRequirements.map((r) => ({ r, c: preparedPoaFor(r) }));
+    const sources = poaRequirements.filter((r) => outstanding.includes(r)).map((r) => ({ r, c: preparedPoaFor(r) }));
 
     for (const { r, c: chosen } of sources) {
-      if (!chosen) continue;
+      if (!chosen) throw new Error(`${r.label} is still being prepared. Wait for its PDF before previewing or sending.`);
       const { data: c } = await supabase.from("contracts")
         .select("sign_token, signature_name, fill_data, filled_pdf_path").eq("id", chosen.id).maybeSingle();
-      if (!c) continue;
+      if (!c) throw new Error(`${r.label} could not be found. Prepare it before sending.`);
       const path = (c as { filled_pdf_path?: string | null }).filled_pdf_path ?? null;
+      if (!path) throw new Error(`${r.label} has no PDF yet. Prepare it before sending.`);
       const url = c.sign_token ? `${PUBLIC_SITE_URL}/sign/${c.sign_token}` : null;
       if (path && poas.some((p) => p.path === path)) continue;
       const name = (c as { signature_name?: string | null }).signature_name
@@ -1442,14 +1443,15 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // contracts) travels as a PDF attachment too, so the email carries every
     // paper they have to print and sign.
     const docs: { label: string; path: string }[] = [];
-    for (const r of requirements) {
+    for (const r of outstanding) {
       if (!r.contractKind || r.contractKind === "poa") continue;
       const match = contracts.find((x) => x.kind === r.contractKind && x.status !== "void");
-      if (!match) continue;
+      if (!match) throw new Error(`${r.label} is still being prepared. Wait for its PDF before previewing or sending.`);
       const { data: c } = await supabase.from("contracts")
         .select("filled_pdf_path").eq("id", match.id).maybeSingle();
       const path = (c as { filled_pdf_path?: string | null } | null)?.filled_pdf_path ?? null;
-      if (!path || docs.some((d) => d.path === path)) continue;
+      if (!path) throw new Error(`${r.label} has no PDF yet. Prepare it before sending.`);
+      if (docs.some((d) => d.path === path)) continue;
       docs.push({ label: r.label, path });
     }
 
@@ -1558,7 +1560,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setAiAskOpen(false);
       setAiInstruction("");
       toast.success(done.length ? "AI updated the request" : "AI filled in the notes", { description: plan.reason || "Check it, then preview and send." });
-      // New POAs fill themselves in the background; open the normal review to send.
+      // Prepared forms fill in the background; preview waits for their PDFs.
       setTimeout(() => setReview({ step: 1 }), 600);
     } catch (e) {
       toast.error("AI couldn't make that change", { description: e instanceof Error ? e.message : String(e) });
@@ -1590,7 +1592,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim(), preview: true },
       });
 
-      if (error) throw error;
+      if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
       const res = data as { html?: string; subject?: string };
       setReview({ step: 2, html: res?.html, subject: res?.subject });
     } catch (e) {
@@ -1612,10 +1614,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       await persistPacketMessages();
       const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
-      const { error } = await supabase.functions.invoke("send-document-packet", {
+      const { data, error } = await supabase.functions.invoke("send-document-packet", {
         body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
       });
-      if (error) throw error;
+      if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
       toast.success(`Document request emailed to ${sellerEmail}`, {
         description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}${docs.length ? ` + ${docs.length} prepared document${docs.length === 1 ? "" : "s"}` : ""}`,
       });
@@ -1944,7 +1946,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       void setRowState(r, "issued").then(() => load());
     } catch (e) {
       setGenFailed((s) => new Set(s).add(reqKey(r)));
-      if (!silent) toast.error((e as Error).message);
+      toast.error(`${r.label} could not be prepared`, { description: (e as Error).message });
     } finally {
       setBusy(null);
     }
@@ -2047,18 +2049,19 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
   /**
-   * POAs build themselves. The family-tree answers tell us exactly who has to
-   * sign, and every field comes from those answers, so as soon as a POA appears
-   * on the checklist we fill it in the background. Nobody — us or the seller —
-   * has anything to "prepare"; it is only ever checked or edited.
+   * Prepare the forms we issue ourselves when they appear on the checklist.
+   * Affidavits remain blank for the family to swear to; the prepared PDF is
+   * nevertheless attached and available on their document page like a POA.
    */
   const autoPrepped = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!poaRequirements.length) return;
-    for (const r of poaRequirements) {
+    const preparedForms = requirements.filter((r) => r.contractKind === "poa" || r.contractKind === "affidavit_heirship");
+    if (!preparedForms.length) return;
+    for (const r of preparedForms) {
       const key = reqKey(r);
       if (autoPrepped.current.has(key)) continue;
-      if (preparedPoaFor(r) && !jointMismatch(r)) continue;
+      if (r.contractKind === "poa" && preparedPoaFor(r) && !jointMismatch(r)) continue;
+      if (r.contractKind === "affidavit_heirship" && contracts.some((c) => c.kind === "affidavit_heirship" && c.status !== "void")) continue;
       autoPrepped.current.add(key);
       void generateDoc(r, undefined, true);
     }
@@ -3543,6 +3546,22 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   })}
                 </div>
               )}
+
+              {outstanding.filter((r) => r.contractKind === "affidavit_heirship").map((r) => {
+                const prepared = contracts.some((c) => c.kind === "affidavit_heirship" && c.status !== "void");
+                return (
+                  <div key={reqKey(r)} className="rounded-md border p-3 space-y-2">
+                    <p className="text-xs font-semibold">{r.label}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {prepared ? "Blank affidavit prepared for the family to complete and sign before a notary. The PDF will be attached to the email." : genFailed.has(reqKey(r)) ? "The PDF could not be prepared. Prepare it before sending." : "Preparing the blank affidavit PDF…"}
+                    </p>
+                    <div className="flex gap-2">
+                      {prepared ? <Button size="sm" variant="outline" onClick={() => void openContractPdf(r)}>Check the affidavit</Button>
+                        : genFailed.has(reqKey(r)) ? <Button size="sm" variant="outline" onClick={() => void generateDoc(r)} disabled={busy === reqKey(r)}>Prepare affidavit</Button> : null}
+                    </div>
+                  </div>
+                );
+              })}
 
 
               <div className="rounded-md border p-3">

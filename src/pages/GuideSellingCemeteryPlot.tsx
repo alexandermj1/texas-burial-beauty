@@ -474,9 +474,9 @@ const GuideSellingCemeteryPlot = () => (
           <Eyebrow>Chapter 05 · Legal</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">The legal side of selling a plot in <span className="italic text-primary">Texas</span></h2>
           <p className="text-foreground/80 leading-relaxed mb-5 text-lg">
-            A common question is whether you need a license to sell. You do not — selling your own plot requires no license. And while Texas once required third-party brokers to register with the <Ext href="https://www.dob.texas.gov/cemetery-prepaid-funeral-services">Texas Department of Banking</Ext>, that registration requirement was repealed effective <strong className="text-foreground">September 1, 2019</strong>. There is no state cemetery-broker license in Texas today.
+            Texas law sets out how cemetery interment rights are conveyed and recorded. Before a sale, check the ownership record, any co-owner or heir interests and the cemetery’s transfer requirements.
           </p>
-          <p className="text-foreground/80 mb-4">What still applies — and what a careful broker handles for you — comes from the <Ext href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm">Texas Health &amp; Safety Code, Chapter 711</Ext>:</p>
+          <p className="text-foreground/80 mb-4">The transfer rules, and what a careful broker handles for you, are set out in the <Ext href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm">Texas Health &amp; Safety Code, Chapter 711</Ext>:</p>
           <ul className="space-y-3 mb-8">
             {[
               "The conveyance (often a quitclaim) must be on a form the cemetery accepts and recorded with the cemetery, generally within three business days of the sale.",

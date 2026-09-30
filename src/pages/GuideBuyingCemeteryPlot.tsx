@@ -472,7 +472,7 @@ const GuideBuyingCemeteryPlot = () => (
               </Link>
             </div>
             <p className="mt-8 text-xs text-primary-foreground/65 max-w-2xl leading-relaxed">
-              Texas Cemetery Brokers operates in partnership with <Ext href="https://bayercemeterybrokers.com/">Bayer Cemetery Brokers</Ext>, a licensed California brokerage (CEB 1512). Texas has no cemetery-broker license requirement (the registration was repealed September 1, 2019). Any client reviews or ratings shown elsewhere on this site referencing Bayer are reviews of our partner brokerage. This page is informational and is not legal advice; cemetery rules and fees vary by location.
+              Texas Cemetery Brokers operates in partnership with <Ext href="https://bayercemeterybrokers.com/">Bayer Cemetery Brokers</Ext>, a licensed California brokerage (CEB 1512). Any client reviews or ratings shown elsewhere on this site referencing Bayer are reviews of our partner brokerage. This page is informational and is not legal advice; cemetery rules and fees vary by location.
             </p>
           </div>
         </section>

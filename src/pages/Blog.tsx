@@ -97,7 +97,7 @@ const blogPosts: BlogPost[] = [
         mainEntity: [
           { "@type": "Question", name: "Can you sell a cemetery plot in Texas?", acceptedAnswer: { "@type": "Answer", text: "Yes. If you own the right of sepulture in a plot, you can sell it. Check your contract for a right-of-first-refusal clause, confirm co-owners agree, then sell privately or through a broker who handles valuation, buyers, paperwork and the transfer." } },
           { "@type": "Question", name: "How much is my cemetery plot worth in Texas?", acceptedAnswer: { "@type": "Answer", text: "It depends on the cemetery, the section and current demand, so the best way to know is a valuation rather than a fixed figure. Resale plots typically sell below the cemetery's current retail price, which is what attracts buyers. We provide a free, plot-specific valuation." } },
-          { "@type": "Question", name: "Do I need a license to sell my own cemetery plot in Texas?", acceptedAnswer: { "@type": "Answer", text: "No. Selling your own plot needs no license, and Texas no longer requires cemetery brokers to register either — that requirement was repealed effective September 1, 2019. Brokers must still follow the code's rules for recording the conveyance and remitting cemetery fees." } },
+          { "@type": "Question", name: "What paperwork is needed to sell a cemetery plot in Texas?", acceptedAnswer: { "@type": "Answer", text: "The cemetery needs a conveyance that identifies the seller and buyer, records the transfer and accounts for any cemetery fees. Co-owners or heirs may also need to sign, depending on the ownership record. We confirm the specific requirements with the cemetery." } },
           { "@type": "Question", name: "How long does it take to sell a cemetery plot in Texas?", acceptedAnswer: { "@type": "Answer", text: "It depends on the cemetery and your price. High-demand metro plots can sell in weeks; rural or oversupplied locations may take longer. Accurate pricing and reaching active buyers shortens the timeline." } },
           { "@type": "Question", name: "Will the cemetery buy my plot back?", acceptedAnswer: { "@type": "Answer", text: "Sometimes, but often only at the price you originally paid rather than today's value — and many will not buy back at all. An open-market resale usually recovers more of your plot's worth." } },
         ],
@@ -222,9 +222,9 @@ const blogPosts: BlogPost[] = [
         {/* Legal */}
         <h2 className="font-display text-2xl md:text-3xl text-foreground mb-4 mt-12">Selling a plot in Texas, legally</h2>
         <p className="text-lg leading-relaxed text-foreground/80 mb-4">
-          Selling your own plot needs <strong className="text-foreground">no license</strong>. Texas <strong className="text-foreground">repealed the third-party cemetery-broker registration requirement effective September 1, 2019</strong> (S.B. 614) — there is no state cemetery-broker license today.
+          Texas law sets out how cemetery interment rights are conveyed and recorded. Check the ownership record, any co-owner or heir interests, and the cemetery’s transfer requirements before a sale.
         </p>
-        <p className="text-lg leading-relaxed text-foreground/80 mb-4">What still applies under the Texas Health &amp; Safety Code:</p>
+        <p className="text-lg leading-relaxed text-foreground/80 mb-4">The Texas Health &amp; Safety Code sets out these transfer steps:</p>
         <ul className="space-y-3 mb-6">
           {[
             "The conveyance (often a quitclaim) must be on a cemetery-accepted form and recorded with the cemetery — generally within three business days.",
@@ -269,7 +269,7 @@ const blogPosts: BlogPost[] = [
           {[
             { q: "Can you sell a cemetery plot in Texas?", a: "Yes. If you own the right of sepulture in a plot, you can sell it. Check your contract for a right-of-first-refusal clause, confirm co-owners agree, then sell privately or through a broker who handles valuation, buyers, paperwork and the transfer." },
             { q: "How much is my cemetery plot worth in Texas?", a: "It depends on the cemetery, the section and current demand, so the best way to know is a valuation rather than a fixed figure. Resale plots typically sell below the cemetery's current retail price, which is what attracts buyers. We provide a free, plot-specific valuation." },
-            { q: "Do I need a license to sell my own cemetery plot in Texas?", a: "No. Selling your own plot needs no license, and Texas no longer requires cemetery brokers to register either — that requirement was repealed effective September 1, 2019. Brokers must still follow the code's rules for recording the conveyance and remitting cemetery fees." },
+            { q: "What paperwork is needed to sell a cemetery plot in Texas?", a: "The cemetery needs a conveyance that identifies the seller and buyer, records the transfer and accounts for any cemetery fees. Co-owners or heirs may also need to sign, depending on the ownership record. We confirm the specific requirements with the cemetery." },
             { q: "How long does it take to sell a cemetery plot in Texas?", a: "It depends on the cemetery and your price. High-demand metro plots can sell in weeks; rural or oversupplied locations may take longer. Accurate pricing and reaching active buyers shortens the timeline." },
             { q: "Will the cemetery buy my plot back?", a: "Sometimes, but often only at the price you originally paid rather than today's value — and many will not buy back at all. An open-market resale usually recovers more of your plot's worth." },
           ].map((f, i) => (
