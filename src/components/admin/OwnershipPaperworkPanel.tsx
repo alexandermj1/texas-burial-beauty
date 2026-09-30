@@ -2944,30 +2944,30 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
           })()}
 
           {/* ── Checklist ── */}
-          <div id="document-request-workflow" className="space-y-3 scroll-mt-28 rounded-lg border-2 border-primary/30 bg-primary/[0.04] p-4 shadow-sm">
+          <div id="document-request-workflow" className="min-w-0 space-y-3 scroll-mt-28 rounded-xl border border-[#d8e2eb] bg-[#f7fafd] p-3 sm:p-4 shadow-sm transition-colors duration-200">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <span className="text-sm font-semibold flex items-center gap-1.5"><FileText className="h-4 w-4 text-primary" />Step 2 · Document request</span>
                 <p className="mt-0.5 text-xs text-muted-foreground">Review the exact checklist before it is emailed to the seller.</p>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <Button size="sm" variant="ghost" onClick={() => setAiAskOpen((v) => !v)} className="text-primary">
+              <div className="flex min-w-0 w-full flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setAiAskOpen((v) => !v)} className="h-auto min-h-9 whitespace-normal border-[#bfd2e3] bg-white text-[#254969] hover:bg-[#eef5fa]">
                   ✦ Ask AI to change
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
+                <Button size="sm" variant="outline" onClick={() => setAddDocOpen(true)} className="h-auto min-h-9 whitespace-normal bg-white">
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
                 </Button>
-                <Button size="sm" variant="ghost" onClick={openPacketLink} title="Open the seller's document page in a new tab">
+                <Button size="sm" variant="outline" onClick={openPacketLink} title="Open the seller's document page in a new tab" className="h-auto min-h-9 whitespace-normal bg-white">
                   <Link2 className="w-3.5 h-3.5 mr-1" />Open seller page
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => void syncChecklist()} disabled={saving}>
+                <Button size="sm" variant="outline" onClick={() => void syncChecklist()} disabled={saving} className="h-auto min-h-9 whitespace-normal bg-white">
                   {saving ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
                   Sync checklist
                 </Button>
                 <Button
                   size="sm"
-                  className={requestedAt ? "bg-emerald-600 hover:bg-emerald-700 text-primary-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
+                  className="h-auto min-h-9 max-w-full whitespace-normal bg-[#254969] text-white hover:bg-[#1f3d59] sm:ml-auto"
                   onClick={() => setReview({ step: 1 })}
                   disabled={sending || !sellerEmail}
                   title={requestedAt
