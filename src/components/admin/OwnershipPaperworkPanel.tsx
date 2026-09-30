@@ -2951,6 +2951,21 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
             </div>
 
+            {aiAskOpen && (
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-primary">✦ Tell the AI what to change on this request</p>
+                <Textarea aria-label="AI instruction" value={aiInstruction} onChange={(e) => setAiInstruction(e.target.value)} rows={3}
+                  placeholder='e.g. "Add a POA for Maria Lopez and a death certificate for John Smith, remove the affidavit, and change the plot wording to Garden of Memories · Lot 12 · Spaces 3 & 4"' />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => setAiAskOpen(false)}>Cancel</Button>
+                  <Button size="sm" onClick={() => void applyAiInstruction()} disabled={aiApplying}>
+                    {aiApplying ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}Apply changes
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">The AI makes the changes, then the normal review opens so you can preview and send.</p>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 rounded-md border border-border/70 bg-background px-3 py-2">
               <span className={`grid h-7 min-w-7 place-items-center rounded-full px-2 text-xs font-bold ${outstanding.length ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>{outstanding.length}</span>
               <p className="text-xs font-medium text-foreground">{outstanding.length ? `${outstanding.length} item${outstanding.length === 1 ? "" : "s"} still needed from the seller` : "No documents are currently outstanding"}</p>
