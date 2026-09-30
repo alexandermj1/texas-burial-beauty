@@ -160,14 +160,15 @@ const UploadGrid = ({
           className="group relative block aspect-square sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-border/70 bg-card hover:border-primary/50"
           title={u.name}
         >
-          <Button variant="ghost" type="button" onClick={() => onOpen(u)} className="absolute inset-0 z-0 h-full w-full rounded-none" aria-label={`Open ${u.name}`} />
-          {u.isImage ? (
-            <img src={u.url} alt={alt} className="w-full h-full object-cover group-hover:opacity-90" />
-          ) : (
-            <span className="w-full h-full flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground px-2 text-center">
-              <FileText className="w-5 h-5 text-primary" /> View file
-            </span>
-          )}
+          <Button variant="ghost" type="button" onClick={() => onOpen(u)} className="absolute inset-0 z-0 h-full w-full rounded-none p-0" aria-label={`Open ${u.name}`}>
+            {u.isImage ? (
+              <img src={u.url} alt={alt} className="w-full h-full object-cover group-hover:opacity-90" />
+            ) : (
+              <span className="w-full h-full flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground px-2 text-center">
+                <FileText className="w-5 h-5 text-primary" /> View file
+              </span>
+            )}
+          </Button>
           <Button variant="ghost" size="icon"
             type="button"
             onClick={() => onRemove(u)}
@@ -791,7 +792,7 @@ const SellerDocuments = () => {
           <h1 className="mt-2 text-[29px] sm:text-[40px] leading-tight font-semibold text-foreground">
             {firstName ? `${firstName}, your documents` : "Your documents"}
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
             {packet?.broker_note || "Review and send the documents needed for your sale."}
           </p>
           {packet?.plot_description && (
