@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Current request
-- [ ] Audit and correct Alexander's test cemetery/location mismatch; verify prepared document contents
-- [ ] Let staff-directed AI distinguish cemetery reassignment from the shared selling-location field
-- [ ] Refine seller document page on desktop and mobile with restrained blue brand styling and no overlapping controls
+- [x] Audit and correct Alexander's test cemetery/location mismatch; verify prepared document contents
+- [x] Let staff-directed AI distinguish cemetery reassignment from the shared selling-location field
+- [x] Refine seller document page on desktop and mobile with restrained blue brand styling and no overlapping controls
 - [x] Prepare and attach blank affidavits in AI-assisted document requests, with staff review before sending
 - [x] Remove outdated Texas licensing claims from articles and FAQs without misrepresenting repealed law
 
