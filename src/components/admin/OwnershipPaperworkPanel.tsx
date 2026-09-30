@@ -1482,6 +1482,91 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  const [aiAskOpen, setAiAskOpen] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState("");
+  const [aiApplying, setAiApplying] = useState(false);
+  /**
+   * Staff tell the AI what to change in plain words. The AI only plans; every
+   * change is applied here with the same steps a broker uses (add document,
+   * remove, update the locations being sold + rebuild), then the normal review
+   * opens so the request is previewed and sent the usual way.
+   */
+  const applyAiInstruction = async () => {
+    const instruction = aiInstruction.trim();
+    if (instruction.length < 3) return toast.error("Tell the AI what to change");
+    setAiApplying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seller-agent", {
+        body: { action: "plan_packet", submission_id: submissionId, instruction, items: requirements.map((r) => ({ key: reqKey(r), label: r.label, person: r.personName ?? null })) },
+      });
+      if (error || data?.error) throw new Error(typeof data?.error === "string" ? data.error : error?.message ?? "AI failed");
+      const plan = data as { add_docs: { kind: string; label: string; why: string; person: string; person2: string; needsNotary: boolean }[]; remove_keys: string[]; plot_description: string; greeting_name: string; email_note: string; page_note: string; reason: string };
+      const done: string[] = [];
+      const next = { ...(answers as Record<string, any>) } as Record<string, any>;
+
+      // Remove
+      const removing = requirements.filter((r) => plan.remove_keys.includes(reqKey(r)));
+      if (removing.length) {
+        const extraIds = removing.filter((r) => r.code.startsWith("X-")).map((r) => r.code.slice(2));
+        next.extraDocs = (next.extraDocs ?? []).filter((d: { id: string }) => !extraIds.includes(d.id));
+        next.removedDocs = [...new Set([...(next.removedDocs ?? []), ...removing.filter((r) => !r.code.startsWith("X-")).map(reqKey)])];
+        const live = await fetchLiveRows();
+        const ids = live.filter((x) => removing.some((r) => keyOf(x.doc_code, x.person_name) === reqDbKey(r))).map((x) => x.id);
+        if (ids.length) await softDelete("submission_documents", ids);
+        for (const r of removing) await voidPreparedFor(r);
+        done.push(`removed ${removing.map((r) => r.label).join(", ")}`);
+      }
+
+      // Add (same shape as "Add a document")
+      for (const d of plan.add_docs) {
+        const label = d.label || (
+          d.kind === "poa" ? `Limited power of attorney to Texas Cemetery Brokers — ${d.person}`
+            : d.kind === "joint_poa" ? `Joint limited power of attorney — ${d.person} & ${d.person2}`
+              : d.kind === "affidavit_heirship" ? "Affidavit of Heirship" : d.label);
+        const doc = { id: crypto.randomUUID().slice(0, 8), kind: d.kind, label, why: d.why || undefined, person: d.person || undefined, person2: d.person2 || undefined, needsNotary: d.kind === "custom" ? d.needsNotary : true };
+        next.extraDocs = [...(next.extraDocs ?? []), doc];
+        const code = d.kind === "affidavit_heirship" ? "D12" : d.kind === "custom" ? `X-${doc.id}` : "D21";
+        next.removedDocs = (next.removedDocs ?? []).filter((k: string) => k !== `${code}::${d.person}`);
+        done.push(`added ${label}`);
+      }
+
+      // Locations being sold
+      const newPlot = plan.plot_description.trim();
+      const plotChanged = !!newPlot && newPlot !== plotDescription.trim();
+      if (plotChanged) {
+        next.autopilot = { ...(next.autopilot ?? {}), plotDescription: newPlot, plotDescriptionUpdatedAt: new Date().toISOString() };
+        done.push(`changed the plot wording to "${newPlot}"`);
+      }
+
+      next.packetGreeting = plan.greeting_name || greetName.trim();
+      next.packetEmailNote = plan.email_note;
+      next.packetNote = plan.page_note;
+      await persistAnswers(next as OwnershipAnswers);
+      if (plotChanged) {
+        const { error: e } = await supabase.from("contact_submissions").update({ plot_description: newPlot } as never).eq("id", submissionId);
+        if (e) throw e;
+        await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: newPlot });
+        setPlotDescription(newPlot);
+      }
+      if (done.length) {
+        await supabase.from("customer_notes").insert({ submission_id: submissionId, body: `Updated the document request: ${done.join("; ")}.`, author_name: "AI agent (asked by staff)" } as never);
+      }
+      await load();
+      setGreetName(next.packetGreeting);
+      setEmailNote(plan.email_note);
+      setPageNote(plan.page_note);
+      setAiAskOpen(false);
+      setAiInstruction("");
+      toast.success(done.length ? "AI updated the request" : "AI filled in the notes", { description: plan.reason || "Check it, then preview and send." });
+      // New POAs fill themselves in the background; open the normal review to send.
+      setTimeout(() => setReview({ step: 1 }), 600);
+    } catch (e) {
+      toast.error("AI couldn't make that change", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setAiApplying(false);
+    }
+  };
+
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {
     await persistAnswers({
@@ -2834,6 +2919,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
 
               <div className="flex items-center gap-1.5">
+                <Button size="sm" variant="ghost" onClick={() => setAiAskOpen((v) => !v)} className="text-primary">
+                  ✦ Ask AI to change
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => setAddDocOpen(true)}>
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
                 </Button>
