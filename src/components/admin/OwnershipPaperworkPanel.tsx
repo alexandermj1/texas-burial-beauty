@@ -24,6 +24,9 @@ import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 
 /** States that mean an item needs nothing further from the seller. */
 const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
+const sameCemetery = (a?: string | null, b?: string | null) =>
+  String(a ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+  === String(b ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 import {
   QUESTIONS, questionPath, progress, computeRequirements, signingRoster,
   summarise, reqKey, ROLE_LABEL, STATE_LABEL, STATE_ORDER, DOC_GUIDE,
@@ -1054,11 +1057,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
   /** Same requirement, matched loosely on the person's name. */
   const rowFor = (r: Requirement) => rows.find((x) => keyOf(x.doc_code, x.person_name) === reqDbKey(r));
-
-  /** Loose comparison of two cemetery names ("Rose Hill Burial Park" ≠ "Rose Hill Memorial Park"). */
-  const sameCemetery = (a?: string | null, b?: string | null) =>
-    String(a ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
-    === String(b ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
   /**
    * The cemetery on a file can be corrected after the paperwork was built (the
