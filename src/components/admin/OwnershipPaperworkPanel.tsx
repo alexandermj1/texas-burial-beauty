@@ -619,9 +619,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   const frozen = !!requestedAt && rows.some((r) => r.doc_code && r.doc_code !== "REVIEW");
   const requirements = useMemo(() => {
     if (!frozen) return computedRequirements;
+    // Once staff deliberately reassigns the cemetery, its old C-* forms must
+    // disappear from the next request even though the sent checklist is frozen.
+    const cemeteryChanged = !!(answers as Record<string, unknown>).checklistCemetery
+      && !sameCemetery(String((answers as Record<string, unknown>).checklistCemetery), cemetery ?? "");
     const byKey = new Map(computedRequirements.map((r) => [reqDbKey(r), r]));
     const persisted = rows
-      .filter((r) => r.doc_code && r.doc_code !== "REVIEW")
+      .filter((r) => r.doc_code && r.doc_code !== "REVIEW" && !(cemeteryChanged && r.doc_code.startsWith("C-")))
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
       .map((r) => {
         const match = byKey.get(keyOf(r.doc_code, r.person_name));
@@ -645,7 +649,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const added = computedRequirements.filter((r) => !have.has(reqDbKey(r)));
     return [...persisted, ...added];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frozen, rows, computedRequirements]);
+  }, [frozen, rows, computedRequirements, answers, cemetery]);
 
   const roster = useMemo(() => signingRoster(answers), [answers]);
 
@@ -1561,7 +1565,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       next.packetGreeting = plan.greeting_name || greetName.trim();
       next.packetEmailNote = plan.email_note;
-      next.packetNote = plan.page_note;
+      next.packetNote = plan.page_note || (selectedCemetery && (answers.packetNote ?? "").includes(cemetery ?? "")
+        ? (answers.packetNote ?? "").replaceAll(cemetery ?? "", selectedCemetery.name)
+        : plan.page_note);
       await persistAnswers(next as OwnershipAnswers);
       if (selectedCemetery) {
         await updateSubmissionCemetery(submissionId, selectedCemetery.name, selectedCemetery.city, plotChanged ? newPlot : undefined);
@@ -1580,7 +1586,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       await load();
       setGreetName(next.packetGreeting);
       setEmailNote(plan.email_note);
-      setPageNote(plan.page_note);
+      setPageNote(next.packetNote);
       setAiAskOpen(false);
       setAiInstruction("");
       toast.success(done.length ? "AI updated the request" : "AI filled in the notes", { description: plan.reason || "Check it, then preview and send." });
