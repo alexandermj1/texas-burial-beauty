@@ -1562,6 +1562,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
          if (!selectedCemetery) throw new Error("Cemetery is no longer available.");
          await updateSubmissionCemetery(submissionId, selectedCemetery.name, selectedCemetery.city, plotChanged ? newPlot : undefined);
          done.push(`matched the cemetery to ${selectedCemetery.name}`);
+         onSent?.();
        }
        if (plotChanged && (!newCemetery || newCemetery === cemetery)) {
         const { error: e } = await supabase.from("contact_submissions").update({ plot_description: newPlot } as never).eq("id", submissionId);
