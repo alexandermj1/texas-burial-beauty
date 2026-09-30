@@ -494,7 +494,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const { error } = await supabase.from("contact_submissions")
         .update({ plot_description: next, ownership_answers: nextAnswers } as never)
         .eq("id", submissionId);
-      if (error) throw error;
+      if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
       const rebuilt = await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: next });
       setAnswers(nextAnswers as OwnershipAnswers);
       setPlotDescription(next);
@@ -1614,10 +1614,10 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       await persistPacketMessages();
       const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
 
-      const { error } = await supabase.functions.invoke("send-document-packet", {
+      const { data, error } = await supabase.functions.invoke("send-document-packet", {
         body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim() },
       });
-      if (error) throw error;
+      if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
       toast.success(`Document request emailed to ${sellerEmail}`, {
         description: `${items.length} item${items.length === 1 ? "" : "s"}${poas.length ? ` + ${poas.length} Power of Attorney` : ""}${docs.length ? ` + ${docs.length} prepared document${docs.length === 1 ? "" : "s"}` : ""}`,
       });

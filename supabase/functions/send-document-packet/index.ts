@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
           ${attachCount ? `
           <p style="margin:0 0 22px;font-size:14px;color:#4a5568;line-height:1.7;">
             We've also attached ${attachCount === 1 ? 'a document' : `${attachCount} documents`} to this email that we've
-            already prepared and filled in for you — please print, sign where indicated (before a notary where the page says so)
+             prepared for you — please complete any blank sections, then sign where indicated (before a notary where the page says so)
             and send back to us.
           </p>` : ''}
 
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
 
     // Send through the info@ Gmail mailbox (same path as the quote email) so the
     // message lands in Gmail's Sent folder and can be verified there.
-    const plain = `Your document page: ${packetUrl}\n\nEverything we need is listed on that page.${attachments.length ? `\n\nWe've attached ${attachments.length} document${attachments.length === 1 ? '' : 's'} we've already filled in for you — please print, sign (before a notary where indicated) and send back.` : ''}`;
+    const plain = `Your document page: ${packetUrl}\n\nEverything we need is listed on that page.${attachments.length ? `\n\nWe've attached ${attachments.length} prepared document${attachments.length === 1 ? '' : 's'} — please complete any blank sections, sign (before a notary where indicated) and send back.` : ''}`;
     const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {
@@ -288,7 +288,7 @@ Deno.serve(async (req) => {
       from_name: 'Texas Cemetery Brokers',
       to_email: to,
       subject,
-      snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${attachments.length ? ` + ${attachments.length} Power of Attorney attached` : ''}.`,
+       snippet: `Document request sent — ${items.length} item${items.length === 1 ? '' : 's'}${attachments.length ? ` + ${attachments.length} prepared document${attachments.length === 1 ? '' : 's'} attached` : ''}.`,
       body_text: plain,
       body_html: html,
       received_at: now,
