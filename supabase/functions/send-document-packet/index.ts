@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
       if (!p.path || seenPaths.has(p.path)) continue;
       seenPaths.add(p.path);
       const { data: file } = await svc.storage.from('contracts').download(p.path);
-      if (!file) continue;
+       if (!file) throw new Error(`The prepared power of attorney for ${p.name ?? 'the signer'} could not be attached. Nothing was sent.`);
       const bytes = new Uint8Array(await file.arrayBuffer());
       let bin = '';
       for (let i = 0; i < bytes.length; i += 0x8000) {
@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
       if (!d.path || seenPaths.has(d.path)) continue;
       seenPaths.add(d.path);
       const { data: file } = await svc.storage.from('contracts').download(d.path);
-      if (!file) continue;
+       if (!file) throw new Error(`${d.label ?? 'A prepared document'} could not be attached. Nothing was sent.`);
       const bytes = new Uint8Array(await file.arrayBuffer());
       let bin = '';
       for (let i = 0; i < bytes.length; i += 0x8000) {

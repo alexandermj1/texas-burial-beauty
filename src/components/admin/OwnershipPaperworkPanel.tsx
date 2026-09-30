@@ -494,7 +494,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const { error } = await supabase.from("contact_submissions")
         .update({ plot_description: next, ownership_answers: nextAnswers } as never)
         .eq("id", submissionId);
-      if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
+      if (error) throw error;
       const rebuilt = await rebuildUnsignedSubmissionDocuments(submissionId, { plotDescription: next });
       setAnswers(nextAnswers as OwnershipAnswers);
       setPlotDescription(next);
@@ -1592,7 +1592,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
         body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greetName.trim(), note: emailNote.trim(), preview: true },
       });
 
-      if (error) throw error;
+      if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
       const res = data as { html?: string; subject?: string };
       setReview({ step: 2, html: res?.html, subject: res?.subject });
     } catch (e) {
