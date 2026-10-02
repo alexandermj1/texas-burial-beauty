@@ -365,7 +365,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   // Cost control: skip automatic runs when nothing new has happened since the last run.
   const { data: lastRun } = await db.from("ai_agent_runs").select("created_at").eq("submission_id", sub.id).eq("status", "done").order("created_at", { ascending: false }).limit(1).maybeSingle();
   const { data: lastMsg } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
-  if (trigger !== "manual" && lastRun) {
+  if (trigger !== "manual" && trigger !== "refresh" && lastRun) {
     const { count: newNotes } = await db.from("customer_notes").select("id", { count: "exact", head: true }).eq("submission_id", sub.id).gt("created_at", lastRun.created_at).not("author_name", "ilike", "AI agent%");
     const newMail = lastMsg && lastMsg.received_at > lastRun.created_at;
     if (!newMail && !newNotes && (sub.updated_at ?? "") <= lastRun.created_at) return { status: "skipped", reason: "nothing new since last review" };
@@ -483,11 +483,16 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "AI is not configured" }, 500);
 
-    const user = await staffUser(db, req);
-    if (!user) return json({ error: "Admin or staff only" }, 403);
-
     const parsed = Body.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
+    // Database triggers (new seller email / staff note) may request a review — proposals only, never sends.
+    const cronTok = req.headers.get("x-agent-cron");
+    let user = cronTok ? null : await staffUser(db, req);
+    if (cronTok && ["run", "sweep"].includes(parsed.data.action)) {
+      const { data: t } = await db.from("ai_agent_settings").select("value").eq("key", "cron_token").maybeSingle();
+      if (t && String(t.value) === cronTok) user = { id: null as any, name: "AI agent (automatic)" };
+    }
+    if (!user) return json({ error: "Admin or staff only" }, 403);
     let body = parsed.data as any;
     let staffRequested = false;
 
@@ -547,7 +552,7 @@ Deno.serve(async (req) => {
     if (body.action === "sweep") {
       // Needs-reply sellers only: the latest email on the record is FROM the customer
       // (unanswered). Fetch recent mail both directions and keep only those.
-      const since = new Date(Date.now() - 7 * 86400_000).toISOString();
+      const since = new Date(Date.now() - 30 * 86400_000).toISOString();
       const { data: recent } = await db.from("email_messages").select("matched_submission_id,received_at,from_email")
         .not("matched_submission_id", "is", null).gte("received_at", since)
         .is("deleted_at", null).order("received_at", { ascending: false }).limit(300);
@@ -563,9 +568,14 @@ Deno.serve(async (req) => {
       for (const [sid, at] of latest) {
         if (processed >= (body.limit ?? 10)) break;
         const { data: lastRun } = await db.from("ai_agent_runs").select("created_at").eq("submission_id", sid).order("created_at", { ascending: false }).limit(1).maybeSingle();
-        if (lastRun && lastRun.created_at > at) continue;
+        if (lastRun && lastRun.created_at > at) {
+          const { count } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
+          if (count) continue; // still has a current suggestion
+        }
         try {
-          const r = await runForSubmission(db, apiKey, sid, "sweep");
+          const { count: live } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
+          // Every Needs-reply seller should carry a current suggestion: re-review if theirs went stale.
+          const r = await runForSubmission(db, apiKey, sid, live ? "sweep" : "refresh");
           if ((r as any).status === "done") processed++;
           results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason });
         } catch (e) {
