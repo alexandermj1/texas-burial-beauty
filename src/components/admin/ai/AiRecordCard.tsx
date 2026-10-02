@@ -27,22 +27,25 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const [paused, setPaused] = useState(!!pausedAt);
   const [showHistory, setShowHistory] = useState(false);
   const [instruction, setInstruction] = useState("");
+  const [sentInstructions, setSentInstructions] = useState<{ body: string; author_name: string | null; created_at: string }[]>([]);
 
   const load = useCallback(async () => {
-    const [{ data: r }, { data: a }] = await Promise.all([
+    const [{ data: r }, { data: a }, { data: ins }] = await Promise.all([
       supabase.from("ai_agent_runs" as never).select("created_at,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("ai_agent_actions" as never).select("*").eq("submission_id", submissionId).is("deleted_at", null).neq("status", "superseded").order("created_at", { ascending: false }).limit(30),
+      supabase.from("customer_notes").select("body,author_name,created_at").eq("submission_id", submissionId).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
     ]);
+    setSentInstructions((ins ?? []) as any);
     setRun((r as unknown as Run) ?? null);
     setActions((a ?? []) as unknown as AiAction[]);
   }, [submissionId]);
 
   useEffect(() => { setPaused(!!pausedAt); load(); }, [submissionId, pausedAt, load]);
 
-  const review = async () => {
+  const review = async (instructionText?: string) => {
     setBusy(true);
     try {
-      const r = await callSellerAgent({ action: "run", submission_id: submissionId });
+      const r = await callSellerAgent({ action: "run", submission_id: submissionId, ...(instructionText ? { instruction: instructionText } : {}) });
       if (r?.status !== "done") toast({ title: "AI skipped this seller", description: r?.reason });
       await load();
     } catch (e) { toast({ title: "AI review failed", description: (e as Error).message, variant: "destructive" }); }
@@ -66,7 +69,11 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       body: `Instruction for AI: ${text}`, author_name: prof?.full_name || u.user?.email || "Staff", author_user_id: u.user?.id ?? null,
     } as never);
     if (error) toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
-    else { setInstruction(""); toast({ title: "Instruction saved", description: "The AI reads it first on its next review." }); }
+    else {
+      setInstruction("");
+      toast({ title: "Instruction sent", description: "The AI is working on it now." });
+      if (!paused) await review(text); else await load();
+    }
   };
 
   const pending = actions.filter((a) => a.status === "proposed");
@@ -89,7 +96,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Switch checked={paused} onCheckedChange={togglePause} /> Pause AI
           </label>
-          <Button size="sm" variant="outline" onClick={review} disabled={busy || paused} className="border-indigo-500/40 text-indigo-700 dark:text-indigo-300">
+          <Button size="sm" variant="outline" onClick={() => review()} disabled={busy || paused} className="border-indigo-500/40 text-indigo-700 dark:text-indigo-300">
             {busy ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}Review now
           </Button>
         </div>
@@ -110,8 +117,19 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
       <div className="flex gap-2">
         <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={1} placeholder="Instruction for AI (e.g. hold until after the funeral)" className="min-h-9 text-sm bg-card" />
-        <Button size="sm" variant="outline" onClick={saveInstruction} disabled={!instruction.trim()} className="border-indigo-500/40"><Send className="w-4 h-4" /></Button>
+        <Button size="sm" variant="outline" onClick={saveInstruction} disabled={!instruction.trim() || busy} className="border-indigo-500/40"><Send className="w-4 h-4" /></Button>
       </div>
+
+      {sentInstructions.length > 0 && (
+        <ul className="space-y-1">
+          {sentInstructions.map((n) => (
+            <li key={n.created_at} className="text-xs rounded-lg bg-card/70 border border-indigo-500/20 px-2.5 py-1.5">
+              <span className="font-medium text-indigo-800 dark:text-indigo-200">You told the AI:</span> {n.body.replace(/^Instruction for AI:\s*/i, "")}
+              <span className="text-muted-foreground"> · {n.author_name ?? "Staff"}, {new Date(n.created_at).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {history.length > 0 && (
         <div>

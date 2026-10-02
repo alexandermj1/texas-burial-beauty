@@ -15,7 +15,7 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional() }),
+  z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional() }),
   z.object({ action: z.literal("execute"), action_id: z.string().uuid() }),
   z.object({ action: z.literal("reject"), action_id: z.string().uuid() }),
@@ -219,6 +219,12 @@ RULES FOR YOUR OUTPUT
 - LISTING VISIBILITY: if asked where an individual listing is, explain that we use searchable cemetery pages instead of individual plot pages; buyers who enquire are matched with our internal property list, also shared with mortuaries. Link the EXAMPLE AVAILABLE PROPERTY LIST; clearly label it as an example, not live inventory. This ordinary question needs no human review unless the seller disputes their actual marketing status.
 - REQUIRED DOCUMENTS: we cannot market or sell without the required ownership/transfer paperwork. We can keep the seller's details on file. If a refund, cancellation, hold or conflicting staff instruction is on the file, leave it to staff to decide whether the file can resume; no customer email from the AI until staff decides.
 - SPACE CORRECTIONS on a sent quote (add/remove a space in the same area, space numbers copied wrong): use update_quote_spaces, don't flag.
+- PHYSICAL ORIGINALS: whenever an email mentions mailing/posting original documents we have not logged as received, word it softly in case they are already on their way or have arrived and our team hasn't logged them yet, e.g. "If you've already posted it, thank you — our team will add it to your file as soon as it's logged." Never imply the seller hasn't sent something.
+- WAITING ON A MAILED POA: be warm and patient — thank them, say we look forward to receiving it, and that once it arrives we'll add it to their file and their listing will go live. No pressure, no blame.
+- POA PHOTO/SCAN NOT YET MAILED: if the seller sends a photo or scan of a power of attorney, check it in the scans: signed by the right person(s) named on the POA, notary block completed (notary signature, seal/stamp, date, commission), and no blank required fields. If it looks right, tell them it looks good and to mail the original. If something is missing or wrong, explain exactly what, kindly, and how to fix it. If unreadable, say so.
+- "IS ANYTHING ELSE NEEDED?" / FILE COMPLETE: only say nothing else is needed when every DOCUMENT REQUEST ITEM is received/notarized/not_needed, or staff explicitly confirmed it in a note/email. For wet-ink originals, staff must have confirmed arrival. If staff confirmed by email but the checklist items still read pending, say so in reasoning and propose update_document_items for the items the evidence supports.
+- CHECK FILING (only when relevant — the seller asks if anything else is needed, says they sent something, or you are reviewing that part of the request): check that the files emailed/uploaded match the checklist item they belong to (right document, right person, e.g. each death certificate under the right deceased person). Propose update_document_items to attach unfiled files to the right item; mention mismatches in reasoning.
+- COUNTER-SIGNED LISTING AGREEMENT: if asked, explain the broker counter-signs the listing agreement once we have all the documents required to sell the property, and they will receive the counter-signed copy by email at that point.
 - NOTES (add_note and every note field): write like a colleague in one plain sentence, e.g. "Robert sent us his phone number: 281-788-6197." Never "Updated the record:", arrows, quotes around values or "Reason:".
 - Emails: plain text, following the tone rules, greeting "Dear <First Name>," and the standard sign-off. No markdown.
 - KEEP EVERY EXPLANATION SHORT AND PLAIN. Staff skim these on a busy panel:
@@ -237,9 +243,9 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
   const { data } = await db.from("customer_files").select("file_name,file_path,mime_type,document_type,file_size,created_at")
     .eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(40);
   const ok = (f: any) => /^image\/(jpeg|png|webp)$/.test(f.mime_type ?? "") ? (f.file_size ?? 0) < 12_000_000 : f.mime_type === "application/pdf" && (f.file_size ?? 0) < 5_000_000;
-  const rank = (f: any) => /deed|certificate of ownership/i.test(f.document_type ?? "") ? 0 : /intake/i.test(f.document_type ?? "") ? 1 : /attachment/i.test(f.document_type ?? "") ? 2 : 9;
+  const rank = (f: any) => /deed|certificate of ownership/i.test(f.document_type ?? "") ? 0 : /power of attorney|poa|death|affidavit|photo id|will/i.test(`${f.document_type} ${f.file_name}`) ? 1 : /intake/i.test(f.document_type ?? "") ? 2 : /attachment/i.test(f.document_type ?? "") ? 2 : 9;
   const seen = new Set<number>();
-  const picked = (data ?? []).filter(ok).filter((f) => !seen.has(f.file_size) && seen.add(f.file_size)).filter((f) => rank(f) < 9).sort((a, b) => rank(a) - rank(b)).slice(0, 4);
+  const picked = (data ?? []).filter(ok).filter((f) => !seen.has(f.file_size) && seen.add(f.file_size)).filter((f) => rank(f) < 9).sort((a, b) => rank(a) - rank(b)).slice(0, 6);
   const parts: any[] = [], names: string[] = [];
   for (const f of picked) {
     // Phone photos are large: ask storage for a resized copy first, fall back to the original.
@@ -348,7 +354,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
   };
 }
 
-async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string) {
+async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string) {
   const { data: sub } = await db.from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
   if (!sub) return { status: "skipped", reason: "not found" };
   if (sub.deleted_at || sub.archived_at) return { status: "skipped", reason: "archived or deleted" };
@@ -376,10 +382,23 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     // Only read the scans when there is something to check: the seller's latest message
     // questions the documents/plots/details, or staff asked for a manual review.
     const lastText = String(ctx.context).slice(-3500).toLowerCase();
-    const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer/.test(lastText);
-    const scans = (customerWaiting && wantsCheck) ? await loadScans(db, sub) : { parts: [], names: [] };
-    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, effort, scans.parts);
+    const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer|notar|power of attorney|poa|death cert|anything else|need anything|mailed|posted|sent (it|them|the)/.test(lastText);
+    // A staff instruction (typed now, or an "Instruction for AI" note since the last review) means a person is directing the AI.
+    let instruction = staffInstruction?.trim() || "";
+    if (!instruction) {
+      const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
+    }
+    const scans = ((customerWaiting && wantsCheck) || instruction) ? await loadScans(db, sub) : { parts: [], names: [] };
+    const directive = instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${instruction}"\nFollow it. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
+    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, instruction ? "medium" : effort, scans.parts);
     const d = parseDecision(raw, allowed);
+    if (instruction) {
+      // Staff-directed: never bounce the work back to a human.
+      const kept = d.actions.filter((a) => a.type !== "flag_human");
+      d.actions = kept.length ? kept : d.actions.map((a) => a.type === "flag_human" ? { ...a, type: "add_note", note: a.note ?? d.human_reason ?? a.reason } : a);
+      d.needs_human = false; d.confidence = Math.max(d.confidence, 0.7);
+    }
     // Handing to staff = nothing else. The seller stays in Needs reply.
     if (d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human")) d.actions = d.actions.filter((a) => a.type === "flag_human");
     const needsHuman = d.needs_human || d.confidence < 0.7 || d.actions.some((a) => a.type === "flag_human");
@@ -474,7 +493,7 @@ Deno.serve(async (req) => {
 
     if (body.action === "run") {
       try {
-        return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual"));
+        return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction));
       } catch (e) {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);

@@ -1566,7 +1566,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       next.packetGreeting = plan.greeting_name || greetName.trim();
       next.packetEmailNote = plan.email_note;
       next.packetNote = plan.page_note || (selectedCemetery && (answers.packetNote ?? "").includes(cemetery ?? "")
-        ? (answers.packetNote ?? "").replaceAll(cemetery ?? "", selectedCemetery.name)
+        ? (answers.packetNote ?? "").split(cemetery ?? "").join(selectedCemetery.name)
         : plan.page_note);
       await persistAnswers(next as OwnershipAnswers);
       if (selectedCemetery) {
