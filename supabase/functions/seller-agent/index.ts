@@ -365,7 +365,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   // Cost control: skip automatic runs when nothing new has happened since the last run.
   const { data: lastRun } = await db.from("ai_agent_runs").select("created_at").eq("submission_id", sub.id).eq("status", "done").order("created_at", { ascending: false }).limit(1).maybeSingle();
   const { data: lastMsg } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
-  if (trigger !== "manual" && lastRun) {
+  if (trigger !== "manual" && trigger !== "refresh" && lastRun) {
     const { count: newNotes } = await db.from("customer_notes").select("id", { count: "exact", head: true }).eq("submission_id", sub.id).gt("created_at", lastRun.created_at).not("author_name", "ilike", "AI agent%");
     const newMail = lastMsg && lastMsg.received_at > lastRun.created_at;
     if (!newMail && !newNotes && (sub.updated_at ?? "") <= lastRun.created_at) return { status: "skipped", reason: "nothing new since last review" };
@@ -573,7 +573,9 @@ Deno.serve(async (req) => {
           if (count) continue; // still has a current suggestion
         }
         try {
-          const r = await runForSubmission(db, apiKey, sid, "sweep");
+          const { count: live } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
+          // Every Needs-reply seller should carry a current suggestion: re-review if theirs went stale.
+          const r = await runForSubmission(db, apiKey, sid, live ? "sweep" : "refresh");
           if ((r as any).status === "done") processed++;
           results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason });
         } catch (e) {
