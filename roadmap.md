@@ -107,7 +107,7 @@
 - [x] Study recent staff email replies to build the tone/protocol knowledge base
 - [x] Update the plan with the knowledge base findings
 - [x] Phase 1: playbook, seller-only agent, approval inbox (shadow/approval mode)
-- [ ] Phase 2: automatic triggers (new email/note/upload) + scheduled sweep — after a week of reviewing proposals
+- [x] Phase 2: automatic reviews on new seller email / staff note; stale suggestions auto-cleared
 - [ ] Phase 3: turn on autonomous sending per action type once approval rates are high
 - [x] Add guarded 10% quote-increase proposals for sellers seeking more; staff review and send through the existing quote email and acceptance chain
 - [x] Send an isolated branded non-actionable quote preview to Alexander's address with an introduction and verified figures (no live payment links)
