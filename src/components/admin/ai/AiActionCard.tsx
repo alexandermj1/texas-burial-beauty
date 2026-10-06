@@ -27,6 +27,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   update_document_items: { label: "Update document checklist", Icon: FileText, approve: "Apply to checklist" },
   update_quote_spaces: { label: "Correct quote spaces", Icon: DollarSign, approve: "Update & open quote" },
   increase_quote_ten_percent: { label: "Revised quote · +10%", Icon: DollarSign, approve: "Review seller pack" },
+  resend_expired_quote: { label: "Renew expired quote", Icon: DollarSign, approve: "Open quote email" },
   resend_quote_free_listing: { label: "Resend quote — free listing (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
@@ -62,7 +63,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const approve = async () => {
     setBusy(true);
     try {
-       if (["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
+       if (["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
       const r = await callSellerAgent({ action: "execute", action_id: a.id });
@@ -97,7 +98,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
-       {["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent"].includes(a.action_type) && a.email_body !== null && (pending ? (
+       {["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.email_body !== null && (pending ? (
         <div className="space-y-2">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
@@ -113,8 +114,8 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           {a.payload.items.map((i) => <li key={i.id}>{i.note ?? "Checklist item"}{i.state ? ` — mark ${i.state.replace(/_/g, " ")}` : ""}{i.attach_file_ids.length ? ` · attach ${i.attach_file_ids.length} file${i.attach_file_ids.length > 1 ? "s" : ""}` : ""}</li>)}
         </ul>
       )}
-      {!["reply_email", "increase_quote_ten_percent"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
-      {a.action_type === "increase_quote_ten_percent" && <p className="text-xs text-muted-foreground">Approval fills in the quote generator with the revised price and opens it. Check the fields and send the quote as normal; the text above then goes out as a separate follow-up email.</p>}
+      {!["reply_email", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
+      {["increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval fills in the quote generator with the revised price and opens it. Check the fields and send the quote as normal; the text above then goes out as a separate follow-up email.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
         <div className="flex gap-2">
