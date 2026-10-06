@@ -3258,7 +3258,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   pausedAt={(selected as any).ai_paused_at ?? null}
                   customerProfileId={(selected as any).customer_profile_id ?? null}
                   onOpenQuote={(action) => {
-                    if (action?.action_type === "increase_quote_ten_percent") {
+                    if (action?.action_type === "increase_quote_ten_percent" || action?.action_type === "resend_expired_quote") {
                       setAutoCompose({ templateId: "seller_listing_options", nonce: Date.now() });
                       setSellerWorkspaceTab("email");
                       setPendingWorkspaceAnchor(`email-thread-${selected.id}`);
