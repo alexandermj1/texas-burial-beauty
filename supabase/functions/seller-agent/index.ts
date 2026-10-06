@@ -150,7 +150,15 @@ function allowedActions(sub: Sub, contracts: any[]) {
   // ("Fill with AI" on the Check the request screen).
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
+  if (sub.quote_sent_at && !accepted && !signed && quoteExpired(sub)) out.add("resend_expired_quote");
   return { allowed: out, liveLink };
+}
+
+// Quotes are valid for ten days from the sent date unless a later expiry was saved.
+function quoteExpired(sub: Sub) {
+  const now = Date.now();
+  if (sub.quote_expires_at) return new Date(String(sub.quote_expires_at)).getTime() < now;
+  return !!sub.quote_sent_at && new Date(String(sub.quote_sent_at)).getTime() + 10 * 86_400_000 < now;
 }
 
 const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves each one; each runs the exact same code staff use, so records, email tags, milestones and notifications are identical to a human doing it):
@@ -162,9 +170,12 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with the $99 waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to click the free Starter option; we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the free Starter option in the quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this instead of flag_human for fee waivers.
-- update_quote_spaces: simple quote corrections, ONLY when the seller (or the deed scan) shows the quote has the wrong spaces in the SAME section/lawn — they want to add a space, take one out, or we copied the space numbers/count from the deed wrongly. The per-space price stays EXACTLY the same; only the count / space numbers change. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and opens the normal Send quote screen prefilled, so staff send it exactly like any quote (listing agreement and family tree follow as usual). Put a one-line summary in reason (e.g. "Adds space 5 in Section 12 at the same $2,100 per space"). Do NOT also write a reply_email.
+- update_quote_spaces: quote corrections, ONLY when the seller (or the deed scan) shows the quote has the wrong spaces in the SAME section/lawn/garden — they want to add a space, take one out, swap to DIFFERENT spaces in that same area, or we copied the space numbers/count from the deed wrongly. Spaces in the same area are valued at the same per-space price. The per-space price stays EXACTLY the same; only the count / space numbers change. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and opens the normal Send quote screen prefilled, so staff send it exactly like any quote (listing agreement and family tree follow as usual). Put a one-line summary in reason (e.g. "Adds space 5 in Section 12 at the same $2,100 per space"). Do NOT also write a reply_email.
  - increase_quote_ten_percent: ONLY when a seller clearly asks for a higher quote, an existing unaccepted quote is on file, and this action is ALLOWED NOW. Propose it with one short reason and body as a SHORT introductory paragraph above the quote explaining we revisited their request. The server calculates the exact 10% increase and strictly checks the 70%-of-retail buyer total including the transfer fee and 15% buyer fee. Staff approval opens the normal seller quote packet; it is not emailed until staff checks the price, deed owners, property description and presses Send. Never propose for a plain decline, an existing accepted quote, a demand for a specific different figure, a price dispute/complaint, or a plot-count discrepancy. Never pair it with reply_email.
- - Quotes: apart from resend_quote_free_listing, update_quote_spaces and increase_quote_ten_percent you NEVER send or propose quotes or valuations. New valuations, a different section/garden, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
+ - resend_expired_quote: ONLY when the seller's unaccepted quote has EXPIRED (ALLOWED NOW) and they want to go ahead, ask about it, or ask for more time. Same price per space, same spaces — nothing changes except a fresh 10-day window. Field: body = a SHORT friendly intro shown above the quote (e.g. "Your earlier quote has expired, so we've renewed it at the same figures for another ten days."). On approval it opens the normal quote email generator prefilled; staff press Send. Never pair it with reply_email. Use this instead of flag_human for expired quotes.
+ - PRICE DISPUTES / FEE QUESTIONS: answer them yourself with reply_email from the SAVED QUOTE FIGURES (quote_amount = per space excluding the transfer fee, plot count, transfer_fee_amount charged once and paid from the sale, separate 15% buyer fee paid by the buyer) and the quote email actually sent in the thread. Explain calmly how the numbers fit together and correct any misunderstanding. If an earlier email from us gave a different figure, acknowledge it honestly and say which figure is current. Do not invent a new price; if they want more, use increase_quote_ten_percent when allowed.
+ - STARTER CANCELLATION FEE: quote whatever fee the seller's own quote email states (read it in the thread). Only if their quote email is not visible use the playbook figure.
+ - Quotes: apart from resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, a different garden/lawn (different area) or a different cemetery, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
@@ -412,7 +423,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     const rows = d.actions.map((a) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -795,6 +806,11 @@ Deno.serve(async (req) => {
           }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).or("quote_response.is.null,quote_response.neq.accepted").is("accepted_quote_amount", null).is("la_signed_at", null).is("archived_at", null).is("deleted_at", null).is("closed_at", null).is("sold_at", null).is("ai_paused_at", null).select("id").single();
           if (e) throw new Error(e.message);
           await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
+        } else if (act.action_type === "resend_expired_quote") {
+          if (!quoteExpired(sub) || !sub.email || !(Number(sub.quote_amount) > 0)) throw new Error("This quote is no longer expired or has no saved price. Review it manually.");
+          const { error: e } = await db.from("contact_submissions").update({ quote_message: String(act.email_body ?? "").slice(0, 1500) || null, quote_expires_at: null }).eq("id", sub.id).is("accepted_quote_amount", null).is("la_signed_at", null);
+          if (e) throw new Error(e.message);
+          await aiNote(`${first(sub)}'s quote had expired — renewed at the same $${Number(sub.quote_amount).toLocaleString()} per space. ${user.name} opened the quote email to send.`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
@@ -807,7 +823,7 @@ Deno.serve(async (req) => {
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces", "increase_quote_ten_percent"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
+    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces", "increase_quote_ten_percent", "resend_expired_quote"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);
