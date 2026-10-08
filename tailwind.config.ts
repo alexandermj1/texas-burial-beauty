@@ -65,6 +65,14 @@ export default {
         },
         gold: "hsl(var(--gold))",
         stone: "hsl(var(--stone))",
+        valuation: {
+          blue: "hsl(var(--valuation-blue))",
+          teal: "hsl(var(--valuation-teal))",
+          coral: "hsl(var(--valuation-coral))",
+          surface: "hsl(var(--valuation-surface))",
+          ink: "hsl(var(--valuation-ink))",
+          paper: "hsl(var(--valuation-paper))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
