@@ -219,7 +219,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
 
       <p className="px-6 md:px-10 py-5 text-[11px] text-muted-foreground leading-relaxed border-t border-border/60">
         Estimates are automated and can be off — the garden, exact location, cemetery fees and current demand all change the real number. For an accurate valuation,{" "}
-        <Link to="/sell" className="text-primary underline underline-offset-2">request a free quote from a licensed broker</Link>. This is not an offer or an appraisal.
+        <Link to="/sell" className="text-primary underline underline-offset-2">request a free quote from our brokers</Link>. This is not an offer or an appraisal.
       </p>
     </div>
   );

@@ -101,6 +101,7 @@ const App = () => (
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
                 <Route path="/cemetery-plot-cost-texas" element={<GuideCemeteryPlotCost />} />
+                <Route path="/cemetery-plot-value-calculator" element={<PlotValueCalculatorPage />} />
                 <Route path="/preneed-cemetery-plots-texas" element={<GuidePreneedCemeteryPlots />} />
                 <Route path="/cemetery-transfer-process-texas" element={<GuideCemeteryTransferProcess />} />
                 <Route path="/guides/planning-a-funeral-in-texas" element={<GuidePlanningFuneralTexas />} />

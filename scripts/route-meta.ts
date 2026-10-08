@@ -109,6 +109,13 @@ export const STATIC_ROUTES: RouteMeta[] = [
     type: "article",
   },
   {
+    path: "/cemetery-plot-value-calculator",
+    title: "Cemetery Plot Value Calculator | Texas Resale Estimate",
+    description:
+      "Free cemetery plot value calculator for Texas. Instantly estimate what your burial plot, crypt or niche could sell for through a broker or a private sale.",
+    type: "website",
+  },
+  {
     path: "/cemetery-plot-cost-texas",
     title: "How Much Does a Cemetery Plot Cost in Texas? (2026)",
     description:
