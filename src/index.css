@@ -190,6 +190,10 @@
   background-size: 100% 300%;
   animation: valuation-hero-flow 3.5s ease-in-out infinite alternate;
 }
+.valuation-hero .valuation-tile-1 { animation-delay: -2.6s; }
+.valuation-hero .valuation-tile-2 { animation-delay: -1s; }
+.valuation-hero .valuation-tile-3 { animation-delay: -3.2s; }
+.valuation-hero .valuation-tile-4 { animation-delay: -1.8s; }
 @keyframes valuation-hero-flow {
   0% { background-position: 0% 0%; opacity: 0.55; }
   100% { background-position: 0% 100%; opacity: 1; }
