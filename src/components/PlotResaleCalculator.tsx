@@ -95,7 +95,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
         </div>
         <span className="inline-flex gap-2 items-center text-xs text-muted-foreground"><ShieldCheck className="w-4 h-4" /> No contact details needed</span>
       </div>
-      <div className="grid lg:grid-cols-[1fr_1.1fr]">
+      <div className={compact ? "grid grid-cols-1" : "grid lg:grid-cols-[1fr_1.1fr]"}>
         <form onSubmit={run} className="p-6 md:p-9 space-y-6 min-w-0">
           <div ref={boxRef} className="relative">
             <label htmlFor="value-cemetery" className="text-sm font-medium mb-2 block">Cemetery</label>
@@ -126,7 +126,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
           <Button type="submit" disabled={loading} className="w-full h-13 min-h-12 text-sm">{loading ? <Loader2 className="animate-spin" /> : <Sparkles />}{loading ? "Calculating your estimate…" : "Estimate my plot value"}<ArrowRight className="ml-auto" /></Button>
           {err && <p role="alert" className="text-sm text-destructive">{err} <Link to={sellHref} className="underline">Get a free quote</Link></p>}
         </form>
-        <div className="p-6 md:p-9 bg-foreground text-background min-h-[520px] min-w-0 lg:rounded-br-lg relative overflow-hidden" aria-live="polite" aria-busy={loading}>
+        <div className="p-6 md:p-9 bg-foreground text-background min-h-[520px] min-w-0 rounded-b-lg relative overflow-hidden" aria-live="polite" aria-busy={loading}>
           <AnimatePresence mode="wait">
             {!est ? <motion.div key={loading ? "loading" : "empty"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="h-full flex flex-col justify-center text-center">
               <p className="text-xs text-valuation-teal mb-3">YOUR RESALE POTENTIAL</p>
