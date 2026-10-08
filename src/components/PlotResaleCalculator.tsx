@@ -89,7 +89,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
     <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-xl border-2 border-primary/25 bg-background">
       <div className="valuation-hero relative isolate overflow-hidden border-b border-border rounded-t-xl flex flex-col items-center text-center">
         <div className="absolute inset-0 grid grid-cols-5" aria-hidden="true">
-          {Array.from({ length: 10 }, (_, i) => <div key={i} className={`valuation-tile valuation-tile-${i % 5}`} />)}
+          {Array.from({ length: 5 }, (_, i) => <div key={i} className={`valuation-tile valuation-tile-${i}`} />)}
         </div>
         <div className="absolute inset-0 valuation-hero-overlay" aria-hidden="true" />
         <div className="relative z-10 px-6 py-10 md:py-14 flex flex-col items-center gap-5 max-w-3xl">
