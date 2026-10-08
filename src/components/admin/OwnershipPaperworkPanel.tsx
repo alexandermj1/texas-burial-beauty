@@ -2952,9 +2952,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
               </div>
 
               <div className="flex min-w-0 w-full flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => setAiAskOpen((v) => !v)} className="h-auto min-h-9 whitespace-normal border-[#bfd2e3] bg-white text-[#254969] hover:bg-[#eef5fa]">
+                {aiOn && <Button size="sm" variant="outline" onClick={() => setAiAskOpen((v) => !v)} className="h-auto min-h-9 whitespace-normal border-[#bfd2e3] bg-white text-[#254969] hover:bg-[#eef5fa]">
                   ✦ Ask AI to change
-                </Button>
+                </Button>}
                 <Button size="sm" variant="outline" onClick={() => setAddDocOpen(true)} className="h-auto min-h-9 whitespace-normal bg-white">
                   <Plus className="w-3.5 h-3.5 mr-1" />Add a document
                 </Button>
@@ -3467,9 +3467,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             <div className="space-y-3 max-h-[65vh] overflow-y-auto">
               <div className="rounded-md border p-3 space-y-2.5">
                 <div className="flex justify-end">
-                  <Button type="button" size="sm" variant="outline" onClick={fillPacketWithAi} disabled={aiFilling} className="h-7 text-xs">
+                  {aiOn && <Button type="button" size="sm" variant="outline" onClick={fillPacketWithAi} disabled={aiFilling} className="h-7 text-xs">
                     {aiFilling ? "AI is filling in…" : "✦ Fill with AI"}
-                  </Button>
+                  </Button>}
                 </div>
                 <div>
                   <p className="text-xs font-semibold">Who the email greets</p>
