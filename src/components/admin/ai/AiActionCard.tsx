@@ -11,8 +11,58 @@ export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
-  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[] } | null;
+  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges } | null;
 };
+
+type AiChanges = {
+  fields?: { label: string; before: string; after: string }[];
+  rebuild?: string[]; untouched?: string[];
+  items?: { label: string; before: string; after: string | null; attach: string[]; note: string | null }[];
+};
+
+function ChangesView({ c }: { c: AiChanges }) {
+  return (
+    <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2.5 text-sm">
+      <div className="text-xs font-semibold text-foreground">What approving this will change</div>
+      {!!c.fields?.length && (
+        <ul className="space-y-1.5">
+          {c.fields.map((f, i) => (
+            <li key={i}>
+              <div className="text-xs text-muted-foreground capitalize">{f.label}</div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="rounded bg-destructive/10 px-1.5 py-0.5 line-through text-muted-foreground">{f.before}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="rounded bg-primary/15 px-1.5 py-0.5 font-medium text-foreground">{f.after}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!!c.rebuild?.length && (
+        <div><div className="text-xs text-muted-foreground">Documents rebuilt with the new wording and re-sent on the documents page</div>
+          <ul className="mt-1 space-y-0.5">{c.rebuild.map((d) => <li key={d} className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />{d}</li>)}</ul></div>
+      )}
+      {!!c.untouched?.length && (
+        <div><div className="text-xs text-muted-foreground">Left as they are</div>
+          <ul className="mt-1 space-y-0.5 text-muted-foreground">{c.untouched.map((d) => <li key={d}>{d}</li>)}</ul></div>
+      )}
+      {!!c.items?.length && (
+        <ul className="space-y-1.5">
+          {c.items.map((i, k) => (
+            <li key={k}>
+              <div className="font-medium text-foreground">{i.label}</div>
+              <div className="text-xs text-muted-foreground">
+                {i.after ? <>Status: <span className="line-through">{i.before}</span> → <span className="font-medium text-foreground">{i.after}</span></> : `Status stays ${i.before}`}
+                {i.attach.length > 0 && <> · attach {i.attach.join(", ")}</>}
+              </div>
+              {i.note && <div className="text-xs text-muted-foreground italic">{i.note}</div>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
   reply_email: { label: "Reply email", Icon: Mail, approve: "Approve & send" },
@@ -109,12 +159,13 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
         </div>
       ) : <pre className="whitespace-pre-wrap text-sm text-foreground bg-muted/40 rounded-lg p-3 font-sans">{a.email_body}</pre>)}
-      {["update_fields", "fix_document_request", "update_quote_spaces"].includes(a.action_type) && a.payload?.fields && (
+      {a.payload?.changes && <ChangesView c={a.payload.changes} />}
+      {!a.payload?.changes && ["update_fields", "fix_document_request", "update_quote_spaces"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {Object.entries(a.payload.fields).map(([k, v]) => <li key={k}><span className="text-muted-foreground">{k.replace(/_/g, " ")}:</span> {v}</li>)}
         </ul>
       )}
-      {a.action_type === "update_document_items" && a.payload?.items && (
+      {!a.payload?.changes && a.action_type === "update_document_items" && a.payload?.items && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {a.payload.items.map((i) => <li key={i.id}>{i.note ?? "Checklist item"}{i.state ? ` — mark ${i.state.replace(/_/g, " ")}` : ""}{i.attach_file_ids.length ? ` · attach ${i.attach_file_ids.length} file${i.attach_file_ids.length > 1 ? "s" : ""}` : ""}</li>)}
         </ul>

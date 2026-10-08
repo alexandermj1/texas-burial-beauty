@@ -253,7 +253,7 @@ RULES FOR YOUR OUTPUT
   - When family, heirs, signers or POAs matter, add {"kind":"family_tree","people":[{"name":string,"relation":string,"parent":string|null (name of the person above them, null for the deed owner),"deceased":boolean,"signs":boolean,"note":string|null}]} (max 12 people).
   - Use visuals anywhere they make your point quicker to check: deed or POA checks, which file sits under which checklist item, quote figures vs what an email said, plot/space corrections, who must sign.
   - When the record and the evidence disagree or need checking, add {"kind":"compare","title":string,"rows":[{"label":string,"record":string,"evidence":string,"match":boolean}]} (max 8 rows).
-- FIX THE RECORD FROM EVIDENCE: whenever a compare row shows a record field that is blank or wrong and the deed/scan/seller email clearly shows the right value, ALSO propose update_fields with those values (e.g. space_numbers "3 & 4", plot_count "2", section, lawn, deed_owner_names, plot_description) and a note like "Filled in the space numbers (3 & 4) and plot count (2) from the deed." Include the compare visual on that action. Never change prices, stages or dates. If a document request has already gone out and the plot wording itself is wrong, use fix_document_request instead.
+- FIX THE RECORD FROM EVIDENCE: whenever a compare row shows a record field that is blank or wrong and the deed/scan/seller email clearly shows the right value, ALSO propose update_fields with those values (e.g. space_numbers "3 & 4", plot_count "2", section, lawn, deed_owner_names, plot_description) and a note like "Filled in the space numbers (3 & 4) and plot count (2) from the deed." Include the compare visual on that action. Never change prices, stages or dates. If a document request has already gone out and the plot wording itself is wrong, use fix_document_request instead, with a compare visual (old wording vs the deed/email) and the deed scan so staff see exactly what is changing and why.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
@@ -391,6 +391,39 @@ function parseVisuals(v: unknown) {
   }).filter(Boolean) as any[];
 }
 
+const DOC_KIND_LABEL: Record<string, string> = { listing_agreement: "Listing agreement", poa: "Power of attorney", affidavit_heirship: "Affidavit of heirship", spousal_consent: "Spousal consent" };
+/** What approving a change will do, worked out up front so staff can see it before approving. */
+async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
+  if (a.type === "fix_document_request" || a.type === "update_fields" || a.type === "update_quote_spaces") {
+    const fields = Object.entries(a.fields ?? {}).map(([k, v]) => ({ label: (FIELD_LABEL as any)[k] ?? k.replace(/_/g, " "), before: String(sub[k] ?? "").trim() || "(blank)", after: String(v) }))
+      .filter((f) => f.before !== f.after);
+    if (a.type !== "fix_document_request") return { fields };
+    const next = String(a.fields?.plot_description ?? "").trim();
+    const { data: live } = await db.from("contracts").select("kind,status,fill_data,signed_at,notarized_at,completed_at").eq("submission_id", sub.id).is("deleted_at", null).neq("status", "void");
+    const rebuild: string[] = [], untouched: string[] = [];
+    for (const c of live ?? []) {
+      const fd = (c.fill_data ?? {}) as Record<string, any>;
+      const who = fd.joint_names || fd.seller_name || fd.principal_name || fd.signer_name || "";
+      const name = `${DOC_KIND_LABEL[c.kind] ?? c.kind}${who ? ` — ${who}` : ""}`;
+      if (c.signed_at || c.notarized_at || c.completed_at || ["signed", "notarized", "completed"].includes(String(c.status))) untouched.push(`${name} (already signed)`);
+      else if (String(fd.plot_description ?? "").trim() !== next) rebuild.push(name);
+      else untouched.push(`${name} (already correct)`);
+    }
+    return { fields, rebuild, untouched };
+  }
+  if (a.type === "update_document_items" && a.items?.length) {
+    const { data: rows } = await db.from("submission_documents").select("id,label,person_name,status").eq("submission_id", sub.id).in("id", a.items.map((i: any) => i.id));
+    const ids = a.items.flatMap((i: any) => i.attach_file_ids);
+    const { data: files } = ids.length ? await db.from("customer_files").select("id,file_name").in("id", ids) : { data: [] as any[] };
+    const fname = new Map((files ?? []).map((f: any) => [f.id, f.file_name]));
+    return { items: a.items.map((i: any) => { const r = (rows ?? []).find((x: any) => x.id === i.id); return {
+      label: r ? `${r.label}${r.person_name ? ` — ${r.person_name}` : ""}` : (i.note ?? "Checklist item"),
+      before: String(r?.status ?? "").replace(/_/g, " ") || "pending", after: i.state ? i.state.replace(/_/g, " ") : null,
+      attach: i.attach_file_ids.map((id: string) => fname.get(id) ?? "file"), note: i.note }; }) };
+  }
+  return null;
+}
+
 async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string) {
   const { data: sub } = await db.from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
   if (!sub) return { status: "skipped", reason: "not found" };
@@ -427,7 +460,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
     }
     const scans = ((customerWaiting && wantsCheck) || instruction) ? await loadScans(db, sub) : { parts: [], names: [], refs: [] as any[] };
-    const directive = instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${instruction}"\nFollow it. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
+    const directive = instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
     const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, instruction ? "medium" : effort, scans.parts);
     const d = parseDecision(raw, allowed);
     if (instruction) {
@@ -449,13 +482,14 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
-    const rows = d.actions.map((a) => ({
+    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch(() => null)));
+    const rows = d.actions.map((a, ai) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
       email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(visuals.length ? { visuals } : {}) },
+      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
       rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
