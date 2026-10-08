@@ -162,21 +162,22 @@
 }
 
 .plot-calculator {
-  --primary: var(--valuation-blue);
-  --primary-foreground: var(--valuation-paper);
-  --background: var(--valuation-paper);
-  --card: var(--valuation-surface);
-  --foreground: var(--valuation-ink);
-  --ring: var(--valuation-blue);
+  --valuation-blue: var(--sage);
+  --valuation-teal: var(--sage-light);
+  --valuation-coral: var(--terracotta-light);
+  --valuation-surface: var(--card);
+  --valuation-ink: var(--foreground);
   box-shadow: var(--shadow-valuation);
 }
 .cost-guide { letter-spacing: 0; }
-.cost-guide .prose :is(a, strong) { color: hsl(var(--valuation-blue)); }
-.cost-guide .cost-chapter:nth-of-type(3n+1) { --chapter-colour: var(--valuation-blue); }
-.cost-guide .cost-chapter:nth-of-type(3n+2) { --chapter-colour: var(--terracotta); }
-.cost-guide .cost-chapter:nth-of-type(3n) { --chapter-colour: var(--sage); }
-.cost-guide .cost-chapter h2 { color: hsl(var(--chapter-colour, var(--valuation-blue))); }
-.cost-chapter-label { color: hsl(var(--chapter-colour, var(--valuation-blue))); }
+.cost-guide .prose a { color: hsl(var(--primary)); }
+.cost-guide #preneed { text-align: center; }
+.cost-guide #preneed .max-w-3xl { margin-inline: auto; }
+.cost-guide #preneed .grid { grid-template-columns: minmax(0, 1fr); }
+.cost-guide #preneed .flex { justify-content: center; }
+.cost-guide #preneed .w-11 { margin-inline: auto; }
+.cost-guide .cost-map .grid { grid-template-columns: minmax(0, 1fr); }
+.cost-guide .cost-map { overflow: hidden; border-radius: var(--radius); }
 @media (prefers-reduced-motion: reduce) {
   .plot-calculator *, .cost-guide * { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
 }
