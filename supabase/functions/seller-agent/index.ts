@@ -403,7 +403,7 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
     const rebuild: string[] = [], untouched: string[] = [];
     for (const c of live ?? []) {
       const fd = (c.fill_data ?? {}) as Record<string, any>;
-      const who = fd.principal_name || fd.signer_name || fd.person || "";
+      const who = fd.joint_names || fd.seller_name || fd.principal_name || fd.signer_name || "";
       const name = `${DOC_KIND_LABEL[c.kind] ?? c.kind}${who ? ` — ${who}` : ""}`;
       if (c.signed_at || c.notarized_at || c.completed_at || ["signed", "notarized", "completed"].includes(String(c.status))) untouched.push(`${name} (already signed)`);
       else if (String(fd.plot_description ?? "").trim() !== next) rebuild.push(name);
