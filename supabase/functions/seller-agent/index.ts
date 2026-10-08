@@ -42,6 +42,8 @@ const isSeller = (s: Sub) => {
   return s.source === "seller_quote" || (s.source === "contact" && !!s.quote_sent_at) || kind.includes("seller");
 };
 
+const AI_HIDDEN_USER_IDS = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f"]);
+
 async function staffUser(db: SupabaseClient, req: Request) {
   const auth = req.headers.get("authorization") ?? "";
   if (!auth.toLowerCase().startsWith("bearer ")) return null;
@@ -49,6 +51,8 @@ async function staffUser(db: SupabaseClient, req: Request) {
   if (!data.user) return null;
   const { data: role } = await db.from("user_roles").select("role").eq("user_id", data.user.id).in("role", ["admin", "staff"]).limit(1).maybeSingle();
   if (!role) return null;
+  // Staff who can't use AI suggestions yet (still see AI-made notes/emails).
+  if (AI_HIDDEN_USER_IDS.has(data.user.id)) return null;
   const { data: prof } = await db.from("profiles").select("full_name").eq("id", data.user.id).maybeSingle();
   return { id: data.user.id, name: prof?.full_name || data.user.email || "Staff" };
 }

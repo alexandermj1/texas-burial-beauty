@@ -26,6 +26,7 @@ import CustomerFiles from "./CustomerFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
 import { useAuth } from "@/hooks/useAuth";
+import { canUseAi } from "@/lib/aiAccess";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
@@ -221,6 +222,7 @@ const ftState = (s: any): { sentAt: string | null; doneAt: string | null } => {
 
 const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
   const { user } = useAuth();
+  const aiOn = canUseAi(user?.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Focus mode: collapse the submissions list into a slide-over drawer so the
   // detail view gets the full width (submissions have grown a lot of content).
@@ -3253,7 +3255,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             {kind !== "buyer" ? (
               <div className="space-y-5">
                 {headBlock}
-                <AiRecordCard
+                {aiOn && <AiRecordCard
                   submissionId={selected.id}
                   pausedAt={(selected as any).ai_paused_at ?? null}
                   customerProfileId={(selected as any).customer_profile_id ?? null}
@@ -3266,7 +3268,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   }}
                   onOpenDocuments={() => setSellerWorkspaceTab("paperwork")}
                   onRefresh={() => { loadAiPending(); onRefresh?.(); }}
-                />
+                />}
                 {sellerWorkspaceNav}
                 {sellerWorkspaceTab === "email" && emailBlock}
                  {tailBlock}
@@ -3832,7 +3834,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
-                        {aiPending.has(aiKey(s)) && (aiPending.get(aiKey(s))!.type === "flag_human"
+                        {aiOn && aiPending.has(aiKey(s)) && (aiPending.get(aiKey(s))!.type === "flag_human"
                           ? <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 shrink-0" title="The AI looked at this record and thinks a person should check it — open to see why"><Bot className="w-3 h-3" />Needs checking</span>
                           : <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shrink-0" title="The AI has something ready on this record — open it to review"><Bot className="w-3 h-3" />AI can help</span>)}
                         {needsReply && (
