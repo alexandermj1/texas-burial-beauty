@@ -110,6 +110,8 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       )}
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
 
+      <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
+      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. It updates automatically when an email, note or record change lands.</p>}
       {pending.map((a) => (
         <AiActionCard key={a.id} action={a} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
@@ -143,7 +145,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
                 return (
                   <li key={a.id} className="text-xs flex items-start gap-2 rounded-lg bg-card/70 border border-border/60 px-2.5 py-1.5">
                     <m.Icon className="w-3.5 h-3.5 mt-0.5 text-indigo-600 shrink-0" />
-                    <span className="flex-1 min-w-0"><span className="font-medium text-foreground">{m.label}</span> — {a.status}{a.decided_by_name ? ` by ${a.decided_by_name}` : ""}{a.email_subject ? ` · "${a.email_subject}"` : ""}</span>
+                    <span className="flex-1 min-w-0"><span className="font-medium text-foreground">{m.label}</span> — {a.status === "executed" ? "accepted" : a.status === "rejected" ? "declined" : a.status}{a.decided_by_name ? ` by ${a.decided_by_name}` : ""}{a.decision_reason ? ` · "${a.decision_reason}"` : ""}{a.email_subject ? ` · "${a.email_subject}"` : ""}</span>
                     <span className="text-muted-foreground shrink-0">{new Date(a.created_at).toLocaleDateString()}</span>
                   </li>
                 );

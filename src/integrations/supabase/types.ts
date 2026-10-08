@@ -120,6 +120,8 @@ export type Database = {
           created_at: string
           decided_at: string | null
           decided_by_name: string | null
+          decided_by_user_id: string | null
+          decision_reason: string | null
           deleted_at: string | null
           deleted_by: string | null
           email_body: string | null
@@ -136,6 +138,7 @@ export type Database = {
           run_id: string | null
           status: string
           submission_id: string
+          was_edited: boolean
         }
         Insert: {
           action_type: string
@@ -143,6 +146,8 @@ export type Database = {
           created_at?: string
           decided_at?: string | null
           decided_by_name?: string | null
+          decided_by_user_id?: string | null
+          decision_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           email_body?: string | null
@@ -159,6 +164,7 @@ export type Database = {
           run_id?: string | null
           status?: string
           submission_id: string
+          was_edited?: boolean
         }
         Update: {
           action_type?: string
@@ -166,6 +172,8 @@ export type Database = {
           created_at?: string
           decided_at?: string | null
           decided_by_name?: string | null
+          decided_by_user_id?: string | null
+          decision_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           email_body?: string | null
@@ -182,6 +190,7 @@ export type Database = {
           run_id?: string | null
           status?: string
           submission_id?: string
+          was_edited?: boolean
         }
         Relationships: [
           {

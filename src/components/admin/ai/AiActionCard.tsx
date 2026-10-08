@@ -9,7 +9,7 @@ import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, U
 export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
-  note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null;
+  note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
   payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[] } | null;
 };
 
@@ -75,9 +75,12 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
     } catch (e) { toast({ title: "Couldn't complete", description: (e as Error).message, variant: "destructive" }); }
     setBusy(false);
   };
+  const [declining, setDeclining] = useState(false);
+  const [why, setWhy] = useState("");
   const reject = async () => {
+    if (!why.trim()) { toast({ title: "Tell the AI why", description: "A short reason helps it learn what it got wrong." }); return; }
     setBusy(true);
-    try { await callSellerAgent({ action: "reject", action_id: a.id }); onChanged(); }
+    try { await callSellerAgent({ action: "reject", action_id: a.id, reason: why.trim() }); setDeclining(false); setWhy(""); onChanged(); }
     catch (e) { toast({ title: "Couldn't reject", description: (e as Error).message, variant: "destructive" }); }
     setBusy(false);
   };
@@ -122,9 +125,16 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           <Button size="sm" onClick={approve} disabled={busy} className="bg-indigo-600 hover:bg-indigo-700 text-primary-foreground">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />{meta.approve}</>}
           </Button>
-          <Button size="sm" variant="outline" onClick={reject} disabled={busy}><X className="w-4 h-4 mr-1" />Reject</Button>
+          <Button size="sm" variant="outline" onClick={() => setDeclining((v) => !v)} disabled={busy}><X className="w-4 h-4 mr-1" />Decline</Button>
         </div>
       )}
+      {pending && declining && (
+        <div className="space-y-2 rounded-lg border border-border p-2.5">
+          <Textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} placeholder="Why is this wrong? (e.g. she already mailed the POA last week)" className="text-sm" />
+          <Button size="sm" variant="outline" onClick={reject} disabled={busy || !why.trim()}>Decline and tell the AI</Button>
+        </div>
+      )}
+      {!pending && a.decision_reason && <p className="text-xs text-muted-foreground">Reason: {a.decision_reason}</p>}
     </div>
   );
 }

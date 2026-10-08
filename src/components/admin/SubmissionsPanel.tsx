@@ -3368,21 +3368,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             >
               <FileSpreadsheet className="w-4 h-4" /> Price sheet
             </button>
-            <button
-              onClick={() => { setAiFirst(v => !v); loadAiPending(); }}
-              title={aiFirst ? "Back to the normal order" : "Bring every seller with an AI suggestion to the top of the list"}
-              className={`h-8 px-3 rounded-full text-xs font-semibold border inline-flex items-center gap-1.5 ${aiFirst ? "bg-indigo-800 text-primary-foreground border-indigo-900 ring-2 ring-indigo-300" : "bg-indigo-600 text-primary-foreground border-indigo-700 hover:bg-indigo-700"}`}
-            >
-              <Bot className="w-4 h-4" /> AI Agent
-              {aiPending.size > 0 && <span className="ml-0.5 min-w-5 h-5 px-1 rounded-full bg-card text-indigo-700 text-[11px] font-bold inline-flex items-center justify-center">{aiPending.size}</span>}
-            </button>
-            <button
-              onClick={() => setAiOpen(true)}
-              title="Full AI queue, what the AI has done, and the playbook"
-              className="h-8 px-2.5 rounded-full text-xs font-medium border bg-card text-indigo-700 border-indigo-300 hover:bg-indigo-50 inline-flex items-center gap-1"
-            >
-              Queue
-            </button>
+
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
               onClick={() => {
