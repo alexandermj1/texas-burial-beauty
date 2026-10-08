@@ -25,6 +25,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("do"), submission_id: z.string().uuid(), type: z.enum(["send_listing_agreement", "resend_signing_link", "send_family_tree"]), deed_owner_names: z.string().trim().min(2).max(300).optional() }),
   // Staff tell the AI what to change on a document request; the panel applies it with the staff code.
   z.object({ action: z.literal("plan_packet"), submission_id: z.string().uuid(), instruction: z.string().trim().min(3).max(2000), items: z.array(z.object({ key: z.string().max(300), label: z.string().max(300), person: z.string().max(200).nullable().optional() })).max(60) }),
+  // Replay old vs lean design on a few sellers (nothing saved as a suggestion).
+  z.object({ action: z.literal("compare"), submission_ids: z.array(z.string().uuid()).min(1).max(4), batch_id: z.string().uuid().optional() }),
 ]);
 
 type Sub = Record<string, any>;
@@ -62,7 +64,7 @@ async function loadPlaybook(db: SupabaseClient) {
   return data ? { version: data.version as number, content: data.content as string } : { version: 1, content: DEFAULT_SELLER_PLAYBOOK };
 }
 
-async function buildContext(db: SupabaseClient, sub: Sub) {
+async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string | null = null) {
   const email = String(sub.email ?? "").toLowerCase();
   const [siblings, emails, notes, files, contracts, docs, reminders] = await Promise.all([
     db.from("contact_submissions").select("id,created_at,cemetery,property_type,spaces,quote_sent_at,quote_response,la_signed_at,archived_at").eq("email", sub.email).neq("id", sub.id).is("deleted_at", null).limit(10),
@@ -99,6 +101,23 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     subject: e.subject,
     text: clip(stripQuoted(String(e.body_text ?? e.snippet ?? "")), 1400),
   }));
+  const fmt = (e: (typeof emailList)[number]) => `--- ${e.when} ${e.from} | ${e.subject}\n${e.text}`;
+  let threadText = emailList.map(fmt).join("\n");
+  // Lean mode: older emails are summarised once (cheap model) and the summary reused until more mail ages out.
+  if (summarizeKey && emailList.length > 6) {
+    const older = emailList.slice(0, -6), recent = emailList.slice(-6);
+    const lastOld = String(older.at(-1)!.when);
+    let summary = (sub.ai_history_summary as string | null) ?? null;
+    const through = sub.ai_history_summary_through ? new Date(sub.ai_history_summary_through).getTime() : 0;
+    if (!summary || new Date(lastOld).getTime() > through) {
+      try {
+        const r = await callCheap(summarizeKey, HISTORY_SYS, `${summary ? `PREVIOUS SUMMARY:\n${summary}\n\n` : ""}OLDER EMAILS:\n${older.map(fmt).join("\n")}`);
+        summary = String(r.summary ?? "").slice(0, 2500) || null;
+        if (summary) await db.from("contact_submissions").update({ ai_history_summary: summary, ai_history_summary_through: lastOld }).eq("id", sub.id);
+      } catch { summary = null; }
+    }
+    if (summary) threadText = `EARLIER EMAILS (summary of ${older.length} older messages):\n${summary}\n\nLATEST EMAILS (word for word):\n${recent.map(fmt).join("\n")}`;
+  }
 
   const latestThread = (emails.data ?? []).find((e) => e.gmail_thread_id && !/^(packet|ownership|local)-/.test(e.gmail_thread_id));
   const latestSeller = (emails.data ?? []).find((e) => !String(e.from_email).toLowerCase().includes("texascemeterybrokers"));
@@ -114,10 +133,17 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
-    `EMAIL THREAD (oldest to newest):\n${emailList.map((e) => `--- ${e.when} ${e.from} | ${e.subject}\n${e.text}`).join("\n") || "(no emails)"}`,
+    `EMAIL THREAD (oldest to newest):\n${threadText || "(no emails)"}`,
   ].join("\n\n");
 
-  return { contracts: (contracts.data ?? []) as any[], context, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
+  // Short view of the file for the cheap screening step and topic picking.
+  const focus = [
+    `STAGE: ${record.stage ?? "?"}; quote sent: ${!!sub.quote_sent_at}; quote response: ${sub.quote_response ?? "none"}; agreement signed: ${!!sub.la_signed_at}; family tree done: ${!!answers.sellerConfirmedAt}; documents requested: ${!!sub.documents_requested_at}`,
+    `NEWEST STAFF NOTES:\n${(notes.data ?? []).slice(0, 3).map((n) => `${n.author_name ?? "Staff"} (${n.created_at}): ${clip(n.body, 300)}`).join("\n") || "(none)"}`,
+    `LATEST EMAILS:\n${emailList.slice(-2).map((e) => `${e.from} (${e.when}): ${clip(e.text, 700)}`).join("\n") || "(none)"}`,
+  ].join("\n\n");
+
+  return { contracts: (contracts.data ?? []) as any[], context, focus, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
 }
 
 const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)[0] || "The seller";
@@ -258,6 +284,154 @@ RULES FOR YOUR OUTPUT
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
  "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null}]}`;
+
+// ───────────── Lean mode: same rules, sent only when relevant ─────────────
+// Static part (identical for every seller → cached): role, core playbook chapters,
+// tone, general output rules and JSON format. Per-case part: the playbook chapters,
+// topic rules, ownership/document guides and only the actions ALLOWED NOW.
+const CHEAP_MODEL = "google/gemini-3.1-flash-lite";
+const TOPICS = ["documents", "quote", "signing", "listing", "cash", "standard"];
+
+async function leanMode(db: SupabaseClient) {
+  const { data } = await db.from("ai_agent_settings").select("value").eq("key", "lean_mode").maybeSingle();
+  return data?.value === true || data?.value === "true";
+}
+
+async function callCheap(apiKey: string, system: string, user: string): Promise<any> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: CHEAP_MODEL, messages: [{ role: "system", content: system }, { role: "user", content: `${user}\n\nReply with JSON only.` }], response_format: { type: "json_object" } }),
+  });
+  if (!res.ok) { const e = new Error(`cheap model ${res.status}`) as Error & { status?: number }; e.status = res.status; throw e; }
+  const j = await res.json();
+  const t = String(j.choices?.[0]?.message?.content ?? "{}").replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
+  return JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+}
+
+const TRIAGE_SYS = `You screen a cemetery-plot SELLER's file for Texas Cemetery Brokers before an expensive full review.
+needs_review = true if: the seller's latest email is unanswered, a staff note asks for something, the change may need a reply / record fix / document update, or you are at all unsure.
+needs_review = false ONLY when clearly nothing is needed right now (we already replied and are waiting on them, the seller only said thanks/ok, a staff note says hold or don't chase).
+topics = every area the next step might touch, from: documents (deeds, POAs, heirs, family tree, uploads, mailing originals), quote (prices, fees, spaces, expired, declined, wants more), signing (listing agreement / links not working), listing (where is my listing, marketing), cash (asks us to buy directly), standard (common questions). Include a topic when in doubt.
+Return {"needs_review": boolean, "topics": string[], "stage_summary": string (max 12 words)}.`;
+
+const HISTORY_SYS = `Summarise these older emails between Texas Cemetery Brokers ("US (TCB)") and a cemetery-plot seller for a colleague who will read only this summary.
+Keep every fact that may matter later: figures quoted, fees mentioned, documents sent / received / promised and for whom, dates, names, plot details, promises we made, seller requests, refusals, refunds, holds, cancellations. If a PREVIOUS SUMMARY is given, merge it in. Plain sentences, max 200 words. Return {"summary": string}.`;
+
+const FULL_TEMPLATE = INSTRUCTIONS("@@PLAYBOOK@@");
+const ROLE_LINE = FULL_TEMPLATE.split("\n")[0];
+const TONE_LINE = (FULL_TEMPLATE.match(/TONE FOR NEXT STEPS[^\n]*/) ?? [""])[0];
+const RULE_BULLETS = FULL_TEMPLATE.split("RULES FOR YOUR OUTPUT\n")[1].split(/\n(?=- )/);
+const ruleTopic = (b: string) =>
+  /^- (DOCUMENTS|PHYSICAL ORIGINALS|WAITING ON A MAILED POA|POA PHOTO|"IS ANYTHING ELSE|CHECK FILING|COUNTER-SIGNED|REQUIRED DOCUMENTS)/.test(b) ? "documents"
+  : /^- (SELLER DECLINES|WANTS MORE|SPACE CORRECTIONS)/.test(b) ? "quote"
+  : /^- LISTING VISIBILITY/.test(b) ? "listing" : "core";
+
+function playbookSections(content: string) {
+  return content.split(/\n(?=#{2,3} )/).map((text, i) => {
+    const t = i === 0 ? "" : text.split("\n")[0].replace(/^#+\s*/, "").toLowerCase();
+    const topics = /^direct cash/.test(t) ? ["cash"]
+      : /^documents and why|^the documents page|^the family tree/.test(t) ? ["documents"]
+      : /^document-page and listing/.test(t) ? ["documents", "listing"]
+      : /^owner clarification: posting originals/.test(t) ? ["documents", "quote"]
+      : /^standard answers/.test(t) ? ["standard"]
+      : /^the quote email|^declined quotes|^simple quote corrections/.test(t) ? ["quote"]
+      : /^signing the listing agreement/.test(t) ? ["signing"]
+      : []; // core (and any new chapter, to stay safe)
+    return { text, topics };
+  });
+}
+
+function keywordTopics(sub: Sub, text: string) {
+  const t = text.toLowerCase();
+  const out = new Set<string>();
+  if (/deed|document|paperwork|poa|power of attorney|notar|death|certificate|affidavit|heir|\bwill\b|probate|signer|signature|\bid\b|mail|post(ed|ing)?\b|upload|original|passed|deceased|died|spouse|wife|husband|family tree|questionnaire|ownership/.test(t)) out.add("documents");
+  if (/quote|price|offer|money|worth|valu|fee|commission|transfer|expire|space|plot|lower|higher|starter|\bpro\b|featured|cancel|declin|accept|elsewhere|refund/.test(t)) out.add("quote");
+  if (/sign|agreement|contract|link|won.?t|can.?t|doesn.?t|not working|error|button|scroll|laptop/.test(t)) out.add("signing");
+  if (/listing|listed|website|where can i|market|advertis/.test(t)) out.add("listing");
+  if (/cash|buy (it|them|the plots?) (yourself|directly)|purchase (it |them )?directly|outright/.test(t)) out.add("cash");
+  // Stage-based: the chapters for the step the seller is on are always included.
+  const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
+  // Quote/tier chapters are always included once a quote exists (tier and fee mismatches matter at every later stage).
+  if (sub.quote_sent_at) out.add("quote");
+  if (accepted && !sub.la_signed_at) out.add("signing");
+  if (sub.la_signed_at || sub.documents_requested_at) out.add("documents");
+  return out;
+}
+
+function toolsFor(allowed: Set<string>, topics: Set<string>) {
+  return TOOLS_DOC.split("\n").filter((l) => {
+    const m = l.match(/^\s*-\s*([a-z_]+):/);
+    if (m) return allowed.has(m[1]);
+    if (/^\s*-\s*(PRICE DISPUTES|STARTER CANCELLATION|Quotes:)/.test(l)) return topics.has("quote");
+    return true;
+  }).join("\n");
+}
+
+const LEAN_STATIC = (playbook: string) => [
+  ROLE_LINE,
+  playbookSections(playbook).filter((s) => !s.topics.length).map((s) => s.text).join("\n"),
+  "Extra rulebook chapters, rules and the admin actions available for THIS seller are given at the top of the input under CASE RULES. Follow them exactly as if they were written here.",
+  TONE_LINE,
+  "RULES FOR YOUR OUTPUT\n" + RULE_BULLETS.filter((b) => ruleTopic(b) === "core").join("\n"),
+].join("\n\n");
+
+function leanCaseRules(playbook: string, allowed: Set<string>, topics: Set<string>) {
+  const has = (ts: string[]) => ts.some((t) => topics.has(t));
+  return [
+    `CASE RULES (topics: ${[...topics].join(", ") || "none"})`,
+    playbookSections(playbook).filter((s) => s.topics.length && has(s.topics)).map((s) => s.text).join("\n"),
+    RULE_BULLETS.filter((b) => { const k = ruleTopic(b); return k !== "core" && topics.has(k); }).join("\n"),
+    topics.has("documents") ? `${OWNERSHIP_GUIDE}\n\n${DOC_CHECK_GUIDE}` : "",
+    toolsFor(allowed, topics),
+  ].filter(Boolean).join("\n\n");
+}
+
+type Prep = { instructions: string; input: string; scans: { parts: any[]; names: string[]; refs: any[] }; skip?: { stage_summary: string; next_step: string } };
+
+async function preparePrompt(db: SupabaseClient, apiKey: string, sub: Sub, ctx: any, allowed: Set<string>, playbook: string, o: { lean: boolean; instruction: string; customerWaiting: boolean; trigger: string }): Promise<Prep> {
+  const noScans = { parts: [], names: [], refs: [] as any[] };
+  let topics = new Set<string>();
+  if (o.lean) {
+    topics = keywordTopics(sub, `${ctx.focus}\n${o.instruction}`);
+    if (o.customerWaiting || o.instruction) topics.add("standard");
+    if (!o.instruction) {
+      try {
+        const t = await callCheap(apiKey, TRIAGE_SYS, ctx.focus);
+        for (const x of Array.isArray(t.topics) ? t.topics : []) if (TOPICS.includes(x)) topics.add(x);
+        const automatic = !["manual", "refresh"].includes(o.trigger);
+        if (automatic && !o.customerWaiting && t.needs_review === false) return { instructions: "", input: "", scans: noScans, skip: { stage_summary: String(t.stage_summary ?? "").slice(0, 120) || "No action needed", next_step: "No action needed" } };
+      } catch { /* keyword topics only */ }
+    }
+  }
+  // Only read the scans when there is something to check: the seller's latest message
+  // questions the documents/plots/details, or staff asked for a manual review.
+  const lastText = String(ctx.context).slice(-3500).toLowerCase();
+  const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer|notar|power of attorney|poa|death cert|anything else|need anything|mailed|posted|sent (it|them|the)/.test(lastText);
+  const scans = ((o.customerWaiting && wantsCheck) || o.instruction) ? await loadScans(db, sub) : noScans;
+  if (scans.names.length) topics.add("documents");
+  const directive = o.instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${o.instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
+  const head = `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n`;
+  if (!o.lean) return { instructions: INSTRUCTIONS(playbook), input: head + ctx.context, scans };
+  return { instructions: LEAN_STATIC(playbook), input: `${leanCaseRules(playbook, allowed, topics)}\n\n${head}${ctx.context}`, scans };
+}
+
+/** Replay helper: one decision, nothing saved. */
+async function decideOnly(db: SupabaseClient, apiKey: string, sub: Sub, lean: boolean) {
+  try {
+    const playbook = await loadPlaybook(db);
+    const { data: lastMsg } = await db.from("email_messages").select("from_email").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
+    const customerWaiting = !!lastMsg && !/texascemeterybrokers/i.test(lastMsg.from_email ?? "");
+    const ctx = await buildContext(db, sub, lean ? apiKey : null);
+    const { allowed } = allowedActions(sub, ctx.contracts);
+    const prep = await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction: "", customerWaiting, trigger: "manual" });
+    const raw = await callModel(apiKey, prep.instructions, prep.input, customerWaiting ? "medium" : "low", prep.scans.parts);
+    const d = parseDecision(raw, allowed);
+    return { input_chars: prep.instructions.length + prep.input.length, decision: { stage_summary: d.stage_summary, next_step: d.next_step, reasoning: d.reasoning, needs_human: d.needs_human, confidence: d.confidence, actions: d.actions.map((a) => ({ type: a.type, reason: a.reason, subject: a.subject, body: a.body, note: a.note, fields: a.fields })) } };
+  } catch (e) {
+    return { error: String((e as Error).message).slice(0, 300) };
+  }
+}
 
 /** Scans on file (deed first) as image/PDF parts so the AI can read them. Kept small for cost. */
 async function loadScans(db: SupabaseClient, sub: Sub) {
@@ -453,23 +627,25 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   const effort: "low" | "medium" = customerWaiting ? "medium" : "low";
 
   const playbook = await loadPlaybook(db);
+  const lean = await leanMode(db);
+  // A staff instruction (typed now, or an "Instruction for AI" note since the last review) means a person is directing the AI.
+  let instruction = staffInstruction?.trim() || "";
+  if (!instruction) {
+    const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
+  }
+  // Context is built before the run row so a saved history summary never looks like a "new change" next time.
+  const ctx = await buildContext(db, sub, lean ? apiKey : null);
   const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger, playbook_version: playbook.version }).select("id").single();
   try {
-    const ctx = await buildContext(db, sub);
     const { allowed } = allowedActions(sub, ctx.contracts);
-    // Only read the scans when there is something to check: the seller's latest message
-    // questions the documents/plots/details, or staff asked for a manual review.
-    const lastText = String(ctx.context).slice(-3500).toLowerCase();
-    const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer|notar|power of attorney|poa|death cert|anything else|need anything|mailed|posted|sent (it|them|the)/.test(lastText);
-    // A staff instruction (typed now, or an "Instruction for AI" note since the last review) means a person is directing the AI.
-    let instruction = staffInstruction?.trim() || "";
-    if (!instruction) {
-      const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
+    const prep = await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger });
+    if (prep.skip) {
+      await db.from("ai_agent_runs").update({ status: "done", stage_summary: prep.skip.stage_summary, next_step: prep.skip.next_step || "No action needed", reasoning: "Quick check: nothing new needs doing on this file.", confidence: 1, needs_human: false }).eq("id", run!.id);
+      return { status: "done", run_id: run!.id, effort: "triage", decision: { actions: [], ...prep.skip } };
     }
-    const scans = ((customerWaiting && wantsCheck) || instruction) ? await loadScans(db, sub) : { parts: [], names: [], refs: [] as any[] };
-    const directive = instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
-    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, instruction ? "medium" : effort, scans.parts);
+    const scans = prep.scans;
+    const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts);
     const d = parseDecision(raw, allowed);
     if (instruction) {
       // Staff-directed: never bounce the work back to a human.
@@ -579,11 +755,39 @@ Deno.serve(async (req) => {
 
     if (body.action === "run") {
       try {
+        // Merge bursts: automatic wake-ups (email, note, record change) wait a minute;
+        // if another wake-up for the same seller arrives meanwhile, only the last one reviews.
+        if (cronTok && ["email_messages", "customer_notes", "record_change"].includes(String(body.trigger))) {
+          const stamp = new Date().toISOString();
+          await db.from("ai_review_queue").upsert({ submission_id: body.submission_id, requested_at: stamp, trigger: body.trigger });
+          await new Promise((r) => setTimeout(r, 60_000));
+          const { data: q } = await db.from("ai_review_queue").select("requested_at").eq("submission_id", body.submission_id).maybeSingle();
+          if (q && new Date(q.requested_at).getTime() !== new Date(stamp).getTime()) return json({ status: "skipped", reason: "merged into a later review" });
+        }
         return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction));
       } catch (e) {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
       }
+    }
+
+    if (body.action === "compare") {
+      // Replay: run the full and the lean design side by side on the same sellers. Nothing is saved as a suggestion.
+      const batch = body.batch_id ?? crypto.randomUUID();
+      const out = await Promise.all(body.submission_ids.map(async (sid: string) => {
+        const { data: sub } = await db.from("contact_submissions").select("*").eq("id", sid).maybeSingle();
+        if (!sub || !isSeller(sub)) return { submission_id: sid, skipped: true };
+        const [a, b] = await Promise.all([decideOnly(db, apiKey, sub, false), decideOnly(db, apiKey, sub, true)]);
+        const types = (d: any) => (d?.decision?.actions ?? []).map((x: any) => x.type).sort().join(",");
+        const row = {
+          batch_id: batch, submission_id: sid, seller_name: sub.name,
+          old_result: a, new_result: b, old_input_chars: a.input_chars ?? null, new_input_chars: b.input_chars ?? null,
+          same_actions: !a.error && !b.error && types(a) === types(b),
+        };
+        await db.from("ai_agent_compare").insert(row);
+        return { submission_id: sid, name: sub.name, same: row.same_actions, old: types(a), new: types(b), old_chars: row.old_input_chars, new_chars: row.new_input_chars };
+      }));
+      return json({ ok: true, batch_id: batch, results: out });
     }
 
     if (body.action === "verify_deed") {
