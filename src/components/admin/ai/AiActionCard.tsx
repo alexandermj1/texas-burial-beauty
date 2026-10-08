@@ -9,7 +9,7 @@ import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, U
 export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
-  note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null;
+  note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
   payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[] } | null;
 };
 
