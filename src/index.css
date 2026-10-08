@@ -182,12 +182,17 @@
 .valuation-art-result { aspect-ratio: auto; min-height: 0; }
 .valuation-hero-overlay {
   background:
-    radial-gradient(ellipse 75% 85% at 50% 45%, hsl(var(--background) / 0.62) 0%, hsl(var(--background) / 0.42) 55%, hsl(var(--background) / 0.08) 100%),
-    linear-gradient(180deg, hsl(var(--background) / 0.2) 0%, hsl(var(--background) / 0.92) 92%, hsl(var(--background)) 100%);
+    radial-gradient(ellipse 55% 60% at 50% 48%, hsl(var(--background) / 0.55) 0%, hsl(var(--background) / 0.15) 70%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, transparent 75%, hsl(var(--background) / 0.85) 100%);
 }
 .valuation-hero .valuation-tile {
-  background: linear-gradient(180deg, hsl(var(--primary) / 0.22) 0%, hsl(var(--primary) / 0.08) 45%, hsl(var(--background) / 0.85) 100%);
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--primary) / 0.7) 30%, hsl(var(--primary) / 0.15) 60%, hsl(var(--background)) 100%);
   background-size: 100% 300%;
+  animation: valuation-hero-flow 3.5s ease-in-out infinite alternate;
+}
+@keyframes valuation-hero-flow {
+  0% { background-position: 0% 0%; opacity: 0.55; }
+  100% { background-position: 0% 100%; opacity: 1; }
 }
 .valuation-tile {
   background: linear-gradient(180deg, hsl(var(--background) / 0.9) 0%, hsl(var(--primary) / 0.36) 35%, hsl(var(--primary) / 0.08) 65%, hsl(var(--background)) 100%);
