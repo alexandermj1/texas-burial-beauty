@@ -27,12 +27,12 @@ const Section: React.FC<{
   children: React.ReactNode;
 }> = ({ id, icon: Icon, eyebrow, title, children }) => (
   <section id={id} className="cost-chapter scroll-mt-28 border-t border-border/60 pt-10 md:pt-14 pb-12 md:pb-16">
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-5 flex flex-col items-center gap-3 text-center">
+    <div className="w-full">
+      <div className="mb-5 flex items-center gap-3">
         <Icon className="w-7 h-7 text-primary" strokeWidth={1.4} />
         <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-medium">{eyebrow}</p>
       </div>
-      <h2 className="font-display text-3xl md:text-[2.6rem] text-foreground mb-6 leading-tight text-center">{title}</h2>
+      <h2 className="font-display text-3xl md:text-[2.6rem] text-foreground mb-6 leading-tight">{title}</h2>
       <div className="prose prose-lg max-w-none text-foreground/80 [&_p]:leading-[1.8] [&_p]:mb-5 [&_strong]:text-foreground [&_strong]:font-medium">
         {children}
       </div>
@@ -126,19 +126,19 @@ const GuideCemeteryPlotCost = () => (
 
     <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-12 pt-28 md:pb-16">
       <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -right-28 top-6 w-[460px] opacity-20 md:-right-12 md:w-[650px]" />
-      <div className="container relative mx-auto max-w-4xl px-6 text-center">
+      <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
         <Link to="/guides" className="mb-8 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-3.5 w-3.5" /> All guides
         </Link>
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65 }}>
           <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">The Pricing Edition · Texas · 2026</p>
-          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl leading-tight text-foreground">
+          <h1 className="max-w-5xl font-display text-4xl sm:text-6xl md:text-7xl leading-tight text-foreground">
             How much does a cemetery plot <span className="italic text-primary">cost in Texas?</span>
           </h1>
-          <p className="mx-auto mt-7 max-w-2xl text-lg md:text-xl font-light leading-relaxed text-foreground/75">
+          <p className="mt-7 max-w-4xl text-lg md:text-xl font-light leading-relaxed text-foreground/75">
             There is no single Texas price. A space in a small rural cemetery and a space in an established metro memorial park are different markets entirely. Here’s what shapes the price, what cemeteries charge on top, and why resale costs less.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-xl"><a href="#plot-value-calculator">Estimate your plot value <ArrowRight className="h-4 w-4" /></a></Button>
             <Button asChild variant="outline" size="lg" className="rounded-xl bg-background/80"><a href="tel:+12142304740"><Phone className="h-4 w-4" /> (214) 230-4740</a></Button>
           </div>
@@ -146,7 +146,7 @@ const GuideCemeteryPlotCost = () => (
       </div>
     </header>
 
-    <article className="container mx-auto px-6 lg:px-10 max-w-[900px] pb-8">
+    <article className="container mx-auto px-6 lg:px-10 max-w-[1200px] pb-8">
       <div>
 
         <div className="min-w-0">
@@ -161,7 +161,7 @@ const GuideCemeteryPlotCost = () => (
           {cityPrices.map((r) => (
             <div
               key={r.city}
-              className="flex flex-col items-center gap-2 py-5 border-b border-border/50 group text-center"
+              className="flex flex-wrap items-center gap-x-6 gap-y-2 py-5 border-b border-border/50 group"
             >
               <span className="flex-1 font-display text-lg md:text-xl text-foreground leading-snug">
                 {r.href ? (
@@ -187,7 +187,7 @@ const GuideCemeteryPlotCost = () => (
         <p>Families are often surprised that the space itself is only part of the total. These sit alongside it:</p>
         <div className="not-prose grid grid-cols-1 gap-4 mt-8">
           {extras.map((e) => (
-            <div key={e.t} className="p-6 rounded-xl border border-border bg-card text-center">
+            <div key={e.t} className="p-6 rounded-xl border border-border bg-card">
               <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-3">{e.n}</p>
               <h3 className="font-display text-xl text-foreground leading-snug mb-2">{e.t}</h3>
               <p className="text-sm text-foreground/70 leading-relaxed">{e.d}</p>
@@ -343,7 +343,7 @@ const GuideCemeteryPlotCost = () => (
 
       {/* City hubs — full width so every local page is one click from the guide */}
       <section aria-labelledby="city-hubs" className="mt-2 mb-4">
-        <div className="flex flex-col items-center text-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <h2 id="city-hubs" className="font-display text-2xl md:text-3xl text-foreground tracking-normal">
             Plot prices in your city
           </h2>
@@ -351,7 +351,7 @@ const GuideCemeteryPlotCost = () => (
             Full directory
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-3 text-center">
+        <div className="grid grid-cols-1 gap-3 text-left">
           {[
             { city: "Dallas–Fort Worth", href: "/cemetery-plots-for-sale-dallas", note: "52+ cemeteries covered" },
             { city: "Houston", href: "/cemetery-plots-for-sale-houston", note: "50+ cemeteries covered" },
