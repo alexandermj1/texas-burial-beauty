@@ -453,23 +453,25 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   const effort: "low" | "medium" = customerWaiting ? "medium" : "low";
 
   const playbook = await loadPlaybook(db);
+  const lean = await leanMode(db);
+  // A staff instruction (typed now, or an "Instruction for AI" note since the last review) means a person is directing the AI.
+  let instruction = staffInstruction?.trim() || "";
+  if (!instruction) {
+    const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
+  }
+  // Context is built before the run row so a saved history summary never looks like a "new change" next time.
+  const ctx = await buildContext(db, sub, lean ? apiKey : null);
   const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger, playbook_version: playbook.version }).select("id").single();
   try {
-    const ctx = await buildContext(db, sub);
     const { allowed } = allowedActions(sub, ctx.contracts);
-    // Only read the scans when there is something to check: the seller's latest message
-    // questions the documents/plots/details, or staff asked for a manual review.
-    const lastText = String(ctx.context).slice(-3500).toLowerCase();
-    const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer|notar|power of attorney|poa|death cert|anything else|need anything|mailed|posted|sent (it|them|the)/.test(lastText);
-    // A staff instruction (typed now, or an "Instruction for AI" note since the last review) means a person is directing the AI.
-    let instruction = staffInstruction?.trim() || "";
-    if (!instruction) {
-      const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
+    const prep = await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger });
+    if (prep.skip) {
+      await db.from("ai_agent_runs").update({ status: "done", stage_summary: prep.skip.stage_summary, next_step: prep.skip.next_step || "No action needed", reasoning: "Quick check: nothing new needs doing on this file.", confidence: 1, needs_human: false }).eq("id", run!.id);
+      return { status: "done", run_id: run!.id, effort: "triage", decision: { actions: [], ...prep.skip } };
     }
-    const scans = ((customerWaiting && wantsCheck) || instruction) ? await loadScans(db, sub) : { parts: [], names: [], refs: [] as any[] };
-    const directive = instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
-    const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, instruction ? "medium" : effort, scans.parts);
+    const scans = prep.scans;
+    const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts);
     const d = parseDecision(raw, allowed);
     if (instruction) {
       // Staff-directed: never bounce the work back to a human.
@@ -579,11 +581,39 @@ Deno.serve(async (req) => {
 
     if (body.action === "run") {
       try {
+        // Merge bursts: automatic wake-ups (email, note, record change) wait a minute;
+        // if another wake-up for the same seller arrives meanwhile, only the last one reviews.
+        if (cronTok && ["email_messages", "customer_notes", "record_change"].includes(String(body.trigger))) {
+          const stamp = new Date().toISOString();
+          await db.from("ai_review_queue").upsert({ submission_id: body.submission_id, requested_at: stamp, trigger: body.trigger });
+          await new Promise((r) => setTimeout(r, 60_000));
+          const { data: q } = await db.from("ai_review_queue").select("requested_at").eq("submission_id", body.submission_id).maybeSingle();
+          if (q && new Date(q.requested_at).getTime() !== new Date(stamp).getTime()) return json({ status: "skipped", reason: "merged into a later review" });
+        }
         return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction));
       } catch (e) {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
       }
+    }
+
+    if (body.action === "compare") {
+      // Replay: run the full and the lean design side by side on the same sellers. Nothing is saved as a suggestion.
+      const batch = body.batch_id ?? crypto.randomUUID();
+      const out = await Promise.all(body.submission_ids.map(async (sid: string) => {
+        const { data: sub } = await db.from("contact_submissions").select("*").eq("id", sid).maybeSingle();
+        if (!sub || !isSeller(sub)) return { submission_id: sid, skipped: true };
+        const [a, b] = await Promise.all([decideOnly(db, apiKey, sub, false), decideOnly(db, apiKey, sub, true)]);
+        const types = (d: any) => (d?.decision?.actions ?? []).map((x: any) => x.type).sort().join(",");
+        const row = {
+          batch_id: batch, submission_id: sid, seller_name: sub.name,
+          old_result: a, new_result: b, old_input_chars: a.input_chars ?? null, new_input_chars: b.input_chars ?? null,
+          same_actions: !a.error && !b.error && types(a) === types(b),
+        };
+        await db.from("ai_agent_compare").insert(row);
+        return { submission_id: sid, name: sub.name, same: row.same_actions, old: types(a), new: types(b), old_chars: row.old_input_chars, new_chars: row.new_input_chars };
+      }));
+      return json({ ok: true, batch_id: batch, results: out });
     }
 
     if (body.action === "verify_deed") {
