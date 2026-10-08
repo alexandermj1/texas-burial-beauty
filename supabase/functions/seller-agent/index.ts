@@ -352,7 +352,8 @@ function keywordTopics(sub: Sub, text: string) {
   if (/cash|buy (it|them|the plots?) (yourself|directly)|purchase (it |them )?directly|outright/.test(t)) out.add("cash");
   // Stage-based: the chapters for the step the seller is on are always included.
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
-  if (sub.quote_sent_at && !accepted) out.add("quote");
+  // Quote/tier chapters are always included once a quote exists (tier and fee mismatches matter at every later stage).
+  if (sub.quote_sent_at) out.add("quote");
   if (accepted && !sub.la_signed_at) out.add("signing");
   if (sub.la_signed_at || sub.documents_requested_at) out.add("documents");
   return out;
