@@ -141,6 +141,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
               <p className="text-[38px] sm:text-[46px] font-medium tabular-nums leading-tight mt-2"><AnimatedMoney value={est.broker.total.mid} /></p>
               <p className="text-sm text-foreground/65 mt-2">{money(est.broker.total.low)} – {money(est.broker.total.high)}</p>
               <p className="text-xs text-foreground/55 mt-1">{money(est.broker.per_space.mid)} per space</p>
+               <ValuationGraphic broker={est.broker.total.mid} privateSale={est.private.total.mid} />
               <div className="border-t border-primary/20 mt-5 pt-5"><p className="text-sm text-valuation-coral">Estimated private sale</p><p className="text-3xl font-medium tabular-nums mt-2"><AnimatedMoney value={est.private.total.mid} /></p><p className="text-xs text-foreground/60 mt-2">{money(est.private.total.low)} – {money(est.private.total.high)}</p></div>
               <SaleTimelines broker={est.broker.timeline} privateSale={est.private.timeline} />
               <p className="text-xs text-foreground/55 mt-5 leading-relaxed">Indicative uncertainty: ±{est.confidence.accuracy_pct}%. Not a verified prediction of your final sale price.</p>
