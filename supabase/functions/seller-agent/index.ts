@@ -302,6 +302,8 @@ async function callModel(apiKey: string, instructions: string, input: string, ef
       input: [{ role: "user", content: media.length ? [{ type: "input_text", text: input }, ...media] : input }],
       stream: true,
       store: false,
+      // Same key for every seller so the fixed playbook instructions are reused from cache instead of re-written.
+      prompt_cache_key: "seller-agent-playbook",
       reasoning: { effort },
     }),
   });
@@ -437,8 +439,14 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   const { data: lastMsg } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
   if (trigger !== "manual" && trigger !== "refresh" && lastRun) {
     const { count: newNotes } = await db.from("customer_notes").select("id", { count: "exact", head: true }).eq("submission_id", sub.id).gt("created_at", lastRun.created_at).not("author_name", "ilike", "AI agent%");
-    const newMail = lastMsg && lastMsg.received_at > lastRun.created_at;
-    if (!newMail && !newNotes && (sub.updated_at ?? "") <= lastRun.created_at) return { status: "skipped", reason: "nothing new since last review" };
+    // Only a seller's email counts as new mail; our own outgoing replies (incl. approved AI replies) don't need a re-review.
+    const { count: newInbound } = await db.from("email_messages").select("id", { count: "exact", head: true }).eq("matched_submission_id", sub.id).is("deleted_at", null).gt("received_at", lastRun.created_at).not("from_email", "ilike", "%texascemeterybrokers%");
+    // Record edits made by carrying out an AI suggestion don't count as a new change.
+    const { data: lastExec } = await db.from("ai_agent_actions").select("executed_at").eq("submission_id", sub.id).not("executed_at", "is", null).order("executed_at", { ascending: false }).limit(1).maybeSingle();
+    const upd = sub.updated_at ?? "";
+    const aiCausedUpdate = !!lastExec?.executed_at && upd >= lastExec.executed_at && Date.parse(upd) - Date.parse(lastExec.executed_at) < 5 * 60_000;
+    const recordChanged = upd > lastRun.created_at && !aiCausedUpdate;
+    if (!newInbound && !newNotes && !recordChanged) return { status: "skipped", reason: "nothing new since last review" };
   }
   // Light reasoning for routine checks; deeper reasoning only when a customer is waiting on a reply.
   const customerWaiting = !!lastMsg && !/texascemeterybrokers/i.test(lastMsg.from_email ?? "");
