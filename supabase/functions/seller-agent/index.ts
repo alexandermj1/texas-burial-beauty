@@ -18,7 +18,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional() }),
   z.object({ action: z.literal("execute"), action_id: z.string().uuid() }),
-  z.object({ action: z.literal("reject"), action_id: z.string().uuid() }),
+  z.object({ action: z.literal("reject"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("prepare_packet"), submission_id: z.string().uuid(), items: z.array(z.object({ label: z.string().max(300), person: z.string().max(200).nullable().optional(), needsNotary: z.boolean().optional() })).max(40).optional() }),
   z.object({ action: z.literal("verify_deed"), submission_id: z.string().uuid() }),
   // Staff ask the AI to do one step now (still runs the exact staff code path).
@@ -623,7 +623,10 @@ Deno.serve(async (req) => {
     if (act.status !== "proposed") return json({ error: `Action already ${act.status}` }, 409);
 
     if (body.action === "reject") {
-      await db.from("ai_agent_actions").update({ status: "rejected", decided_by_name: user.name, decided_at: new Date().toISOString() }).eq("id", act.id);
+      const reason = (body as any).reason?.trim() || null;
+      await db.from("ai_agent_actions").update({ status: "rejected", decided_by_name: user.name, decided_by_user_id: user.id ?? null, decision_reason: reason, decided_at: new Date().toISOString() }).eq("id", act.id);
+      // Saved as a staff note so the AI re-thinks with this feedback (note trigger re-runs it).
+      if (reason) await db.from("customer_notes").insert({ submission_id: act.submission_id, body: `Declined AI suggestion (${String(act.action_type).replace(/_/g, " ")}): ${reason}`, author_name: user.name, author_user_id: user.id ?? null });
       return json({ ok: true });
     }
 
@@ -819,7 +822,7 @@ Deno.serve(async (req) => {
 
     await db.from("ai_agent_actions").update(error
       ? { error }
-      : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_at: now, executed_at: now, error: null }).eq("id", act.id);
+      : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, decided_at: now, executed_at: now, error: null }).eq("id", act.id);
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
