@@ -87,7 +87,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
   const transition = { duration: reduced ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] as const };
   return (
     <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-xl border-2 border-primary/25 bg-background">
-      <div className="relative isolate overflow-hidden border-b border-border rounded-t-xl flex flex-col items-center text-center">
+      <div className="valuation-hero relative isolate overflow-hidden border-b border-border rounded-t-xl flex flex-col items-center text-center">
         <div className="absolute inset-0 grid grid-cols-5" aria-hidden="true">
           {Array.from({ length: 10 }, (_, i) => <div key={i} className={`valuation-tile valuation-tile-${i % 5}`} />)}
         </div>
