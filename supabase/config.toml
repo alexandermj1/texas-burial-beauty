@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.quote-expiry-reminder]
 verify_jwt = false
+
+[functions.plot-value-estimator]
+verify_jwt = false

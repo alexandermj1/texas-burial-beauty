@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import PreneedBlock from "@/components/PreneedBlock";
+import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 
 
 
@@ -387,6 +388,8 @@ const GuideCemeteryPlotCost = () => (
         </div>
       </div>
 
+
+      <section className="my-12 md:my-16"><PlotResaleCalculator compact /></section>
 
       {/* City hubs — full width so every local page is one click from the guide */}
       <section aria-labelledby="city-hubs" className="mt-2 mb-4">
