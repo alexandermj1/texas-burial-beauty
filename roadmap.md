@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Current request
-- [ ] Align cost guide with transfer guide: brand palette, centred single column, rounded edges; verify
+- [x] Align cost guide with transfer guide: brand palette, centred single column, rounded edges; verify
 - [x] Emphasise calculator sale timelines and refine centred graphics; verify the finished presentation
 - [x] Refresh calculator graphics and fluid animations; improve article colour and remove Roman numerals
 - [x] Offer the complete cemetery directory and tolerant, private section matching
