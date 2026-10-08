@@ -4,6 +4,7 @@
 // Only derived estimates leave this function — never raw prices, sources,
 // section names or sample counts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { sectionTokens as tokens, sectionSimilarity as sim } from "../_shared/estimator-matching.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -15,19 +16,10 @@ const json = (b: unknown, s = 200) =>
 
 const BROKER_PCT = 0.6;
 const PRIVATE_PCT = 0.42;
-const STOP = new Set(["lot", "lots", "space", "spaces", "sp", "section", "sec", "of", "the", "and", "garden", "gardens", "lawn", "plot", "plots", "block", "row", "i", "dont", "know", "all", "&", "a"]);
 
 const normCem = (s: string) =>
   (s || "").toLowerCase().replace(/&/g, " and ").replace(/\b(memorial|park|cemetery|cemeteries|funeral|home|gardens?|tx|texas)\b/g, " ")
     .replace(/[^a-z0-9]+/g, "");
-const tokens = (s: string) =>
-  new Set((s || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((t) => t.length > 1 && !STOP.has(t) && !/^\d+$/.test(t)));
-const sim = (a: Set<string>, b: Set<string>) => {
-  if (!a.size || !b.size) return 0;
-  let i = 0;
-  a.forEach((t) => b.has(t) && i++);
-  return i / Math.min(a.size, b.size);
-};
 const cat = (t: string) => {
   const s = (t || "").toLowerCase();
   if (/niche|columbar|urn/.test(s)) return "niche";
@@ -46,9 +38,21 @@ let cache: { at: number; pts: Pt[]; cems: { name: string; city: string | null; k
 
 async function load() {
   if (cache && Date.now() - cache.at < 10 * 60e3) return cache;
-  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const url = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !serviceKey) throw new Error("Estimator configuration unavailable");
+  const db = createClient(url, serviceKey);
+  const registry = async () => {
+    const rows: { name: string; city: string | null; sections: unknown }[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await db.from("texas_cemeteries").select("name, city, sections").is("deleted_at", null).order("id").range(offset, offset + 999);
+      if (error) throw error;
+      rows.push(...(data ?? []));
+      if (!data || data.length < 1000) return rows;
+    }
+  };
   const [{ data: tc }, { data: subs }] = await Promise.all([
-    db.from("texas_cemeteries").select("name, city, sections").is("deleted_at", null),
+    registry().then((data) => ({ data })),
     db.from("contact_submissions").select("cemetery, section, lawn, property_type, cemetery_retail, quote_sent_at, plot_count, spaces")
       .gt("cemetery_retail", 0).is("deleted_at", null).limit(5000),
   ]);
@@ -60,9 +64,9 @@ async function load() {
     for (const s of secs) {
       const p = Number(s?.price);
       if (!(p > 200 && p < 500000)) continue;
-      pts.push({ cem: key, section: tokens(`${s.name ?? ""} ${s.notes ?? ""}`.slice(0, 120)), cat: cat(s.property_type ?? s.name), retail: p, age: yearsAgo(s.date), src: 1.25 });
+       pts.push({ cem: key, section: tokens(String(s.name ?? "").slice(0, 120)), cat: cat(s.property_type ?? s.name), retail: p, age: yearsAgo(s.date), src: 1.25 });
     }
-    if (secs.length) cemMap.set(key, { name: c.name, city: c.city, key });
+    cemMap.set(`${key}|${c.city ?? ""}`, { name: c.name, city: c.city, key });
   }
   const names = new Map((tc ?? []).map((c) => [normCem(c.name), c] as const));
   for (const s of subs ?? []) {
@@ -70,7 +74,7 @@ async function load() {
     const p = Number(s.cemetery_retail);
     if (!key || !(p > 200 && p < 500000)) continue;
     pts.push({ cem: key, section: tokens(`${s.section ?? ""} ${s.lawn ?? ""}`), cat: cat(s.property_type ?? ""), retail: p, age: yearsAgo(s.quote_sent_at), src: 1 });
-    if (!cemMap.has(key)) {
+    if (![...cemMap.values()].some((c) => c.key === key)) {
       const t = names.get(key);
       cemMap.set(key, { name: t?.name ?? s.cemetery, city: t?.city ?? null, key });
     }
@@ -116,12 +120,12 @@ Deno.serve(async (req) => {
     const scored = pool.map((p) => {
       const s = sim(secT, p.section);
       const typeW = p.cat === want ? 1 : 0.25;
-      const secW = tier === "regional" ? 1 : s >= 0.6 ? 4 : 1 + s * 1.5;
+       const secW = tier === "regional" ? 1 : s >= 0.8 ? 4 : 1 + s * 1.5;
       const rec = Math.pow(0.5, p.age / 2.5);
       return { p, s, w: typeW * secW * rec * p.src };
     });
 
-    const secHits = scored.filter((x) => x.s >= 0.6 && x.p.cat === want);
+    const secHits = scored.filter((x) => x.s >= 0.8 && x.p.cat === want);
     const typeHits = scored.filter((x) => x.p.cat === want);
     let use = scored;
     if (tier !== "regional") {
