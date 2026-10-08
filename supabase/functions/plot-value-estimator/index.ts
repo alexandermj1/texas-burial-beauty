@@ -21,7 +21,7 @@ const normCem = (s: string) =>
   (s || "").toLowerCase().replace(/&/g, " and ").replace(/\b(memorial|park|cemetery|cemeteries|funeral|home|gardens?|tx|texas)\b/g, " ")
     .replace(/[^a-z0-9]+/g, "");
 const tokens = (s: string) =>
-  new Set((s || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((t) => t && !STOP.has(t) && !/^\d+$/.test(t) || /^\d{1,3}$/.test(t) && false));
+  new Set((s || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((t) => t.length > 1 && !STOP.has(t) && !/^\d+$/.test(t)));
 const sim = (a: Set<string>, b: Set<string>) => {
   if (!a.size || !b.size) return 0;
   let i = 0;
