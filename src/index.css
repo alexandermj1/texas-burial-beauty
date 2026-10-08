@@ -180,6 +180,15 @@
   background: hsl(var(--background));
 }
 .valuation-art-result { aspect-ratio: auto; min-height: 0; }
+.valuation-hero-overlay {
+  background:
+    radial-gradient(ellipse 75% 85% at 50% 45%, hsl(var(--background) / 0.62) 0%, hsl(var(--background) / 0.42) 55%, hsl(var(--background) / 0.08) 100%),
+    linear-gradient(180deg, hsl(var(--background) / 0.2) 0%, hsl(var(--background) / 0.92) 92%, hsl(var(--background)) 100%);
+}
+.valuation-hero .valuation-tile {
+  background: linear-gradient(180deg, hsl(var(--primary) / 0.22) 0%, hsl(var(--primary) / 0.08) 45%, hsl(var(--background) / 0.85) 100%);
+  background-size: 100% 300%;
+}
 .valuation-tile {
   background: linear-gradient(180deg, hsl(var(--background) / 0.9) 0%, hsl(var(--primary) / 0.36) 35%, hsl(var(--primary) / 0.08) 65%, hsl(var(--background)) 100%);
   background-size: 100% 300%;

@@ -87,13 +87,17 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
   const transition = { duration: reduced ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] as const };
   return (
     <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-xl border-2 border-primary/25 bg-background">
-      <div className="p-6 md:p-9 border-b border-border flex flex-col items-center gap-5 text-center bg-card rounded-t-xl">
-        <div className="max-w-2xl">
-          <p className="flex items-center justify-center gap-2 text-xs font-medium text-primary mb-3"><Sparkles className="w-4 h-4" /> FREE INSTANT ESTIMATE</p>
-          <h2 className={`font-display ${compact ? "text-3xl md:text-[40px]" : "text-4xl md:text-5xl"} leading-tight text-foreground`}>What is your cemetery plot worth?</h2>
-          <p className="mt-3 text-muted-foreground leading-relaxed">A clearer picture of your property's resale potential. Compare a broker sale with selling privately.</p>
+      <div className="valuation-hero relative isolate overflow-hidden border-b border-border rounded-t-xl flex flex-col items-center text-center">
+        <div className="absolute inset-0 grid grid-cols-5" aria-hidden="true">
+          {Array.from({ length: 10 }, (_, i) => <div key={i} className={`valuation-tile valuation-tile-${i % 5}`} />)}
         </div>
-        <span className="inline-flex gap-2 items-center text-xs text-muted-foreground"><ShieldCheck className="w-4 h-4" /> No contact details needed</span>
+        <div className="absolute inset-0 valuation-hero-overlay" aria-hidden="true" />
+        <div className="relative z-10 px-6 py-10 md:py-14 flex flex-col items-center gap-5 max-w-3xl">
+          <p className="flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.22em] uppercase text-primary"><Sparkles className="w-4 h-4" /> Free instant estimate</p>
+          <h2 className={`font-display ${compact ? "text-4xl md:text-5xl" : "text-[44px] md:text-6xl"} leading-[1.04] text-foreground`}>What is your cemetery plot worth?</h2>
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl">See what yours could sell for — compare a broker sale with selling privately, in seconds.</p>
+          <span className="inline-flex gap-2 items-center text-xs font-medium text-foreground/75 rounded-full border border-primary/30 bg-background/70 backdrop-blur px-4 py-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> No contact details needed</span>
+        </div>
       </div>
       <div className={compact ? "grid grid-cols-1" : "grid lg:grid-cols-[1fr_1.1fr]"}>
         <form onSubmit={run} className="p-6 md:p-9 space-y-6 min-w-0">
