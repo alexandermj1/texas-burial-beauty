@@ -37,6 +37,7 @@ const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
 const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
+const PlotValueCalculatorPage = lazy(() => import("./pages/PlotValueCalculatorPage"));
 const GuidePreneedCemeteryPlots = lazy(() => import("./pages/GuidePreneedCemeteryPlots"));
 const GuideCemeteryTransferProcess = lazy(() => import("./pages/GuideCemeteryTransferProcess"));
 const GuidePlanningFuneralTexas = lazy(() => import("./pages/GuidePlanningFuneralTexas"));
