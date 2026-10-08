@@ -2,6 +2,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+const fonts = document.createElement("link");
+fonts.rel = "stylesheet";
+fonts.href = "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap";
+document.head.appendChild(fonts);
+
 // On the Lovable preview/staging host (e.g. texas-burial-beauty.lovable.app),
 // (1) tell search engines not to index this host, and
 // (2) redirect real visitors to the canonical custom domain so Google's
@@ -28,4 +33,5 @@ if (typeof window !== "undefined" && /lovable\.app$/i.test(window.location.hostn
   }
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const root = document.getElementById("root");
+if (root) createRoot(root).render(<App />);

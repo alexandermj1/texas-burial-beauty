@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
+import { Button } from "@/components/ui/button";
 
 const PATH = "/cemetery-plot-value-calculator";
 const URL = `https://texascemeterybrokers.com${PATH}`;
@@ -38,11 +39,11 @@ const PlotValueCalculatorPage = () => (
       path={PATH}
       jsonLd={jsonLd}
     />
-    <Navbar />
+    <Navbar forceScrolled />
     <main className="max-w-[1280px] mx-auto px-5 md:px-8 pt-28 md:pt-36 pb-20">
       <header className="max-w-3xl mb-10 md:mb-14">
         <p className="text-[10px] uppercase tracking-[0.34em] text-primary font-medium mb-4">Texas · Free tool</p>
-        <h1 className="font-display text-4xl md:text-6xl text-foreground leading-[1.02] tracking-tight">
+        <h1 className="font-display text-4xl md:text-6xl text-foreground leading-[1.02] tracking-normal">
           Cemetery plot value calculator
         </h1>
         <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
@@ -57,8 +58,8 @@ const PlotValueCalculatorPage = () => (
           ["~60% of retail", "Typical broker resale value, sold in 1 month – 2 years."],
           ["~42% of retail", "Typical private sale value, taking 5 – 7 years on average."],
           ["$0 to value", "Free valuations with no obligation to list or sell."],
-        ].map(([t, d]) => (
-          <div key={t} className="rounded-3xl border border-border bg-card p-7">
+        ].map(([t, d], i) => (
+          <div key={t} className={`rounded-lg border border-border p-7 ${i === 0 ? "bg-valuation-surface" : i === 1 ? "bg-terracotta-light" : "bg-sage-light"}`}>
             <p className="font-display text-3xl text-foreground">{t}</p>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{d}</p>
           </div>
@@ -78,12 +79,12 @@ const PlotValueCalculatorPage = () => (
           ))}
         </div>
         <div className="mt-10 flex flex-wrap gap-4">
-          <Link to="/sell" className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90">
+          <Button asChild className="h-auto py-3.5 whitespace-normal"><Link to="/sell">
             Get a free, accurate valuation <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link to="/cemetery-plot-cost-texas" className="inline-flex items-center gap-2 px-7 py-3.5 border border-border rounded-full text-sm hover:border-primary">
+          </Link></Button>
+          <Button asChild variant="outline" className="h-auto py-3.5"><Link to="/cemetery-plot-cost-texas">
             Texas plot cost guide
-          </Link>
+          </Link></Button>
         </div>
       </section>
     </main>

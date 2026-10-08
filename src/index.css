@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -51,6 +50,13 @@
     --sand-light: 38 35% 95%;
     --warm-white: 40 30% 97%;
     --stone: 30 15% 40%;
+    --valuation-blue: 209 54% 32%;
+    --valuation-teal: 166 48% 43%;
+    --valuation-coral: 12 66% 65%;
+    --valuation-surface: 208 32% 96%;
+    --valuation-ink: 210 38% 18%;
+    --valuation-paper: 0 0% 100%;
+    --shadow-valuation: 0 24px 64px -28px hsl(var(--valuation-blue) / 0.3);
 
     /* Cohesive status palette — all anchored to ~50% saturation, 45-50% lightness
        in the warm earth family so badges/highlights read as one system. */
@@ -153,6 +159,26 @@
   --primary-foreground: 0 0% 100%;
   --ring: 209 54% 32%;
   --accent: 16 40% 58%;
+}
+
+.plot-calculator {
+  --primary: var(--valuation-blue);
+  --primary-foreground: var(--valuation-paper);
+  --background: var(--valuation-paper);
+  --card: var(--valuation-surface);
+  --foreground: var(--valuation-ink);
+  --ring: var(--valuation-blue);
+  box-shadow: var(--shadow-valuation);
+}
+.cost-guide { letter-spacing: 0; }
+.cost-guide .prose :is(a, strong) { color: hsl(var(--valuation-blue)); }
+.cost-guide .cost-chapter:nth-of-type(3n+1) { --chapter-colour: var(--valuation-blue); }
+.cost-guide .cost-chapter:nth-of-type(3n+2) { --chapter-colour: var(--terracotta); }
+.cost-guide .cost-chapter:nth-of-type(3n) { --chapter-colour: var(--sage); }
+.cost-guide .cost-chapter h2 { color: hsl(var(--chapter-colour, var(--valuation-blue))); }
+.cost-chapter-label { color: hsl(var(--chapter-colour, var(--valuation-blue))); }
+@media (prefers-reduced-motion: reduce) {
+  .plot-calculator *, .cost-guide * { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
 }
 .seller-documents :is(.rounded-2xl, .rounded-xl, .rounded-full) { border-radius: 8px; }
 .seller-documents h1, .seller-documents .font-display { font-family: "DM Sans", sans-serif; letter-spacing: 0; }
