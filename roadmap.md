@@ -1,6 +1,9 @@
 # Roadmap
 
 ## Current request
+- [ ] Refresh calculator graphics and fluid animations; improve article colour and remove Roman numerals
+- [ ] Offer the complete cemetery directory and tolerant, private section matching
+- [ ] Verify estimator matching and calculator desktop/mobile interactions
 - [x] Audit and correct Alexander's test cemetery/location mismatch; verify prepared document contents
 - [x] Let staff-directed AI distinguish cemetery reassignment from the shared selling-location field
 - [x] Refine seller document page on desktop and mobile with restrained blue brand styling and no overlapping controls
