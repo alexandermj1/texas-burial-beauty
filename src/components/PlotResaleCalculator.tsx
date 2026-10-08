@@ -1,47 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Search, Minus, Plus, Clock, ShieldCheck, Sparkles, Loader2, Info } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Search, Minus, Plus, Clock, ShieldCheck, Sparkles, Loader2, MapPin, ChevronDown, Flower2, Landmark, Layers, Trees } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import ValuationGraphic from "@/components/cemetery/ValuationGraphic";
+import { bayCemeteries } from "@/data/cemeteries";
 
 type Range = { low: number; mid: number; high: number };
-type Est = {
-  ok: boolean;
-  reason?: string;
-  cemetery: string;
-  spaces: number;
-  confidence: { score: number; label: string; accuracy_pct: number };
-  factors: Record<"location_match" | "market_data" | "recency" | "consistency", string>;
-  broker: { per_space: Range; total: Range; timeline: string };
-  private: { per_space: Range; total: Range; timeline: string };
-};
-
-const TYPES = [
-  { v: "plot", l: "Burial plot" },
-  { v: "lawn crypt", l: "Lawn crypt" },
-  { v: "mausoleum crypt", l: "Mausoleum crypt" },
-  { v: "niche", l: "Niche / urn space" },
-];
+type Est = { ok: boolean; cemetery: string; spaces: number; confidence: { score: number; label: string; accuracy_pct: number }; broker: { per_space: Range; total: Range; timeline: string }; private: { per_space: Range; total: Range; timeline: string } };
+type Cemetery = { name: string; city: string | null };
+const TYPES = [{ v: "plot", l: "Burial plot", icon: Trees }, { v: "lawn crypt", l: "Lawn crypt", icon: Layers }, { v: "mausoleum crypt", l: "Mausoleum crypt", icon: Landmark }, { v: "niche", l: "Niche / urn space", icon: Flower2 }];
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+const normalize = (s: string) => s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-const Gauge = ({ score }: { score: number }) => {
-  const r = 42, c = 2 * Math.PI * r;
-  return (
-    <svg viewBox="0 0 100 100" className="w-24 h-24 -rotate-90" aria-hidden>
-      <circle cx="50" cy="50" r={r} fill="none" className="stroke-background/15" strokeWidth="8" />
-      <motion.circle
-        cx="50" cy="50" r={r} fill="none" strokeLinecap="round" strokeWidth="8" className="stroke-primary"
-        strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - score / 100) }}
-        transition={{ duration: 1, ease: "easeOut" }}
-      />
-    </svg>
-  );
-};
+function AnimatedMoney({ value }: { value: number }) {
+  const reduced = useReducedMotion();
+  const [shown, setShown] = useState(reduced ? value : 0);
+  useEffect(() => {
+    if (reduced) { setShown(value); return; }
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 950);
+      setShown(value * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, reduced]);
+  return <>{money(shown)}</>;
+}
 
 const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
-  const [cems, setCems] = useState<{ name: string; city: string | null }[]>([]);
+  const reduced = useReducedMotion();
+  const [cems, setCems] = useState<Cemetery[]>([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
   const [section, setSection] = useState("");
   const [type, setType] = useState("plot");
   const [spaces, setSpaces] = useState(2);
@@ -49,180 +45,102 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
   const [est, setEst] = useState<Est | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-
+  const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    let alive = true;
     supabase.functions.invoke("plot-value-estimator", { body: { action: "cemeteries" } }).then(({ data }) => {
-      if (data?.cemeteries) setCems(data.cemeteries);
+      if (alive) setCems(data?.cemeteries?.length ? data.cemeteries : bayCemeteries.map(({ name, city }) => ({ name, city })));
     });
     const close = (e: MouseEvent) => { if (!boxRef.current?.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    return () => { alive = false; document.removeEventListener("mousedown", close); };
   }, []);
-
   const matches = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    return (q ? cems.filter((c) => `${c.name} ${c.city ?? ""}`.toLowerCase().includes(q)) : cems).slice(0, 8);
+    const words = normalize(query).split(" ").filter(Boolean);
+    return cems.filter((c) => words.every((word) => normalize(`${c.name} ${c.city ?? ""}`).includes(word)));
   }, [cems, query]);
-
-  const run = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!query.trim()) { setErr("Choose or type your cemetery to get an estimate."); return; }
-    setErr(null); setLoading(true);
-    const { data, error } = await supabase.functions.invoke("plot-value-estimator", {
-      body: { cemetery: query, section, property_type: type, spaces },
-    });
-    setLoading(false);
-    if (error || !data?.ok) { setEst(null); setErr("We couldn't estimate this one automatically — request a free valuation and a broker will price it for you."); return; }
-    setEst(data);
+  const select = (c: Cemetery) => { setQuery(c.name); setOpen(false); setActive(-1); setEst(null); };
+  const invalidate = () => { setEst(null); setErr(null); };
+  const run = async (e: React.FormEvent) => {
+    e.preventDefault(); setOpen(false);
+    if (!query.trim()) { setErr("Choose or type your cemetery to get an estimate."); inputRef.current?.focus(); return; }
+    setErr(null); setLoading(true); setEst(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("plot-value-estimator", { body: { cemetery: query, section, property_type: type, spaces } });
+      if (error || !data?.ok) setErr("We couldn't estimate this property automatically. Request a free valuation from our team.");
+      else setEst(data);
+    } catch { setErr("We couldn't connect. Please try again or request a free valuation."); }
+    finally { setLoading(false); }
   };
-
   const sellHref = `/sell?cemetery=${encodeURIComponent(est?.cemetery ?? query)}`;
-  const field = "w-full h-12 rounded-2xl border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition";
-
+  const field = "w-full h-12 rounded-lg border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition";
+  const transition = { duration: reduced ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] as const };
   return (
-    <div id="plot-value-calculator" className="scroll-mt-28 rounded-[28px] border border-border bg-card shadow-[0_30px_80px_-40px_hsl(var(--foreground)/0.25)] overflow-hidden">
-      <div className="px-6 md:px-10 pt-9 pb-7 border-b border-border/60">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="h-px w-8 bg-primary/60" />
-          <p className="text-[10px] tracking-[0.34em] uppercase text-primary font-medium">Free plot value calculator</p>
+    <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-lg border border-primary/20 bg-background">
+      <div className="p-6 md:p-9 border-b border-border flex flex-wrap items-start justify-between gap-6 bg-card rounded-t-lg">
+        <div className="max-w-2xl">
+          <p className="flex items-center gap-2 text-xs font-medium text-primary mb-3"><Sparkles className="w-4 h-4" /> FREE INSTANT ESTIMATE</p>
+          <h2 className={`font-display ${compact ? "text-3xl md:text-[40px]" : "text-4xl md:text-5xl"} leading-tight text-foreground`}>What is your cemetery plot worth?</h2>
+          <p className="mt-3 text-muted-foreground leading-relaxed">A clearer picture of your property's resale potential. Compare a broker sale with selling privately.</p>
         </div>
-        <h2 className={`font-display ${compact ? "text-3xl md:text-4xl" : "text-[32px] md:text-[48px]"} text-foreground leading-[1.04] max-w-3xl`}>
-          What is my cemetery plot worth?
-        </h2>
-        <p className="mt-3 text-muted-foreground max-w-2xl leading-relaxed">
-          Get an instant estimated resale value for burial plots, crypts and niches at Texas cemeteries — selling through a broker versus selling it yourself.
-        </p>
+        <span className="inline-flex gap-2 items-center text-xs text-primary border border-primary/20 rounded-full px-3 py-2"><ShieldCheck className="w-4 h-4" /> No contact details needed</span>
       </div>
-
       <div className="grid lg:grid-cols-[1fr_1.1fr]">
-        <form onSubmit={run} className="p-6 md:p-10 space-y-6 border-b lg:border-b-0 lg:border-r border-border/60">
+        <form onSubmit={run} className="p-6 md:p-9 space-y-6 min-w-0">
           <div ref={boxRef} className="relative">
-            <label className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-2 block">Cemetery</label>
+            <label htmlFor="value-cemetery" className="text-sm font-medium mb-2 block">Cemetery</label>
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={query} onChange={(e) => { setQuery(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
-                placeholder="e.g. Restland Memorial Park" className={`${field} pl-11`} autoComplete="off" aria-label="Cemetery name"
-              />
+              <Search className="w-4 h-4 absolute left-4 top-4 text-primary" />
+              <input ref={inputRef} id="value-cemetery" value={query} onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(-1); invalidate(); }} onFocus={() => setOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setOpen(false);
+                  if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); setOpen(true); setActive((n) => Math.max(0, Math.min(matches.length - 1, n + (e.key === "ArrowDown" ? 1 : -1)))); }
+                  if (e.key === "Enter" && open && active >= 0 && matches[active]) { e.preventDefault(); select(matches[active]); }
+                }}
+                placeholder="Search by cemetery or city" className={`${field} pl-11 pr-12`} autoComplete="off" role="combobox" aria-expanded={open} aria-controls="cemetery-options" aria-autocomplete="list" aria-activedescendant={active >= 0 ? `cem-option-${active}` : undefined} />
+              <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1 hover:bg-muted text-muted-foreground" aria-label="Browse all cemeteries" onClick={() => { setOpen(!open); inputRef.current?.focus(); }}><ChevronDown /></Button>
             </div>
-            <AnimatePresence>
-              {open && matches.length > 0 && (
-                <motion.ul
-                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                  className="absolute z-20 mt-2 w-full rounded-2xl border border-border bg-popover shadow-xl overflow-hidden max-h-72 overflow-y-auto"
-                >
-                  {matches.map((c) => (
-                    <li key={c.name}>
-                      <button type="button" onClick={() => { setQuery(c.name); setOpen(false); }}
-                        className="w-full text-left px-4 py-3 hover:bg-muted transition-colors">
-                        <span className="text-sm text-foreground">{c.name}</span>
-                        {c.city && <span className="block text-xs text-muted-foreground">{c.city}</span>}
-                      </button>
-                    </li>
-                  ))}
-                </motion.ul>
-              )}
-            </AnimatePresence>
+            <AnimatePresence>{open && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="absolute z-30 mt-2 w-full rounded-lg border border-border bg-popover shadow-lg overflow-hidden">
+              <p className="px-4 py-2 border-b border-border text-xs text-muted-foreground">{matches.length} cemeteries {query ? "found" : "in the directory"}</p>
+              <ul id="cemetery-options" role="listbox" aria-label="Cemeteries" className="max-h-64 overflow-y-auto">
+                {matches.map((c, i) => <li id={`cem-option-${i}`} role="option" aria-selected={i === active} key={`${c.name}-${c.city}`} ref={(el) => { if (el && i === active) el.scrollIntoView({ block: "nearest" }); }}>
+                  <Button type="button" variant="ghost" onClick={() => select(c)} className={`w-full h-auto min-h-14 justify-start rounded-none px-4 py-3 whitespace-normal text-left hover:bg-muted hover:text-foreground ${active === i ? "bg-muted" : ""}`}><MapPin className="text-primary" /><span className="min-w-0"><span className="block text-sm">{c.name}</span>{c.city && <span className="block text-xs text-muted-foreground font-normal">{c.city}</span>}</span></Button>
+                </li>)}
+                {!matches.length && <li className="px-4 py-4 text-sm text-muted-foreground">No directory match. You can still estimate using the name you entered.</li>}
+              </ul>
+            </motion.div>}</AnimatePresence>
           </div>
-
-          <div>
-            <label className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-2 block">Garden or section <span className="normal-case tracking-normal">(optional)</span></label>
-            <input value={section} onChange={(e) => setSection(e.target.value)} placeholder="As written on your deed" className={field} />
-          </div>
-
-          <div>
-            <p className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-2">Property type</p>
-            <div className="grid grid-cols-2 gap-2">
-              {TYPES.map((t) => (
-                <button key={t.v} type="button" onClick={() => setType(t.v)} aria-pressed={type === t.v}
-                  className={`h-11 rounded-xl border text-sm transition-all ${type === t.v ? "border-primary bg-primary/10 text-foreground font-medium" : "border-border text-muted-foreground hover:text-foreground hover:border-primary/40"}`}>
-                  {t.l}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-end justify-between gap-6">
-            <div>
-              <p className="text-[10px] tracking-[0.28em] uppercase text-muted-foreground mb-2">Spaces</p>
-              <div className="flex items-center gap-4">
-                <button type="button" aria-label="Fewer spaces" onClick={() => setSpaces((s) => Math.max(1, s - 1))}
-                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:border-primary transition-colors"><Minus className="w-4 h-4" /></button>
-                <span className="font-display text-4xl w-10 text-center tabular-nums">{spaces}</span>
-                <button type="button" aria-label="More spaces" onClick={() => setSpaces((s) => Math.min(12, s + 1))}
-                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:border-primary transition-colors"><Plus className="w-4 h-4" /></button>
-              </div>
-            </div>
-            <button type="submit" disabled={loading}
-              className="h-12 px-7 rounded-full bg-primary text-primary-foreground text-sm font-medium inline-flex items-center gap-2 hover:opacity-90 disabled:opacity-60 transition">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Estimate value
-            </button>
-          </div>
-          {err && <p className="text-sm text-destructive">{err}</p>}
+          <div><label htmlFor="value-section" className="text-sm font-medium mb-2 block">Garden or section <span className="text-muted-foreground font-normal">(optional)</span></label><input id="value-section" value={section} onChange={(e) => { setSection(e.target.value); invalidate(); }} placeholder="e.g. Garden of Memories" className={field} /></div>
+          <fieldset><legend className="text-sm font-medium mb-3">Property type</legend><div className="grid grid-cols-2 gap-2">{TYPES.map((t) => <Button key={t.v} type="button" variant="outline" onClick={() => { setType(t.v); invalidate(); }} aria-pressed={type === t.v} className={`relative h-14 px-3 whitespace-normal text-xs sm:text-sm justify-start hover:bg-card hover:text-foreground ${type === t.v ? "border-primary bg-card text-primary" : "text-muted-foreground"}`}><t.icon /><span>{t.l}</span>{type === t.v && <motion.span layoutId="property-selection" transition={transition} className="absolute bottom-0 inset-x-3 h-0.5 bg-primary" />}</Button>)}</div></fieldset>
+          <div className="flex items-center justify-between"><label className="text-sm font-medium">Number of spaces</label><div className="flex items-center gap-3"><Button type="button" size="icon" variant="outline" disabled={spaces === 1} aria-label="Fewer spaces" onClick={() => { setSpaces(spaces - 1); invalidate(); }} className="hover:bg-card hover:text-primary"><Minus /></Button><span className="text-2xl font-medium tabular-nums w-8 text-center">{spaces}</span><Button type="button" size="icon" variant="outline" disabled={spaces === 12} aria-label="More spaces" onClick={() => { setSpaces(spaces + 1); invalidate(); }} className="hover:bg-card hover:text-primary"><Plus /></Button></div></div>
+          <Button type="submit" disabled={loading} className="w-full h-13 min-h-12 text-sm">{loading ? <Loader2 className="animate-spin" /> : <Sparkles />}{loading ? "Calculating your estimate…" : "Estimate my plot value"}<ArrowRight className="ml-auto" /></Button>
+          {err && <p role="alert" className="text-sm text-destructive">{err} <Link to={sellHref} className="underline">Get a free quote</Link></p>}
         </form>
-
-        <div className="p-6 md:p-10 bg-foreground text-background min-h-[420px] flex flex-col">
+        <div className="p-6 md:p-9 bg-foreground text-background min-h-[520px] min-w-0 lg:rounded-br-lg relative overflow-hidden" aria-live="polite" aria-busy={loading}>
           <AnimatePresence mode="wait">
-            {!est ? (
-              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="my-auto">
-                <p className="font-display text-3xl leading-tight mb-4">Your estimate appears here.</p>
-                <ul className="space-y-3 text-sm text-background/70">
-                  <li className="flex gap-2"><ShieldCheck className="w-4 h-4 text-primary mt-0.5" /> Built from real Texas cemetery pricing and resale activity</li>
-                  <li className="flex gap-2"><Clock className="w-4 h-4 text-primary mt-0.5" /> Broker vs private sale value and typical timelines</li>
-                  <li className="flex gap-2"><Info className="w-4 h-4 text-primary mt-0.5" /> Free, instant, no contact details needed</li>
-                </ul>
-              </motion.div>
-            ) : (
-              <motion.div key={JSON.stringify(est.broker)} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-col h-full">
-                <div className="flex items-center gap-5 mb-7">
-                  <div className="relative">
-                    <Gauge score={est.confidence.score} />
-                    <span className="absolute inset-0 flex items-center justify-center font-display text-2xl tabular-nums">{est.confidence.score}</span>
-                  </div>
-                  <div>
-                    <p className="text-[10px] tracking-[0.24em] uppercase text-primary font-medium">Confidence · {est.confidence.label}</p>
-                    <p className="text-sm text-background/75 mt-1">Typically within ±{est.confidence.accuracy_pct}% for {est.cemetery}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-background/10 p-5 mb-3">
-                  <div className="flex justify-between items-baseline gap-3">
-                    <p className="text-[10px] tracking-[0.24em] uppercase text-primary font-medium">Estimated resale with a broker</p>
-                    <p className="text-xs text-background/60 whitespace-nowrap"><Clock className="w-3 h-3 inline mr-1" />{est.broker.timeline}</p>
-                  </div>
-                  <p className="font-display text-4xl md:text-5xl mt-2 tabular-nums">{money(est.broker.total.mid)}</p>
-                  <p className="text-sm text-background/70 mt-1">{money(est.broker.total.low)} – {money(est.broker.total.high)} · {money(est.broker.per_space.mid)} per space</p>
-                </div>
-                <div className="rounded-2xl border border-background/15 p-5 mb-6">
-                  <div className="flex justify-between items-baseline gap-3">
-                    <p className="text-[10px] tracking-[0.24em] uppercase text-background/60 font-medium">Estimated private sale</p>
-                    <p className="text-xs text-background/60 whitespace-nowrap"><Clock className="w-3 h-3 inline mr-1" />{est.private.timeline} avg.</p>
-                  </div>
-                  <p className="font-display text-3xl mt-2 tabular-nums text-background/85">{money(est.private.total.mid)}</p>
-                  <p className="text-sm text-background/60 mt-1">{money(est.private.total.low)} – {money(est.private.total.high)}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs mb-6">
-                  {([["Location match", est.factors.location_match], ["Market data", est.factors.market_data], ["Recency", est.factors.recency], ["Consistency", est.factors.consistency]] as const).map(([k, v]) => (
-                    <div key={k} className="flex justify-between border-b border-background/10 pb-1.5"><span className="text-background/55">{k}</span><span>{v}</span></div>
-                  ))}
-                </div>
-
-                <Link to={sellHref} className="mt-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:opacity-90 transition">
-                  Get my exact quote — free <ArrowRight className="w-4 h-4" />
-                </Link>
-              </motion.div>
-            )}
+            {!est ? <motion.div key={loading ? "loading" : "empty"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="h-full flex flex-col justify-center">
+              <p className="text-xs text-valuation-teal mb-3 flex gap-2 items-center"><span className="w-2 h-2 rounded-full bg-valuation-teal" /> YOUR RESALE POTENTIAL</p>
+              <h3 className="font-display text-3xl md:text-4xl leading-tight max-w-sm">An informed next step.<br /><span className="text-valuation-coral">Not a guessing game.</span></h3>
+              <ValuationGraphic />
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-background/70"><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 bg-valuation-teal" /> Broker resale</span><span className="inline-flex items-center gap-2"><span className="w-5 border-t border-dashed border-valuation-coral" /> Private resale</span></div>
+              <p className="text-sm text-background/60 mt-6 leading-relaxed">{loading ? "Preparing your value range and confidence score…" : "Compare estimated values, sale timelines and a confidence score for your property."}</p>
+            </motion.div> : <motion.div key={JSON.stringify(est)} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition}>
+              <div className="flex justify-between gap-4 items-start border-b border-background/15 pb-5 mb-5"><div><p className="text-xs text-background/55 mb-1">YOUR ESTIMATE · {est.spaces} {est.spaces === 1 ? "SPACE" : "SPACES"}</p><h3 className="font-body text-base font-medium">{est.cemetery}</h3></div><div className="shrink-0 text-right"><p className="text-valuation-teal text-xl font-medium tabular-nums">{est.confidence.score}<span className="text-xs text-background/50"> / 100</span></p><p className="text-xs text-background/65">{est.confidence.label} confidence</p></div></div>
+              <p className="text-sm text-valuation-teal font-medium">Estimated resale with a broker</p>
+              <p className="text-[38px] sm:text-[46px] font-medium tabular-nums leading-tight mt-2"><AnimatedMoney value={est.broker.total.mid} /></p>
+              <p className="text-sm text-background/65 mt-2">{money(est.broker.total.low)} – {money(est.broker.total.high)}</p>
+              <p className="text-xs text-background/55 mt-1">{money(est.broker.per_space.mid)} per space</p>
+              <div className="h-2 rounded-full bg-background/10 mt-5 overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={transition} className="h-full bg-valuation-teal rounded-full" /></div>
+              <p className="flex gap-2 items-center text-xs text-background/65 mt-3"><Clock className="w-3.5 h-3.5" />{est.broker.timeline}</p>
+              <div className="border-t border-background/15 mt-5 pt-5"><div className="flex items-baseline justify-between gap-3"><p className="text-sm text-valuation-coral">Estimated private sale</p><p className="text-2xl font-medium tabular-nums"><AnimatedMoney value={est.private.total.mid} /></p></div><p className="text-xs text-background/60 mt-2">{money(est.private.total.low)} – {money(est.private.total.high)}</p><div className="h-2 rounded-full bg-background/10 mt-3 overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, est.private.total.mid / est.broker.total.mid * 100)}%` }} transition={{ ...transition, delay: reduced ? 0 : 0.15 }} className="h-full bg-valuation-coral rounded-full" /></div><p className="text-xs text-background/65 mt-3 flex gap-2 items-center"><Clock className="w-3.5 h-3.5" />{est.private.timeline} average</p></div>
+              <p className="text-xs text-background/55 mt-5 leading-relaxed">Indicative uncertainty: ±{est.confidence.accuracy_pct}%. Not a verified prediction of your final sale price.</p>
+              <Button asChild className="mt-5 w-full bg-background text-foreground hover:bg-background/90 h-12"><Link to={sellHref}>Get my free broker valuation <ArrowRight /></Link></Button>
+            </motion.div>}
           </AnimatePresence>
         </div>
       </div>
-
-      <p className="px-6 md:px-10 py-5 text-[11px] text-muted-foreground leading-relaxed border-t border-border/60">
-        Estimates are automated and can be off — the garden, exact location, cemetery fees and current demand all change the real number. For an accurate valuation,{" "}
-        <Link to="/sell" className="text-primary underline underline-offset-2">request a free quote from our brokers</Link>. This is not an offer or an appraisal.
-      </p>
+      <p className="px-6 md:px-9 py-5 text-xs text-muted-foreground leading-relaxed border-t border-border">Automated estimates can be off. Location, cemetery fees and demand affect the final price. For an accurate valuation, <Link to={sellHref} className="text-primary underline underline-offset-2">request a free quote</Link>. This is not an offer or an appraisal.</p>
     </div>
   );
 };
-
 export default PlotResaleCalculator;
