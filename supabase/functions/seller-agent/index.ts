@@ -244,20 +244,25 @@ RULES FOR YOUR OUTPUT
   - reasoning: 1-2 short sentences, plain words, no jargon, no restating the whole record.
   - each action's reason: one short sentence, e.g. "She asked where to send the deed — reply with the address."
   - human_reason: one short sentence saying exactly what a person must decide.
+- VISUALS (helps staff see what you mean at a glance; add only when they genuinely help, max 3):
+  - When your reasoning or an action relies on a SCAN, add {"kind":"scan","scan":<SCAN number>,"caption":"one short line","marks":[{"x":0-1,"y":0-1,"w":0-1,"h":0-1,"label":"2-4 words"}]} — marks are boxes around the exact spot (fractions of the image width/height from the top-left), e.g. the grantee names, the plot wording, a missing notary seal. Max 4 marks; omit marks if unsure of the position or the scan is a PDF.
+  - When family, heirs, signers or POAs matter, add {"kind":"family_tree","people":[{"name":string,"relation":string,"parent":string|null (name of the person above them, null for the deed owner),"deceased":boolean,"signs":boolean,"note":string|null}]} (max 12 people).
+  - When the record and the evidence disagree or need checking, add {"kind":"compare","title":string,"rows":[{"label":string,"record":string,"evidence":string,"match":boolean}]} (max 8 rows).
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
+ "visuals": array (may be empty),
  "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null}]}`;
 
 /** Scans on file (deed first) as image/PDF parts so the AI can read them. Kept small for cost. */
 async function loadScans(db: SupabaseClient, sub: Sub) {
-  if (!sub.customer_profile_id) return { parts: [] as any[], names: [] as string[] };
+  if (!sub.customer_profile_id) return { parts: [] as any[], names: [] as string[], refs: [] as any[] };
   const { data } = await db.from("customer_files").select("file_name,file_path,mime_type,document_type,file_size,created_at")
     .eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(40);
   const ok = (f: any) => /^image\/(jpeg|png|webp)$/.test(f.mime_type ?? "") ? (f.file_size ?? 0) < 12_000_000 : f.mime_type === "application/pdf" && (f.file_size ?? 0) < 5_000_000;
   const rank = (f: any) => /deed|certificate of ownership/i.test(f.document_type ?? "") ? 0 : /power of attorney|poa|death|affidavit|photo id|will/i.test(`${f.document_type} ${f.file_name}`) ? 1 : /intake/i.test(f.document_type ?? "") ? 2 : /attachment/i.test(f.document_type ?? "") ? 2 : 9;
   const seen = new Set<number>();
   const picked = (data ?? []).filter(ok).filter((f) => !seen.has(f.file_size) && seen.add(f.file_size)).filter((f) => rank(f) < 9).sort((a, b) => rank(a) - rank(b)).slice(0, 6);
-  const parts: any[] = [], names: string[] = [];
+  const parts: any[] = [], names: string[] = [], refs: any[] = [];
   for (const f of picked) {
     // Phone photos are large: ask storage for a resized copy first, fall back to the original.
     let blob: Blob | null = null;
@@ -272,12 +277,13 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
     const b64 = btoa(bin);
     if (!b64) continue;
     names.push(`${f.document_type}: ${f.file_name}`);
+    refs.push({ file_path: f.file_path, file_name: f.file_name, mime_type: f.mime_type, document_type: f.document_type });
     parts.push({ type: "input_text", text: `SCAN ${names.length} — ${f.document_type}: ${f.file_name} (uploaded ${f.created_at})` });
     parts.push(f.mime_type === "application/pdf"
       ? { type: "input_file", filename: f.file_name || "scan.pdf", file_data: `data:application/pdf;base64,${b64}` }
       : { type: "input_image", image_url: `data:${blob.type && blob.type.startsWith("image/") ? blob.type : f.mime_type};base64,${b64}` });
   }
-  return { parts, names };
+  return { parts, names, refs };
 }
 
 async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: any[] = []) {
@@ -336,6 +342,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
     confidence: Math.max(0, Math.min(1, Number(obj.confidence) || 0)),
     needs_human: Boolean(obj.needs_human),
     human_reason: obj.human_reason ? String(obj.human_reason) : null,
+    visuals: parseVisuals(obj.visuals),
     actions: actions
       .filter((a: any) => allowed.has(a?.type) && (a?.type !== "increase_quote_ten_percent" || (typeof a.body === "string" && a.body.trim().length > 0)))
       .slice(0, 4)
@@ -363,6 +370,19 @@ function parseDecision(raw: string, allowed: Set<string>) {
       .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body)
       .filter((a: any) => a.type !== "update_quote_spaces" || (Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20)),
   };
+}
+
+function parseVisuals(v: unknown) {
+  const str = (x: unknown, n: number) => (x == null ? "" : String(x)).slice(0, n);
+  const frac = (x: unknown) => Math.max(0, Math.min(1, Number(x) || 0));
+  if (!Array.isArray(v)) return [] as any[];
+  return v.slice(0, 3).map((x: any) => {
+    if (x?.kind === "scan" && Number(x.scan) >= 1) return { kind: "scan", scan: Math.floor(Number(x.scan)), caption: str(x.caption, 200),
+      marks: Array.isArray(x.marks) ? x.marks.slice(0, 4).map((m: any) => ({ x: frac(m.x), y: frac(m.y), w: frac(m.w), h: frac(m.h), label: str(m.label, 40) })).filter((m: any) => m.w > 0.005 && m.h > 0.005) : [] };
+    if (x?.kind === "family_tree" && Array.isArray(x.people)) return { kind: "family_tree", people: x.people.slice(0, 12).map((p: any) => ({ name: str(p.name, 80), relation: str(p.relation, 60), parent: p.parent ? str(p.parent, 80) : null, deceased: !!p.deceased, signs: !!p.signs, note: p.note ? str(p.note, 120) : null })).filter((p: any) => p.name) };
+    if (x?.kind === "compare" && Array.isArray(x.rows)) return { kind: "compare", title: str(x.title, 80), rows: x.rows.slice(0, 8).map((r: any) => ({ label: str(r.label, 60), record: str(r.record, 200), evidence: str(r.evidence, 200), match: !!r.match })) };
+    return null;
+  }).filter(Boolean) as any[];
 }
 
 async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string) {
@@ -400,7 +420,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
     }
-    const scans = ((customerWaiting && wantsCheck) || instruction) ? await loadScans(db, sub) : { parts: [], names: [] };
+    const scans = ((customerWaiting && wantsCheck) || instruction) ? await loadScans(db, sub) : { parts: [], names: [], refs: [] as any[] };
     const directive = instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${instruction}"\nFollow it. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
     const raw = await callModel(apiKey, INSTRUCTIONS(playbook.content), `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n${ctx.context}`, instruction ? "medium" : effort, scans.parts);
     const d = parseDecision(raw, allowed);
@@ -421,16 +441,18 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     // Supersede older undecided proposals for this seller so the queue stays current.
     await db.from("ai_agent_actions").update({ status: "superseded" }).eq("submission_id", sub.id).eq("status", "proposed");
 
+    // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
+    const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
     const rows = d.actions.map((a) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
       email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: a.fields ? { fields: a.fields } : a.items ? { items: a.items } : null,
+      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(visuals.length ? { visuals } : {}) },
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
-      rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: null });
+      rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
     }
     if (rows.length) await db.from("ai_agent_actions").insert(rows);
     return { status: "done", run_id: run!.id, effort, decision: d };

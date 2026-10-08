@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import AiVisuals, { type AiVisual } from "./AiVisuals";
 import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, Users, DollarSign, FileText, PencilLine } from "lucide-react";
 
 export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
-  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[] } | null;
+  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[] } | null;
 };
 
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
@@ -101,6 +102,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
+      <AiVisuals visuals={a.payload?.visuals} />
        {["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.email_body !== null && (pending ? (
         <div className="space-y-2">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
