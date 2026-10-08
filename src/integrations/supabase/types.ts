@@ -209,6 +209,45 @@ export type Database = {
           },
         ]
       }
+      ai_agent_compare: {
+        Row: {
+          batch_id: string
+          created_at: string
+          id: string
+          new_input_chars: number | null
+          new_result: Json | null
+          old_input_chars: number | null
+          old_result: Json | null
+          same_actions: boolean | null
+          seller_name: string | null
+          submission_id: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          id?: string
+          new_input_chars?: number | null
+          new_result?: Json | null
+          old_input_chars?: number | null
+          old_result?: Json | null
+          same_actions?: boolean | null
+          seller_name?: string | null
+          submission_id: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          id?: string
+          new_input_chars?: number | null
+          new_result?: Json | null
+          old_input_chars?: number | null
+          old_result?: Json | null
+          same_actions?: boolean | null
+          seller_name?: string | null
+          submission_id?: string
+        }
+        Relationships: []
+      }
       ai_agent_runs: {
         Row: {
           confidence: number | null
@@ -391,6 +430,24 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           version?: number
+        }
+        Relationships: []
+      }
+      ai_review_queue: {
+        Row: {
+          requested_at: string
+          submission_id: string
+          trigger: string | null
+        }
+        Insert: {
+          requested_at?: string
+          submission_id: string
+          trigger?: string | null
+        }
+        Update: {
+          requested_at?: string
+          submission_id?: string
+          trigger?: string | null
         }
         Relationships: []
       }
@@ -844,6 +901,8 @@ export type Database = {
           acceptance_channel: string | null
           accepted_quote_amount: number | null
           admin_notes: string | null
+          ai_history_summary: string | null
+          ai_history_summary_through: string | null
           ai_paused_at: string | null
           ai_summary: string | null
           ai_summary_at: string | null
@@ -969,6 +1028,8 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_history_summary?: string | null
+          ai_history_summary_through?: string | null
           ai_paused_at?: string | null
           ai_summary?: string | null
           ai_summary_at?: string | null
@@ -1094,6 +1155,8 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_history_summary?: string | null
+          ai_history_summary_through?: string | null
           ai_paused_at?: string | null
           ai_summary?: string | null
           ai_summary_at?: string | null
