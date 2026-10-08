@@ -125,7 +125,7 @@ const SITE = "https://www.texascemeterybrokers.com";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
 const FIELD_LABEL: Record<string, string> = { phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
-const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city"];
+const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count"];
 // The quote stores the authorised sale price per space excluding one transfer fee.
 // Match the admin quote ceiling: buyer pays 115% of (price + transfer fee).
 function higherQuote(sub: Sub) {
@@ -251,7 +251,9 @@ RULES FOR YOUR OUTPUT
 - VISUALS (helps staff see what you mean at a glance; add only when they genuinely help, max 3):
   - When your reasoning or an action relies on a SCAN, add {"kind":"scan","scan":<SCAN number>,"caption":"one short line","marks":[{"x":0-1,"y":0-1,"w":0-1,"h":0-1,"label":"2-4 words"}]} — marks are boxes around the exact spot (fractions of the image width/height from the top-left), e.g. the grantee names, the plot wording, a missing notary seal. Max 4 marks; omit marks if unsure of the position or the scan is a PDF.
   - When family, heirs, signers or POAs matter, add {"kind":"family_tree","people":[{"name":string,"relation":string,"parent":string|null (name of the person above them, null for the deed owner),"deceased":boolean,"signs":boolean,"note":string|null}]} (max 12 people).
+  - Use visuals anywhere they make your point quicker to check: deed or POA checks, which file sits under which checklist item, quote figures vs what an email said, plot/space corrections, who must sign.
   - When the record and the evidence disagree or need checking, add {"kind":"compare","title":string,"rows":[{"label":string,"record":string,"evidence":string,"match":boolean}]} (max 8 rows).
+- FIX THE RECORD FROM EVIDENCE: whenever a compare row shows a record field that is blank or wrong and the deed/scan/seller email clearly shows the right value, ALSO propose update_fields with those values (e.g. space_numbers "3 & 4", plot_count "2", section, lawn, deed_owner_names, plot_description) and a note like "Filled in the space numbers (3 & 4) and plot count (2) from the deed." Include the compare visual on that action. Never change prices, stages or dates. If a document request has already gone out and the plot wording itself is wrong, use fix_document_request instead.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
@@ -714,7 +716,7 @@ Deno.serve(async (req) => {
           const before = Object.fromEntries(Object.keys(patch).map((k) => [k, sub[k] ?? "—"]));
           const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
           if (e) throw new Error(e.message);
-          await aiNote(Object.entries(patch).map(([k, v]) => before[k] === "—" || !String(before[k]).trim()
+          if (act.note_body) await aiNote(String(act.note_body)); else await aiNote(Object.entries(patch).map(([k, v]) => before[k] === "—" || !String(before[k]).trim()
             ? `${first(sub)} sent us their ${FIELD_LABEL[k] ?? k}: ${v}.`
             : `Changed the ${FIELD_LABEL[k] ?? k} from ${before[k]} to ${v}.`).join(" "));
         } else if (act.action_type === "update_document_items") {
