@@ -25,6 +25,8 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("do"), submission_id: z.string().uuid(), type: z.enum(["send_listing_agreement", "resend_signing_link", "send_family_tree"]), deed_owner_names: z.string().trim().min(2).max(300).optional() }),
   // Staff tell the AI what to change on a document request; the panel applies it with the staff code.
   z.object({ action: z.literal("plan_packet"), submission_id: z.string().uuid(), instruction: z.string().trim().min(3).max(2000), items: z.array(z.object({ key: z.string().max(300), label: z.string().max(300), person: z.string().max(200).nullable().optional() })).max(60) }),
+  // Replay old vs lean design on a few sellers (nothing saved as a suggestion).
+  z.object({ action: z.literal("compare"), submission_ids: z.array(z.string().uuid()).min(1).max(4), batch_id: z.string().uuid().optional() }),
 ]);
 
 type Sub = Record<string, any>;
@@ -62,7 +64,7 @@ async function loadPlaybook(db: SupabaseClient) {
   return data ? { version: data.version as number, content: data.content as string } : { version: 1, content: DEFAULT_SELLER_PLAYBOOK };
 }
 
-async function buildContext(db: SupabaseClient, sub: Sub) {
+async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string | null = null) {
   const email = String(sub.email ?? "").toLowerCase();
   const [siblings, emails, notes, files, contracts, docs, reminders] = await Promise.all([
     db.from("contact_submissions").select("id,created_at,cemetery,property_type,spaces,quote_sent_at,quote_response,la_signed_at,archived_at").eq("email", sub.email).neq("id", sub.id).is("deleted_at", null).limit(10),
@@ -99,6 +101,23 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     subject: e.subject,
     text: clip(stripQuoted(String(e.body_text ?? e.snippet ?? "")), 1400),
   }));
+  const fmt = (e: (typeof emailList)[number]) => `--- ${e.when} ${e.from} | ${e.subject}\n${e.text}`;
+  let threadText = emailList.map(fmt).join("\n");
+  // Lean mode: older emails are summarised once (cheap model) and the summary reused until more mail ages out.
+  if (summarizeKey && emailList.length > 6) {
+    const older = emailList.slice(0, -6), recent = emailList.slice(-6);
+    const lastOld = String(older.at(-1)!.when);
+    let summary = (sub.ai_history_summary as string | null) ?? null;
+    const through = sub.ai_history_summary_through ? new Date(sub.ai_history_summary_through).getTime() : 0;
+    if (!summary || new Date(lastOld).getTime() > through) {
+      try {
+        const r = await callCheap(summarizeKey, HISTORY_SYS, `${summary ? `PREVIOUS SUMMARY:\n${summary}\n\n` : ""}OLDER EMAILS:\n${older.map(fmt).join("\n")}`);
+        summary = String(r.summary ?? "").slice(0, 2500) || null;
+        if (summary) await db.from("contact_submissions").update({ ai_history_summary: summary, ai_history_summary_through: lastOld }).eq("id", sub.id);
+      } catch { summary = null; }
+    }
+    if (summary) threadText = `EARLIER EMAILS (summary of ${older.length} older messages):\n${summary}\n\nLATEST EMAILS (word for word):\n${recent.map(fmt).join("\n")}`;
+  }
 
   const latestThread = (emails.data ?? []).find((e) => e.gmail_thread_id && !/^(packet|ownership|local)-/.test(e.gmail_thread_id));
   const latestSeller = (emails.data ?? []).find((e) => !String(e.from_email).toLowerCase().includes("texascemeterybrokers"));
@@ -114,10 +133,17 @@ async function buildContext(db: SupabaseClient, sub: Sub) {
     `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
-    `EMAIL THREAD (oldest to newest):\n${emailList.map((e) => `--- ${e.when} ${e.from} | ${e.subject}\n${e.text}`).join("\n") || "(no emails)"}`,
+    `EMAIL THREAD (oldest to newest):\n${threadText || "(no emails)"}`,
   ].join("\n\n");
 
-  return { contracts: (contracts.data ?? []) as any[], context, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
+  // Short view of the file for the cheap screening step and topic picking.
+  const focus = [
+    `STAGE: ${record.stage ?? "?"}; quote sent: ${!!sub.quote_sent_at}; quote response: ${sub.quote_response ?? "none"}; agreement signed: ${!!sub.la_signed_at}; family tree done: ${!!answers.sellerConfirmedAt}; documents requested: ${!!sub.documents_requested_at}`,
+    `NEWEST STAFF NOTES:\n${(notes.data ?? []).slice(0, 3).map((n) => `${n.author_name ?? "Staff"} (${n.created_at}): ${clip(n.body, 300)}`).join("\n") || "(none)"}`,
+    `LATEST EMAILS:\n${emailList.slice(-2).map((e) => `${e.from} (${e.when}): ${clip(e.text, 700)}`).join("\n") || "(none)"}`,
+  ].join("\n\n");
+
+  return { contracts: (contracts.data ?? []) as any[], context, focus, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
 }
 
 const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)[0] || "The seller";
