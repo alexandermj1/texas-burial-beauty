@@ -822,7 +822,7 @@ Deno.serve(async (req) => {
 
     await db.from("ai_agent_actions").update(error
       ? { error }
-      : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, decided_at: now, executed_at: now, error: null }).eq("id", act.id);
+      : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, error: null }).eq("id", act.id);
     if (!error) {
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
