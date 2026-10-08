@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
+import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 
 
 const TEXAS_REGIONS = [
@@ -386,6 +387,10 @@ const GuideSellingCemeteryPlot = () => (
         </section>
 
         {/* H2: Why a broker */}
+        <section className="my-12 md:my-16" aria-label="Estimate your cemetery plot resale value">
+          <PlotResaleCalculator compact />
+        </section>
+
         <section id="why" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 03 · The case for a broker</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Why selling through Texas Cemetery Brokers is the <span className="italic text-primary">safest, fastest route</span></h2>

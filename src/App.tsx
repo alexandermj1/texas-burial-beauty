@@ -37,7 +37,6 @@ const Guides = lazy(() => import("./pages/Guides"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
 const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
-const PlotValueCalculatorPage = lazy(() => import("./pages/PlotValueCalculatorPage"));
 const GuidePreneedCemeteryPlots = lazy(() => import("./pages/GuidePreneedCemeteryPlots"));
 const GuideCemeteryTransferProcess = lazy(() => import("./pages/GuideCemeteryTransferProcess"));
 const GuidePlanningFuneralTexas = lazy(() => import("./pages/GuidePlanningFuneralTexas"));
@@ -102,7 +101,7 @@ const App = () => (
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
                 <Route path="/cemetery-plot-cost-texas" element={<GuideCemeteryPlotCost />} />
-                <Route path="/cemetery-plot-value-calculator" element={<PlotValueCalculatorPage />} />
+                <Route path="/cemetery-plot-value-calculator" element={<Navigate to="/cemetery-plot-cost-texas#plot-value-calculator" replace />} />
                 <Route path="/preneed-cemetery-plots-texas" element={<GuidePreneedCemeteryPlots />} />
                 <Route path="/cemetery-transfer-process-texas" element={<GuideCemeteryTransferProcess />} />
                 <Route path="/guides/planning-a-funeral-in-texas" element={<GuidePlanningFuneralTexas />} />
