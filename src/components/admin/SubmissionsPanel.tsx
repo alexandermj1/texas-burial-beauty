@@ -3268,7 +3268,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   }}
                   onOpenDocuments={() => setSellerWorkspaceTab("paperwork")}
                   onRefresh={() => { loadAiPending(); onRefresh?.(); }}
-                />
+                />}
                 {sellerWorkspaceNav}
                 {sellerWorkspaceTab === "email" && emailBlock}
                  {tailBlock}

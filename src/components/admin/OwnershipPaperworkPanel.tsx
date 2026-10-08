@@ -21,6 +21,8 @@ import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
 import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
 import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
+import { useAuth } from "@/hooks/useAuth";
+import { canUseAi } from "@/lib/aiAccess";
 
 /** States that mean an item needs nothing further from the seller. */
 const DONE_STATES = new Set(["received", "notarized", "complete", "not_needed", "not_required", "waived"]);
@@ -245,6 +247,8 @@ const fileMatchesRequirement = (f: AnyFile, r: Requirement, row?: DocRow) => {
 
 
 export default function OwnershipPaperworkPanel({ submissionId, cemetery, sellerName, sellerEmail, relationshipToOwner, sellingLocation, defaultOpen = false, quoteAccepted, onSent }: Props) {
+  const { user: aiUser } = useAuth();
+  const aiOn = canUseAi(aiUser?.id);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
