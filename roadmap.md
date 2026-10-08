@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [x] Integrate calculator into cost, selling and inherited-plot transfer guides; retire standalone page with a redirect
+- [x] Make reference-inspired graphic motion more visible and verify all three placements
 - [x] Align cost guide with transfer guide: brand palette, centred single column, rounded edges; verify
 - [x] Emphasise calculator sale timelines and refine centred graphics; verify the finished presentation
 - [x] Refresh calculator graphics and fluid animations; improve article colour and remove Roman numerals

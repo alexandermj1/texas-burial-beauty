@@ -181,9 +181,9 @@
 }
 .valuation-art-result { aspect-ratio: auto; min-height: 0; }
 .valuation-tile {
-  background: linear-gradient(180deg, hsl(var(--primary) / 0.02), hsl(var(--primary) / 0.18), hsl(var(--background) / 0.6));
-  background-size: 100% 250%;
-  animation: valuation-tile-flow 9s ease-in-out infinite alternate;
+  background: linear-gradient(180deg, hsl(var(--background) / 0.9) 0%, hsl(var(--primary) / 0.36) 35%, hsl(var(--primary) / 0.08) 65%, hsl(var(--background)) 100%);
+  background-size: 100% 300%;
+  animation: valuation-tile-flow 4.5s ease-in-out infinite alternate;
 }
 .valuation-tile-1 { animation-delay: -3s; }
 .valuation-tile-2 { animation-delay: -6s; }
@@ -194,8 +194,8 @@
 .valuation-value-bar { background: linear-gradient(90deg, hsl(var(--primary) / 0.6), hsl(var(--primary))); }
 .valuation-private-bar { background: linear-gradient(90deg, hsl(var(--foreground) / 0.35), hsl(var(--foreground) / 0.8)); }
 @keyframes valuation-tile-flow {
-  from { background-position: 0% 0%; }
-  to { background-position: 0% 100%; }
+  from { background-position: 0% 0%; opacity: 0.65; }
+  to { background-position: 0% 100%; opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .valuation-tile { animation: none; }
