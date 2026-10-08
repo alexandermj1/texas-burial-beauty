@@ -162,20 +162,22 @@
 }
 
 .plot-calculator {
+  --background: var(--valuation-paper);
+  --foreground: var(--ink);
+  --card: var(--sage-light);
+  --muted-foreground: 210 12% 40%;
   --valuation-blue: var(--sage);
-  --valuation-teal: var(--sage-light);
-  --valuation-coral: var(--terracotta-light);
+  --valuation-teal: var(--sage);
+  --valuation-coral: var(--ink);
   --valuation-surface: var(--card);
-  --valuation-ink: var(--foreground);
+  --valuation-ink: var(--ink);
   box-shadow: var(--shadow-valuation);
 }
 .cost-guide { letter-spacing: 0; }
 .cost-guide .prose a { color: hsl(var(--primary)); }
-.cost-guide #preneed { text-align: center; }
-.cost-guide #preneed .max-w-3xl { margin-inline: auto; }
+.cost-guide #preneed { text-align: left; }
+.cost-guide #preneed .max-w-3xl { max-width: none; }
 .cost-guide #preneed .grid { grid-template-columns: minmax(0, 1fr); }
-.cost-guide #preneed .flex { justify-content: center; }
-.cost-guide #preneed .w-11 { margin-inline: auto; }
 .cost-guide .cost-map .grid { grid-template-columns: minmax(0, 1fr); }
 .cost-guide .cost-map { overflow: hidden; border-radius: var(--radius); }
 @media (prefers-reduced-motion: reduce) {

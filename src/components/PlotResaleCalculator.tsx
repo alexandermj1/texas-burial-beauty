@@ -33,11 +33,11 @@ function AnimatedMoney({ value }: { value: number }) {
 }
 
 function SaleTimelines({ broker = "1 month – 2 years", privateSale = "5 – 7 years" }: { broker?: string; privateSale?: string }) {
-  return <div className="mt-6 pt-5 border-t border-background/15 text-center">
-    <p className="text-xs text-background/60 flex items-center justify-center gap-2 mb-4"><Clock className="w-4 h-4" /> Estimated time to sell</p>
-    <div className="grid grid-cols-2 divide-x divide-background/15">
-      <div className="px-2"><p className="text-xs text-valuation-teal mb-2">With a broker</p><p className="text-lg sm:text-xl font-medium leading-snug tabular-nums">{broker}</p><p className="text-xs text-background/45 mt-1.5">Estimated range</p></div>
-      <div className="px-2"><p className="text-xs text-valuation-coral mb-2">Private sale</p><p className="text-lg sm:text-xl font-medium leading-snug tabular-nums">{privateSale}</p><p className="text-xs text-background/45 mt-1.5">On average</p></div>
+  return <div className="mt-6 pt-5 border-t border-primary/20 text-center">
+    <p className="text-xs text-foreground/60 flex items-center justify-center gap-2 mb-4"><Clock className="w-4 h-4" /> Estimated time to sell</p>
+    <div className="grid grid-cols-2 divide-x divide-primary/20">
+      <div className="px-2"><p className="text-xs text-valuation-teal mb-2">With a broker</p><p className="text-lg sm:text-xl font-medium leading-snug tabular-nums">{broker}</p><p className="text-xs text-foreground/45 mt-1.5">Estimated range</p></div>
+      <div className="px-2"><p className="text-xs text-valuation-coral mb-2">Private sale</p><p className="text-lg sm:text-xl font-medium leading-snug tabular-nums">{privateSale}</p><p className="text-xs text-foreground/45 mt-1.5">On average</p></div>
     </div>
   </div>;
 }
@@ -86,8 +86,8 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
   const field = "w-full h-12 rounded-lg border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition";
   const transition = { duration: reduced ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] as const };
   return (
-    <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-lg border border-primary/20 bg-background">
-      <div className="p-6 md:p-9 border-b border-border flex flex-col items-center gap-5 text-center bg-card rounded-t-lg">
+    <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-xl border-2 border-primary/25 bg-background">
+      <div className="p-6 md:p-9 border-b border-border flex flex-col items-center gap-5 text-center bg-card rounded-t-xl">
         <div className="max-w-2xl">
           <p className="flex items-center justify-center gap-2 text-xs font-medium text-primary mb-3"><Sparkles className="w-4 h-4" /> FREE INSTANT ESTIMATE</p>
           <h2 className={`font-display ${compact ? "text-3xl md:text-[40px]" : "text-4xl md:text-5xl"} leading-tight text-foreground`}>What is your cemetery plot worth?</h2>
@@ -126,25 +126,25 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
           <Button type="submit" disabled={loading} className="w-full h-13 min-h-12 text-sm">{loading ? <Loader2 className="animate-spin" /> : <Sparkles />}{loading ? "Calculating your estimate…" : "Estimate my plot value"}<ArrowRight className="ml-auto" /></Button>
           {err && <p role="alert" className="text-sm text-destructive">{err} <Link to={sellHref} className="underline">Get a free quote</Link></p>}
         </form>
-        <div className="p-6 md:p-9 bg-foreground text-background min-h-[520px] min-w-0 rounded-b-lg relative overflow-hidden" aria-live="polite" aria-busy={loading}>
+        <div className="p-6 md:p-9 bg-card text-foreground min-h-[420px] min-w-0 rounded-b-xl border-t border-primary/20 relative overflow-hidden" aria-live="polite" aria-busy={loading}>
           <AnimatePresence mode="wait">
             {!est ? <motion.div key={loading ? "loading" : "empty"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="h-full flex flex-col justify-center text-center">
               <p className="text-xs text-valuation-teal mb-3">YOUR RESALE POTENTIAL</p>
               <h3 className="font-body font-medium text-2xl md:text-3xl leading-tight max-w-sm mx-auto">A clearer view of<br />value and time.</h3>
               <ValuationGraphic />
-              <div className="flex justify-center flex-wrap gap-x-5 gap-y-2 text-xs text-background/70"><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-teal" /> Broker resale</span><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-coral" /> Private resale</span></div>
+              <div className="flex justify-center flex-wrap gap-x-5 gap-y-2 text-xs text-foreground/70"><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-teal" /> Broker resale</span><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-coral" /> Private resale</span></div>
               <SaleTimelines />
-              {loading && <p className="text-sm text-background/60 mt-5">Preparing your estimate…</p>}
+              {loading && <p className="text-sm text-foreground/60 mt-5">Preparing your estimate…</p>}
             </motion.div> : <motion.div key={JSON.stringify(est)} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="text-center">
-              <div className="flex justify-between gap-4 items-start border-b border-background/15 pb-5 mb-5"><div><p className="text-xs text-background/55 mb-1">YOUR ESTIMATE · {est.spaces} {est.spaces === 1 ? "SPACE" : "SPACES"}</p><h3 className="font-body text-base font-medium">{est.cemetery}</h3></div><div className="shrink-0 text-right"><p className="text-valuation-teal text-xl font-medium tabular-nums">{est.confidence.score}<span className="text-xs text-background/50"> / 100</span></p><p className="text-xs text-background/65">{est.confidence.label} confidence</p></div></div>
+              <div className="flex justify-between gap-4 items-start border-b border-primary/20 pb-5 mb-5"><div><p className="text-xs text-foreground/55 mb-1">YOUR ESTIMATE · {est.spaces} {est.spaces === 1 ? "SPACE" : "SPACES"}</p><h3 className="font-body text-base font-medium">{est.cemetery}</h3></div><div className="shrink-0 text-right"><p className="text-valuation-teal text-xl font-medium tabular-nums">{est.confidence.score}<span className="text-xs text-foreground/50"> / 100</span></p><p className="text-xs text-foreground/65">{est.confidence.label} confidence</p></div></div>
               <p className="text-sm text-valuation-teal font-medium">Estimated resale with a broker</p>
               <p className="text-[38px] sm:text-[46px] font-medium tabular-nums leading-tight mt-2"><AnimatedMoney value={est.broker.total.mid} /></p>
-              <p className="text-sm text-background/65 mt-2">{money(est.broker.total.low)} – {money(est.broker.total.high)}</p>
-              <p className="text-xs text-background/55 mt-1">{money(est.broker.per_space.mid)} per space</p>
-              <div className="border-t border-background/15 mt-5 pt-5"><p className="text-sm text-valuation-coral">Estimated private sale</p><p className="text-3xl font-medium tabular-nums mt-2"><AnimatedMoney value={est.private.total.mid} /></p><p className="text-xs text-background/60 mt-2">{money(est.private.total.low)} – {money(est.private.total.high)}</p></div>
+              <p className="text-sm text-foreground/65 mt-2">{money(est.broker.total.low)} – {money(est.broker.total.high)}</p>
+              <p className="text-xs text-foreground/55 mt-1">{money(est.broker.per_space.mid)} per space</p>
+              <div className="border-t border-primary/20 mt-5 pt-5"><p className="text-sm text-valuation-coral">Estimated private sale</p><p className="text-3xl font-medium tabular-nums mt-2"><AnimatedMoney value={est.private.total.mid} /></p><p className="text-xs text-foreground/60 mt-2">{money(est.private.total.low)} – {money(est.private.total.high)}</p></div>
               <SaleTimelines broker={est.broker.timeline} privateSale={est.private.timeline} />
-              <p className="text-xs text-background/55 mt-5 leading-relaxed">Indicative uncertainty: ±{est.confidence.accuracy_pct}%. Not a verified prediction of your final sale price.</p>
-              <Button asChild className="mt-5 w-full bg-background text-foreground hover:bg-background/90 h-12"><Link to={sellHref}>Get my free broker valuation <ArrowRight /></Link></Button>
+              <p className="text-xs text-foreground/55 mt-5 leading-relaxed">Indicative uncertainty: ±{est.confidence.accuracy_pct}%. Not a verified prediction of your final sale price.</p>
+              <Button asChild className="mt-5 w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12"><Link to={sellHref}>Get my free broker valuation <ArrowRight /></Link></Button>
             </motion.div>}
           </AnimatePresence>
         </div>
