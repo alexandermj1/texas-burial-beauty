@@ -8,7 +8,6 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import PreneedBlock from "@/components/PreneedBlock";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import { RESTLAND_HERO, RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
-import { Button } from "@/components/ui/button";
 import { MotionConfig } from "framer-motion";
 
 
@@ -130,7 +129,7 @@ const GuideCemeteryPlotCost = () => (
     {/* Editorial masthead */}
     <section className="relative pt-28 pb-12 md:pb-16 overflow-hidden bg-valuation-ink text-primary-foreground">
       <img src={RESTLAND_HERO.src} alt={RESTLAND_HERO.alt} className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-valuation-ink/80" />
+      <div className="absolute inset-0 bg-valuation-ink/65" />
       <div className="relative container mx-auto px-6 lg:px-10 max-w-[1280px]">
         <Link
           to="/guides"
