@@ -3,6 +3,54 @@
 @tailwind components;
 @tailwind utilities;
 
+/* A centred, high-contrast editorial treatment, isolated from other guides. */
+.worth-article {
+  --worth-deep: 145 30% 23%;
+  --worth-light: 145 24% 88%;
+  --worth-shadow: 0 16px 50px -24px hsl(var(--primary) / 0.5);
+}
+.worth-lead {
+  background: hsl(var(--worth-deep));
+  color: hsl(var(--primary-foreground));
+  margin: 24px -40px 0;
+  padding-inline: 32px;
+  padding-bottom: 100px;
+  border-radius: 120px 120px 0 0 / 40px 40px 0 0;
+}
+.worth-lead > p { color: hsl(var(--worth-light)); }
+.worth-start-link { color: hsl(var(--primary-foreground)); }
+.worth-start-link:hover { color: hsl(var(--worth-light)); }
+.worth-curve { position: absolute; bottom: 10px; width: 150px; height: 142px; color: hsl(var(--worth-light)); pointer-events: none; }
+.worth-curve-left { left: 8%; transform: rotate(-12deg); }
+.worth-curve-right { right: 8%; transform: scaleX(-1) rotate(-12deg); }
+.worth-calculator-wrap { position: relative; padding-top: 0; }
+.worth-calculator-wrap .plot-calculator { box-shadow: var(--worth-shadow); border-color: hsl(var(--primary) / 0.6); }
+.worth-article main > article, .worth-article main > section[aria-labelledby="related-reading"] { text-align: center; }
+.worth-article article section > div:first-of-type:has(> h2),
+.worth-article section[aria-labelledby="related-reading"] > div:first-child { justify-content: center; }
+.worth-article article section > div.space-y-5 { max-width: 880px; margin-inline: auto; color: hsl(var(--foreground) / 0.8); }
+.worth-article article p { max-width: 860px; margin-inline: auto; }
+.worth-article article section { padding-block: 56px; }
+.worth-article article section:nth-child(even) { background: hsl(var(--sage-light) / 0.5); border-radius: 24px; padding-inline: 28px; }
+.worth-article article section h2 { max-width: 850px; }
+.worth-article article section > div:first-of-type:has(> h2) { flex-direction: column; }
+.worth-article #local-context figcaption > p:first-child { justify-content: center; }
+.worth-article section[aria-labelledby="team-perspective"] > div { flex-direction: column; }
+.worth-article section[aria-labelledby="team-perspective"] blockquote { border-left: 0; padding: 20px 0 0; border-top: 2px solid hsl(var(--primary)); max-width: 850px; margin: 0 auto; }
+.worth-article section[aria-labelledby="estimate-path"] ol > li { flex-direction: column; align-items: center; gap: 12px; }
+.worth-article #next-step ul { max-width: 700px; margin-inline: auto; text-align: left; }
+.worth-article section[aria-labelledby="related-reading"] a { justify-content: center; }
+.worth-article section[aria-labelledby="related-reading"] a > span { flex: initial; }
+.worth-article #questions button { text-align: center; }
+@media (max-width: 640px) {
+  .worth-lead { margin-inline: 0; border-radius: 44px 44px 0 0; padding-inline: 18px; padding-bottom: 100px; }
+  .worth-curve { width: 90px; height: 85px; bottom: 3px; }
+  .worth-curve-left { left: 6%; }
+  .worth-curve-right { right: 6%; }
+  .worth-article article section { padding-block: 36px; }
+  .worth-article article section:nth-child(even) { padding-inline: 18px; }
+}
+
 @layer base {
   :root {
     --background: 40 30% 97%;
