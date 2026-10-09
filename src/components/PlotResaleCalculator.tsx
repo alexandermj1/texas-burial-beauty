@@ -42,7 +42,7 @@ function SaleTimelines({ broker = "1 month – 2 years", privateSale = "5 – 7 
   </div>;
 }
 
-const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
+const PlotResaleCalculator = ({ compact = false, heading = "What is your cemetery plot worth?" }: { compact?: boolean; heading?: string }) => {
   const reduced = useReducedMotion();
   const [cems, setCems] = useState<Cemetery[]>([]);
   const [query, setQuery] = useState("");
@@ -94,7 +94,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
         <div className="absolute inset-0 valuation-hero-overlay" aria-hidden="true" />
         <div className={`relative z-10 flex flex-col items-center max-w-3xl ${compact ? "px-5 py-6 md:py-7 gap-3" : "px-6 py-10 md:py-14 gap-5"}`}>
           <p className="flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.22em] uppercase text-primary"><Sparkles className="w-4 h-4" /> Free instant estimate</p>
-          <h2 className={`font-display ${compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl"} leading-[1.08] text-foreground`}>What is your cemetery plot worth?</h2>
+          <h2 className={`font-display ${compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl"} leading-[1.08] text-foreground`}>{heading}</h2>
           <p className={`${compact ? "text-sm" : "text-lg md:text-xl"} text-muted-foreground leading-relaxed max-w-xl`}>{compact ? "Compare resale value and time to sell." : "See what yours could sell for — compare a broker sale with selling privately, in seconds."}</p>
           {!compact && <span className="inline-flex gap-2 items-center text-xs font-medium text-foreground/75 rounded-full border border-primary/30 bg-background/70 backdrop-blur px-4 py-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> No contact details needed</span>}
         </div>
@@ -157,6 +157,14 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
         </div>
       </div>
        <p className={`${compact ? "px-4 sm:px-6 py-4" : "px-6 md:px-9 py-5"} text-xs text-muted-foreground leading-relaxed border-t border-border`}>Automated estimates can be off. Location, cemetery fees and demand affect the final price. For an accurate valuation, <Link to={sellHref} className="text-primary underline underline-offset-2">request a free quote</Link>. This is not an offer or an appraisal.</p>
+       <nav aria-label="Understand your plot estimate" className={`${compact ? "px-4 sm:px-6" : "px-6 md:px-9"} pb-5 flex flex-wrap gap-x-5 gap-y-3 text-sm`}>
+         {[
+           { to: "/what-is-my-cemetery-plot-worth-texas", label: "What affects my plot’s value?" },
+           { to: "/cemetery-plot-cost-texas", label: "Pricing & fees" },
+           { to: "/sell-cemetery-plot-texas", label: "Selling process" },
+           { to: "/cemetery-transfer-process-texas", label: "Inherited plots" },
+         ].map(({ to, label }) => <Link key={to} to={to} className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline">{label}<ArrowRight className="w-3.5 h-3.5 shrink-0" /></Link>)}
+       </nav>
     </div>
   );
 };
