@@ -180,6 +180,10 @@
   background: hsl(var(--background));
 }
 .valuation-art-result { aspect-ratio: auto; min-height: 0; }
+.plot-calculator-compact fieldset button { min-height: 44px; height: auto; }
+.plot-calculator-compact .valuation-art { margin-block: 1rem; }
+.plot-calculator-compact .valuation-art-result > div.relative { padding: 1rem; }
+.plot-calculator-compact form + div > div > div.mt-6:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 .valuation-hero-overlay {
   background:
     radial-gradient(ellipse 55% 60% at 50% 48%, hsl(var(--background) / 0.55) 0%, hsl(var(--background) / 0.15) 70%, transparent 100%),
