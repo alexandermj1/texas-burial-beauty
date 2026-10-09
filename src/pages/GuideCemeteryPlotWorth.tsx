@@ -35,8 +35,19 @@ function Chapter({ id, icon: Icon, title, children }: { id: string; icon: typeof
   </section>;
 }
 
+function CalculatorLeadIn() {
+  return <section className="worth-lead relative text-center py-10 sm:py-14" aria-labelledby="worth-start">
+    <p className="text-xs font-medium mb-3">Your next chapter starts with a clearer number.</p>
+    <h2 id="worth-start" className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl mx-auto">A place with meaning.<br />A value worth understanding.</h2>
+    <p className="mt-5 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">Your cemetery. Your spaces. An estimated resale range.<br className="hidden sm:block" /> Start below, then explore what the numbers mean.</p>
+    <Button asChild variant="link" className="worth-start-link mt-4"><a href="#plot-value-calculator">Find your estimated value <ArrowRight className="w-4 h-4" /></a></Button>
+    <svg className="worth-curve worth-curve-left" viewBox="0 0 180 170" fill="none" aria-hidden="true"><path d="M15 12C105 0 154 35 126 73C101 105 47 68 68 48C102 15 174 81 154 149M136 132L154 151L171 132" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <svg className="worth-curve worth-curve-right" viewBox="0 0 180 170" fill="none" aria-hidden="true"><path d="M15 12C105 0 154 35 126 73C101 105 47 68 68 48C102 15 174 81 154 149M136 132L154 151L171 132" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  </section>;
+}
+
 export default function GuideCemeteryPlotWorth() {
-  return <MotionConfig reducedMotion="user"><div className="min-h-screen bg-background text-foreground">
+  return <MotionConfig reducedMotion="user"><div className="worth-article min-h-screen bg-background text-foreground">
     <Seo title={TITLE} description={DESCRIPTION} path={PATH} type="article" jsonLd={[
       { "@context": "https://schema.org", "@type": "Article", headline: TITLE, description: DESCRIPTION, mainEntityOfPage: `${SITE}${PATH}`, datePublished: "2026-10-09", dateModified: "2026-10-09", inLanguage: "en-US", author: { "@type": "Organization", name: "Texas Cemetery Brokers", url: SITE }, publisher: { "@type": "Organization", name: "Texas Cemetery Brokers", url: SITE } },
       { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQS.map(({ q, a }) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) },
@@ -45,19 +56,20 @@ export default function GuideCemeteryPlotWorth() {
     <Navbar forceScrolled />
     <header className="relative overflow-hidden bg-sage-light border-b border-border pt-24 md:pt-28 pb-8 md:pb-10">
       <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} className="absolute -right-28 -top-12 w-[440px] md:w-[600px] opacity-20 pointer-events-none" />
-      <div className="relative max-w-[1200px] mx-auto px-5 sm:px-6 lg:px-10">
+      <div className="relative max-w-[1200px] mx-auto px-5 sm:px-6 lg:px-10 text-center">
         <Link to="/guides" className="inline-flex items-center gap-2 text-sm text-muted-foreground mb-6 hover:text-primary"><ArrowLeft className="w-4 h-4" /> All guides</Link>
         <p className="text-xs font-medium text-primary mb-4">The Valuation Edition · Texas</p>
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight max-w-4xl">What is my cemetery plot worth <span className="text-primary">in Texas?</span></h1>
-        <p className="mt-5 text-base sm:text-lg leading-relaxed max-w-3xl text-muted-foreground">Your plot’s value is local, not a statewide average. Start with an estimated resale range, then understand what could change it before you decide to sell.</p>
-        <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground"><span>By Texas Cemetery Brokers · Updated October 9, 2026</span><Link to="/team" className="text-primary hover:underline">Meet our team</Link></div>
+        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight max-w-4xl mx-auto">What is my cemetery plot worth <span className="text-primary">in Texas?</span></h1>
+        <p className="mt-5 mx-auto text-base sm:text-lg leading-relaxed max-w-3xl text-foreground/80">Your plot’s value is local, not a statewide average. Start with an estimated resale range, then understand what could change it before you decide to sell.</p>
+        <div className="mt-6 flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs text-muted-foreground"><span>By Texas Cemetery Brokers · Updated October 9, 2026</span><Link to="/team" className="text-primary hover:underline">Meet our team</Link></div>
       </div>
     </header>
     <main className="max-w-[1200px] mx-auto px-5 sm:px-6 lg:px-10">
-      <nav aria-label="In this article" className="flex flex-wrap gap-x-6 gap-y-3 py-5 border-b border-border text-sm text-primary">
+      <nav aria-label="In this article" className="flex flex-wrap justify-center gap-x-6 gap-y-3 py-5 border-b border-border text-sm text-primary">
         <a href="#plot-value-calculator" className="hover:underline">Estimate your value</a><a href="#reading-estimate" className="hover:underline">Understand the result</a><a href="#local-context" className="hover:underline">Explore your cemetery</a><a href="#ownership" className="hover:underline">Inherited plots</a><a href="#next-step" className="hover:underline">Get a written quote</a><a href="#questions" className="hover:underline">Common questions</a>
       </nav>
-      <section aria-label="Cemetery plot resale estimate" className="pt-7 pb-8 md:pt-9 md:pb-10"><PlotResaleCalculator heading="Estimate your plot’s resale value" /><p className="mt-4 text-sm text-muted-foreground leading-relaxed">An estimate for planning, not a binding offer. Your exact spaces, ownership and fees need a separate review. <a href="#reading-estimate" className="text-primary underline underline-offset-4">What does the confidence score mean?</a></p></section>
+      <CalculatorLeadIn />
+      <section aria-label="Cemetery plot resale estimate" className="worth-calculator-wrap pb-8 md:pb-10"><PlotResaleCalculator heading="Estimate your plot’s resale value" /><p className="mt-5 mx-auto max-w-3xl text-center text-sm text-muted-foreground leading-relaxed">An estimate for planning, not a binding offer. Your exact spaces, ownership and fees need a separate review. <a href="#reading-estimate" className="text-primary underline underline-offset-4">What does the confidence score mean?</a></p></section>
       <PlotWorthGroundsPhoto />
       <article>
         <PlotWorthEstimatePath />

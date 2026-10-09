@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Centre plot-worth editorial text, increase brand contrast, and build a curved-arrow visual lead-in to the calculator; verify desktop/mobile
 - [x] Enrich the plot-worth article around the calculator with existing cemetery photography, honest staff attribution, local links and valuation guidance; verify desktop/mobile
 - [x] Create a tool-led Texas plot-worth article using existing public guide content and link it from the guides hub and calculator
 - [x] Verify new article, related-guide links, estimates and desktop/mobile presentation
