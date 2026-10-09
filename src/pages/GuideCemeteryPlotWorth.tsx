@@ -8,6 +8,7 @@ import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
+import { PlotWorthLocalContext, PlotWorthGroundsPhoto, PlotWorthTeamPerspective, PlotWorthEstimatePath } from "@/components/guides/PlotWorthEditorial";
 
 const PATH = "/what-is-my-cemetery-plot-worth-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -49,15 +50,17 @@ export default function GuideCemeteryPlotWorth() {
         <p className="text-xs font-medium text-primary mb-4">The Valuation Edition · Texas</p>
         <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight max-w-4xl">What is my cemetery plot worth <span className="text-primary">in Texas?</span></h1>
         <p className="mt-5 text-base sm:text-lg leading-relaxed max-w-3xl text-muted-foreground">Your plot’s value is local, not a statewide average. Start with an estimated resale range, then understand what could change it before you decide to sell.</p>
-        <p className="mt-4 text-xs text-muted-foreground">By Texas Cemetery Brokers · Updated October 9, 2026</p>
+        <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground"><span>By Texas Cemetery Brokers · Updated October 9, 2026</span><Link to="/team" className="text-primary hover:underline">Meet our team</Link></div>
       </div>
     </header>
     <main className="max-w-[1200px] mx-auto px-5 sm:px-6 lg:px-10">
-      <section aria-label="Cemetery plot resale estimate" className="py-8 md:py-10"><PlotResaleCalculator heading="Estimate your plot’s resale value" /></section>
-      <nav aria-label="In this article" className="flex flex-wrap gap-x-6 gap-y-3 py-5 border-t border-border text-sm text-primary">
-        <a href="#value-factors" className="hover:underline">What affects value</a><a href="#reading-estimate" className="hover:underline">Reading your estimate</a><a href="#selling-time" className="hover:underline">Time to sell</a><a href="#next-step" className="hover:underline">Get a written quote</a><a href="#questions" className="hover:underline">Common questions</a>
+      <nav aria-label="In this article" className="flex flex-wrap gap-x-6 gap-y-3 py-5 border-b border-border text-sm text-primary">
+        <a href="#plot-value-calculator" className="hover:underline">Estimate your value</a><a href="#reading-estimate" className="hover:underline">Understand the result</a><a href="#local-context" className="hover:underline">Explore your cemetery</a><a href="#ownership" className="hover:underline">Inherited plots</a><a href="#next-step" className="hover:underline">Get a written quote</a><a href="#questions" className="hover:underline">Common questions</a>
       </nav>
+      <section aria-label="Cemetery plot resale estimate" className="pt-7 pb-8 md:pt-9 md:pb-10"><PlotResaleCalculator heading="Estimate your plot’s resale value" /><p className="mt-4 text-sm text-muted-foreground leading-relaxed">An estimate for planning, not a binding offer. Your exact spaces, ownership and fees need a separate review. <a href="#reading-estimate" className="text-primary underline underline-offset-4">What does the confidence score mean?</a></p></section>
+      <PlotWorthGroundsPhoto />
       <article>
+        <PlotWorthEstimatePath />
         <Chapter id="value-factors" icon={MapPin} title="What actually makes your plot valuable?">
           <p><strong>The cemetery and exact location are the starting point.</strong> A burial space in Dallas–Fort Worth is not interchangeable with one in Houston, Austin or San Antonio. Even inside the same cemetery, two gardens can appeal to different buyers.</p>
           <div className="divide-y divide-border">
@@ -77,11 +80,13 @@ export default function GuideCemeteryPlotWorth() {
           <h3 className="font-body text-xl font-medium text-foreground">Resale value is not automatically your net proceeds</h3>
           <p>Cemetery transfer fees and the seller’s agreed fees affect what you receive. Do not subtract a guessed fee from the estimate: ask for a written quote showing the property price, transfer fee, seller fee and net proceeds. Our <Link to="/cemetery-plot-cost-texas">pricing and fees guide</Link> explains the categories to check.</p>
         </Chapter>
+        <PlotWorthTeamPerspective />
         <Chapter id="selling-time" icon={Clock} title="Value and time to sell belong together">
           <p>The calculator displays a broad broker-sale timeline of <strong>1 month to 2 years</strong> and a private-sale planning average of <strong>5–7 years</strong>. These are illustrative planning assumptions, not independently verified averages or a promise for your plot. Some properties can take longer or may not sell.</p>
           <p>A private seller needs to find a buyer, answer questions, agree payment arrangements and coordinate the cemetery’s transfer requirements. A broker handles marketing, buyer enquiries and the sale process, but cannot remove the need for demand or complete paperwork.</p>
           <p>Before choosing a price, decide how much waiting you are comfortable with and what work you want to handle yourself. Read <Link to="/sell-cemetery-plot-texas">how to sell a cemetery plot in Texas</Link> for the process behind the number.</p>
         </Chapter>
+        <PlotWorthLocalContext />
         <Chapter id="ownership" icon={FileText} title="An inherited plot can have value before it is ready to sell">
           <p>If a deed owner has died, a calculator can still help you consider your options. It cannot establish who owns the rights or who must sign. Those questions need to be resolved before a sale can complete.</p>
           <p>Keep the deed and any relevant family information. Do not assume the person holding the paperwork is the only person who needs to agree. Our <Link to="/cemetery-transfer-process-texas">inherited cemetery plot and transfer guide</Link> explains why family relationships, signatures and cemetery records matter.</p>
