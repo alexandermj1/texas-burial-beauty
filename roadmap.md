@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Current request
-- [ ] Create a tool-led Texas plot-worth article using existing public guide content and link it from the guides hub and calculator
-- [ ] Verify new article, related-guide links, estimates and desktop/mobile presentation
+- [x] Create a tool-led Texas plot-worth article using existing public guide content and link it from the guides hub and calculator
+- [x] Verify new article, related-guide links, estimates and desktop/mobile presentation
 - [x] Keep the full calculator in the cost article; use a shorter compact version in selling and transfer guides; verify desktop, 390px and 320px phones and a real estimate
 - [x] Integrate calculator into cost, selling and inherited-plot transfer guides; retire standalone page with a redirect
 - [x] Make reference-inspired graphic motion more visible and verify all three placements
