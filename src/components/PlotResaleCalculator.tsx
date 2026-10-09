@@ -86,21 +86,21 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
   const field = "w-full h-12 rounded-lg border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition";
   const transition = { duration: reduced ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] as const };
   return (
-    <div id="plot-value-calculator" className="plot-calculator scroll-mt-28 rounded-xl border-2 border-primary/25 bg-background">
+    <div id="plot-value-calculator" className={`plot-calculator ${compact ? "plot-calculator-compact" : ""} scroll-mt-28 rounded-xl border-2 border-primary/25 bg-background`}>
       <div className="valuation-hero relative isolate overflow-hidden border-b border-border rounded-t-xl flex flex-col items-center text-center">
         <div className="absolute inset-0 grid grid-cols-5" aria-hidden="true">
           {Array.from({ length: 5 }, (_, i) => <div key={i} className={`valuation-tile valuation-tile-${i}`} />)}
         </div>
         <div className="absolute inset-0 valuation-hero-overlay" aria-hidden="true" />
-        <div className="relative z-10 px-6 py-10 md:py-14 flex flex-col items-center gap-5 max-w-3xl">
+        <div className={`relative z-10 flex flex-col items-center max-w-3xl ${compact ? "px-5 py-6 md:py-7 gap-3" : "px-6 py-10 md:py-14 gap-5"}`}>
           <p className="flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.22em] uppercase text-primary"><Sparkles className="w-4 h-4" /> Free instant estimate</p>
-          <h2 className={`font-display ${compact ? "text-4xl md:text-5xl" : "text-[44px] md:text-6xl"} leading-[1.04] text-foreground`}>What is your cemetery plot worth?</h2>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl">See what yours could sell for — compare a broker sale with selling privately, in seconds.</p>
-          <span className="inline-flex gap-2 items-center text-xs font-medium text-foreground/75 rounded-full border border-primary/30 bg-background/70 backdrop-blur px-4 py-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> No contact details needed</span>
+          <h2 className={`font-display ${compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl"} leading-[1.08] text-foreground`}>What is your cemetery plot worth?</h2>
+          <p className={`${compact ? "text-sm" : "text-lg md:text-xl"} text-muted-foreground leading-relaxed max-w-xl`}>{compact ? "Compare resale value and time to sell." : "See what yours could sell for — compare a broker sale with selling privately, in seconds."}</p>
+          {!compact && <span className="inline-flex gap-2 items-center text-xs font-medium text-foreground/75 rounded-full border border-primary/30 bg-background/70 backdrop-blur px-4 py-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> No contact details needed</span>}
         </div>
       </div>
-      <div className={compact ? "grid grid-cols-1" : "grid lg:grid-cols-[1fr_1.1fr]"}>
-        <form onSubmit={run} className="p-6 md:p-9 space-y-6 min-w-0">
+      <div className="grid grid-cols-1">
+        <form onSubmit={run} className={`${compact ? "p-4 sm:p-6 space-y-4" : "p-6 md:p-9 space-y-6"} min-w-0`}>
           <div ref={boxRef} className="relative">
             <label htmlFor="value-cemetery" className="text-sm font-medium mb-2 block">Cemetery</label>
             <div className="relative">
@@ -130,17 +130,19 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
           <Button type="submit" disabled={loading} className="w-full h-13 min-h-12 text-sm">{loading ? <Loader2 className="animate-spin" /> : <Sparkles />}{loading ? "Calculating your estimate…" : "Estimate my plot value"}<ArrowRight className="ml-auto" /></Button>
           {err && <p role="alert" className="text-sm text-destructive">{err} <Link to={sellHref} className="underline">Get a free quote</Link></p>}
         </form>
-        <div className="p-6 md:p-9 bg-card text-foreground min-h-[420px] min-w-0 rounded-b-xl border-t border-primary/20 relative overflow-hidden" aria-live="polite" aria-busy={loading}>
+        <div className={`${compact ? "p-4 sm:p-6" : "p-6 md:p-9 min-h-[420px]"} bg-card text-foreground min-w-0 rounded-b-xl border-t border-primary/20 relative overflow-hidden`} aria-live="polite" aria-busy={loading}>
           <AnimatePresence mode="wait">
             {!est ? <motion.div key={loading ? "loading" : "empty"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="h-full flex flex-col justify-center text-center">
-              <p className="text-xs text-valuation-teal mb-3">YOUR RESALE POTENTIAL</p>
-              <h3 className="font-body font-medium text-2xl md:text-3xl leading-tight max-w-sm mx-auto">A clearer view of<br />value and time.</h3>
-              <ValuationGraphic />
-              <div className="flex justify-center flex-wrap gap-x-5 gap-y-2 text-xs text-foreground/70"><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-teal" /> Broker resale</span><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-coral" /> Private resale</span></div>
+              {!compact && <>
+                <p className="text-xs text-valuation-teal mb-3">YOUR RESALE POTENTIAL</p>
+                <h3 className="font-body font-medium text-2xl md:text-3xl leading-tight max-w-sm mx-auto">A clearer view of<br />value and time.</h3>
+                <ValuationGraphic />
+                <div className="flex justify-center flex-wrap gap-x-5 gap-y-2 text-xs text-foreground/70"><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-teal" /> Broker resale</span><span className="inline-flex items-center gap-2"><span className="w-5 h-0.5 rounded-full bg-valuation-coral" /> Private resale</span></div>
+              </>}
               <SaleTimelines />
               {loading && <p className="text-sm text-foreground/60 mt-5">Preparing your estimate…</p>}
             </motion.div> : <motion.div key={JSON.stringify(est)} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="text-center">
-              <div className="flex justify-between gap-4 items-start border-b border-primary/20 pb-5 mb-5"><div><p className="text-xs text-foreground/55 mb-1">YOUR ESTIMATE · {est.spaces} {est.spaces === 1 ? "SPACE" : "SPACES"}</p><h3 className="font-body text-base font-medium">{est.cemetery}</h3></div><div className="shrink-0 text-right"><p className="text-valuation-teal text-xl font-medium tabular-nums">{est.confidence.score}<span className="text-xs text-foreground/50"> / 100</span></p><p className="text-xs text-foreground/65">{est.confidence.label} confidence</p></div></div>
+               <div className="flex flex-wrap justify-between gap-4 items-start border-b border-primary/20 pb-5 mb-5"><div className="min-w-0 flex-1"><p className="text-xs text-foreground/55 mb-1">YOUR ESTIMATE · {est.spaces} {est.spaces === 1 ? "SPACE" : "SPACES"}</p><h3 className="font-body text-base font-medium break-words">{est.cemetery}</h3></div><div className="shrink-0 text-right"><p className="text-valuation-teal text-xl font-medium tabular-nums">{est.confidence.score}<span className="text-xs text-foreground/50"> / 100</span></p><p className="text-xs text-foreground/65">{est.confidence.label} confidence</p></div></div>
               <p className="text-sm text-valuation-teal font-medium">Estimated resale with a broker</p>
               <p className="text-[38px] sm:text-[46px] font-medium tabular-nums leading-tight mt-2"><AnimatedMoney value={est.broker.total.mid} /></p>
               <p className="text-sm text-foreground/65 mt-2">{money(est.broker.total.low)} – {money(est.broker.total.high)}</p>
@@ -154,7 +156,7 @@ const PlotResaleCalculator = ({ compact = false }: { compact?: boolean }) => {
           </AnimatePresence>
         </div>
       </div>
-      <p className="px-6 md:px-9 py-5 text-xs text-muted-foreground leading-relaxed border-t border-border">Automated estimates can be off. Location, cemetery fees and demand affect the final price. For an accurate valuation, <Link to={sellHref} className="text-primary underline underline-offset-2">request a free quote</Link>. This is not an offer or an appraisal.</p>
+       <p className={`${compact ? "px-4 sm:px-6 py-4" : "px-6 md:px-9 py-5"} text-xs text-muted-foreground leading-relaxed border-t border-border`}>Automated estimates can be off. Location, cemetery fees and demand affect the final price. For an accurate valuation, <Link to={sellHref} className="text-primary underline underline-offset-2">request a free quote</Link>. This is not an offer or an appraisal.</p>
     </div>
   );
 };
