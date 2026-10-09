@@ -35,15 +35,20 @@ function Chapter({ id, icon: Icon, title, children }: { id: string; icon: typeof
   </section>;
 }
 
-function CalculatorLeadIn() {
-  return <section className="worth-lead relative text-center py-10 sm:py-14" aria-labelledby="worth-start">
-    <p className="text-xs font-medium mb-3">Your next chapter starts with a clearer number.</p>
-    <h2 id="worth-start" className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl mx-auto">A place with meaning.<br />A value worth understanding.</h2>
-    <p className="mt-5 max-w-xl mx-auto text-base sm:text-lg leading-relaxed">Your cemetery. Your spaces. An estimated resale range.<br className="hidden sm:block" /> Start below, then explore what the numbers mean.</p>
-    <Button asChild variant="link" className="worth-start-link mt-4"><a href="#plot-value-calculator">Find your estimated value <ArrowRight className="w-4 h-4" /></a></Button>
+function WorthHero() {
+  return <header className="worth-lead relative overflow-hidden text-center" aria-labelledby="worth-start">
+    <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} className="absolute -right-28 -top-12 w-[440px] md:w-[600px] opacity-10 invert pointer-events-none" />
+    <div className="relative max-w-4xl mx-auto">
+      <Link to="/guides" className="worth-hero-back inline-flex items-center gap-2 text-sm mb-6"><ArrowLeft className="w-4 h-4" /> All guides</Link>
+      <p className="worth-hero-kicker text-xs font-medium mb-4">The Valuation Edition · Texas</p>
+      <h1 id="worth-start" className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight max-w-4xl mx-auto">What is my cemetery plot worth <span className="italic font-light">in Texas?</span></h1>
+      <p className="worth-hero-copy mt-5 mx-auto text-base sm:text-lg leading-relaxed max-w-3xl">Your plot’s value is local, not a statewide average. Start with an estimated resale range, then understand what could change it before you decide to sell.</p>
+      <div className="worth-hero-meta mt-6 flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs"><span>By Texas Cemetery Brokers · Updated October 9, 2026</span><Link to="/team" className="underline underline-offset-4">Meet our team</Link></div>
+      <Button asChild variant="link" className="worth-start-link mt-7"><a href="#plot-value-calculator">Find your estimated value <ArrowRight className="w-4 h-4" /></a></Button>
+    </div>
     <svg className="worth-curve worth-curve-left" viewBox="0 0 180 170" fill="none" aria-hidden="true"><path d="M15 12C105 0 154 35 126 73C101 105 47 68 68 48C102 15 174 81 154 149M136 132L154 151L171 132" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
     <svg className="worth-curve worth-curve-right" viewBox="0 0 180 170" fill="none" aria-hidden="true"><path d="M15 12C105 0 154 35 126 73C101 105 47 68 68 48C102 15 174 81 154 149M136 132L154 151L171 132" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-  </section>;
+  </header>;
 }
 
 export default function GuideCemeteryPlotWorth() {
@@ -54,21 +59,11 @@ export default function GuideCemeteryPlotWorth() {
       { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: SITE }, { "@type": "ListItem", position: 2, name: "Guides", item: `${SITE}/guides` }, { "@type": "ListItem", position: 3, name: TITLE, item: `${SITE}${PATH}` }] },
     ]} />
     <Navbar forceScrolled />
-    <header className="relative overflow-hidden bg-sage-light border-b border-border pt-24 md:pt-28 pb-8 md:pb-10">
-      <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} className="absolute -right-28 -top-12 w-[440px] md:w-[600px] opacity-20 pointer-events-none" />
-      <div className="relative max-w-[1200px] mx-auto px-5 sm:px-6 lg:px-10 text-center">
-        <Link to="/guides" className="inline-flex items-center gap-2 text-sm text-muted-foreground mb-6 hover:text-primary"><ArrowLeft className="w-4 h-4" /> All guides</Link>
-        <p className="text-xs font-medium text-primary mb-4">The Valuation Edition · Texas</p>
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight max-w-4xl mx-auto">What is my cemetery plot worth <span className="text-primary">in Texas?</span></h1>
-        <p className="mt-5 mx-auto text-base sm:text-lg leading-relaxed max-w-3xl text-foreground/80">Your plot’s value is local, not a statewide average. Start with an estimated resale range, then understand what could change it before you decide to sell.</p>
-        <div className="mt-6 flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-xs text-muted-foreground"><span>By Texas Cemetery Brokers · Updated October 9, 2026</span><Link to="/team" className="text-primary hover:underline">Meet our team</Link></div>
-      </div>
-    </header>
+    <WorthHero />
     <main className="max-w-[1200px] mx-auto px-5 sm:px-6 lg:px-10">
       <nav aria-label="In this article" className="flex flex-wrap justify-center gap-x-6 gap-y-3 py-5 border-b border-border text-sm text-primary">
         <a href="#plot-value-calculator" className="hover:underline">Estimate your value</a><a href="#reading-estimate" className="hover:underline">Understand the result</a><a href="#local-context" className="hover:underline">Explore your cemetery</a><a href="#ownership" className="hover:underline">Inherited plots</a><a href="#next-step" className="hover:underline">Get a written quote</a><a href="#questions" className="hover:underline">Common questions</a>
       </nav>
-      <CalculatorLeadIn />
       <section aria-label="Cemetery plot resale estimate" className="worth-calculator-wrap pb-8 md:pb-10"><PlotResaleCalculator heading="Estimate your plot’s resale value" /><p className="mt-5 mx-auto max-w-3xl text-center text-sm text-muted-foreground leading-relaxed">An estimate for planning, not a binding offer. Your exact spaces, ownership and fees need a separate review. <a href="#reading-estimate" className="text-primary underline underline-offset-4">What does the confidence score mean?</a></p></section>
       <PlotWorthGroundsPhoto />
       <article>
