@@ -48,8 +48,8 @@
 .worth-article section[aria-labelledby="related-reading"] a > span { flex: initial; }
 .worth-article #questions button { text-align: center; }
 @media (max-width: 640px) {
-  .worth-lead { margin-inline: 0; border-radius: 44px 44px 0 0; padding-inline: 18px; padding-bottom: 100px; }
-  .worth-curve { width: 90px; height: 85px; bottom: 3px; }
+  .worth-lead { padding-inline: 18px; padding-top: 96px; padding-bottom: 150px; border-radius: 0 0 44px 44px / 0 0 16px 16px; }
+  .worth-curve { width: 90px; height: 85px; bottom: 30px; }
   .worth-curve-left { left: 6%; }
   .worth-curve-right { right: 6%; }
   .worth-article article section { padding-block: 36px; }
