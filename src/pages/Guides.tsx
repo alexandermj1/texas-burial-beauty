@@ -56,6 +56,21 @@ interface Guide {
 
 export const guides: Guide[] = [
   {
+    slug: "what-is-my-cemetery-plot-worth-texas",
+    issue: "Issue N°06",
+    kicker: "The Valuation Edition",
+    title: "What Is My Cemetery Plot",
+    titleAccent: "Worth in Texas?",
+    dek: "An instant resale estimate, what changes your plot’s value, and how to turn a range into a written broker valuation.",
+    status: "live",
+    meta: "Calculator · 6 min read",
+    panel: "bg-primary",
+    panelInk: "text-primary-foreground",
+    rule: "bg-primary-foreground/40",
+    hero: FLORAL.plumeria,
+    accent: FOLIAGE.veined,
+  },
+  {
     slug: "guides/planning-a-funeral-in-texas",
     issue: "Start here",
     kicker: "The Starting-Point Guide",

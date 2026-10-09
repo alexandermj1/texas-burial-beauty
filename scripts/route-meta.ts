@@ -123,6 +123,13 @@ export const STATIC_ROUTES: RouteMeta[] = [
     type: "article",
   },
   {
+    path: "/what-is-my-cemetery-plot-worth-texas",
+    title: "What Is My Cemetery Plot Worth in Texas?",
+    description:
+      "Estimate your Texas cemetery plot's resale value, compare broker and private-sale timelines, and understand pricing, fees and your next step.",
+    type: "article",
+  },
+  {
     path: "/guides/planning-a-funeral-in-texas",
     title: "Planning a Funeral in Texas: Where to Start | TCB",
     description:
