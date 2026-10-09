@@ -12,15 +12,20 @@
 .worth-lead {
   background: hsl(var(--worth-deep));
   color: hsl(var(--primary-foreground));
-  margin: 24px -40px 0;
   padding-inline: 32px;
-  padding-bottom: 100px;
-  border-radius: 120px 120px 0 0 / 40px 40px 0 0;
+  padding-top: 112px;
+  padding-bottom: 170px;
+  border-radius: 0 0 120px 120px / 0 0 40px 40px;
 }
 .worth-lead > p { color: hsl(var(--worth-light)); }
+.worth-hero-back { color: hsl(var(--worth-light)); }
+.worth-hero-back:hover { color: hsl(var(--primary-foreground)); }
+.worth-hero-kicker { color: hsl(var(--worth-light)); }
+.worth-hero-copy { color: hsl(var(--primary-foreground) / 0.85); }
+.worth-hero-meta { color: hsl(var(--worth-light) / 0.75); }
 .worth-start-link { color: hsl(var(--primary-foreground)); }
 .worth-start-link:hover { color: hsl(var(--worth-light)); }
-.worth-curve { position: absolute; bottom: 10px; width: 150px; height: 142px; color: hsl(var(--worth-light)); pointer-events: none; }
+.worth-curve { position: absolute; bottom: 44px; width: 150px; height: 142px; color: hsl(var(--worth-light)); pointer-events: none; }
 .worth-curve-left { left: 8%; transform: rotate(-12deg); }
 .worth-curve-right { right: 8%; transform: scaleX(-1) rotate(-12deg); }
 .worth-calculator-wrap { position: relative; padding-top: 0; }
@@ -43,8 +48,8 @@
 .worth-article section[aria-labelledby="related-reading"] a > span { flex: initial; }
 .worth-article #questions button { text-align: center; }
 @media (max-width: 640px) {
-  .worth-lead { margin-inline: 0; border-radius: 44px 44px 0 0; padding-inline: 18px; padding-bottom: 100px; }
-  .worth-curve { width: 90px; height: 85px; bottom: 3px; }
+  .worth-lead { padding-inline: 18px; padding-top: 96px; padding-bottom: 150px; border-radius: 0 0 44px 44px / 0 0 16px 16px; }
+  .worth-curve { width: 90px; height: 85px; bottom: 30px; }
   .worth-curve-left { left: 6%; }
   .worth-curve-right { right: 6%; }
   .worth-article article section { padding-block: 36px; }
