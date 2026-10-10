@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [x] Verify four new live payment links load correct amounts without charging; add October AI guidance and fix missing private-package admin labels
+- [x] Check quote-to-agreement routing and checkbox mapping; full paid transaction remains untested
 - [x] Show only three public packages with genuine $200 October savings and a Texas-time countdown
 - [x] Verify quote payment amounts and tier IDs with tests, inspect agreement checkbox mapping, test simulated confirmation redirect; real Stripe transaction not performed
 - [x] Replace standard listing fees across public pages, indexed metadata, quote/payment flows and new contracts; preserve historical agreements and promised fees
