@@ -3674,17 +3674,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const StageIcon = stage.icon;
 
             const isBuyer = sKind === "buyer";
+            // Brand-new inquiries are washed in light blue so they jump straight out
+            // of the list; the selected row still wins so you always know where you are.
             const bgCls = isActive
               ? "bg-primary/15"
-              : needsReply
-                // Buyers needing reply get a light minty sage tint; everyone else
-                // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
-                ? isBuyer
-                  ? "bg-[hsl(var(--status-buyer))]/10 hover:bg-[hsl(var(--status-buyer))]/18"
-                  : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
-                : beingWorked
-                  ? "bg-accent/10 hover:bg-accent/15"
-                  : stage.tint;
+              : fresh
+                ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/85"
+                : needsReply
+                  // Buyers needing reply get a light minty sage tint; everyone else
+                  // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
+                  ? isBuyer
+                    ? "bg-[hsl(var(--status-buyer))]/10 hover:bg-[hsl(var(--status-buyer))]/18"
+                    : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
+                  : beingWorked
+                    ? "bg-accent/10 hover:bg-accent/15"
+                    : stage.tint;
+            // Fresh rows get a blue edge; a buyer awaiting reply keeps the coral edge.
+            const edgeCls = isActive
+              ? ""
+              : fresh
+                ? "border-l-[3px] border-l-[hsl(var(--status-new))]"
+                : needsReply && isBuyer
+                  ? "border-l-[3px] border-l-[hsl(var(--status-buyer))]"
+                  : "";
+
+
 
 
             // ---- Quiet meta chips: money, docs, agreement, payment ----
@@ -3808,7 +3822,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${needsReply && isBuyer ? "border-l-[3px] border-l-[hsl(var(--status-buyer))]" : ""}`}
+                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${edgeCls}`}
                 >
                   {/* Stage rail — colour + fill height show how far along they are */}
                   <span
@@ -4076,7 +4090,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               setNotesDraft(s.admin_notes || "");
                               recordView(s.id);
                             }}
-                            className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : "hover:bg-muted/40"}`}
+                            className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : fresh ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/85" : "hover:bg-muted/40"}`}
                           >
                             <img
                               src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
