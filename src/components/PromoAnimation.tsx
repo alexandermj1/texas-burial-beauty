@@ -240,7 +240,7 @@ export const SellerPromoAnimation = () => {
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
               Fill out a simple form with your property details, and we'll provide a free valuation within 24 hours.
-              Choose Starter $299, Pro $399, Featured $499 or Set Your Own Price $799 — your valuation is free and carries no obligation.
+              Choose Starter $299, Pro $399, Featured $499 — your valuation is free and carries no obligation.
             </p>
 
             {/* Integrated stats grid */}

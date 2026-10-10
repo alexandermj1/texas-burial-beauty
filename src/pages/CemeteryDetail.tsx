@@ -131,7 +131,7 @@ const sellingSteps = [
     icon: ClipboardList,
     label: "02",
     title: "Listing packages from $299",
-    body: "Choose Starter $299, Pro $399, Featured $499 or Set Your Own Price $799. We handle photos, listing copy, marketing and buyer screening.",
+    body: "Choose Starter $299, Pro $399, Featured $499. We handle photos, listing copy, marketing and buyer screening.",
   },
   {
     icon: CheckCircle2,
@@ -517,7 +517,7 @@ const CemeteryDetail = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 to-transparent" />
               <div className="absolute bottom-5 left-5 right-5 text-background">
                 <p className="text-[10px] tracking-[0.2em] uppercase opacity-80 mb-1">Listing packages from $299</p>
-                <p className="font-display text-2xl">Four listing options to choose from.</p>
+                <p className="font-display text-2xl">Three listing options to choose from.</p>
               </div>
             </motion.div>
 
@@ -594,7 +594,7 @@ const CemeteryDetail = () => {
           <div className="grid sm:grid-cols-3 gap-5">
             {[
               { icon: ShieldCheck, title: "Licensed & insured", body: "Partnered with Bayer Cemetery Brokers, a licensed California brokerage." },
-              { icon: Banknote, title: "Listing packages from $299", body: "Starter $299, Pro $399, Featured $499, or Set Your Own Price $799 — one-time upfront fees." },
+              { icon: Banknote, title: "Listing packages from $299", body: "Starter $299, Pro $399, Featured $499 — one-time upfront fees." },
               { icon: FileCheck, title: "Full title transfer", body: "We handle all cemetery paperwork end-to-end." },
             ].map((b, i) => (
               <motion.div

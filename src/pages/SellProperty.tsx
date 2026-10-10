@@ -15,7 +15,7 @@ import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const benefits = [
-  { num: "01", kicker: "Four listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499, and Set Your Own Price $799. One-time upfront listing fees. Your valuation is free." },
+  { num: "01", kicker: "Three listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499,. One-time upfront listing fees. Your valuation is free." },
   { num: "02", kicker: "Free valuation", title: "An honest market price.", desc: "We research recent sales in your cemetery and give you a fair, no-obligation estimate." },
   { num: "03", kicker: "Done for you", title: "We handle every form.", desc: "Cemetery transfers, deeds, escrow, paperwork — every call, every signature, on us." },
   { num: "04", kicker: "You decide", title: "Nothing happens without you.", desc: "List with us and stay in control. We negotiate on your behalf. You approve every offer." },
@@ -25,7 +25,7 @@ const benefits = [
 
 const faqs = [
   { q: "What types of property can I sell?", a: "We help sell all types of cemetery property: single plots, side-by-side plots, family estates, crypts, mausoleum spaces, niches, and more." },
-  { q: "How much does it cost to list?", a: "Starter is $299, Pro is $399, Featured is $499, and Set Your Own Price is $799. Each is a one-time upfront listing fee. The seller’s 15% commission at closing is separate. Valuations remain free." },
+  { q: "How much does it cost to list?", a: "Starter is $299, Pro is $399, Featured is $499. Each is a one-time upfront listing fee. The seller’s 15% commission at closing is separate. Valuations remain free." },
   { q: "How do you determine the value of my property?", a: "We research recent sales of similar properties in the same cemetery, considering factors like location within the cemetery, property type, and current market demand." },
   { q: "What if I inherited property and don't have the deed?", a: "No problem. We can help you navigate the process of obtaining a replacement deed or the necessary documentation from the cemetery." },
   { q: "Do buyers have to pay all at once?", a: "No — we offer qualified buyers 0% interest financing, which widens the pool of families who can purchase your property. It makes no difference to you: you're still paid the full agreed amount upfront at closing, and we carry the payment plan." },
@@ -45,7 +45,7 @@ const SellProperty = () => {
             serviceType: "Cemetery Plot Resale",
             provider: { "@id": "https://texascemeterybrokers.com/#organization" },
             areaServed: "Texas, United States",
-            offers: { "@type": "Offer", description: "One-time listing fees: Starter $299, Pro $399, Featured $499, Set Your Own Price $799" },
+            offers: { "@type": "Offer", description: "One-time listing fees: Starter $299, Pro $399, Featured $499" },
           },
           {
             "@context": "https://schema.org",
