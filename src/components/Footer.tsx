@@ -33,6 +33,8 @@ const Footer = () => {
               <Link to="/buy" className="block hover:text-foreground transition-colors">Buy Property</Link>
               <Link to="/sell" className="block hover:text-foreground transition-colors">Sell Property</Link>
               <Link to="/property-types" className="block hover:text-foreground transition-colors">Property Types</Link>
+              <Link to="/what-is-my-cemetery-plot-worth-texas" className="block hover:text-foreground transition-colors">What Is My Plot Worth?</Link>
+
               <Link to="/partners" className="block hover:text-foreground transition-colors">Our Partners</Link>
               <Link to="/contact" className="block hover:text-foreground transition-colors">Contact</Link>
             </div>

@@ -173,10 +173,11 @@ const GuidesCarousel = () => {
                             </p>
                           </div>
                           <div>
-                            <p className="font-display italic text-base opacity-90 mb-2">N°0{i + 1}</p>
+                            <p className="font-display italic text-base opacity-90 mb-2">N°{g.num}</p>
                             <p className="font-display text-[3.5rem] lg:text-[4.5rem] leading-[0.85] tracking-tighter">
-                              {String(i + 1).padStart(2, "0")}
+                              {g.num}
                             </p>
+
                             <div className={`mt-3 w-14 h-px ${g.rule} opacity-80`} />
                             <p className="mt-2 text-[10px] tracking-[0.28em] uppercase opacity-85 font-semibold">
                               Texas Cemetery Brokers

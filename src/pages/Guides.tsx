@@ -41,6 +41,8 @@ const SCATTER = [FOLIAGE.palm, FLORAL.pinkBranch, FOLIAGE.banana];
 interface Guide {
   slug: string;
   issue: string;
+  num: string;       // editorial issue number shown large on the panel
+
   kicker: string;
   title: string;
   titleAccent: string;
@@ -58,6 +60,8 @@ export const guides: Guide[] = [
   {
     slug: "what-is-my-cemetery-plot-worth-texas",
     issue: "Issue N°06",
+    num: "06",
+
     kicker: "The Valuation Edition",
     title: "What Is My Cemetery Plot",
     titleAccent: "Worth in Texas?",
@@ -73,6 +77,8 @@ export const guides: Guide[] = [
   {
     slug: "guides/planning-a-funeral-in-texas",
     issue: "Start here",
+    num: "00",
+
     kicker: "The Starting-Point Guide",
     title: "Planning a Funeral in",
     titleAccent: "Texas",
@@ -88,6 +94,8 @@ export const guides: Guide[] = [
   {
     slug: "sell-cemetery-plot-texas",
     issue: "Issue N°01",
+    num: "01",
+
     kicker: "The Seller's Edition",
     title: "How to Sell a Cemetery Plot in",
     titleAccent: "Texas",
@@ -103,6 +111,8 @@ export const guides: Guide[] = [
   {
     slug: "cemetery-plots-for-sale-texas",
     issue: "Issue N°02",
+    num: "02",
+
     kicker: "The Buyer's Edition",
     title: "Cemetery Plots for Sale in",
     titleAccent: "Texas",
@@ -118,6 +128,8 @@ export const guides: Guide[] = [
   {
     slug: "cemetery-plot-cost-texas",
     issue: "Issue N°03",
+    num: "03",
+
     kicker: "The Pricing Edition",
     title: "How Much Does a Cemetery Plot",
     titleAccent: "Cost in Texas?",
@@ -133,6 +145,8 @@ export const guides: Guide[] = [
   {
     slug: "preneed-cemetery-plots-texas",
     issue: "Issue N°04",
+    num: "04",
+
     kicker: "The Preneed Edition",
     title: "Preneed Cemetery Plots in",
     titleAccent: "Texas",
@@ -148,6 +162,8 @@ export const guides: Guide[] = [
   {
     slug: "cemetery-transfer-process-texas",
     issue: "Issue N°05",
+    num: "05",
+
 
     kicker: "The Transfer Edition",
     title: "The Cemetery",
@@ -295,7 +311,7 @@ const Guides = () => {
               </p>
             </div>
             <p className="hidden lg:block text-xs tracking-[0.18em] uppercase text-[hsl(28_20%_25%)]/60 max-w-xs text-right">
-              Three complete editions · swipe through to read →
+              Seven complete editions · swipe through to read →
             </p>
           </motion.div>
         </div>
@@ -406,10 +422,11 @@ const Guides = () => {
                             </p>
                           </div>
                           <div>
-                            <p className="font-display italic text-sm md:text-base opacity-90 mb-1 md:mb-2">N°0{i + 1}</p>
+                            <p className="font-display italic text-sm md:text-base opacity-90 mb-1 md:mb-2">N°{g.num}</p>
                             <p className="font-display text-[3rem] md:text-[4rem] lg:text-[5.5rem] leading-[0.85] tracking-tighter">
-                              {String(i + 1).padStart(2, "0")}
+                              {g.num}
                             </p>
+
                             <div className={`mt-2 md:mt-4 w-12 md:w-16 h-px ${g.rule} opacity-80`} />
                             <p className="mt-2 md:mt-3 text-[10px] md:text-[11px] tracking-[0.26em] md:tracking-[0.28em] uppercase opacity-85 font-semibold">
                               Texas Cemetery Brokers
