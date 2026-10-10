@@ -634,7 +634,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
                   </h2>
                   <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
                     Free and no obligation. A few short questions and we come back with a figure, usually within one
-                    business day. No up-front cost, and you only pay when the sale closes.
+                    business day. Listing packages start at $299 upfront; the separate 15% seller commission is paid at closing.
                   </p>
                   <a
                     href="tel:+12142304740"

@@ -2050,7 +2050,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                 <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
                                 <span className="font-display text-lg font-bold">
                                   {known ? TIER_LABEL[key] : manualTier}
-                                  {known && ` · $${TIER_PRICE[key].toLocaleString()}`}
                                 </span>
                               </div>
                             </div>
