@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Are there any upfront fees to sell my property?",
-    a: "We offer a free listing option and a premium $99 listing option — choose whichever fits you best. No appraisal charges or hidden costs.",
+    a: "Starter is $299, Pro is $399, Featured is $499, and Set Your Own Price is $799 — one-time upfront listing fees. Valuations are free. The seller’s 15% commission at closing is separate.",
   },
   {
     q: "What is the buying or selling process?",

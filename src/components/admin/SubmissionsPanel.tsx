@@ -175,7 +175,7 @@ const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 const FOLLOWUP_EXCLUDE_RX = /(don['’]?t have anything matching|keep your request on file|nothing matching your request|the moment something fitting becomes available|new inventory comes in often)/i;
 
 // Listing tier pricing (in dollars) — mirrors SendListingOptionsDialog.
-const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 0, pro: 99, featured: 299 };
+const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 299, pro: 399, featured: 499 };
 const TIER_LABEL: Record<"starter" | "pro" | "featured", string> = { starter: "Starter", pro: "Pro", featured: "Featured" };
 
 // Detect an acceptance-of-quote reply in inbound email body. Returns tier + snippet.
@@ -2050,7 +2050,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                 <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Listing option selected</span>
                                 <span className="font-display text-lg font-bold">
                                   {known ? TIER_LABEL[key] : manualTier}
-                                  {known && ` · $${TIER_PRICE[key].toLocaleString()}`}
                                 </span>
                               </div>
                             </div>
@@ -3760,7 +3759,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               chips.push({
                 key: "tier",
                 icon: Clock,
-                text: `${TIER_LABEL[k]} $${TIER_PRICE[k].toLocaleString()}`,
+                text: `${TIER_LABEL[k]}`,
                 tone: "text-teal-700 dark:text-teal-300 bg-teal-50/60 dark:bg-teal-950/20 border-teal-300/60 dark:border-teal-800/70 border-dashed",
                 title: `${TIER_LABEL[k]} listing option selected — payment not received yet`,
               });

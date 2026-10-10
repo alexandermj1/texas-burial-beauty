@@ -1,7 +1,4 @@
-// Vogue-style editorial promo announcing the temporary listing-fee reduction.
-// Three tiers presented as a magazine spread: numbered masthead, big italic
-// display prices with a struck-through original, editorial descriptions, and
-// a hairline-divided grid that reuses the site's sand/coral/foreground tokens.
+// Editorial listing packages with current upfront fees and unchanged benefits.
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,7 +6,6 @@ import { Link } from "react-router-dom";
 interface Tier {
   num: string;
   name: string;
-  was: string;
   now: string;
   tagline: string;
   desc: string;
@@ -21,17 +17,15 @@ const tiers: Tier[] = [
   {
     num: "01",
     name: "Starter",
-    was: "$299",
-    now: "$0",
-    tagline: "List with zero out-of-pocket cost.",
-    desc: "Your property is listed with us at no upfront charge. Ideal for owners who want to test the market before committing.",
+    now: "$299",
+    tagline: "A straightforward start.",
+    desc: "Your property is listed with a one-time upfront fee. Ideal for owners who want to test the market before committing.",
     cancel: "Early cancellation fee applies if withdrawn within 36 months.",
   },
   {
     num: "02",
     name: "Pro",
-    was: "$399",
-    now: "$99",
+    now: "$399",
     tagline: "Actively marketed to Texas buyers.",
     desc: "One-time upfront fee. Actively marketed to Texas buyers and sent directly to local mortuaries and family counselors.",
     cancel: "Cancel anytime at no charge.",
@@ -40,10 +34,17 @@ const tiers: Tier[] = [
   {
     num: "03",
     name: "Featured",
-    was: "$599",
-    now: "$299",
+    now: "$499",
     tagline: "Maximum visibility for your listing.",
     desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors.",
+    cancel: "Cancel anytime at no charge.",
+  },
+  {
+    num: "04",
+    name: "Set Your Own Price",
+    now: "$799",
+    tagline: "Your price, our expertise.",
+    desc: "Everything in Featured, plus you set your own minimum asking price. A higher minimum may take longer to sell.",
     cancel: "Cancel anytime at no charge.",
   },
 ];
@@ -80,26 +81,26 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             <div className="flex items-center justify-center gap-3 mb-5 flex-wrap">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-[10px] tracking-[0.3em] uppercase font-bold px-3 py-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                Limited time · until August 31
+                Four listing options
               </span>
               <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
-                Listing fees, reduced
+                Listing packages
               </span>
             </div>
             <h2 className="font-display text-foreground tracking-tight leading-[0.98] text-[clamp(2.5rem,6vw,5rem)] max-w-4xl mx-auto">
-              Because buyer demand is high,{" "}
-              <span className="italic text-primary">we've cut every listing fee.</span>
+              List your Texas cemetery property.{" "}
+              <span className="italic text-primary">Choose your listing package.</span>
             </h2>
             <p className="mt-5 text-foreground/70 leading-relaxed max-w-2xl mx-auto text-[15px] md:text-base font-light">
-              Three ways to list your Texas cemetery property — each one at a lower price
-              through the end of July while we work through a high volume of qualified
-              buyer inquiries.
+              Four ways to list your Texas cemetery property. One-time upfront fees,
+              with the same dedicated support from our team. The seller’s 15% commission
+              at closing is separate; your valuation remains free.
             </p>
           </motion.div>
 
 
           {/* Tiers */}
-          <div className="grid md:grid-cols-3 gap-px bg-foreground/15 border border-foreground/15">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/15 border border-foreground/15">
             {tiers.map((t, i) => (
               <motion.article
                 key={t.num}
@@ -111,7 +112,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                   t.featured
                     ? "bg-[hsl(var(--sand-light))]"
                     : "bg-[hsl(var(--warm-white))]"
-                } p-8 md:p-10`}
+                } p-6 md:p-8`}
               >
                 {t.featured && (
                   <span className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-[10px] tracking-[0.25em] uppercase font-bold px-3 py-1.5 shadow-soft">
@@ -133,15 +134,12 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 {/* Price block */}
                 <div className="mb-5">
                   <div className="flex items-end gap-3">
-                    <span className="font-display text-foreground/40 line-through text-2xl md:text-3xl leading-none">
-                      {t.was}
-                    </span>
-                    <span className="font-display italic text-primary text-6xl md:text-7xl leading-[0.9] tracking-tight">
+                    <span className="font-display italic text-primary text-5xl md:text-6xl leading-[0.9] tracking-tight">
                       {t.now}
                     </span>
                   </div>
                   <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-3">
-                    {t.now === "$0" ? "Upfront" : "One-time upfront fee"}
+                    One-time upfront fee
                   </p>
                 </div>
 

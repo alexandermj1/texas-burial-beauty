@@ -196,7 +196,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "I inherited spaces at Sparkman-Hillcrest — what are they worth?",
-        a: "Often considerably more than the family paid. Send us the deed and we will value it free, usually within one business day. If you decide to sell, we handle marketing, buyer screening, payment and the cemetery transfer, and you pay nothing up front.",
+        a: "Often considerably more than the family paid. Send us the deed and we will value it free, usually within one business day. If you decide to sell, we handle marketing, buyer screening, payment and the cemetery transfer, with one-time listing packages from $299 and a separate 15% seller commission at closing.",
       },
     ],
     nearby: ["restland-memorial-park", "grove-hill-memorial-park", "bluebonnet-hills-memorial-park"],
@@ -650,7 +650,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "How do I sell an inherited cemetery plot in Houston?",
-        a: "We check the deed, confirm who has the legal right to sell, value the space against what property in that section actually trades for, market it at no up-front cost and file the transfer with the cemetery. You pay only when the sale closes.",
+        a: "We check the deed, confirm who has the legal right to sell, value the space against what property in that section actually trades for, market it with a one-time listing fee from $299 and file the transfer with the cemetery. The separate 15% seller commission is deducted at closing.",
       },
     ],
     nearby: ["forest-park-westheimer", "brookside-memorial-park", "memorial-oaks-cemetery"],
@@ -871,7 +871,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "How do I sell a cemetery plot at Memorial Oaks?",
-        a: "Send us the deed. We confirm who is legally able to sell, value the space against real transactions in that section, market it at no up-front cost and handle the cemetery transfer. You are paid the net once the sale closes.",
+        a: "Send us the deed. We confirm who is legally able to sell, value the space against real transactions in that section, market it with a one-time listing fee from $299 and handle the cemetery transfer. You are paid the net once the sale closes.",
       },
     ],
     nearby: ["forest-park-westheimer", "forest-park-lawndale", "brookside-memorial-park"],
@@ -1014,7 +1014,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "Can I sell a Grove Hill plot I no longer need?",
-        a: "Yes. East Dallas is an active market and we hold buyers looking for this park. We value the space, handle the marketing, screen the buyer and file the transfer with the cemetery office — there is no up-front cost to you.",
+        a: "Yes. East Dallas is an active market and we hold buyers looking for this park. We value the space, handle the marketing, screen the buyer and file the transfer with the cemetery office — listing packages start at $299 upfront, with a separate 15% seller commission at closing.",
       },
       {
         q: "Can a single space at Grove Hill hold two interments?",

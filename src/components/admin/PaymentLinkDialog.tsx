@@ -26,9 +26,10 @@ interface Props {
 type Kind = "plot_sale" | "listing_fee" | "custom";
 
 const LISTING_FEES = [
-  { id: "starter", label: "Starter", amount: 0, desc: "$0 — pay only if it sells" },
-  { id: "pro", label: "Pro", amount: 99, desc: "$99 one-time" },
-  { id: "custom_plus", label: "Custom Plus", amount: 299, desc: "$299 one-time" },
+  { id: "starter", label: "Starter", amount: 299, desc: "$299 one-time" },
+  { id: "pro", label: "Pro", amount: 399, desc: "$399 one-time" },
+  { id: "custom_plus", label: "Featured", amount: 499, desc: "$499 one-time" },
+  { id: "set_your_price", label: "Set Your Own Price", amount: 799, desc: "$799 one-time" },
 ];
 
 const fmt = (cents: number) =>

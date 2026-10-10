@@ -86,7 +86,7 @@ export default function SelectStarter() {
           </div>
         ) : (
           <p className="text-muted-foreground mb-6">
-            Confirm the <strong className="text-foreground">Starter listing</strong> option ($0 upfront) and we'll take you straight to your Exclusive Sales Agreement to sign — no waiting on email.
+            Confirm the <strong className="text-foreground">Starter listing</strong> option at the fee shown in your original quote and we'll take you straight to your Exclusive Sales Agreement to sign — no waiting on email.
           </p>
         )}
 

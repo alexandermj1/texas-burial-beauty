@@ -79,7 +79,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   update_quote_spaces: { label: "Correct quote spaces", Icon: DollarSign, approve: "Update & open quote" },
   increase_quote_ten_percent: { label: "Revised quote · +10%", Icon: DollarSign, approve: "Review seller pack" },
   resend_expired_quote: { label: "Renew expired quote", Icon: DollarSign, approve: "Open quote email" },
-  resend_quote_free_listing: { label: "Resend quote — free listing (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
+  resend_quote_free_listing: { label: "Resend historical waived-fee quote (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
 export async function callSellerAgent(body: Record<string, unknown>) {

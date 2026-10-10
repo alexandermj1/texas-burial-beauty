@@ -9,3 +9,5 @@
 - Embed the shared calculator in the cost, selling, transfer and plot-worth guides, with related-guide links in the shared calculator; keep the retired standalone URL redirected to the cost guide and excluded from sitemap/route metadata — why: a single estimator funnels visitors into maintained editorial content without a duplicate tool page.
 - Use the shared calculator's compact prop for secondary article placements, with a shorter animated header, tighter form and timeline-first empty state; keep both sizes single-column — why: secondary embeds should not overwhelm the article or sacrifice mobile usability.
 - Keep plot-worth editorial photography, local cemetery links and team context in a guide-specific supporting module, reusing existing cemetery photo data; distinguish published team statements from personal quotations — why: the calculator remains shared while article authority stays traceable and honest.
+
+- New listing agreement fee templates are versioned in contract fill data; signing refreshes preserve that version and historical quotes retain their original terms — why: a fee update must not rewrite a customer’s contractual history.

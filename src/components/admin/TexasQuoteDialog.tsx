@@ -104,11 +104,14 @@ While it's natural to compare our valuations to retail list prices or asking amo
 
 To begin the process, we offer flexible listing options designed to suit your preferences:
 
-• Starter — $0 Upfront. Pay only if your plot sells, with a broker service fee due at close. An early cancellation fee applies if withdrawn within 36 months.
-• Pro — $299 One-Time Upfront Fee (Most Popular). Prepaid listing fee with no additional fees when your plot sells. Cancel anytime at no charge.
-• Custom Plus — $999 One-Time Upfront Fee. Maximum visibility with no additional fees due when your plot sells.
+• Starter — $299 one-time upfront fee. Standard listing; an early cancellation fee applies if withdrawn within 36 months.
+• Pro — $399 one-time upfront fee. Active marketing and direct outreach to mortuaries and family counselors. Cancel anytime at no charge.
+• Featured — $499 one-time upfront fee. Everything in Pro, plus targeted digital advertising and priority placement. Cancel anytime at no charge.
+• Set Your Own Price — $799 one-time upfront fee. Everything in Featured, plus you set your own minimum asking price. Cancel anytime at no charge.
 
-Unlike classified listing sites and other brokers who charge upfront fees regardless of a sale, we offer a zero-cost listing option, requiring no monetary outlay by you and providing true financial flexibility.
+The seller’s 15% commission at closing is separate from the upfront listing fee.
+
+Our complimentary valuation helps you choose the listing package that suits your needs.
 
 Choosing Texas Cemetery Brokers means choosing a partner committed to your success. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — ensuring your transaction is secure and compliant.
 

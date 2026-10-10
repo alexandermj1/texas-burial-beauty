@@ -24,8 +24,9 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 async function fetchTemplate(
   svc: ReturnType<typeof createClient>,
   kind: 'listing_agreement' | 'poa',
+  currentFees = false,
 ): Promise<Uint8Array> {
-  const file = kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
+  const file = kind === 'poa' ? 'poa-template.pdf' : (currentFees ? 'listing-agreement-current.pdf' : 'listing-agreement-template.pdf');
   const { data, error } = await svc.storage.from('contracts').download(`_templates/${file}`);
   if (error || !data) throw new Error(`Could not fetch contract template: ${error?.message ?? 'missing'}`);
   const buf = new Uint8Array(await data.arrayBuffer());
@@ -232,6 +233,8 @@ Deno.serve(async (req) => {
       authorized_min_per_plot: Number(overrides.authorized_min_per_plot) ||
         (authMinTotal ? Math.round(authMinTotal / plots) : undefined),
       listing_option: overrides.listing_option ?? sub.listing_tier ?? sub.listing_option ?? 'Starter',
+      // Preserve the fee generation for signing refreshes; never reprice old quotes.
+      listing_pricing_version: !sub.quote_sent_at || sub.quote_sent_at >= '2026-10-10T12:46:30Z' ? 'current' : 'legacy',
       quote_amount: Number(sub.quote_amount ?? 0) || undefined,
       retail_price: Number(sub.cemetery_retail ?? 0) || undefined,
       transfer_fee: transferFee ?? undefined,
@@ -332,7 +335,7 @@ Deno.serve(async (req) => {
         email: fill.email,
       });
     } else {
-      const templateBytes = await fetchTemplate(svc, 'listing_agreement');
+      const templateBytes = await fetchTemplate(svc, 'listing_agreement', fill.listing_pricing_version === 'current');
       filled = await buildFilledPdf(templateBytes, 'listing_agreement', fill);
     }
 

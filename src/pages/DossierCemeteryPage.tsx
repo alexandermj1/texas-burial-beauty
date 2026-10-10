@@ -38,7 +38,7 @@ const NAV = [
 
 const STEPS = [
   { n: "01", t: "Deed check", b: "We read your deed, confirm the section and space and verify who is legally able to sell." },
-  { n: "02", t: "Valuation & listing", b: "A realistic figure based on what property here actually trades for, then we market it — no up-front cost." },
+  { n: "02", t: "Valuation & listing", b: "A realistic figure based on what property here actually trades for, a free valuation, then listing packages from $299 upfront." },
   { n: "03", t: "Buyer & payment", b: "We screen the buyer and hold funds until the paperwork is right on both sides." },
   { n: "04", t: "Cemetery transfer", b: "We file the transfer with the cemetery office, pay the recording fee from proceeds and send you the net." },
 ];
@@ -634,7 +634,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
                   </h2>
                   <p className="mt-4 text-[hsl(var(--parchment)/0.78)] leading-relaxed font-light">
                     Free and no obligation. A few short questions and we come back with a figure, usually within one
-                    business day. No up-front cost, and you only pay when the sale closes.
+                    business day. Listing packages start at $299 upfront; the separate 15% seller commission is paid at closing.
                   </p>
                   <a
                     href="tel:+12142304740"
