@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [x] Show only three public packages with genuine $200 October savings and a Texas-time countdown
+- [x] Verify quote payment amounts and tier IDs with tests, inspect agreement checkbox mapping, test simulated confirmation redirect; real Stripe transaction not performed
 - [x] Replace standard listing fees across public pages, indexed metadata, quote/payment flows and new contracts; preserve historical agreements and promised fees
 - [x] Update AI's latest versioned playbook and runtime guidance; verify fees and unchanged benefits
 - [x] Centre plot-worth editorial text, increase brand contrast, and build a curved-arrow visual lead-in to the calculator; verify desktop/mobile

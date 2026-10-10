@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Are there any upfront fees to sell my property?",
-    a: "Starter is $299, Pro is $399, Featured is $499, and Set Your Own Price is $799 — one-time upfront listing fees. Valuations are free. The seller’s 15% commission at closing is separate.",
+    a: "Starter is $299, Pro is $399, Featured is $499 — one-time upfront listing fees. Valuations are free. The seller’s 15% commission at closing is separate.",
   },
   {
     q: "What is the buying or selling process?",

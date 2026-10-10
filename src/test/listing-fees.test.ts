@@ -13,6 +13,7 @@ describe("current listing fees", () => {
     invoke.mockClear();
     const html = await buildListingOptionsBlock({ seller: {id:"test",name:"Test Seller",email:"test@example.test",cemetery:"Restland",section:null,property_type:null,spaces:"2"}, netPerPlot: 1000, plotCount: 2, transferFee: 100, environment: "sandbox" });
     expect(invoke.mock.calls.map(call => (call as unknown as [string, {body: {amountCents: number}}])[1].body.amountCents)).toEqual([29900,39900,49900,79900]);
+    expect(invoke.mock.calls.map(call => (call as unknown as [string, {body: {listingTier: string}}])[1].body.listingTier)).toEqual(["starter", "pro", "custom_plus", "set_your_price"]);
     for (const price of ["$299","$399","$499","$799"]) expect(html).toContain(price);
     expect(html).not.toContain("zero out-of-pocket");
     expect(html).toContain("$1,700");

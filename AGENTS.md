@@ -11,3 +11,5 @@
 - Keep plot-worth editorial photography, local cemetery links and team context in a guide-specific supporting module, reusing existing cemetery photo data; distinguish published team statements from personal quotations — why: the calculator remains shared while article authority stays traceable and honest.
 
 - New listing agreement fee templates are versioned in contract fill data; signing refreshes preserve that version and historical quotes retain their original terms — why: a fee update must not rewrite a customer’s contractual history.
+
+- Public listing promotions use a fixed Texas-time deadline, never a resetting countdown; private quote/contract tiers remain separate from the public three-package display — why: offers must expire honestly without removing private package choices.
