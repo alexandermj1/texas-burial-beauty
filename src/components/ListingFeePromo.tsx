@@ -1,12 +1,14 @@
 // Editorial listing packages with current upfront fees and unchanged benefits.
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Tier {
   num: string;
   name: string;
   now: string;
+  regular: string;
   tagline: string;
   desc: string;
   cancel: string;
@@ -18,6 +20,7 @@ const tiers: Tier[] = [
     num: "01",
     name: "Starter",
     now: "$299",
+    regular: "$499",
     tagline: "A straightforward start.",
     desc: "Your property is listed with a one-time upfront fee. Ideal for owners who want to test the market before committing.",
     cancel: "Early cancellation fee applies if withdrawn within 36 months.",
@@ -26,6 +29,7 @@ const tiers: Tier[] = [
     num: "02",
     name: "Pro",
     now: "$399",
+    regular: "$599",
     tagline: "Actively marketed to Texas buyers.",
     desc: "One-time upfront fee. Actively marketed to Texas buyers and sent directly to local mortuaries and family counselors.",
     cancel: "Cancel anytime at no charge.",
@@ -35,19 +39,19 @@ const tiers: Tier[] = [
     num: "03",
     name: "Featured",
     now: "$499",
+    regular: "$699",
     tagline: "Maximum visibility for your listing.",
     desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors.",
     cancel: "Cancel anytime at no charge.",
   },
-  {
-    num: "04",
-    name: "Set Your Own Price",
-    now: "$799",
-    tagline: "Your price, our expertise.",
-    desc: "Everything in Featured, plus you set your own minimum asking price. A higher minimum may take longer to sell.",
-    cancel: "Cancel anytime at no charge.",
-  },
 ];
+
+// Midnight after October 31 in America/Chicago (still CDT).
+export const OCTOBER_OFFER_END = Date.parse("2026-11-01T00:00:00-05:00");
+export function offerCountdown(now: number) {
+  const seconds = Math.max(0, Math.floor((OCTOBER_OFFER_END - now) / 1000));
+  return [Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24, Math.floor(seconds / 60) % 60, seconds % 60];
+}
 
 interface Props {
   /** Slightly denser spacing when rendered inside a hero-adjacent context. */
@@ -55,6 +59,12 @@ interface Props {
 }
 
 const ListingFeePromo = ({ compact = false }: Props) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const offerActive = now < OCTOBER_OFFER_END;
   return (
     <section
       id="listing-fees"
@@ -81,7 +91,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             <div className="flex items-center justify-center gap-3 mb-5 flex-wrap">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-[10px] tracking-[0.3em] uppercase font-bold px-3 py-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                Four listing options
+                Three listing options
               </span>
               <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
                 Listing packages
@@ -92,15 +102,29 @@ const ListingFeePromo = ({ compact = false }: Props) => {
               <span className="italic text-primary">Choose your listing package.</span>
             </h2>
             <p className="mt-5 text-foreground/70 leading-relaxed max-w-2xl mx-auto text-[15px] md:text-base font-light">
-              Four ways to list your Texas cemetery property. One-time upfront fees,
+              Three ways to list your Texas cemetery property. One-time upfront fees,
               with the same dedicated support from our team. The seller’s 15% commission
               at closing is separate; your valuation remains free.
             </p>
+            {offerActive && (
+              <div className="mt-7 flex flex-col items-center gap-4">
+                <p className="text-primary font-semibold text-base flex items-center gap-2"><Clock className="h-4 w-4" /> October offer · Save $200 on every package</p>
+                <div role="timer" aria-label="Time remaining in October offer" className="flex justify-center gap-3 sm:gap-5 tabular-nums">
+                  {offerCountdown(now).map((value, index) => (
+                    <div key={index} className="min-w-14 sm:min-w-16 text-center">
+                      <span className="block rounded-lg border border-primary/20 bg-primary/5 py-3 text-2xl sm:text-3xl font-semibold text-primary">{String(value).padStart(2, "0")}</span>
+                      <span className="mt-2 block text-xs text-muted-foreground">{["Days", "Hours", "Minutes", "Seconds"][index]}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground">Ends October 31, 2026 at 11:59 p.m. Texas time.</p>
+              </div>
+            )}
           </motion.div>
 
 
           {/* Tiers */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-foreground/15 border border-foreground/15">
+          <div className="grid md:grid-cols-3 gap-5">
             {tiers.map((t, i) => (
               <motion.article
                 key={t.num}
@@ -112,7 +136,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                   t.featured
                     ? "bg-[hsl(var(--sand-light))]"
                     : "bg-[hsl(var(--warm-white))]"
-                } p-6 md:p-8`}
+                } rounded-lg border border-foreground/15 p-6 md:p-8`}
               >
                 {t.featured && (
                   <span className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-[10px] tracking-[0.25em] uppercase font-bold px-3 py-1.5 shadow-soft">
@@ -133,6 +157,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
 
                 {/* Price block */}
                 <div className="mb-5">
+                  {offerActive && <p className="mb-3 text-muted-foreground text-sm">Regularly <span className="line-through">{t.regular}</span> <span className="ml-2 font-semibold text-primary">Save $200</span></p>}
                   <div className="flex items-end gap-3">
                     <span className="font-display italic text-primary text-5xl md:text-6xl leading-[0.9] tracking-tight">
                       {t.now}
