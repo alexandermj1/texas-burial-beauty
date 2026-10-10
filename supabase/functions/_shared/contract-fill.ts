@@ -18,6 +18,7 @@ export interface FillData {
   authorized_min_per_plot?: number;
   authorized_min_total?: number;
   listing_option?: string;
+  listing_pricing_version?: 'current' | 'legacy';
   quote_amount?: number;
   retail_price?: number;
   transfer_fee?: number;

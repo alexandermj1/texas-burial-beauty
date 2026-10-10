@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
         if (typeof fd.seller_name === 'string' && fd.seller_name.trim() && !supplied.includes('seller_name')) {
           try {
             const cleaned = { ...fd, seller_name: '' } as FillData;
-            const { data: tmpl } = await svc.storage.from('contracts').download('_templates/listing-agreement-template.pdf');
+            const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${fd.listing_pricing_version === 'current' ? 'listing-agreement-current.pdf' : 'listing-agreement-template.pdf'}`);
             if (tmpl) {
               const rebuilt = await buildFilledPdf(new Uint8Array(await tmpl.arrayBuffer()), 'listing_agreement', cleaned);
               const p = `${c.submission_id}/listing_agreement-${Date.now()}.pdf`;
@@ -302,7 +302,7 @@ Deno.serve(async (req) => {
         });
 
       } else {
-        const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : 'listing-agreement-template.pdf';
+        const tmplFile = c.kind === 'poa' ? 'poa-template.pdf' : merged.listing_pricing_version === 'current' ? 'listing-agreement-current.pdf' : 'listing-agreement-template.pdf';
         const { data: tmpl } = await svc.storage.from('contracts').download(`_templates/${tmplFile}`);
         if (!tmpl) throw new Error('template missing');
         const tmplBytes = new Uint8Array(await tmpl.arrayBuffer());
