@@ -47,7 +47,7 @@ export const BAYER_STAGE_META: Record<BayerStage, { label: string; short: string
   quote_morgued:             { label: "2b. Morgued (no response)",  short: "Morgued",      cls: "bg-muted text-muted-foreground border-border",                Icon: Archive,       owner: "Auto",          dot: "bg-muted-foreground" },
   quote_accepted:            { label: "3. Quote accepted",          short: "Accepted",     cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25",    Icon: ThumbsUp,      owner: "Intake",        dot: "bg-emerald-500" },
   la_issued:                 { label: "4. L.A. issued",             short: "L.A. out",     cls: "bg-sky-500/10 text-sky-700 border-sky-500/25",                Icon: FileSignature, owner: "Intake",        dot: "bg-sky-500" },
-  la_signed_awaiting_payment:{ label: "5a. L.A. signed — awaiting $99", short: "Awaiting $99", cls: "bg-amber-500/10 text-amber-700 border-amber-500/25",     Icon: CreditCard,    owner: "YM",            dot: "bg-amber-500" },
+  la_signed_awaiting_payment:{ label: "5a. L.A. signed — awaiting payment", short: "Awaiting payment", cls: "bg-amber-500/10 text-amber-700 border-amber-500/25",     Icon: CreditCard,    owner: "YM",            dot: "bg-amber-500" },
   la_signed_paid:            { label: "5b. L.A. signed (paid/free)", short: "L.A. signed",  cls: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25",   Icon: ThumbsUp,      owner: "YM",            dot: "bg-emerald-500" },
   la_confirmed_poa_issued:   { label: "6. POA issued",              short: "POA out",      cls: "bg-sky-500/10 text-sky-700 border-sky-500/25",                Icon: ShieldCheck,   owner: "Senior Broker", dot: "bg-sky-500" },
   awaiting_notarized_docs:   { label: "7. Awaiting notarized docs", short: "Awaiting POA", cls: "bg-amber-500/10 text-amber-700 border-amber-500/25",          Icon: Mail,          owner: "Seller",        dot: "bg-amber-500" },
@@ -64,7 +64,7 @@ export const deriveBayerStage = (s: Submission): BayerStage => {
     return "la_confirmed_poa_issued";
   }
   if ((s as any).la_signed_at) {
-    if ((s as any).listing_option === "paid_99" && !(s as any).payment_received_at) return "la_signed_awaiting_payment";
+    if ((s as any).listing_option && (s as any).listing_option !== "free" && !(s as any).payment_received_at) return "la_signed_awaiting_payment";
     return "la_signed_paid";
   }
   if ((s as any).la_issued_at) return "la_issued";
@@ -336,7 +336,7 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
                 <> · expires {formatDistanceToNow(new Date((submission as any).la_signature_expires_at), { addSuffix: true })}</>
               )}
             </div>
-            <SelectField label="Listing option chosen" value={(submission as any).listing_option ?? ""} options={["", "paid_99", "free"]} onSave={v => onPatch({ listing_option: v || null } as any)} />
+            <SelectField label="Listing option chosen" value={(submission as any).listing_option ?? ""} options={["", "starter", "pro", "featured", "set_your_price", ...(["paid_99", "free"].includes((submission as any).listing_option) ? [(submission as any).listing_option] : [])]} onSave={v => onPatch({ listing_option: v || null } as any)} />
             <button
               onClick={() => advance({ la_signed_at: nowIso() } as any, "L.A. signed")}
               className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-emerald-600 text-white"
@@ -349,8 +349,8 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
         {/* STAGE 5a — Awaiting payment */}
         {stage === "la_signed_awaiting_payment" && (
           <>
-            <p className="text-xs text-foreground font-medium">$99 listing — awaiting payment.</p>
-            <div className="bg-muted/40 border border-border/40 rounded-lg p-2 flex items-center gap-2 text-[11px]">
+            <p className="text-xs text-foreground font-medium">Listing fee awaiting payment — use the amount in the accepted quote.</p>
+            {(submission as any).listing_option === "paid_99" && <div className="bg-muted/40 border border-border/40 rounded-lg p-2 flex items-center gap-2 text-[11px]">
               <CreditCard className="w-3.5 h-3.5 text-primary" />
               <span className="text-muted-foreground">Payment link:</span>
               <a href="https://paymnt.io/0hd7ep" target="_blank" rel="noreferrer" className="font-mono text-primary hover:underline truncate">https://paymnt.io/0hd7ep</a>
@@ -360,9 +360,9 @@ const BayerPipelinePanel = ({ submission, onPatch }: Props) => {
               >
                 Copy
               </button>
-            </div>
+            </div>}
             <div className="flex flex-wrap gap-2">
-              {submission.email && (
+              {submission.email && (submission as any).listing_option === "paid_99" && (
                 <a
                   href={buildGmailComposeUrl({
                     to: submission.email,
