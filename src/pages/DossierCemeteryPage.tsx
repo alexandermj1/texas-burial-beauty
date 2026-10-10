@@ -38,7 +38,7 @@ const NAV = [
 
 const STEPS = [
   { n: "01", t: "Deed check", b: "We read your deed, confirm the section and space and verify who is legally able to sell." },
-  { n: "02", t: "Valuation & listing", b: "A realistic figure based on what property here actually trades for, then we market it — no up-front cost." },
+  { n: "02", t: "Valuation & listing", b: "A realistic figure based on what property here actually trades for, a free valuation, then listing packages from $299 upfront." },
   { n: "03", t: "Buyer & payment", b: "We screen the buyer and hold funds until the paperwork is right on both sides." },
   { n: "04", t: "Cemetery transfer", b: "We file the transfer with the cemetery office, pay the recording fee from proceeds and send you the net." },
 ];

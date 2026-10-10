@@ -1057,7 +1057,7 @@ Deno.serve(async (req) => {
           });
           const text = await res.text();
           if (!res.ok || /"error"/.test(text)) throw new Error(`Email failed (${res.status}): ${text.slice(0, 200)}`);
-          await aiNote(`Re-sent ${first(sub)}'s quote with the listing fee waived — they click the free Starter option and we record it as Pro.`);
+          await aiNote(`Re-sent ${first(sub)}'s quote with the listing fee waived — they use their original waived-fee option and we record it as Pro.`);
         } else if (act.action_type === "update_quote_spaces") {
           const f = (act.payload?.fields ?? {}) as Record<string, string>;
           const n = Math.round(Number(f.spaces));

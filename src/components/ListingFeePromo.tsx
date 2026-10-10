@@ -1,7 +1,4 @@
-// Vogue-style editorial promo announcing the temporary listing-fee reduction.
-// Three tiers presented as a magazine spread: numbered masthead, big italic
-// display prices with a struck-through original, editorial descriptions, and
-// a hairline-divided grid that reuses the site's sand/coral/foreground tokens.
+// Editorial listing packages with current upfront fees and unchanged benefits.
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
