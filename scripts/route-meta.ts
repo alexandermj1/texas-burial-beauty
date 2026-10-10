@@ -70,7 +70,7 @@ export const STATIC_ROUTES: RouteMeta[] = [
     path: "/sell-cemetery-plot-texas",
     title: "How to Sell a Cemetery Plot in Texas (2026 Guide)",
     description:
-      "What your plot is worth today, the transfer steps Texas cemeteries require, and how to sell it without upfront fees. Free valuation in 24 hours.",
+      "What your plot is worth today, the transfer steps Texas cemeteries require, and listing packages from $299. Free valuation in 24 hours.",
     type: "article",
   },
   {
