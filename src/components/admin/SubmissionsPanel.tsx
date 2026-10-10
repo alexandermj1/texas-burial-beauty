@@ -175,8 +175,8 @@ const FOLLOWUP_THRESHOLD_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 const FOLLOWUP_EXCLUDE_RX = /(don['’]?t have anything matching|keep your request on file|nothing matching your request|the moment something fitting becomes available|new inventory comes in often)/i;
 
 // Listing tier pricing (in dollars) — mirrors SendListingOptionsDialog.
-const TIER_PRICE: Record<"starter" | "pro" | "featured", number> = { starter: 299, pro: 399, featured: 499 };
-const TIER_LABEL: Record<"starter" | "pro" | "featured", string> = { starter: "Starter", pro: "Pro", featured: "Featured" };
+const TIER_PRICE: Record<"starter" | "pro" | "featured" | "set_your_price", number> = { starter: 299, pro: 399, featured: 499, set_your_price: 799 };
+const TIER_LABEL: Record<"starter" | "pro" | "featured" | "set_your_price", string> = { starter: "Starter", pro: "Pro", featured: "Featured", set_your_price: "Set Your Own Price" };
 
 // Detect an acceptance-of-quote reply in inbound email body. Returns tier + snippet.
 const ACCEPT_RX = /\b(i\s+accept(?:\s+(?:the|your)\s+(?:offer|quote|price))?|we\s+accept(?:\s+(?:the|your)\s+(?:offer|quote|price))?|please\s+proceed\s+with\s+(?:the|your)\s+(?:offer|quote)|i\s+accept\s+the\s+minimum\s+authorized\s+sales\s+price)\b/i;
@@ -1698,7 +1698,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         setLocationSaving(false);
       }
     };
-    const selectListingTier = async (tier: "starter" | "pro" | "featured") => {
+    const selectListingTier = async (tier: "starter" | "pro" | "featured" | "set_your_price") => {
       const current = String(seller.listing_tier || "").toLowerCase();
       const active = current === tier || (tier === "featured" && current === "custom_plus");
       await onUpdate(selected.id, (active ? { listing_tier: null, listing_option: null } : {
@@ -1880,7 +1880,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             <p className="mt-2 text-[11px] text-muted-foreground">Added fees are charged once to the buyer and never reduce the seller's proceeds.</p>
                           </details>}
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
+                          <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured","set_your_price"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>
                         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
@@ -2024,6 +2024,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           const label = tierLabel === "starter" ? "Starter"
                             : tierLabel === "pro" ? "Pro"
                             : tierLabel === "custom_plus" || tierLabel === "featured" ? "Featured"
+                            : tierLabel === "set_your_price" ? "Set Your Own Price"
                             : (paid.description || "Listing");
                           const amount = paid.amountCents > 0 ? `$${(paid.amountCents / 100).toLocaleString()}` : "$0";
                           return (
@@ -2042,8 +2043,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           );
                         })()}
                         {!paid && manualTier && (() => {
-                          const key = (manualTier === "custom_plus" ? "featured" : manualTier) as "starter" | "pro" | "featured";
-                          const known = ["starter", "pro", "featured"].includes(key);
+                          const key = (manualTier === "custom_plus" ? "featured" : manualTier) as keyof typeof TIER_LABEL;
+                          const known = key in TIER_LABEL;
                           return (
                             <div className={`${bandBase} ${teal}`}>
                               <div className="flex flex-col leading-tight">
@@ -2066,6 +2067,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       { key: "starter", label: "Starter" },
                       { key: "pro", label: "Pro" },
                       { key: "featured", label: "Featured" },
+                      { key: "set_your_price", label: "Set Your Own Price" },
                     ];
                     return (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -3741,7 +3743,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const p = paidMap[s.id];
               if (p) {
                 const t = (p.tier || "").toLowerCase();
-                const label = t === "starter" ? "Starter" : t === "pro" ? "Pro" : (t === "custom_plus" || t === "featured") ? "Featured" : "Paid";
+                const label = t === "starter" ? "Starter" : t === "pro" ? "Pro" : (t === "custom_plus" || t === "featured") ? "Featured" : t === "set_your_price" ? "Set Your Own Price" : "Paid";
                 const amount = p.amountCents > 0 ? `$${(p.amountCents / 100).toLocaleString()}` : "$0";
                 chips.push({
                   key: "paid",
@@ -3754,8 +3756,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               }
               const t = String((s as any).listing_tier || "").toLowerCase();
               const key = t === "custom_plus" ? "featured" : t;
-              if (!["starter", "pro", "featured"].includes(key)) return;
-              const k = key as "starter" | "pro" | "featured";
+              if (!(key in TIER_LABEL)) return;
+              const k = key as keyof typeof TIER_LABEL;
               chips.push({
                 key: "tier",
                 icon: Clock,
