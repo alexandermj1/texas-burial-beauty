@@ -3822,7 +3822,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${needsReply && isBuyer ? "border-l-[3px] border-l-[hsl(var(--status-buyer))]" : ""}`}
+                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${edgeCls}`}
                 >
                   {/* Stage rail — colour + fill height show how far along they are */}
                   <span
@@ -4090,7 +4090,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                               setNotesDraft(s.admin_notes || "");
                               recordView(s.id);
                             }}
-                            className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : "hover:bg-muted/40"}`}
+                            className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${isExpanded ? "bg-muted/40" : fresh ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/85" : "hover:bg-muted/40"}`}
                           >
                             <img
                               src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
