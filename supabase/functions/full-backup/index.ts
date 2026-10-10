@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
     const parts: string[] = [
       `From: Texas Cemetery Brokers <${FROM_EMAIL}>`,
       `To: ${TO_EMAILS.join(", ")}`,
-      `Subject: Weekly CRM backup ${stamp} — ${rowsTotal} rows, ${TABLES.length} tables`,
+      `Subject: Weekly CRM backup ${stamp} - ${rowsTotal} rows, ${TABLES.length} tables`,
       `MIME-Version: 1.0`,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       ``,

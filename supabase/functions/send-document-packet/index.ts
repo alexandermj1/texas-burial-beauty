@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     // The email stays deliberately short: one button, nothing else. The list of
     // documents, how to get each one, notary steps and the mailing address all
     // live on the seller's document page — never in the email itself.
-    const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
+    const subject = `Automatic email: the documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
     const attachCount = poas.filter((p) => p.path).length + extraDocs.filter((d) => d.path).length;
 
 
@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(31,42,55,0.08);">
         <tr><td style="background:#1f2a37;color:#ffffff;padding:32px 40px;text-align:center;">
           <div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#d9c7a3;">Texas Cemetery Brokers</div>
+          <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#9fb0c6;margin-top:6px;">This is an automatic email</div>
           <div style="font-size:22px;margin-top:10px;">Your document page is ready</div>
         </td></tr>
         <tr><td style="padding:32px 40px;font-size:15px;line-height:1.7;">
