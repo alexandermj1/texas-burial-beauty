@@ -3674,17 +3674,31 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const StageIcon = stage.icon;
 
             const isBuyer = sKind === "buyer";
+            // Brand-new inquiries are washed in light blue so they jump straight out
+            // of the list; the selected row still wins so you always know where you are.
             const bgCls = isActive
               ? "bg-primary/15"
-              : needsReply
-                // Buyers needing reply get a light minty sage tint; everyone else
-                // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
-                ? isBuyer
-                  ? "bg-[hsl(var(--status-buyer))]/10 hover:bg-[hsl(var(--status-buyer))]/18"
-                  : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
-                : beingWorked
-                  ? "bg-accent/10 hover:bg-accent/15"
-                  : stage.tint;
+              : fresh
+                ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/85"
+                : needsReply
+                  // Buyers needing reply get a light minty sage tint; everyone else
+                  // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
+                  ? isBuyer
+                    ? "bg-[hsl(var(--status-buyer))]/10 hover:bg-[hsl(var(--status-buyer))]/18"
+                    : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
+                  : beingWorked
+                    ? "bg-accent/10 hover:bg-accent/15"
+                    : stage.tint;
+            // Fresh rows get a blue edge; a buyer awaiting reply keeps the coral edge.
+            const edgeCls = isActive
+              ? ""
+              : fresh
+                ? "border-l-[3px] border-l-[hsl(var(--status-new))]"
+                : needsReply && isBuyer
+                  ? "border-l-[3px] border-l-[hsl(var(--status-buyer))]"
+                  : "";
+
+
 
 
             // ---- Quiet meta chips: money, docs, agreement, payment ----
