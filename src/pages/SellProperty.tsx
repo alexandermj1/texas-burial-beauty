@@ -15,7 +15,7 @@ import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const benefits = [
-  { num: "01", kicker: "Three listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499,. One-time upfront listing fees. Your valuation is free." },
+  { num: "01", kicker: "Three listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499. One-time upfront listing fees. Your valuation is free." },
   { num: "02", kicker: "Free valuation", title: "An honest market price.", desc: "We research recent sales in your cemetery and give you a fair, no-obligation estimate." },
   { num: "03", kicker: "Done for you", title: "We handle every form.", desc: "Cemetery transfers, deeds, escrow, paperwork — every call, every signature, on us." },
   { num: "04", kicker: "You decide", title: "Nothing happens without you.", desc: "List with us and stay in control. We negotiate on your behalf. You approve every offer." },

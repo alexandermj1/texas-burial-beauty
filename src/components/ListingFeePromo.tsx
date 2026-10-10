@@ -160,7 +160,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                   {offerActive && <p className="mb-3 text-muted-foreground text-sm">Regularly <span className="line-through">{t.regular}</span> <span className="ml-2 font-semibold text-primary">Save $200</span></p>}
                   <div className="flex items-end gap-3">
                     <span className="font-display italic text-primary text-5xl md:text-6xl leading-[0.9] tracking-tight">
-                      {t.now}
+                      {offerActive ? t.now : t.regular}
                     </span>
                   </div>
                   <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-3">
