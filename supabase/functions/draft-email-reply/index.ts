@@ -38,6 +38,7 @@ Power of Attorney (POA) — key points (plain summary):
 const PRICING_AND_OPTIONS = `
 Listing options (factual, non-promotional):
 These fees apply to new offers. Honour the fee and cancellation terms in each seller’s already-sent quote or signed agreement; do not replace historical fees. There is no standard free listing. Valuations remain complimentary.
+October 2026 offer: through October 31 at 11:59 p.m. America/Chicago, Starter $299 / Pro $399 / Featured $499 are each $200 below regular fees $499 / $599 / $699. Only those three packages are advertised publicly. Set Your Own Price $799 remains private to quote emails and agreements, with no claimed discount. Quote emails and agreements state current payable fees without promotional wording; explain the offer separately only when relevant. Never describe the offer as active after its deadline, and honour previously promised fees.
 - Starter — $299 one-time upfront. Listed on our website.
 - Pro — $399 one-time upfront. In 2025 data, Pro listings sold on average 22% faster than Starter.
 - Featured — $499 one-time upfront. In 2025 data, Featured listings sold on average 61% faster. Useful context: ~90% of plot sales originate through mortuaries, so being near the top of the list they show families matters.
