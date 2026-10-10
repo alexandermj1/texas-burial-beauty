@@ -54,10 +54,10 @@ const parseCount = (raw?: string | null) => {
 /** The four packages we sell. The PDF has three checkboxes; "Set your own
  *  price" includes everything in Featured, so it ticks the Featured box. */
 const LISTING_OPTIONS = [
-  { value: "Starter", label: "Starter", note: "$0" },
-  { value: "Pro", label: "Pro", note: "$99" },
-  { value: "Featured", label: "Featured", note: "$299" },
-  { value: "Set your own price", label: "Set your own price", note: "$499" },
+  { value: "Starter", label: "Starter", note: "$299" },
+  { value: "Pro", label: "Pro", note: "$399" },
+  { value: "Featured", label: "Featured", note: "$499" },
+  { value: "Set your own price", label: "Set your own price", note: "$799" },
 ] as const;
 
 const Field = ({

@@ -240,12 +240,12 @@ export const SellerPromoAnimation = () => {
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
               Fill out a simple form with your property details, and we'll provide a free valuation within 24 hours.
-              Choose a free listing or our premium $99 listing — no obligation.
+              Choose Starter $299, Pro $399, Featured $499 or Set Your Own Price $799 — your valuation is free and carries no obligation.
             </p>
 
             {/* Integrated stats grid */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <StatPill icon={Shield} value="$0" label="Upfront Fees" delay={0.3} color="accent" />
+              <StatPill icon={Shield} value="$299" label="Listing Fees From" delay={0.3} color="accent" />
               <StatPill icon={Users} value="50,000+" label="Buyer Network" delay={0.4} color="accent" />
               <StatPill icon={Award} value="4.9★" label="Google Rating" delay={0.5} color="accent" />
               <StatPill icon={Heart} value="100%" label="Consignment Model" delay={0.6} color="accent" />

@@ -65,7 +65,7 @@ const HOME_FAQ_JSONLD = {
       name: "Are there upfront fees to sell my cemetery plot?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "We offer a free listing option and a premium $99 listing option. No appraisal charges or hidden fees.",
+        text: "Our one-time upfront listing fees are Starter $299, Pro $399, Featured $499 and Set Your Own Price $799. Valuations are free; the seller’s 15% commission at closing is separate.",
       },
     },
     {

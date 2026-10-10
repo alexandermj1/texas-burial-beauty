@@ -45,10 +45,10 @@ const buildButtonHtml = (opts: { amountCents: number; description: string; url: 
 };
 
 const PRESETS: { id: "starter" | "pro" | "custom_plus" | "set_your_price"; label: string; amount: number; desc: string }[] = [
-  { id: "starter", label: "Starter", amount: 0, desc: "Starter listing — $0 upfront" },
-  { id: "pro", label: "Pro", amount: 99, desc: "Pro listing — one-time upfront fee" },
-  { id: "custom_plus", label: "Featured", amount: 299, desc: "Featured listing — one-time upfront fee" },
-  { id: "set_your_price", label: "Set Your Own Price", amount: 499, desc: "Set Your Own Price listing — one-time upfront fee" },
+  { id: "starter", label: "Starter", amount: 299, desc: "Starter listing — $299 upfront" },
+  { id: "pro", label: "Pro", amount: 399, desc: "Pro listing — one-time upfront fee" },
+  { id: "custom_plus", label: "Featured", amount: 499, desc: "Featured listing — one-time upfront fee" },
+  { id: "set_your_price", label: "Set Your Own Price", amount: 799, desc: "Set Your Own Price listing — one-time upfront fee" },
 ];
 
 const AttachPaymentButtonDialog = ({ open, onClose, submissionId, recipientEmail, recipientName, onAttach }: Props) => {

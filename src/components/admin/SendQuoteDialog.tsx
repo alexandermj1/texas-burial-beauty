@@ -106,11 +106,14 @@ Fees paid by the buyer (not by you): in addition to the sales price, the buyer p
 
 To begin the process, we offer flexible listing options designed to suit your preferences:
 
-• Starter — $0 Upfront. Pay only if your plot sells, with a broker service fee due at close. An early cancellation fee applies if withdrawn within 36 months.
-• Pro — $299 One-Time Upfront Fee (Most Popular). Prepaid listing fee with no additional fees when your plot sells. Cancel anytime at no charge.
-• Custom Plus — $999 One-Time Upfront Fee. Maximum visibility with no additional fees due when your plot sells.
+• Starter — $299 one-time upfront fee. Standard listing; an early cancellation fee applies if withdrawn within 36 months.
+• Pro — $399 one-time upfront fee. Active marketing and direct outreach to mortuaries and family counselors. Cancel anytime at no charge.
+• Featured — $499 one-time upfront fee. Everything in Pro, plus targeted digital advertising and priority placement. Cancel anytime at no charge.
+• Set Your Own Price — $799 one-time upfront fee. Everything in Featured, plus you set your own minimum asking price. Cancel anytime at no charge.
 
-Our offer is rooted in 30 years of unparalleled expertise in the cemetery property resale market. Unlike general listing sites that may charge upfront fees regardless of a sale, we offer a zero-cost upfront listing option, providing true peace of mind. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — ensuring your transaction is secure and compliant.
+The seller’s 15% commission at closing is separate from the upfront listing fee.
+
+Our offer is rooted in 30 years of unparalleled expertise in the cemetery property resale market. Choose the listing package that suits your needs; valuations remain complimentary. We operate in partnership with Bayer Cemetery Brokers — a licensed California brokerage (CEB 1512) — ensuring your transaction is secure and compliant.
 
 While it's natural to compare to original purchase prices or retail listings from cemeteries, our valuations reflect the realistic, current market value based on deep industry knowledge. We understand the influence of factors like significant cemetery transfer fees, the large inventory available in the resale market, and the highly exacting and price-sensitive nature of buyers.
 

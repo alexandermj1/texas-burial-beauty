@@ -37,10 +37,11 @@ Power of Attorney (POA) — key points (plain summary):
 
 const PRICING_AND_OPTIONS = `
 Listing options (factual, non-promotional):
-- Starter — $0. Listed on our website.
-- Pro — $99. In 2025 data, Pro listings sold on average 22% faster than Starter.
-- Featured — $299. In 2025 data, Featured listings sold on average 61% faster. Useful context: ~90% of plot sales originate through mortuaries, so being near the top of the list they show families matters.
-- Set Your Own Price — $499. Everything in Featured, and the seller sets their own floor price. For sellers who are comfortable waiting longer for a sale in exchange for a potentially higher return. We always try to sell for the highest amount regardless of the option chosen; this option only raises the floor.
+These fees apply to new offers. Honour the fee and cancellation terms in each seller’s already-sent quote or signed agreement; do not replace historical fees. There is no standard free listing. Valuations remain complimentary.
+- Starter — $299 one-time upfront. Listed on our website.
+- Pro — $399 one-time upfront. In 2025 data, Pro listings sold on average 22% faster than Starter.
+- Featured — $499 one-time upfront. In 2025 data, Featured listings sold on average 61% faster. Useful context: ~90% of plot sales originate through mortuaries, so being near the top of the list they show families matters.
+- Set Your Own Price — $799 one-time upfront. Everything in Featured, and the seller sets their own floor price. For sellers who are comfortable waiting longer for a sale in exchange for a potentially higher return. We always try to sell for the highest amount regardless of the option chosen; this option only raises the floor.
 Sample mortuary listing sheet:
 - We publish a sample of the actual Available Property List we circulate to Texas funeral homes and mortuaries. If a seller asks how we market the property, what the list looks like, or where their plot would appear, share this link: https://www.texascemeterybrokers.com/sample-listing-sheet.html (opens in any browser; a PDF version is at https://www.texascemeterybrokers.com/__l5e/assets-v1/4f4d9a57-3daf-4acc-bef9-f182c7bf8e0f/texas-cemetery-brokers-featured-listings.pdf). Make clear it is an example document, not current inventory.
 Quotes:
@@ -93,7 +94,7 @@ Business FAQ:
 - We are a licensed Texas brokerage that helps families sell unused/duplicate cemetery property (plots, crypts, niches, mausoleum spaces).
 - Model: consignment/listing brokerage. We do NOT buy property outright. We market and sell on the owner's behalf.
 - Payment to seller: at closing, after the cemetery transfer is complete.
-- Fees: seller pays the listing option they choose ($0/$99/$299). Our commission is agreed in the listing agreement and taken from the sale proceeds at closing.
+- Fees: seller pays the listing option they choose ($299/$399/$499/$799). Our commission is agreed in the listing agreement and taken from the sale proceeds at closing.
 - Cemetery transfer fees are charged by the cemetery itself, not by us. Amount varies by cemetery.
 - Timeline: varies by cemetery, property type, and asking price. We do not guarantee a sale by a specific date.
 - Territory: Texas.
@@ -405,7 +406,7 @@ const TOOLS = [
     type: "function",
     function: {
       name: "get_pricing_and_options",
-      description: "Returns the current listing options ($0/$99/$299), their factual 2025 performance stats, and pricing/quote rules. Call this only when the customer asks about listing packages, prices, or how quotes work.",
+      description: "Returns the current listing options ($299/$399/$499/$799), their factual 2025 performance stats, and pricing/quote rules. Call this only when the customer asks about listing packages, prices, or how quotes work.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },

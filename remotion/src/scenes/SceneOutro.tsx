@@ -67,7 +67,7 @@ export const SceneOutro: React.FC = () => {
           opacity: subOpacity,
           fontWeight: 300,
         }}>
-          No upfront costs. No hidden fees. No hassle.{"\n"}
+          Listing packages from $299. Free valuation. No hassle.{"\n"}
           Just a seamless sale at the best market price.
         </div>
 

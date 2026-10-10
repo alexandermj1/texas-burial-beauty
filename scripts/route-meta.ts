@@ -27,7 +27,7 @@ export const STATIC_ROUTES: RouteMeta[] = [
     path: "/sell",
     title: "Sell Your Cemetery Plot in Texas | Texas Cemetery Brokers",
     description:
-      "List your Texas cemetery plot with trusted brokers. Free and premium listings, no upfront appraisal fees, transparent process.",
+      "List your Texas cemetery plot with trusted brokers. Listing packages from $299, free valuations, transparent process.",
   },
   {
     path: "/property-types",

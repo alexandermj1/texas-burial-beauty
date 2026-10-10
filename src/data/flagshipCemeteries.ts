@@ -196,7 +196,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
       },
       {
         q: "I inherited spaces at Sparkman-Hillcrest — what are they worth?",
-        a: "Often considerably more than the family paid. Send us the deed and we will value it free, usually within one business day. If you decide to sell, we handle marketing, buyer screening, payment and the cemetery transfer, and you pay nothing up front.",
+        a: "Often considerably more than the family paid. Send us the deed and we will value it free, usually within one business day. If you decide to sell, we handle marketing, buyer screening, payment and the cemetery transfer, with one-time listing packages from $299 and a separate 15% seller commission at closing.",
       },
     ],
     nearby: ["restland-memorial-park", "grove-hill-memorial-park", "bluebonnet-hills-memorial-park"],

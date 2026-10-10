@@ -1,5 +1,5 @@
 // Compose & attach a "Listing Options" block to a seller email.
-// Generates 3 Stripe Checkout links (Starter $0 / Pro $99 / Featured $299)
+// Generates paid listing links (Starter $299 / Pro $399 / Featured $499)
 // via `create-payment-link` and injects branded pay-to-select cards into
 // the composer. Also fills in the offer/comparable pricing text so the
 // admin doesn't have to retype it.
@@ -37,9 +37,9 @@ const parseSpaces = (s: string | null | undefined): number => {
 };
 
 const TIERS = [
-  { id: "starter", label: "Starter", price: 0, priceLabel: "$0 Upfront", blurb: "List your property with zero out-of-pocket costs. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
-  { id: "pro", label: "Pro", price: 99, priceLabel: "$99 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors. Cancel anytime at no charge." },
-  { id: "custom_plus", label: "Featured", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurb: "Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at your cemetery. Cancel anytime at no charge." },
+  { id: "starter", label: "Starter", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurb: "List your property with a one-time upfront fee. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
+  { id: "pro", label: "Pro", price: 399, priceLabel: "$399 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors. Cancel anytime at no charge." },
+  { id: "custom_plus", label: "Featured", price: 499, priceLabel: "$499 One-Time Upfront Fee", blurb: "Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at your cemetery. Cancel anytime at no charge." },
 ] as const;
 
 export default function SendListingOptionsDialog({ open, onClose, seller, onAttach }: Props) {
@@ -107,7 +107,7 @@ export default function SendListingOptionsDialog({ open, onClose, seller, onAtta
     if (!canAttach) return;
     setCreating(true);
     try {
-      // Create 3 Stripe links (Starter is $0 — the edge function short-circuits).
+      // Create paid links for each listing option.
       const links = await Promise.all(
         TIERS.map(async (t) => {
           try {

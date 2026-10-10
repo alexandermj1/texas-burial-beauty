@@ -196,7 +196,7 @@ export const Scene6Buyer: React.FC = () => {
                 </svg>
               </div>
               <div style={{ fontFamily: fonts.body, fontSize: 16, color: colors.muted, lineHeight: 1.45 }}>
-                <span style={{ color: colors.primary, fontWeight: 700 }}>$0 upfront</span>
+                <span style={{ color: colors.primary, fontWeight: 700 }}>Listing from $299</span>
                 <br />
                 net of every cemetery and broker fee
               </div>

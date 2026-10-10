@@ -15,7 +15,7 @@ import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const benefits = [
-  { num: "01", kicker: "Reduced through August 31", title: "List from $0 to $299.", desc: "Starter is now $0 (was $299), Pro is $99 (was $399), and Featured is $299 (was $599). No appraisal fees. No hidden charges." },
+  { num: "01", kicker: "Four listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499, and Set Your Own Price $799. One-time upfront listing fees. Your valuation is free." },
   { num: "02", kicker: "Free valuation", title: "An honest market price.", desc: "We research recent sales in your cemetery and give you a fair, no-obligation estimate." },
   { num: "03", kicker: "Done for you", title: "We handle every form.", desc: "Cemetery transfers, deeds, escrow, paperwork — every call, every signature, on us." },
   { num: "04", kicker: "You decide", title: "Nothing happens without you.", desc: "List with us and stay in control. We negotiate on your behalf. You approve every offer." },
@@ -25,7 +25,7 @@ const benefits = [
 
 const faqs = [
   { q: "What types of property can I sell?", a: "We help sell all types of cemetery property: single plots, side-by-side plots, family estates, crypts, mausoleum spaces, niches, and more." },
-  { q: "How much does it cost to list?", a: "Through August 31, listing fees are reduced: Starter is $0 (was $299), Pro is $99 (was $399), and Featured is $299 (was $599). No marketing costs or hidden charges." },
+  { q: "How much does it cost to list?", a: "Starter is $299, Pro is $399, Featured is $499, and Set Your Own Price is $799. Each is a one-time upfront listing fee. The seller’s 15% commission at closing is separate. Valuations remain free." },
   { q: "How do you determine the value of my property?", a: "We research recent sales of similar properties in the same cemetery, considering factors like location within the cemetery, property type, and current market demand." },
   { q: "What if I inherited property and don't have the deed?", a: "No problem. We can help you navigate the process of obtaining a replacement deed or the necessary documentation from the cemetery." },
   { q: "Do buyers have to pay all at once?", a: "No — we offer qualified buyers 0% interest financing, which widens the pool of families who can purchase your property. It makes no difference to you: you're still paid the full agreed amount upfront at closing, and we carry the payment plan." },
@@ -36,7 +36,7 @@ const SellProperty = () => {
     <div className="min-h-screen bg-[hsl(var(--sand-light))] flex flex-col [&>footer]:mt-auto">
       <Seo
         title="Sell Your Cemetery Plot in Texas | Free Valuation"
-        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, no upfront fees. Serving Dallas, Houston, Austin & San Antonio."
+        description="Sell your Texas cemetery plot, niche or crypt with confidence. Free valuation, listing packages from $299. Serving Dallas, Houston, Austin & San Antonio."
         path="/sell"
         jsonLd={[
           {
@@ -45,7 +45,7 @@ const SellProperty = () => {
             serviceType: "Cemetery Plot Resale",
             provider: { "@id": "https://texascemeterybrokers.com/#organization" },
             areaServed: "Texas, United States",
-            offers: { "@type": "Offer", description: "Reduced listing fees through August 31: Starter $0, Pro $99, Featured $299" },
+            offers: { "@type": "Offer", description: "One-time listing fees: Starter $299, Pro $399, Featured $499, Set Your Own Price $799" },
           },
           {
             "@context": "https://schema.org",
@@ -113,7 +113,7 @@ const SellProperty = () => {
             {/* Standfirst — drop cap intro paragraph, narrow left column */}
             <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
               <p className="text-base md:text-lg text-foreground/80 leading-relaxed font-light first-letter:font-display first-letter:text-6xl first-letter:font-medium first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none">
-                Most owners try to sell on their own — and lose months chasing buyers, paperwork, and cemetery red tape. We take all of that off your plate, find a serious buyer, and close for you. Free valuation. No upfront cost. You stay in charge.
+                Most owners try to sell on their own — and lose months chasing buyers, paperwork, and cemetery red tape. We take all of that off your plate, find a serious buyer, and close for you. Free valuation. Listing packages from $299. You stay in charge.
               </p>
               <div className="mt-6 flex items-baseline gap-3 text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/60">
                 <span>By Texas Cemetery Brokers</span>
@@ -134,7 +134,7 @@ const SellProperty = () => {
             {/* Stat strip — runs full width across the grid */}
             <div className="col-span-12 grid grid-cols-3 lg:grid-cols-4 gap-px bg-foreground/15 border-y border-foreground/15 mt-2">
               {[
-                { v: "$0", l: "Upfront cost" },
+                { v: "$299", l: "Listing fees from" },
                 { v: "24h", l: "Response time" },
                 { v: "10k+", l: "Texas buyers" },
                 { v: "100%", l: "You stay in control" },
@@ -188,7 +188,7 @@ const SellProperty = () => {
       </section>
 
 
-      {/* Listing fee promo — reduced pricing while buyer demand is high */}
+      {/* Listing packages */}
       <ListingFeePromo compact />
 
       {/* Buyer financing — why it means a faster sale for you */}

@@ -121,7 +121,7 @@ const AboutSeoSection = () => {
             </p>
             <p>
               For sellers, we list cemetery plots inherited or no longer needed — with a{" "}
-              <strong className="text-foreground font-medium">free or $99 listing option</strong> and full control
+              <strong className="text-foreground font-medium">listing package from $299</strong> and full control
               over your asking price. For buyers planning at-need or pre-need, we match you to verified properties at
               the right cemetery, in the right section, for the right price. Pre-need buyers get our best pricing plus
               interest-free financing.
