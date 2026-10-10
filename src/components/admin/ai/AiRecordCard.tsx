@@ -111,7 +111,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
 
       <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
-      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. It updates automatically when an email, note or record change lands.</p>}
+      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI only looks at this seller when you press Review now.</p>}
       {pending.map((a) => (
         <AiActionCard key={a.id} action={a} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
