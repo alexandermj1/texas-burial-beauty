@@ -74,7 +74,7 @@ export default function SellerBrokerValue() {
 
           <div className="grid items-start gap-10 border-t border-border pt-12 lg:grid-cols-2 lg:gap-16">
             <figure className="lg:sticky lg:top-28">
-              <img src={walkthrough.url} alt="A Texas Cemetery Brokers team member walking cemetery grounds" loading="lazy" className="aspect-[4/5] w-full rounded-2xl object-cover" />
+              <img src={walkthrough.url} alt="A Texas Cemetery Brokers team member on cemetery grounds" loading="lazy" className="aspect-[4/5] w-full rounded-2xl object-cover object-[70%_center]" />
               <figcaption className="mt-4 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px w-8 bg-primary/40" />On the ground. In your corner.</figcaption>
             </figure>
             <div>
