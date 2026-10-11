@@ -2288,9 +2288,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                   {/* Plot matches we can offer today */}
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3" /> Plots we can offer
-                    </p>
                     <BuyerCemeteryInventory
                       cemetery={selected.cemetery}
                       listings={liveListings}
