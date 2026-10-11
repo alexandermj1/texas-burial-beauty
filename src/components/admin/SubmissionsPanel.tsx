@@ -3021,11 +3021,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             {/* Message / details — presented as a quote card from the buyer */}
             {kind === "buyer" && (selected.message || selected.details) && (
-              <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
-                <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-xl border border-border/60 bg-card p-4">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
                   {selected.message ? "Message from the buyer" : "Additional details"}
                 </p>
-                <p className="px-4 pb-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed border-l-2 border-primary/40 ml-4 mr-4 pl-3 -mt-0 mb-4">
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed border-l-2 border-primary/40 pl-3">
                   {selected.message || selected.details}
                 </p>
               </div>
