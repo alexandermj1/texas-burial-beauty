@@ -2274,12 +2274,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </span>
                   </div>
 
-                  {/* What they asked for */}
+                  {/* What they asked for — one clean strip, label: value pairs */}
                   {wants.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="rounded-lg border border-border/60 bg-card px-3.5 py-2.5 flex flex-wrap items-baseline gap-x-5 gap-y-1">
                       {wants.map(w => (
-                        <span key={w.k} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/60 text-[11px]">
-                          <span className="text-muted-foreground uppercase tracking-wide text-[9px]">{w.k}</span>
+                        <span key={w.k} className="text-xs">
+                          <span className="text-muted-foreground">{w.k}: </span>
                           <span className="text-foreground font-medium">{w.v}</span>
                         </span>
                       ))}
@@ -2348,10 +2348,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
 
-                  {/* Quick toggles */}
-                  <div className="pt-3 border-t border-emerald-500/20 space-y-2">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Quick toggles</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  {/* Quick toggles — grouped so it's clear what each row controls */}
+                  <div className="pt-3 border-t border-emerald-500/20 space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-20 shrink-0">Status</span>
                       <button
                         className={toggleCls(!!selected.handled)}
                         onClick={() => onUpdate(selected.id, { handled: !selected.handled } as any)}
@@ -2371,7 +2371,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <MessageCircleX className="w-3.5 h-3.5" /> No reply needed
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-20 shrink-0">Buyer stage</span>
                       {tags.map(t => (
                         <button
                           key={t}
@@ -2923,9 +2924,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               ].filter(r => r.value && r.value.trim());
               const showDeedBox = customerDeed || aiDeed;
               return (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                <div className="rounded-xl border border-border/60 bg-card px-4 py-1 text-sm">
                   {rows.map(({ label, value }) => (
-                    <Field key={label} label={label} value={value} />
+                    <div key={label} className="flex items-baseline justify-between gap-4 py-1.5 border-b border-border/40 last:border-0">
+                      <span className="text-[11px] text-muted-foreground shrink-0">{label}</span>
+                      <span className="text-xs font-medium text-foreground text-right break-words min-w-0">{value}</span>
+                    </div>
                   ))}
                   {showDeedBox && (() => {
                     const matches = customerDeed && aiDeed && aiDeed.status === "match";
@@ -3016,13 +3020,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
 
-            {/* Message / details */}
+            {/* Message / details — presented as a quote card from the buyer */}
             {kind === "buyer" && (selected.message || selected.details) && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
-                  {selected.message ? "Message" : "Additional details"}
+              <div className="rounded-xl border border-border/60 bg-card p-4">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
+                  {selected.message ? "Message from the buyer" : "Additional details"}
                 </p>
-                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed border-l-2 border-primary/40 pl-3">
                   {selected.message || selected.details}
                 </p>
               </div>
