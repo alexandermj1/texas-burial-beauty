@@ -10,6 +10,7 @@ import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
+import BuyerCemeteryInventory from "./BuyerCemeteryInventory";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate, buildSellerListingAgreementTemplate, buildSellerFamilyTreeTemplate } from "@/lib/emailTemplates";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
@@ -2217,7 +2218,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const sellerPlots = submissions.filter(s =>
                 resolveKind(s.customer_kind, s.source) === "buyer" ? false :
                 resolveKind(s.customer_kind, s.source) === "seller" &&
-                (s as any).quote_response === "accepted" &&
+                !s.archived_at && !(s as any).deleted_at &&
                 !(s as any).sold_at &&
                 !!canon && _canon(s.cemetery || "") === canon
               );
@@ -2287,55 +2288,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
                   {/* Plot matches we can offer today */}
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3" /> Plots we can offer
-                    </p>
-                    {matchCount === 0 ? (
-                      <p className="text-xs text-muted-foreground">
-                        Nothing in inventory at {selected.cemetery || "this cemetery"} yet. They'll be flagged automatically the moment a seller accepts here.
-                      </p>
-                    ) : (
-                      <ul className="space-y-1.5">
-                        {liveListings.map(l => (
-                          <li key={`l-${l.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
-                            <span className="text-xs text-foreground truncate">
-                              {[l.plot_type, l.section, l.spaces ? `${l.spaces} space${l.spaces > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")}
-                            </span>
-                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 shrink-0">
-                              {l.asking_price != null ? `$${Number(l.asking_price).toLocaleString()}` : "Price on request"}
-                            </span>
-                          </li>
-                        ))}
-                        {allSellerPlots.map(s => {
-                          const isManual = manualIds.includes(s.id);
-                          return (
-                            <li key={`s-${s.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-card border border-border/60 px-3 py-2">
-                              <span className="text-xs text-foreground truncate">
-                                {[s.name, s.cemetery, [s.property_type, (s as any).section, s.spaces ? `${s.spaces} space${Number(s.spaces) > 1 ? "s" : ""}` : null].filter(Boolean).join(" · ")]
-                                  .filter(Boolean).join(" — ") || "Seller plot"}
-                                <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-                                  {isManual ? "matched by you" : "from seller"}
-                                </span>
-                              </span>
-                              <span className="inline-flex items-center gap-2 shrink-0">
-                                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                                  {(s as any).list_price != null ? `$${Number((s as any).list_price).toLocaleString()}` : "Price TBC"}
-                                </span>
-                                {isManual && (
-                                  <button
-                                    onClick={() => setManualIds(manualIds.filter(id => id !== s.id))}
-                                    className="p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                    title="Remove this match"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                )}
-                              </span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
+                    <BuyerCemeteryInventory
+                      cemetery={selected.cemetery}
+                      listings={liveListings}
+                      sellers={allSellerPlots}
+                      manualIds={manualIds}
+                      onRemoveManual={(id) => setManualIds(manualIds.filter(m => m !== id))}
+                    />
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button
                         onClick={() => setPlotCardsOpen(true)}
