@@ -174,7 +174,7 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
                         <Detail k="Plot type" v={s.property_type} />
                         <Detail k="Section" v={x.section} />
                         <Detail k="Spaces" v={s.spaces} />
-                        <Detail k="Locations" v={x.locations_being_sold || x.plot_locations} />
+                        <Detail k="Locations" v={x.plot_description} />
                         <Detail k="Quote" v={money(x.quote_amount)} />
                         <Detail k="List price" v={money(x.list_price)} />
                         <Detail k="Quote sent" v={fmtDate(s.quote_sent_at)} />
