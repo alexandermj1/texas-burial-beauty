@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import ListingFeePromo from "@/components/ListingFeePromo";
+import SellerBrokerValue from "@/components/SellerBrokerValue";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
@@ -191,8 +192,8 @@ const SellProperty = () => {
       {/* Listing packages */}
       <ListingFeePromo compact />
 
-      {/* Buyer financing — why it means a faster sale for you */}
-      <FinancingSection />
+      {/* Broker value: pricing, timelines, paperwork and buyer support */}
+      <SellerBrokerValue />
 
       {/* The mortuary Available Property List — rendered on the page */}
       <MortuarySheetShowcase />

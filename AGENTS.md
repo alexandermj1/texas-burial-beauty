@@ -13,3 +13,4 @@
 - New listing agreement fee templates are versioned in contract fill data; signing refreshes preserve that version and historical quotes retain their original terms — why: a fee update must not rewrite a customer’s contractual history.
 
 - Public listing promotions use a fixed Texas-time deadline, never a resetting countdown; private quote/contract tiers remain separate from the public three-package display — why: offers must expire honestly without removing private package choices.
+- Keep the sell-page broker comparison in SellerBrokerValue, with estimate-model comparisons explicitly distinguished from measured returns and net proceeds — why: marketing must not turn calculator assumptions into guaranteed outcomes.
