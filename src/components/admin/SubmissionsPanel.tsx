@@ -2348,10 +2348,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
 
-                  {/* Quick toggles */}
-                  <div className="pt-3 border-t border-emerald-500/20 space-y-2">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Quick toggles</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  {/* Quick toggles — grouped so it's clear what each row controls */}
+                  <div className="pt-3 border-t border-emerald-500/20 space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-20 shrink-0">Status</span>
                       <button
                         className={toggleCls(!!selected.handled)}
                         onClick={() => onUpdate(selected.id, { handled: !selected.handled } as any)}
@@ -2371,7 +2371,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <MessageCircleX className="w-3.5 h-3.5" /> No reply needed
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground w-20 shrink-0">Buyer stage</span>
                       {tags.map(t => (
                         <button
                           key={t}
