@@ -8,7 +8,7 @@ import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
-import { PlotWorthLocalContext, PlotWorthGroundsPhoto, PlotWorthTeamPerspective, PlotWorthEstimatePath } from "@/components/guides/PlotWorthEditorial";
+import { PlotWorthLocalContext, PlotWorthGroundsPhoto, PlotWorthEstimatePath } from "@/components/guides/PlotWorthEditorial";
 
 const PATH = "/what-is-my-cemetery-plot-worth-texas";
 const SITE = "https://texascemeterybrokers.com";
@@ -87,7 +87,6 @@ export default function GuideCemeteryPlotWorth() {
           <h3 className="font-body text-xl font-medium text-foreground">Resale value is not automatically your net proceeds</h3>
           <p>Cemetery transfer fees and the seller’s agreed fees affect what you receive. Do not subtract a guessed fee from the estimate: ask for a written quote showing the property price, transfer fee, seller fee and net proceeds. Our <Link to="/cemetery-plot-cost-texas">pricing and fees guide</Link> explains the categories to check.</p>
         </Chapter>
-        <PlotWorthTeamPerspective />
         <Chapter id="selling-time" icon={Clock} title="Value and time to sell belong together">
           <p>The calculator displays a broad broker-sale timeline of <strong>1 month to 2 years</strong> and a private-sale planning average of <strong>5–7 years</strong>. These are illustrative planning assumptions, not independently verified averages or a promise for your plot. Some properties can take longer or may not sell.</p>
           <p>A private seller needs to find a buyer, answer questions, agree payment arrangements and coordinate the cemetery’s transfer requirements. A broker handles marketing, buyer enquiries and the sale process, but cannot remove the need for demand or complete paperwork.</p>
