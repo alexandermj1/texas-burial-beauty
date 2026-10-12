@@ -3,7 +3,6 @@ import { ArrowRight, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GUIDE_CEMETERY_FEATURES } from "@/components/guides/GuideCemeteryGallery";
 import { RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
-import terryPhoto from "@/assets/team/terry-arellano.png";
 
 export function PlotWorthLocalContext() {
   return <section id="local-context" className="scroll-mt-28 border-t border-border py-10 md:py-14">
@@ -34,21 +33,6 @@ export function PlotWorthGroundsPhoto() {
   </figure>;
 }
 
-export function PlotWorthTeamPerspective() {
-  return <section aria-labelledby="team-perspective" className="border-y border-border py-9 md:py-12 my-2">
-    <p className="text-xs font-medium text-primary mb-4">The people behind the guidance</p>
-    <div className="flex items-center gap-4 sm:gap-5 mb-6">
-      <img src={terryPhoto} alt="Terry Arellano, president and co-founder of Bayer Cemetery Brokers" width={112} height={112} loading="lazy" className="w-20 h-20 sm:w-28 sm:h-28 rounded-xl object-cover object-top shrink-0" />
-      <div><h2 id="team-perspective" className="font-display text-2xl sm:text-3xl">Terry Arellano</h2><p className="text-sm text-muted-foreground mt-1">President & co-founder · Bayer Cemetery Brokers</p><p className="text-xs text-primary mt-2">Texas Cemetery Brokers’ partner organization</p></div>
-    </div>
-    <blockquote className="border-l-2 border-primary pl-5 sm:pl-7">
-      <p className="font-display text-2xl sm:text-3xl leading-relaxed">“The salespeople identify with being advocates of the living and grieving, displaying integrity, humility and professionalism.”</p>
-      <footer className="text-sm text-muted-foreground mt-4">Our partner team’s philosophy, as published on our <Link to="/team" className="text-primary underline underline-offset-4">team page</Link>.</footer>
-    </blockquote>
-    <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mt-6">Terry co-founded Bayer Cemetery Brokers in 1996. That established partner network supports our Texas service. Here, the same principle means distinguishing an automated estimate from a reviewed quote, explaining fees clearly and checking the ownership paperwork before a sale.</p>
-    <Button asChild variant="link" className="px-0 mt-3"><Link to="/team">Meet the people behind our service <ArrowRight className="w-4 h-4" /></Link></Button>
-  </section>;
-}
 
 export function PlotWorthEstimatePath() {
   return <section aria-labelledby="estimate-path" className="border-t border-border py-9 md:py-12">
