@@ -2249,6 +2249,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 selected.cemetery ? { k: "Cemetery", v: selected.cemetery } : null,
                 selected.property_type ? { k: "Property", v: selected.property_type } : null,
                 selected.spaces ? { k: "Spaces", v: String(selected.spaces) } : null,
+                (selected as any).section ? { k: "Section / Lot", v: String((selected as any).section) } : null,
                 (selected as any).budget ? { k: "Budget", v: String((selected as any).budget) } : null,
                 (selected as any).timeline ? { k: "Timeline", v: String((selected as any).timeline) } : null,
                 (selected as any).region ? { k: "Area", v: String((selected as any).region) } : null,
@@ -2270,31 +2271,43 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       <ArrowUpFromLine className="w-3.5 h-3.5" /> Buyer workspace
                     </p>
                     <span className="text-[11px] text-muted-foreground">
-                      {matchCount} possible {matchCount === 1 ? "match" : "matches"} at {selected.cemetery || "their cemetery"}
+                      {matchCount} possible {matchCount === 1 ? "match" : "matches"}
                     </span>
                   </div>
 
                   {/* What they asked for — one clean strip, label: value pairs */}
                   {wants.length > 0 && (
-                    <div className="rounded-lg border border-border/60 bg-card px-3.5 py-2.5 flex flex-wrap items-baseline gap-x-5 gap-y-1">
+                    <div aria-label="Buyer requirements" className="border-y border-primary/20 bg-primary/5 px-3.5 py-3">
+                      <p className="text-[10px] uppercase tracking-wide font-semibold text-primary mb-2">Looking for</p>
+                      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
                       {wants.map(w => (
                         <span key={w.k} className="text-xs">
                           <span className="text-muted-foreground">{w.k}: </span>
                           <span className="text-foreground font-medium">{w.v}</span>
                         </span>
                       ))}
+                      </div>
                     </div>
+                  )}
+
+                  {(selected.message || selected.details) && (
+                    <details className="text-xs border-b border-border/60 pb-3">
+                      <summary className="cursor-pointer font-medium text-foreground">Original buyer request</summary>
+                      <p className="mt-2 whitespace-pre-wrap leading-relaxed text-muted-foreground">{selected.message || selected.details}</p>
+                    </details>
                   )}
 
                   {/* Plot matches we can offer today */}
                   <div>
-                    <BuyerCemeteryInventory
+                    <div role="region" aria-label="Available plots and seller progress" tabIndex={0} className="max-h-[65vh] overflow-y-auto overscroll-contain pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+                      <BuyerCemeteryInventory
                       cemetery={selected.cemetery}
                       listings={liveListings}
                       sellers={allSellerPlots}
                       manualIds={manualIds}
                       onRemoveManual={(id) => setManualIds(manualIds.filter(m => m !== id))}
                     />
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button
                         onClick={() => setPlotCardsOpen(true)}
@@ -2908,13 +2921,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const aiDeed = aiByLabel.get("Owner(s) on record") || aiByLabel.get("Purchaser");
               const customerDeed = s.deed_owner_names ? String(s.deed_owner_names).trim() : "";
               const rows: Array<{ label: string; value: string }> = [
-                { label: "Cemetery name", value: (s.cemetery_original as string) || s.cemetery || "" },
-                { label: "Property type", value: s.property_type || "" },
-                { label: "Timeline", value: s.timeline || "" },
-                { label: "Budget", value: s.budget || "" },
-                { label: "Region", value: s.region || "" },
-                { label: "Spaces", value: s.spaces != null ? String(s.spaces) : "" },
-                { label: "Section / Lot", value: s.section || "" },
+                { label: "Originally entered cemetery", value: s.cemetery_original && s.cemetery_original !== s.cemetery ? s.cemetery_original : "" },
                 { label: "Cemetery city/state", value: s.cemetery_city || "" },
                 { label: "Owner status", value: s.deed_owners_status || "" },
                 { label: "Relationship to owner", value: s.relationship_to_owner || "" },
@@ -2923,8 +2930,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 { label: "Bayer entry #", value: s.bayer_entry_id || "" },
               ].filter(r => r.value && r.value.trim());
               const showDeedBox = customerDeed || aiDeed;
+              if (!rows.length && !showDeedBox) return null;
               return (
-                <div className="rounded-xl border border-border/60 bg-card px-4 py-1 text-sm">
+                <details className="border-y border-border/60 px-4 py-3 text-sm">
+                  <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Additional record details</summary>
                   {rows.map(({ label, value }) => (
                     <div key={label} className="flex items-baseline justify-between gap-4 py-1.5 border-b border-border/40 last:border-0">
                       <span className="text-[11px] text-muted-foreground shrink-0">{label}</span>
@@ -2967,7 +2976,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     );
                   })()}
-                </div>
+                </details>
               );
             })()}
 
@@ -3019,18 +3028,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
 
 
-
-            {/* Message / details — presented as a quote card from the buyer */}
-            {kind === "buyer" && (selected.message || selected.details) && (
-              <div className="rounded-xl border border-border/60 bg-card p-4">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
-                  {selected.message ? "Message from the buyer" : "Additional details"}
-                </p>
-                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed border-l-2 border-primary/40 pl-3">
-                  {selected.message || selected.details}
-                </p>
-              </div>
-            )}
 
             {/* Mobile keeps it lean — view-only. Notes, pipelines, reply/action buttons and files
                 are hidden on mobile since admin work is done from desktop. */}
