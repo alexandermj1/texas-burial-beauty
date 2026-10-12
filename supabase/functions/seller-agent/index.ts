@@ -742,28 +742,16 @@ Deno.serve(async (req) => {
 
     const parsed = Body.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
-    // Database triggers (new seller email / staff note) may request a review — proposals only, never sends.
+    // Reviews are staff-click only. Reject the retired automatic path before any model call.
     const cronTok = req.headers.get("x-agent-cron");
-    let user = cronTok ? null : await staffUser(db, req);
-    if (cronTok && ["run", "sweep"].includes(parsed.data.action)) {
-      const { data: t } = await db.from("ai_agent_settings").select("value").eq("key", "cron_token").maybeSingle();
-      if (t && String(t.value) === cronTok) user = { id: null as any, name: "AI agent (automatic)" };
-    }
+    if (cronTok) return json({ status: "skipped", reason: "Automatic seller reviews are disabled; staff must click review." });
+    const user = await staffUser(db, req);
     if (!user) return json({ error: "Admin or staff only" }, 403);
     let body = parsed.data as any;
     let staffRequested = false;
 
     if (body.action === "run") {
       try {
-        // Merge bursts: automatic wake-ups (email, note, record change) wait a minute;
-        // if another wake-up for the same seller arrives meanwhile, only the last one reviews.
-        if (cronTok && ["email_messages", "customer_notes", "record_change"].includes(String(body.trigger))) {
-          const stamp = new Date().toISOString();
-          await db.from("ai_review_queue").upsert({ submission_id: body.submission_id, requested_at: stamp, trigger: body.trigger });
-          await new Promise((r) => setTimeout(r, 60_000));
-          const { data: q } = await db.from("ai_review_queue").select("requested_at").eq("submission_id", body.submission_id).maybeSingle();
-          if (q && new Date(q.requested_at).getTime() !== new Date(stamp).getTime()) return json({ status: "skipped", reason: "merged into a later review" });
-        }
         return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction));
       } catch (e) {
         const status = (e as any).status;

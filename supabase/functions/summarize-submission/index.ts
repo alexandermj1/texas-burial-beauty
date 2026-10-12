@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+  // Retired: even older published clients must not spend credits while browsing.
+  return json({ summaries: {}, status: "disabled", reason: "Automatic record summaries are paused to preserve credits." });
+
   try {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "AI not configured" }, 500);
