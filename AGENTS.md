@@ -14,3 +14,4 @@
 
 - Public listing promotions use a fixed Texas-time deadline, never a resetting countdown; private quote/contract tiers remain separate from the public three-package display — why: offers must expire honestly without removing private package choices.
 - Keep the sell-page broker comparison in SellerBrokerValue, with estimate-model comparisons explicitly distinguished from measured returns and net proceeds — why: marketing must not turn calculator assumptions into guaranteed outcomes.
+- Buyer cemetery inventory uses buyerInventoryPricing with quoteFigures for saved per-space quotes and one-time transfer fees; show separate-purchase prices and whole-transfer totals distinctly, never invent space identifiers — why: buyers must not confuse seller prices, bundle totals or repeated transfer fees.
