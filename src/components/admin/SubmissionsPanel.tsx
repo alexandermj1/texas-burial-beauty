@@ -1262,37 +1262,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [editCemeteryInline, setEditCemeteryInline] = useState(false);
   const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
 
-  // Seed AI summaries already cached on the rows, then top up missing ones for
-  // the visible list in small batches (cheap model, cached server-side).
+  // Display saved summaries only. Browsing the list must never start AI work.
   useEffect(() => {
     const seeded: Record<string, string> = {};
     for (const s of submissions as any[]) if (s.ai_summary) seeded[s.id] = s.ai_summary;
     setSummaryMap(prev => ({ ...seeded, ...prev }));
   }, [submissions]);
-
-  const summaryRequestedRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    let cancelled = false;
-    // Ask for any visible row we haven't asked about this session — the server
-    // returns the cached text unless the state fingerprint (or prompt version)
-    // changed, so stale summaries refresh without extra cost.
-    const batch = filtered
-      .filter(s => !summaryRequestedRef.current.has(s.id))
-      .slice(0, 8)
-      .map(s => s.id);
-    if (!batch.length) return;
-    const t = setTimeout(async () => {
-      batch.forEach(id => summaryRequestedRef.current.add(id));
-      try {
-        const { data } = await supabase.functions.invoke("summarize-submission", {
-          body: { submissionIds: batch },
-        });
-        if (cancelled || !data?.summaries) return;
-        setSummaryMap(prev => ({ ...prev, ...data.summaries }));
-      } catch { /* non-blocking */ }
-    }, 400);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [filtered, summaryMap]);
 
 
   // Duplicates are merged into one card, but paperwork/documents live on whichever
