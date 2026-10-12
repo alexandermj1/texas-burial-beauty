@@ -6,6 +6,9 @@ import { ChevronDown, ExternalLink, Globe, Users, X, Check } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import type { AdminListing } from "@/hooks/useActiveListings";
 import type { Submission } from "./SubmissionsPanel";
+import { Button } from "@/components/ui/button";
+import { useCemeteryMeta } from "@/hooks/useCemeteryMeta";
+import { buyerInventoryPricing } from "@/lib/buyerInventoryPricing";
 
 const money = (v: any) => (v != null && v !== "" && !isNaN(Number(v)) ? `$${Number(v).toLocaleString()}` : null);
 const spacesLabel = (n: any) => (n ? `${n} space${Number(n) > 1 ? "s" : ""}` : null);
@@ -75,6 +78,7 @@ const Field = ({ k, v }: { k: string; v: any }) => (
 );
 
 const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemoveManual }: Props) => {
+  const { metaFor, loading: feesLoading } = useCemeteryMeta();
   const [open, setOpen] = useState<string | null>(null);
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id));
 
@@ -112,7 +116,7 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
   return (
     <div className="space-y-5">
       {/* Live listings */}
-      <section>
+      {listings.length > 0 && <section>
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 inline-flex items-center gap-1.5">
           <Globe className="w-3 h-3" /> Live listings at {cemetery || "this cemetery"} ({listings.length})
         </p>
@@ -173,7 +177,7 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
             })}
           </ul>
         )}
-      </section>
+      </section>}
 
       {/* Sellers in the pipeline */}
       <section>
@@ -224,15 +228,17 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
               ];
               const isOpen = open === `s-${s.id}`;
               const isManual = manualIds.includes(s.id);
-              const has = [s.property_type, x.section, spacesLabel(s.spaces)].filter(Boolean).join(" · ");
-              const price = money(x.list_price) || money(x.quote_amount);
+              const pricing = buyerInventoryPricing(x, metaFor(s.cemetery || cemetery || "").transferFee);
+              const ready = pricing.ready && !feesLoading;
+              const has = [s.property_type, x.section, pricing.count ? spacesLabel(pricing.count) : "Plot count not confirmed"].filter(Boolean).join(" · ");
               return (
                 <li key={s.id}>
                   <div className="flex items-center">
                     <span className={`self-stretch w-1 shrink-0 ${m.dot}`} />
-                    <button
+                    <Button variant="ghost"
                       onClick={() => toggle(`s-${s.id}`)}
-                      className="flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40 transition-colors"
+                      aria-expanded={isOpen}
+                      className="h-auto rounded-none flex-1 min-w-0 flex flex-wrap items-center gap-3 px-3 py-2.5 text-left whitespace-normal hover:bg-muted/40 transition-colors"
                     >
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-medium text-foreground truncate">
@@ -246,9 +252,8 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-foreground shrink-0">
                         <span className={`w-2 h-2 rounded-full ${m.dot}`} /> {p.text}
                       </span>
-                      {price && <span className="text-xs font-semibold text-foreground shrink-0 hidden sm:inline">{price}</span>}
                       <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                    </button>
+                    </Button>
                     {isManual && (
                       <button
                         onClick={() => onRemoveManual(s.id)}
@@ -258,6 +263,28 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
                         <X className="w-3 h-3" />
                       </button>
                     )}
+                  </div>
+                  <div className="ml-4 mr-3 mb-3 border-l border-border pl-3">
+                    {pricing.count && Array.from({ length: pricing.count }, (_, index) => (
+                      <div key={index} className="py-2 border-b border-border/50 last:border-0">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                          <span className="text-xs font-medium text-foreground">Plot {index + 1} <span className="font-normal text-muted-foreground">· {s.property_type || "Type not confirmed"}</span></span>
+                          <span className="text-xs font-semibold text-primary">{ready ? `${money(pricing.single.buyerPriceTotal)} buyer pays` : "Buyer price to confirm"}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-1 break-words">{x.plot_description || x.section || "Location not yet recorded"}</p>
+                        {ready && <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                          Seller price {money(pricing.single.netPerSpace)} + transfer {money(pricing.single.transferFee)} + 15% buyer premium {money(pricing.single.buyerPremiumPerSpace)}
+                          {pricing.single.buyerFees.map(f => <span key={f.id}> + {f.label} {money(f.amount)}</span>)}
+                        </p>}
+                      </div>
+                    ))}
+                    {!pricing.count && <p className="py-2 text-xs text-muted-foreground">Number of plots needs confirming.</p>}
+                    {!ready && <p className="text-[11px] text-muted-foreground py-1">{feesLoading ? "Checking transfer fee…" : !pricing.single.hasQuote ? "No seller price recorded yet." : "Transfer fee not recorded — total needs confirming."}</p>}
+                    {pricing.count && pricing.count > 1 && ready && pricing.together && <div className="border-t border-primary/20 pt-2 mt-1">
+                      <p className="text-[11px] text-muted-foreground">Each plot price above is for a separate purchase. Exact space numbers must be confirmed from the seller’s recorded locations.</p>
+                      <p className="flex flex-wrap justify-between gap-2 text-xs mt-2"><span className="font-medium text-foreground">All {pricing.count} plots together</span><span className="font-semibold text-primary">{money(pricing.together.buyerPriceTotal)} buyer pays</span></p>
+                      <p className="text-[11px] text-muted-foreground mt-1">{money(pricing.together.netTotal)} seller price + {money(pricing.together.transferFee)} transfer charged once + {money(pricing.together.buyerPremiumTotal)} buyer premium (15%){pricing.together.buyerFeesTotal > 0 ? ` + ${money(pricing.together.buyerFeesTotal)} additional fees` : ""}.</p>
+                    </div>}
                   </div>
                   {isOpen && (
                     <div className="px-4 pb-4 pt-3 bg-muted/20 space-y-4">
@@ -286,8 +313,6 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
                         <Field k="Section" v={x.section} />
                         <Field k="Spaces" v={s.spaces} />
                         <Field k="Locations" v={x.plot_description} />
-                        <Field k="Quote" v={money(x.quote_amount)} />
-                        <Field k="List price" v={money(x.list_price)} />
                         <Field k="Phone" v={s.phone} />
                         <Field k="Email" v={s.email} />
                       </div>
