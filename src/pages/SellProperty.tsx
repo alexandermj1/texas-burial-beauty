@@ -192,11 +192,11 @@ const SellProperty = () => {
       {/* Listing packages */}
       <ListingFeePromo compact />
 
-      {/* Broker value: pricing, timelines, paperwork and buyer support */}
-      <SellerBrokerValue />
-
       {/* The mortuary Available Property List — rendered on the page */}
       <MortuarySheetShowcase />
+
+      {/* Broker value follows the available-property list */}
+      <SellerBrokerValue />
 
       {/* Seller Journey Video */}
 
