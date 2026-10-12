@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Redesign broker value in the sell page’s editorial style, move below available properties, and verify presentation and links
 - [x] Add an on-brand sell-page broker-value section with estimated timelines, document guidance, viewings, financing and industry connections; verify desktop/mobile
 - [x] Verify four new live payment links load correct amounts without charging; add October AI guidance and fix missing private-package admin labels
 - [x] Check quote-to-agreement routing and checkbox mapping; full paid transaction remains untested
