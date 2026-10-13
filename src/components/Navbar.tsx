@@ -138,7 +138,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                   </Link>
 
                   {/* Full-bleed mega-panel flowing out of the bar */}
-                  <div className="absolute left-0 right-0 top-full opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-300 ease-out z-50">
+                  <div className="absolute left-0 right-0 top-full z-50 opacity-0 invisible -translate-y-2 scale-[0.985] origin-top blur-[3px] transition-[opacity,transform,filter,visibility] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:blur-0 focus-within:opacity-100 focus-within:visible focus-within:translate-y-0 focus-within:scale-100 focus-within:blur-0 motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 motion-reduce:scale-100 motion-reduce:blur-0">
                     <div className={`relative w-full border-y shadow-hover ${dark ? "border-[hsl(var(--gold)/0.25)] bg-[hsl(var(--ink-deep))]" : "border-border bg-background"}`}>
                       <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
                         {menuPhoto && (
