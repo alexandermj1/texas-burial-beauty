@@ -11,10 +11,9 @@ type MenuKey = "cemeteries" | "guides";
 
 // Most-read guides, styled like the cards on /guides
 const featuredGuides = [
-  { to: "/what-is-my-cemetery-plot-worth-texas", num: "06", kicker: "The Valuation Edition", title: "What Is My Plot", accent: "Worth?", meta: "Calculator · 6 min", panel: "bg-primary", ink: "text-primary-foreground", flower: plumeriaCluster.url },
-  { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(16_50%_58%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
+  { to: "/cemetery-transfer-process-texas", num: "05", kicker: "The Transfer Edition", title: "The Cemetery", accent: "Transfer Process", meta: "8 chapters · 17 min read", panel: "bg-[hsl(200_28%_34%)]", ink: "text-[hsl(40_30%_97%)]", flower: plumeriaCluster.url },
+  { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(16_50%_45%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
   { to: "/cemetery-plot-cost-texas", num: "03", kicker: "The Pricing Edition", title: "What a Plot", accent: "Really Costs", meta: "7 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBranch.url },
-  { to: "/cemetery-transfer-process-texas", num: "05", kicker: "The Transfer Edition", title: "The Transfer", accent: "Process", meta: "17 min read", panel: "bg-[hsl(200_28%_34%)]", ink: "text-[hsl(40_30%_97%)]", flower: plumeriaCluster.url },
 ];
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
@@ -249,18 +248,18 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                             All guides <ArrowRight className="h-4 w-4 transition-transform group-hover/a:translate-x-1" />
                           </Link>
                         </div>
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                           {featuredGuides.map((g, i) => (
                             <div key={g.to} {...reveal(i)}>
-                              <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-44 flex-col justify-between overflow-hidden rounded-2xl p-5 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
-                                <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 object-contain opacity-90 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
+                              <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 object-contain opacity-70 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
                                 <div className="relative flex items-start justify-between">
-                                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-80">{g.kicker}</span>
-                                  <span className="font-display text-3xl leading-none opacity-40">{g.num}</span>
+                                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">{g.kicker}</span>
+                                  <span className="font-display text-3xl leading-none opacity-45">{g.num}</span>
                                 </div>
-                                <div className="relative max-w-[75%]">
-                                  <p className="font-display text-xl leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
-                                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs opacity-80">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
+                                <div className="relative max-w-[68%]">
+                                  <p className="font-display text-[1.45rem] leading-[1.12]">{g.title} <span className="italic">{g.accent}</span></p>
+                                  <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium opacity-90">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
                                 </div>
                               </Link>
                             </div>
@@ -347,20 +346,21 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       </div>
                     )}
                     {link.to === "/guides" && (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="mt-2 flex flex-col gap-2">
                         {featuredGuides.map(g => (
                           <Link
                             key={g.to}
                             to={g.to}
                             onClick={() => setMenuOpen(false)}
-                            className={`group relative flex min-h-28 flex-col justify-between overflow-hidden rounded-xl p-3 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
+                            className={`group relative flex min-h-24 items-end justify-between overflow-hidden rounded-xl p-4 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
                           >
-                            <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90" />
-                            <div className="relative flex items-start justify-between gap-1">
-                              <span className="text-[9px] uppercase tracking-[0.16em] opacity-80">{g.kicker}</span>
-                              <span className="font-display text-base leading-none opacity-40">{g.num}</span>
-                            </div>
-                            <p className="relative max-w-[80%] font-display text-sm leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
+                            <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 object-contain opacity-70" />
+                            <span className="relative">
+                              <span className="block text-[9px] uppercase tracking-[0.18em] opacity-90">{g.kicker} · N°{g.num}</span>
+                              <span className="mt-1.5 block max-w-[80%] font-display text-lg leading-tight">{g.title} <span className="italic">{g.accent}</span></span>
+                              <span className="mt-1 block text-[11px] font-medium opacity-90">{g.meta}</span>
+                            </span>
+                            <ArrowUpRight className="relative h-4 w-4 shrink-0 opacity-80" />
                           </Link>
                         ))}
                       </div>
