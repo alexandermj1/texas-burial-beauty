@@ -232,15 +232,15 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       </div>
                     ) : (
                       <div className="relative container mx-auto px-6 py-5">
-                        {/* Editorial paper texture — same soft dotted grid as the Guides page */}
+                        {/* Editorial paper texture — the same lined grid as the Guides page cards */}
                         <div
                           aria-hidden
-                          className="absolute inset-0 pointer-events-none opacity-40"
+                          className="absolute inset-0 pointer-events-none"
                           style={{
                             backgroundImage: dark
-                              ? "radial-gradient(hsl(var(--gold)/0.14) 1px, transparent 1px)"
-                              : "radial-gradient(hsl(28 20% 70% / 0.35) 1px, transparent 1px)",
-                            backgroundSize: "22px 22px",
+                              ? "linear-gradient(hsl(var(--gold)/0.12) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--gold)/0.12) 1px, transparent 1px)"
+                              : "linear-gradient(hsl(28 25% 30% / 0.10) 1px, transparent 1px), linear-gradient(90deg, hsl(28 25% 30% / 0.10) 1px, transparent 1px)",
+                            backgroundSize: "44px 44px",
                           }}
                         />
                         <div className="relative mb-3 flex items-baseline justify-between">
