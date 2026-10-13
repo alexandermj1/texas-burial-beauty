@@ -2,6 +2,10 @@ import { useState, useLayoutEffect, useEffect } from "react";
 import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import dallasArt from "@/assets/dallas-hero-illustration.png.asset.json";
+import houstonArt from "@/assets/houston-hero-illustration.png.asset.json";
+import austinArt from "@/assets/austin-hero-illustration.png.asset.json";
+import sanAntonioArt from "@/assets/san-antonio-nav.jpg";
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
@@ -44,10 +48,10 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
   // Local city landing pages — surfaced inside the existing "Cemeteries" item
   // so the top bar stays uncrowded.
   const cityLinks = [
-    { to: "/cemetery-plots-for-sale-dallas", label: "Dallas–Fort Worth" },
-    { to: "/cemetery-plots-for-sale-houston", label: "Houston" },
-    { to: "/cemetery-plots-for-sale-austin", label: "Austin" },
-    { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio" },
+    { to: "/cemetery-plots-for-sale-dallas", label: "Dallas–Fort Worth", img: dallasArt.url },
+    { to: "/cemetery-plots-for-sale-houston", label: "Houston", img: houstonArt.url },
+    { to: "/cemetery-plots-for-sale-austin", label: "Austin", img: austinArt.url },
+    { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio", img: sanAntonioArt },
   ];
 
 
@@ -142,50 +146,42 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       <div className={`absolute inset-x-0 top-0 h-1 ${dark ? "bg-gradient-to-r from-[hsl(var(--gold)/0.2)] via-[hsl(var(--gold))] to-[hsl(var(--gold)/0.2)]" : "bg-gradient-to-r from-sage via-terracotta/60 to-sage"}`} />
                       {/* Subtle warm texture */}
                       {!dark && <div className="absolute inset-0 bg-gradient-to-b from-sage/3 via-transparent to-terracotta/3 pointer-events-none" />}
-                      <div className="relative container mx-auto px-6 py-8 grid grid-cols-12 gap-8">
-                        {/* Featured */}
-                        <Link
-                          to="/cemeteries"
-                          className={`group/f col-span-12 lg:col-span-4 flex items-start gap-4 rounded-[1.5rem] transition-colors p-5 border ${
-                            dark
-                              ? "border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--ink))] hover:bg-[hsl(var(--gold)/0.1)]"
-                              : "bg-gradient-sage hover:bg-sage-light border-sage/10"
-                          }`}
-                        >
-                          <span className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center shadow-soft ${dark ? "bg-[hsl(var(--gold))] text-[hsl(var(--ink))]" : "bg-sage text-primary-foreground"}`}>
-                            <Trees className="w-5 h-5" strokeWidth={1.75} />
-                          </span>
-                          <span className="min-w-0">
-                            <span className={`flex items-center gap-1.5 font-display text-lg leading-tight ${dark ? "text-[hsl(var(--parchment))]" : "text-foreground"}`}>
-                              Texas cemetery directory
-                              <ArrowRight className={`w-4 h-4 -translate-x-1 opacity-0 group-hover/f:opacity-100 group-hover/f:translate-x-0 transition-all ${dark ? "text-[hsl(var(--gold))]" : "text-sage"}`} />
-                            </span>
-                            <span className={`block text-xs mt-1 ${dark ? "text-[hsl(var(--parchment)/0.6)]" : "text-muted-foreground"}`}>
-                              All 95 cemeteries — fees, contacts and availability
-                            </span>
-                          </span>
-                        </Link>
-
-                        <div className="col-span-12 lg:col-span-5">
-                          <p className={`pb-3 text-[10px] uppercase tracking-[0.24em] ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
+                      <div className="relative container mx-auto px-6 py-5">
+                        <div className="flex items-baseline justify-between pb-3">
+                          <p className={`font-display italic text-lg ${dark ? "text-[hsl(var(--parchment))]" : "text-foreground"}`}>
                             Plots by metro
                           </p>
-                          <div className="grid grid-cols-2 xl:grid-cols-3 gap-1.5">
-                            {cityLinks.map(c => (
-                              <Link
-                                key={c.to}
-                                to={c.to}
-                                className={`group/i flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                                  dark
-                                    ? "text-[hsl(var(--parchment)/0.8)] hover:text-[hsl(var(--parchment))] hover:bg-[hsl(var(--gold)/0.12)]"
-                                    : "text-foreground/80 hover:text-foreground hover:bg-muted/70"
-                                }`}
-                              >
-                                <span className={`w-1.5 h-1.5 rounded-full transition-colors shrink-0 ${dark ? "bg-[hsl(var(--gold)/0.4)] group-hover/i:bg-[hsl(var(--gold))]" : "bg-sage/40 group-hover/i:bg-terracotta"}`} />
-                                <span className="truncate">{c.label}</span>
-                              </Link>
-                            ))}
-                          </div>
+                          <span className={`text-[10px] uppercase tracking-[0.28em] ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
+                            Texas
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                          {cityLinks.map((c, i) => (
+                            <Link
+                              key={c.to}
+                              to={c.to}
+                              className="group/i relative block aspect-[16/10] overflow-hidden rounded-2xl shadow-soft"
+                            >
+                              <img
+                                src={c.img}
+                                alt={`${c.label} cemetery plots`}
+                                loading="lazy"
+                                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/i:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/10 to-transparent" />
+                              <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4 text-background">
+                                <div>
+                                  <span className="block text-[10px] uppercase tracking-[0.26em] opacity-75">
+                                    N°0{i + 1}
+                                  </span>
+                                  <span className="block font-display text-xl leading-tight">{c.label}</span>
+                                </div>
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-background/20 backdrop-blur-md transition-all group-hover/i:bg-background group-hover/i:text-foreground">
+                                  <ArrowRight className="h-4 w-4" />
+                                </span>
+                              </div>
+                            </Link>
+                          ))}
                         </div>
                       </div>
                     </div>
