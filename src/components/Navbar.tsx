@@ -355,6 +355,15 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                             onClick={() => setMenuOpen(false)}
                             className={`group relative flex min-h-24 items-end justify-between overflow-hidden rounded-xl p-4 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
                           >
+                            <div
+                              aria-hidden
+                              className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
+                              style={{
+                                backgroundImage:
+                                  "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                                backgroundSize: "34px 34px",
+                              }}
+                            />
                             <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 object-contain opacity-70" />
                             <span className="relative">
                               <span className="block text-[9px] uppercase tracking-[0.18em] opacity-90">{g.kicker} · N°{g.num}</span>
