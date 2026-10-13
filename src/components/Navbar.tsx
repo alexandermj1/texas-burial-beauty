@@ -32,12 +32,12 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
   }, [menuOpen]);
 
   const links = [
-    { to: "/property-types", label: "Property Types", desc: "Browse plot categories", Icon: Building2 },
-    { to: "/cemeteries", label: "Cemeteries", desc: "Find a cemetery near you", Icon: Trees },
     { to: "/buy", label: "Buy Property", desc: "Available listings", Icon: ShoppingBag },
     { to: "/sell", label: "Sell Property", desc: "List your plot", Icon: Tag },
+    { to: "/cemeteries", label: "Cemeteries", desc: "Find a cemetery near you", Icon: Trees },
     { to: "/partners", label: "Partners", desc: "Funeral homes & agents", Icon: Handshake },
     { to: "/guides", label: "Guides", desc: "Plain-English help", Icon: BookOpen },
+    { to: "/property-types", label: "Property Types", desc: "Browse plot categories", Icon: Building2 },
     { to: "/contact", label: "Contact", desc: "Talk to our team", Icon: Mail },
   ];
 
