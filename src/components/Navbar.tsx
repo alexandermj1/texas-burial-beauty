@@ -2,10 +2,7 @@ import { useState, useLayoutEffect, useEffect } from "react";
 import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import dallasArt from "@/assets/dallas-hero-illustration.png.asset.json";
-import houstonArt from "@/assets/houston-hero-illustration.png.asset.json";
-import austinArt from "@/assets/austin-hero-illustration.png.asset.json";
-import sanAntonioArt from "@/assets/san-antonio-nav.jpg";
+import { photoEssayFor } from "@/data/cemeteryPhotos";
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
@@ -48,11 +45,12 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
   // Local city landing pages — surfaced inside the existing "Cemeteries" item
   // so the top bar stays uncrowded.
   const cityLinks = [
-    { to: "/cemetery-plots-for-sale-dallas", label: "Dallas–Fort Worth", img: dallasArt.url },
-    { to: "/cemetery-plots-for-sale-houston", label: "Houston", img: houstonArt.url },
-    { to: "/cemetery-plots-for-sale-austin", label: "Austin", img: austinArt.url },
-    { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio", img: sanAntonioArt },
+    { to: "/cemetery-plots-for-sale-dallas", label: "Dallas–Fort Worth", detail: "North Texas" },
+    { to: "/cemetery-plots-for-sale-houston", label: "Houston", detail: "Greater Houston" },
+    { to: "/cemetery-plots-for-sale-austin", label: "Austin", detail: "Central Texas" },
+    { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio", detail: "South Texas" },
   ];
+  const menuPhoto = photoEssayFor("restland-memorial-park")?.photos[0];
 
 
   const solid = scrolled || menuOpen || megaOpen;
@@ -142,44 +140,28 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                   {/* Full-bleed mega-panel flowing out of the bar */}
                   <div className="absolute left-0 right-0 top-full opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 focus-within:opacity-100 focus-within:visible transition-all duration-300 ease-out z-50">
                     <div className={`relative w-full border-y shadow-hover ${dark ? "border-[hsl(var(--gold)/0.25)] bg-[hsl(var(--ink-deep))]" : "border-border bg-background"}`}>
-                      {/* Top gradient accent line */}
-                      <div className={`absolute inset-x-0 top-0 h-1 ${dark ? "bg-gradient-to-r from-[hsl(var(--gold)/0.2)] via-[hsl(var(--gold))] to-[hsl(var(--gold)/0.2)]" : "bg-gradient-to-r from-sage via-terracotta/60 to-sage"}`} />
-                      {/* Subtle warm texture */}
-                      {!dark && <div className="absolute inset-0 bg-gradient-to-b from-sage/3 via-transparent to-terracotta/3 pointer-events-none" />}
-                      <div className="relative container mx-auto px-6 py-5">
-                        <div className="flex items-baseline justify-between pb-3">
-                          <p className={`font-display italic text-lg ${dark ? "text-[hsl(var(--parchment))]" : "text-foreground"}`}>
-                            Plots by metro
-                          </p>
-                          <span className={`text-[10px] uppercase tracking-[0.28em] ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
-                            Texas
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-3">
+                      <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
+                        {menuPhoto && (
+                          <figure className="min-w-0">
+                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-32 w-full rounded-lg object-cover" />
+                            <figcaption className={`mt-2 text-xs ${dark ? "text-[hsl(var(--parchment))]" : "text-muted-foreground"}`}>
+                              Restland Memorial Park · Dallas
+                            </figcaption>
+                          </figure>
+                        )}
+                        <div className="grid grid-cols-2 gap-x-8">
                           {cityLinks.map((c, i) => (
                             <Link
                               key={c.to}
                               to={c.to}
-                              className="group/i relative block aspect-[16/10] overflow-hidden rounded-2xl shadow-soft"
+                              className={`group/i flex min-h-20 min-w-0 items-center gap-4 border-b py-4 transition-colors ${dark ? "border-[hsl(var(--gold)/0.25)] text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "border-border text-foreground hover:text-primary"}`}
                             >
-                              <img
-                                src={c.img}
-                                alt={`${c.label} cemetery plots`}
-                                loading="lazy"
-                                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover/i:scale-105"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/10 to-transparent" />
-                              <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4 text-background">
-                                <div>
-                                  <span className="block text-[10px] uppercase tracking-[0.26em] opacity-75">
-                                    N°0{i + 1}
-                                  </span>
-                                  <span className="block font-display text-xl leading-tight">{c.label}</span>
-                                </div>
-                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-background/20 backdrop-blur-md transition-all group-hover/i:bg-background group-hover/i:text-foreground">
-                                  <ArrowRight className="h-4 w-4" />
-                                </span>
-                              </div>
+                              <span className={`self-start pt-1 text-xs ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>0{i + 1}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block font-display text-2xl leading-tight">{c.label}</span>
+                                <span className={`mt-1 block text-xs ${dark ? "text-[hsl(var(--parchment))]" : "text-muted-foreground"}`}>{c.detail}</span>
+                              </span>
+                              <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover/i:translate-x-1 motion-reduce:transition-none" />
                             </Link>
                           ))}
                         </div>
@@ -229,7 +211,6 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
         <div
           className={`md:hidden fixed inset-x-0 top-[68px] bottom-0 z-40 overflow-y-auto animate-fade-in ${dark ? "bg-[hsl(var(--ink))]" : "bg-background"}`}
         >
-          {!dark && <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-accent/5 pointer-events-none" />}
           <div className="relative px-6 pt-6 pb-10 flex flex-col gap-6 min-h-full">
             <p className={`text-[11px] uppercase tracking-[0.18em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
               Menu
