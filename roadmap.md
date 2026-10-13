@@ -134,3 +134,7 @@
 - [x] Send an isolated branded non-actionable quote preview to Alexander's address with an introduction and verified figures (no live payment links)
 - [x] Reduce unnecessary AI input/output (read scans only when needed; omit unused model reasoning summary) without switching models or dropping relevant context
 - [x] AI: never auto-suggest document requests; keep ability to send them (with greeting/email note/page note) when staff ask
+
+## Menu guide cards and sell-form example name
+- [x] Keep the lined grid texture on the menu guide cards and swap the pricing guide for the preneed guide; verified desktop/mobile
+- [ ] Replace the "Jane Doe" example name at the start of the sell-your-plot form with another name
