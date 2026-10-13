@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Give the buy page a consistent wide layout and replace the savings banner with refined editorial design; verify the buying steps and presentation
 - [x] Redesign broker value in the sell page’s editorial style, move below available properties, and verify presentation and links
 - [x] Add an on-brand sell-page broker-value section with estimated timelines, document guidance, viewings, financing and industry connections; verify desktop/mobile
 - [x] Verify four new live payment links load correct amounts without charging; add October AI guidance and fix missing private-package admin labels
