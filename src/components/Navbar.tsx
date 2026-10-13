@@ -2,7 +2,7 @@ import { useState, useLayoutEffect, useEffect } from "react";
 import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import { photoEssayFor } from "@/data/cemeteryPhotos";
+import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
@@ -50,7 +50,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
     { to: "/cemetery-plots-for-sale-austin", label: "Austin", detail: "Central Texas" },
     { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio", detail: "South Texas" },
   ];
-  const menuPhoto = photoEssayFor("restland-memorial-park")?.photos[0];
+  const menuPhoto = SPARKMAN_HERO;
 
 
   const solid = scrolled || menuOpen || megaOpen;
