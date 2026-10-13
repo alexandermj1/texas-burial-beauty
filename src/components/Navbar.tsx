@@ -16,6 +16,13 @@ const featuredGuides = [
   { to: "/preneed-cemetery-plots-texas", num: "04", kicker: "The Preneed Edition", title: "Preneed Cemetery", accent: "Plots in Texas", meta: "9 chapters · 8 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBlossom.url },
 ];
 
+// The rest of the series, listed in the menu's contents rail
+const otherGuides = [
+  { to: "/guides/planning-a-funeral-in-texas", num: "00", title: "Planning a Funeral in Texas" },
+  { to: "/cemetery-plots-for-sale-texas", num: "02", title: "Cemetery Plots for Sale" },
+  { to: "/cemetery-plot-cost-texas", num: "03", title: "What a Plot Costs in Texas" },
+];
+
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
     forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
@@ -230,28 +237,47 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                         </div>
                       </div>
                     ) : (
-                      <div className="relative container mx-auto px-6 py-5">
-                        <div className="relative flex items-stretch gap-5">
-                          {/* Vogue side rail — vertical label so the cards start at the very top */}
-                          <div className="flex w-8 shrink-0 flex-col items-center justify-between py-1">
-                            <span className={`font-display text-[11px] uppercase tracking-[0.34em] [writing-mode:vertical-rl] rotate-180 ${dark ? "text-[hsl(var(--gold))]" : "text-foreground/55"}`}>
-                              Most read
-                            </span>
-                            <span className={`my-3 w-px flex-1 ${dark ? "bg-[hsl(var(--gold)/0.3)]" : "bg-border"}`} />
+                      <div className="relative container mx-auto flex h-full flex-col px-6 py-5">
+                        <div className="relative flex flex-1 items-stretch gap-7">
+                          {/* Contents rail — the rest of the series, set like a magazine index */}
+                          <aside className={`flex w-56 shrink-0 flex-col justify-between border-l py-0.5 pl-5 ${dark ? "border-[hsl(var(--gold)/0.25)]" : "border-border"}`}>
+                            <div>
+                              <p className={`text-[10px] uppercase tracking-[0.3em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
+                                Also in the series
+                              </p>
+                              <ul className="mt-1.5">
+                                {otherGuides.map((g, i) => (
+                                  <li key={g.to} {...reveal(i + 3)}>
+                                    <Link
+                                      to={g.to}
+                                      onClick={closeMenu}
+                                      className={`group/s flex items-baseline gap-2.5 border-t py-[7px] transition-colors ${
+                                        dark
+                                          ? "border-[hsl(var(--gold)/0.2)] text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]"
+                                          : "border-border/70 text-foreground/80 hover:text-primary"
+                                      }`}
+                                    >
+                                      <span className="font-display text-[11px] italic leading-none opacity-55">N°{g.num}</span>
+                                      <span className="font-display text-[14px] leading-snug">{g.title}</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                             <Link
                               to="/guides"
                               onClick={closeMenu}
-                              className={`font-display italic text-[11px] uppercase tracking-[0.24em] [writing-mode:vertical-rl] rotate-180 transition-opacity hover:underline underline-offset-4 ${
-                                dark ? "text-[hsl(var(--parchment))] opacity-80 hover:opacity-100" : "text-muted-foreground opacity-90 hover:opacity-100"
+                              className={`group/a mt-3 inline-flex items-center gap-2 font-display text-sm italic transition-colors ${
+                                dark ? "text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "text-foreground/70 hover:text-primary"
                               }`}
                             >
-                              All seven guides
+                              All seven guides <ArrowRight className="h-4 w-4 transition-transform group-hover/a:translate-x-1" />
                             </Link>
-                          </div>
+                          </aside>
                           <div className="grid flex-1 grid-cols-3 gap-4">
                             {featuredGuides.map((g, i) => (
                               <div key={g.to} {...reveal(i)}>
-                                <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-full min-h-[13rem] flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
                                   <div
                                     aria-hidden
                                     className="absolute inset-0 opacity-[0.10] mix-blend-overlay"

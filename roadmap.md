@@ -139,3 +139,4 @@
 - [x] Keep the lined grid texture on the menu guide cards and swap the pricing guide for the preneed guide; verified desktop/mobile
 - [x] Replace the "Jane Doe" example name at the start of the sell-your-plot form with another name
 - [x] Guides menu: drop the panel-wide background grid (cards keep theirs); replace the "Most read guides / All guides" header row with a vertical Vogue side rail reading "Most read" and "All seven guides"; verified desktop/mobile
+- [x] Guides menu: replace the upside-down side label with a proper contents rail — "Also in the series" listing N°00 Planning a Funeral in Texas, N°02 Cemetery Plots for Sale, N°03 What a Plot Costs in Texas, then "All seven guides →"; cards now stretch to fill the panel so the dead space below is gone (panel 297px → 250px); verified desktop/mobile
