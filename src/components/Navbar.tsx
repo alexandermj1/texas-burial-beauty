@@ -1,8 +1,21 @@
-import { useState, useLayoutEffect, useEffect } from "react";
+import { useState, useLayoutEffect, useEffect, useRef } from "react";
 import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+
+type MenuKey = "cemeteries" | "guides";
+
+// Most-read guides, styled like the cards on /guides
+const featuredGuides = [
+  { to: "/what-is-my-cemetery-plot-worth-texas", num: "06", kicker: "The Valuation Edition", title: "What Is My Plot", accent: "Worth?", meta: "Calculator · 6 min", panel: "bg-primary", ink: "text-primary-foreground", flower: plumeriaCluster.url },
+  { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(145_25%_36%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
+  { to: "/cemetery-plot-cost-texas", num: "03", kicker: "The Pricing Edition", title: "What a Plot", accent: "Really Costs", meta: "7 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBranch.url },
+  { to: "/cemetery-transfer-process-texas", num: "05", kicker: "The Transfer Edition", title: "The Transfer", accent: "Process", meta: "17 min read", panel: "bg-[hsl(200_28%_34%)]", ink: "text-[hsl(40_30%_97%)]", flower: plumeriaCluster.url },
+];
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
@@ -25,9 +38,9 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
     closeTimer.current = window.setTimeout(() => setOpenMenu(null), 140);
   };
-  useEffect(() => { setOpenMenu(null); }, [location.pathname]);
   const megaOpen = openMenu !== null;
   const location = useLocation();
+  useEffect(() => { setOpenMenu(null); }, [location.pathname]);
 
   useLayoutEffect(() => {
     setMenuOpen(false);
@@ -53,8 +66,8 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
     { to: "/buy", label: "Buy Property", desc: "Available listings", Icon: ShoppingBag },
     { to: "/sell", label: "Sell Property", desc: "List your plot", Icon: Tag },
     { to: "/cemeteries", label: "Cemeteries", desc: "Find a cemetery near you", Icon: Trees },
-    { to: "/partners", label: "Partners", desc: "Funeral homes & agents", Icon: Handshake },
     { to: "/guides", label: "Guides", desc: "Plain-English help", Icon: BookOpen },
+    { to: "/partners", label: "Partners", desc: "Funeral homes & agents", Icon: Handshake },
     { to: "/property-types", label: "Property Types", desc: "Browse plot categories", Icon: Building2 },
     { to: "/contact", label: "Contact", desc: "Talk to our team", Icon: Mail },
   ];
