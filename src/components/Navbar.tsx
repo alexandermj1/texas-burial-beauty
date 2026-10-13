@@ -150,12 +150,16 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                           </figure>
                         )}
                         <div className="grid grid-cols-2 gap-x-10">
-                          <p className={`col-span-2 mb-1 text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
+                          <p className={`col-span-2 mb-1 text-[10px] uppercase tracking-[0.28em] font-medium opacity-0 transition-opacity duration-500 group-hover:opacity-100 motion-reduce:opacity-100 ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
                             Explore by region
                           </p>
                           {cityLinks.map((c, i) => (
-                            <Link
+                            <div
                               key={c.to}
+                              className="opacity-0 translate-y-1.5 transition-[opacity,transform] duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 motion-reduce:opacity-100 motion-reduce:translate-y-0"
+                              style={{ transitionDelay: `${70 + i * 45}ms` }}
+                            >
+                            <Link
                               to={c.to}
                               className={`group/i flex min-h-20 min-w-0 items-center gap-4 border-b py-4 transition-colors ${dark ? "border-[hsl(var(--gold)/0.25)] text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "border-border text-foreground hover:text-primary"}`}
                             >
@@ -166,6 +170,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                               </span>
                               <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover/i:translate-x-1 motion-reduce:transition-none" />
                             </Link>
+                            </div>
                           ))}
                         </div>
                       </div>
