@@ -231,50 +231,50 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       </div>
                     ) : (
                       <div className="relative container mx-auto px-6 py-5">
-                        {/* Editorial paper texture — the same lined grid as the Guides page cards */}
-                        <div
-                          aria-hidden
-                          className="absolute inset-0 pointer-events-none"
-                          style={{
-                            backgroundImage: dark
-                              ? "linear-gradient(hsl(var(--gold)/0.12) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--gold)/0.12) 1px, transparent 1px)"
-                              : "linear-gradient(hsl(28 25% 30% / 0.10) 1px, transparent 1px), linear-gradient(90deg, hsl(28 25% 30% / 0.10) 1px, transparent 1px)",
-                            backgroundSize: "44px 44px",
-                          }}
-                        />
-                        <div className="relative mb-3 flex items-baseline justify-between">
-                          <p className={`text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>Most read guides</p>
-                          <Link to="/guides" onClick={closeMenu} className={`group/a inline-flex items-center gap-1.5 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "text-foreground/70 hover:text-primary"}`}>
-                            All guides <ArrowRight className="h-4 w-4 transition-transform group-hover/a:translate-x-1" />
-                          </Link>
+                        <div className="relative flex items-stretch gap-5">
+                          {/* Vogue side rail — vertical label so the cards start at the very top */}
+                          <div className="flex w-8 shrink-0 flex-col items-center justify-between py-1">
+                            <span className={`font-display text-[11px] uppercase tracking-[0.34em] [writing-mode:vertical-rl] rotate-180 ${dark ? "text-[hsl(var(--gold))]" : "text-foreground/55"}`}>
+                              Most read
+                            </span>
+                            <span className={`my-3 w-px flex-1 ${dark ? "bg-[hsl(var(--gold)/0.3)]" : "bg-border"}`} />
+                            <Link
+                              to="/guides"
+                              onClick={closeMenu}
+                              className={`font-display italic text-[11px] uppercase tracking-[0.24em] [writing-mode:vertical-rl] rotate-180 transition-opacity hover:underline underline-offset-4 ${
+                                dark ? "text-[hsl(var(--parchment))] opacity-80 hover:opacity-100" : "text-muted-foreground opacity-90 hover:opacity-100"
+                              }`}
+                            >
+                              All seven guides
+                            </Link>
+                          </div>
+                          <div className="grid flex-1 grid-cols-3 gap-4">
+                            {featuredGuides.map((g, i) => (
+                              <div key={g.to} {...reveal(i)}>
+                                <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                  <div
+                                    aria-hidden
+                                    className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
+                                    style={{
+                                      backgroundImage:
+                                        "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                                      backgroundSize: "44px 44px",
+                                    }}
+                                  />
+                                  <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 object-contain opacity-70 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
+                                  <div className="relative flex items-start justify-between">
+                                    <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">{g.kicker}</span>
+                                    <span className="font-display text-3xl leading-none opacity-45">{g.num}</span>
+                                  </div>
+                                  <div className="relative max-w-[68%]">
+                                    <p className="font-display text-[1.45rem] leading-[1.12]">{g.title} <span className="italic">{g.accent}</span></p>
+                                    <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium opacity-90">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
+                                  </div>
+                                </Link>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          {featuredGuides.map((g, i) => (
-                            <div key={g.to} {...reveal(i)}>
-                              <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
-                                <div
-                                  aria-hidden
-                                  className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
-                                  style={{
-                                    backgroundImage:
-                                      "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-                                    backgroundSize: "44px 44px",
-                                  }}
-                                />
-                                <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 object-contain opacity-70 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
-                                <div className="relative flex items-start justify-between">
-                                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">{g.kicker}</span>
-                                  <span className="font-display text-3xl leading-none opacity-45">{g.num}</span>
-                                </div>
-                                <div className="relative max-w-[68%]">
-                                  <p className="font-display text-[1.45rem] leading-[1.12]">{g.title} <span className="italic">{g.accent}</span></p>
-                                  <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium opacity-90">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
-                                </div>
-                              </Link>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
                     )}
                   </div>
                 );
