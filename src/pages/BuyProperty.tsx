@@ -308,27 +308,27 @@ const BuyProperty = () => {
         <img src={pinkBranch.url} alt="" aria-hidden="true" className="hidden md:block absolute left-[3%] bottom-24 w-24 lg:w-28 opacity-50 -rotate-6 pointer-events-none select-none" />
         <div className="relative w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
           <div className="text-center pb-8 sm:pb-10 lg:pb-12">
-            <p className="text-[10px] uppercase font-bold text-accent mb-5">A guide for Texas families</p>
+            <p className="text-[10px] uppercase font-bold text-accent mb-5">Before you call the cemetery, start here</p>
             <h1 className="mx-auto font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
-              Buy a cemetery plot.<br />
-              <span className="italic text-primary">With peace of mind.</span>
+              Why pay the cemetery's price<br />
+              <span className="italic text-primary">for the very same plot?</span>
             </h1>
             <div className="max-w-2xl mx-auto mt-5 sm:mt-6">
               <p className="text-xs text-accent uppercase font-medium">The private resale advantage</p>
               <div className="flex items-center justify-center gap-3 sm:gap-6 mt-4">
-                <p className="max-w-28 sm:max-w-40 text-xs sm:text-sm text-muted-foreground">Buying directly from the cemetery</p>
+                <p className="max-w-28 sm:max-w-40 text-xs sm:text-sm text-muted-foreground">The price the cemetery quotes</p>
                 <svg viewBox="0 0 110 50" fill="none" className="w-16 sm:w-24 h-12 shrink-0 text-primary" aria-hidden="true">
                   <path d="M5 30C22 3 61 3 97 28M97 28L81 27M97 28L91 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div className="text-center">
                   <p className="font-display text-4xl sm:text-7xl italic text-primary leading-none whitespace-nowrap">30–50%</p>
-                  <p className="text-xs sm:text-sm text-primary mt-2">less than cemetery retail</p>
+                  <p className="text-xs sm:text-sm text-primary mt-2">less for the same space</p>
                 </div>
               </div>
               <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                Same cemetery. Less to pay. Savings vary by property — we help you compare the full purchase costs.
+                Many families in Texas are selling spaces they no longer need — often in the very cemeteries you're considering. We find those properties, guide you through every step, and you never pay us a fee.
               </p>
-              <p className="mt-4 text-xs text-primary font-medium">Personal guidance · No concierge fee</p>
+              <p className="mt-4 text-xs text-primary font-medium">Personal guidance · Every step handled · No concierge fee</p>
             </div>
           </div>
           <div className="max-w-5xl mx-auto border-t border-foreground/20 pt-6 sm:pt-8 text-center">
