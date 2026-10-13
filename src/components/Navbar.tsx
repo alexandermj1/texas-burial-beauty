@@ -6,6 +6,7 @@ import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import pinkBlossom from "@/assets/flowers/pink-blossom.png.asset.json";
 
 type MenuKey = "cemeteries" | "guides";
 
@@ -13,7 +14,7 @@ type MenuKey = "cemeteries" | "guides";
 const featuredGuides = [
   { to: "/cemetery-transfer-process-texas", num: "05", kicker: "The Transfer Edition", title: "The Cemetery", accent: "Transfer Process", meta: "8 chapters · 17 min read", panel: "bg-[hsl(200_28%_34%)]", ink: "text-[hsl(40_30%_97%)]", flower: plumeriaCluster.url },
   { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(16_50%_45%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
-  { to: "/cemetery-plot-cost-texas", num: "03", kicker: "The Pricing Edition", title: "What a Plot", accent: "Really Costs", meta: "7 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBranch.url },
+  { to: "/preneed-cemetery-plots-texas", num: "04", kicker: "The Preneed Edition", title: "Preneed Cemetery", accent: "Plots in Texas", meta: "9 chapters · 8 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBlossom.url },
 ];
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
