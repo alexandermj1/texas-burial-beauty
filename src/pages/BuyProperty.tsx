@@ -308,10 +308,10 @@ const BuyProperty = () => {
         <img src={pinkBranch.url} alt="" aria-hidden="true" className="hidden md:block absolute left-[3%] bottom-24 w-24 lg:w-28 opacity-50 -rotate-6 pointer-events-none select-none" />
         <div className="relative w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
           <div className="text-center pb-8 sm:pb-10 lg:pb-12">
-            <p className="text-[10px] uppercase font-bold text-accent mb-5">Before you call the cemetery, start here</p>
+            <p className="text-[10px] uppercase font-bold text-accent mb-5">Texas buyer concierge · No fee</p>
             <h1 className="mx-auto font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
-              Why pay the cemetery's price<br />
-              <span className="italic text-primary">for the very same plot?</span>
+              The plot you want,<br />
+              <span className="italic text-primary">for thousands less.</span>
             </h1>
             <div className="max-w-2xl mx-auto mt-5 sm:mt-6">
               <p className="text-xs text-accent uppercase font-medium">The private resale advantage</p>
@@ -322,11 +322,11 @@ const BuyProperty = () => {
                 </svg>
                 <div className="text-center">
                   <p className="font-display text-4xl sm:text-7xl italic text-primary leading-none whitespace-nowrap">30–50%</p>
-                  <p className="text-xs sm:text-sm text-primary mt-2">less for the same space</p>
+                  <p className="text-xs sm:text-sm text-primary mt-2">less — often thousands</p>
                 </div>
               </div>
               <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                Many families in Texas are selling spaces they no longer need — often in the very cemeteries you're considering. We find those properties, guide you through every step, and you never pay us a fee.
+                Families across Texas are selling spaces they no longer need — often in the cemetery you want. We find them and handle every step.
               </p>
               <p className="mt-4 text-xs text-primary font-medium">Personal guidance · Every step handled · No concierge fee</p>
             </div>
