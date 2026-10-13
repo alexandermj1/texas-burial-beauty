@@ -99,88 +99,32 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                     ? solid || warm ? "text-foreground font-medium" : "text-primary-foreground font-medium"
                     : solid || warm ? "text-foreground/65 hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"
               }`;
+              const key: MenuKey | null = link.to === "/cemeteries" ? "cemeteries" : link.to === "/guides" ? "guides" : null;
 
-              if (link.to !== "/cemeteries") {
+              if (!key) {
                 return (
-                  <Link key={link.to} to={link.to} className={cls}>
+                  <Link key={link.to} to={link.to} className={cls} onMouseEnter={closeMenu}>
                     {link.label}
                   </Link>
                 );
               }
-
+              const isOpen = openMenu === key;
               return (
-                <div
-                  key={link.to}
-                  className="group py-2 -my-2"
-                  onMouseEnter={() => setMegaOpen(true)}
-                  onMouseLeave={() => setMegaOpen(false)}
-                  onFocus={() => setMegaOpen(true)}
-                  onBlur={() => setMegaOpen(false)}
-                >
-                  <Link to={link.to} className={`${cls} inline-flex items-center gap-1.5`}>
+                <div key={link.to} className="py-2 -my-2" onMouseEnter={() => openNow(key)} onFocus={() => openNow(key)}>
+                  <Link to={link.to} aria-expanded={isOpen} className={`${cls} inline-flex items-center gap-1.5`}>
                     {link.label}
-
-                    {/* Inventive indicator: sage ring with a morphing caret */}
                     <span className="relative inline-flex items-center justify-center w-4 h-4">
-                      <span className="absolute inset-0 rounded-full border border-current opacity-25 group-hover:opacity-60 group-hover:scale-110 transition-all duration-300" />
+                      <span className={`absolute inset-0 rounded-full border border-current transition-all duration-300 ${isOpen ? "opacity-60 scale-110" : "opacity-25"}`} />
                       <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 overflow-visible">
-                        <path
-                          d="M2.5 4.5 L6 8 L9.5 4.5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="origin-center transition-transform duration-500 ease-out group-hover:rotate-180 group-hover:translate-y-[-1px]"
-                        />
+                        <path d="M2.5 4.5 L6 8 L9.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+                          className={`origin-center transition-transform duration-500 ease-out ${isOpen ? "rotate-180 -translate-y-px" : ""}`} />
                       </svg>
                     </span>
                   </Link>
-
-                  {/* Full-bleed mega-panel flowing out of the bar */}
-                  <div className="absolute left-0 right-0 top-full z-50 opacity-0 invisible -translate-y-2 scale-[0.985] origin-top blur-[3px] transition-[opacity,transform,filter,visibility] duration-[560ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:scale-100 group-hover:blur-0 focus-within:opacity-100 focus-within:visible focus-within:translate-y-0 focus-within:scale-100 focus-within:blur-0 motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 motion-reduce:scale-100 motion-reduce:blur-0">
-                    <div className={`relative w-full border-y shadow-hover ${dark ? "border-[hsl(var(--gold)/0.25)] bg-[hsl(var(--ink-deep))]" : "border-border bg-background"}`}>
-                      <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
-                        {menuPhoto && (
-                          <figure className="min-w-0">
-                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-40 w-full rounded-md object-cover" />
-                            <figcaption className={`mt-3 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment)/0.8)]" : "text-foreground/70"}`}>
-                              Sparkman-Hillcrest Memorial Park · Dallas
-                            </figcaption>
-                          </figure>
-                        )}
-                        <div className="grid grid-cols-2 gap-x-10">
-                          <p className={`col-span-2 mb-1 text-[10px] uppercase tracking-[0.28em] font-medium opacity-0 transition-opacity duration-500 group-hover:opacity-100 motion-reduce:opacity-100 ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
-                            Explore by region
-                          </p>
-                          {cityLinks.map((c, i) => (
-                            <div
-                              key={c.to}
-                              className="opacity-0 translate-y-1.5 transition-[opacity,transform] duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 motion-reduce:opacity-100 motion-reduce:translate-y-0"
-                              style={{ transitionDelay: `${70 + i * 45}ms` }}
-                            >
-                            <Link
-                              to={c.to}
-                              className={`group/i flex min-h-20 min-w-0 items-center gap-4 border-b py-4 transition-colors ${dark ? "border-[hsl(var(--gold)/0.25)] text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "border-border text-foreground hover:text-primary"}`}
-                            >
-                              <span className={`self-start pt-1 text-xs ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>0{i + 1}</span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block font-display text-2xl leading-tight">{c.label}</span>
-                                <span className={`mt-1 block text-xs ${dark ? "text-[hsl(var(--parchment))]" : "text-muted-foreground"}`}>{c.detail}</span>
-                              </span>
-                              <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover/i:translate-x-1 motion-reduce:transition-none" />
-                            </Link>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               );
-
-
             })}
+
 
             <a
               href="tel:+12142304740"
