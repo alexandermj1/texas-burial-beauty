@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
 import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
 import cryptImg from "@/assets/property-types/mausoleum.png";
@@ -297,24 +301,32 @@ const BuyProperty = () => {
       <Navbar forceScrolled />
 
       {/* Editorial masthead, aligned with every buying step below. */}
-      <header className="pt-20 pb-4 sm:pb-6 bg-background">
-        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
+      <header className="relative overflow-hidden pt-24 md:pt-28 pb-4 sm:pb-6 bg-background">
+        <img src={bananaLeaf.url} alt="" aria-hidden="true" className="hidden md:block absolute -left-60 top-40 w-[28rem] opacity-10 -rotate-12 pointer-events-none select-none" />
+        <img src={palmFan.url} alt="" aria-hidden="true" className="hidden lg:block absolute -right-44 bottom-10 w-[26rem] opacity-10 rotate-6 pointer-events-none select-none" />
+        <img src={hibiscusCoral.url} alt="" aria-hidden="true" className="hidden md:block absolute right-[5%] top-36 w-20 lg:w-24 opacity-85 rotate-6 pointer-events-none select-none" />
+        <img src={pinkBranch.url} alt="" aria-hidden="true" className="hidden md:block absolute left-[3%] bottom-24 w-24 lg:w-28 opacity-50 -rotate-6 pointer-events-none select-none" />
+        <div className="relative w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
           <div className="text-center pb-8 sm:pb-10 lg:pb-12">
+            <p className="text-[10px] uppercase font-bold text-accent mb-5">A guide for Texas families</p>
             <h1 className="mx-auto font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
               Buy a cemetery plot.<br />
               <span className="italic text-primary">With peace of mind.</span>
             </h1>
-            <div className="max-w-2xl mx-auto mt-6 sm:mt-8">
+            <div className="max-w-2xl mx-auto mt-5 sm:mt-6">
               <p className="text-xs text-accent uppercase font-medium">The private resale advantage</p>
               <div className="flex items-center justify-center gap-3 sm:gap-6 mt-4">
                 <p className="max-w-28 sm:max-w-40 text-xs sm:text-sm text-muted-foreground">Buying directly from the cemetery</p>
                 <svg viewBox="0 0 110 50" fill="none" className="w-16 sm:w-24 h-12 shrink-0 text-primary" aria-hidden="true">
                   <path d="M5 30C22 3 61 3 97 28M97 28L81 27M97 28L91 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <p className="font-display text-2xl sm:text-4xl italic text-primary leading-none">Same cemetery.<br />Less to pay.</p>
+                <div className="text-center">
+                  <p className="font-display text-4xl sm:text-7xl italic text-primary leading-none whitespace-nowrap">30–50%</p>
+                  <p className="text-xs sm:text-sm text-primary mt-2">less than cemetery retail</p>
+                </div>
               </div>
-              <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
-                Privately resold plots, niches and crypts can cost meaningfully less than cemetery retail. Your savings depend on the property — we help you compare the full purchase costs.
+              <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+                Same cemetery. Less to pay. Savings vary by property — we help you compare the full purchase costs.
               </p>
               <p className="mt-4 text-xs text-primary font-medium">Personal guidance · No concierge fee</p>
             </div>
