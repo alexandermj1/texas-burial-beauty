@@ -5,7 +5,6 @@ import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import pinkBlossom from "@/assets/flowers/pink-blossom.png.asset.json";
 
 type MenuKey = "cemeteries" | "guides";
