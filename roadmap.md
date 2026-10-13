@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Keep the mobile navigation menu compact with Guides as a single row; verify desktop menu cards remain
 - [x] Give the buy page a consistent wide layout and replace the savings banner with refined editorial design; verified all five buying steps, matching 1536px section widths and mobile presentation
 - [x] Redesign broker value in the sell page’s editorial style, move below available properties, and verify presentation and links
 - [x] Add an on-brand sell-page broker-value section with estimated timelines, document guidance, viewings, financing and industry connections; verify desktop/mobile
