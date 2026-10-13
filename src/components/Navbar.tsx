@@ -2,7 +2,7 @@ import { useState, useLayoutEffect, useEffect } from "react";
 import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import { photoEssayFor } from "@/data/cemeteryPhotos";
+import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
@@ -50,7 +50,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
     { to: "/cemetery-plots-for-sale-austin", label: "Austin", detail: "Central Texas" },
     { to: "/cemetery-plots-for-sale-san-antonio", label: "San Antonio", detail: "South Texas" },
   ];
-  const menuPhoto = photoEssayFor("restland-memorial-park")?.photos[0];
+  const menuPhoto = SPARKMAN_HERO;
 
 
   const solid = scrolled || menuOpen || megaOpen;
@@ -143,13 +143,16 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
                         {menuPhoto && (
                           <figure className="min-w-0">
-                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-32 w-full rounded-lg object-cover" />
-                            <figcaption className={`mt-2 text-xs ${dark ? "text-[hsl(var(--parchment))]" : "text-muted-foreground"}`}>
-                              Restland Memorial Park · Dallas
+                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-40 w-full rounded-md object-cover" />
+                            <figcaption className={`mt-3 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment)/0.8)]" : "text-foreground/70"}`}>
+                              Sparkman-Hillcrest Memorial Park · Dallas
                             </figcaption>
                           </figure>
                         )}
-                        <div className="grid grid-cols-2 gap-x-8">
+                        <div className="grid grid-cols-2 gap-x-10">
+                          <p className={`col-span-2 mb-1 text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
+                            Explore by region
+                          </p>
                           {cityLinks.map((c, i) => (
                             <Link
                               key={c.to}
