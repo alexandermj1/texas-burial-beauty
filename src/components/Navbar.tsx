@@ -12,7 +12,7 @@ type MenuKey = "cemeteries" | "guides";
 // Most-read guides, styled like the cards on /guides
 const featuredGuides = [
   { to: "/what-is-my-cemetery-plot-worth-texas", num: "06", kicker: "The Valuation Edition", title: "What Is My Plot", accent: "Worth?", meta: "Calculator · 6 min", panel: "bg-primary", ink: "text-primary-foreground", flower: plumeriaCluster.url },
-  { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(145_25%_36%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
+  { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(16_50%_58%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
   { to: "/cemetery-plot-cost-texas", num: "03", kicker: "The Pricing Edition", title: "What a Plot", accent: "Really Costs", meta: "7 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBranch.url },
   { to: "/cemetery-transfer-process-texas", num: "05", kicker: "The Transfer Edition", title: "The Transfer", accent: "Process", meta: "17 min read", panel: "bg-[hsl(200_28%_34%)]", ink: "text-[hsl(40_30%_97%)]", flower: plumeriaCluster.url },
 ];
@@ -231,8 +231,19 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                         </div>
                       </div>
                     ) : (
-                      <div className="container mx-auto px-6 py-5">
-                        <div className="mb-3 flex items-baseline justify-between">
+                      <div className="relative container mx-auto px-6 py-5">
+                        {/* Editorial paper texture — same soft dotted grid as the Guides page */}
+                        <div
+                          aria-hidden
+                          className="absolute inset-0 pointer-events-none opacity-40"
+                          style={{
+                            backgroundImage: dark
+                              ? "radial-gradient(hsl(var(--gold)/0.14) 1px, transparent 1px)"
+                              : "radial-gradient(hsl(28 20% 70% / 0.35) 1px, transparent 1px)",
+                            backgroundSize: "22px 22px",
+                          }}
+                        />
+                        <div className="relative mb-3 flex items-baseline justify-between">
                           <p className={`text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>Most read guides</p>
                           <Link to="/guides" onClick={closeMenu} className={`group/a inline-flex items-center gap-1.5 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "text-foreground/70 hover:text-primary"}`}>
                             All guides <ArrowRight className="h-4 w-4 transition-transform group-hover/a:translate-x-1" />
@@ -331,6 +342,25 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                             }`}
                           >
                             {c.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    {link.to === "/guides" && (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {featuredGuides.map(g => (
+                          <Link
+                            key={g.to}
+                            to={g.to}
+                            onClick={() => setMenuOpen(false)}
+                            className={`group relative flex min-h-28 flex-col justify-between overflow-hidden rounded-xl p-3 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
+                          >
+                            <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90" />
+                            <div className="relative flex items-start justify-between gap-1">
+                              <span className="text-[9px] uppercase tracking-[0.16em] opacity-80">{g.kicker}</span>
+                              <span className="font-display text-base leading-none opacity-40">{g.num}</span>
+                            </div>
+                            <p className="relative max-w-[80%] font-display text-sm leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
                           </Link>
                         ))}
                       </div>
