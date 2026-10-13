@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useEffect, useRef } from "react";
-import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, BookOpen, Flower2 } from "lucide-react";
+import { Menu, X, Building2, Trees, ShoppingBag, Tag, Handshake, Mail, Phone, ArrowRight, ArrowUpRight, BookOpen, Flower2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
@@ -98,6 +98,8 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
   return (
     <>
       <nav
+        onMouseLeave={scheduleClose}
+        onMouseEnter={() => { if (closeTimer.current) window.clearTimeout(closeTimer.current); }}
         className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,backdrop-filter,box-shadow,border-color] duration-300 ${
           dark
             ? dkBar
@@ -185,6 +187,81 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+        </div>
+        {/* Shared mega-panel — Cemeteries and Guides slide between each other */}
+        <div
+          aria-hidden={!megaOpen}
+          className={`hidden md:block absolute left-0 right-0 top-full z-50 origin-top transition-[opacity,transform,filter,visibility] duration-[520ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${megaOpen ? "opacity-100 visible translate-y-0 scale-100 blur-0" : "opacity-0 invisible -translate-y-2 scale-[0.985] blur-[3px] pointer-events-none"}`}
+        >
+          <div className={`relative w-full overflow-hidden border-y shadow-hover ${dark ? "border-[hsl(var(--gold)/0.25)] bg-[hsl(var(--ink-deep))]" : "border-border bg-background"}`}>
+            <div className="grid">
+              {(["cemeteries", "guides"] as MenuKey[]).map((k) => {
+                const shown = (openMenu ?? lastMenu) === k;
+                const offset = shown ? "translate-x-0 opacity-100" : k === "cemeteries" ? "-translate-x-12 opacity-0 pointer-events-none" : "translate-x-12 opacity-0 pointer-events-none";
+                const reveal = (i: number) => ({
+                  className: `transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${shown && megaOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1.5"}`,
+                  style: { transitionDelay: shown && megaOpen ? `${90 + i * 50}ms` : "0ms" },
+                });
+                return (
+                  <div key={k} inert={!shown ? true : undefined} className={`[grid-area:1/1] transition-[opacity,transform] duration-[480ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${offset}`}>
+                    {k === "cemeteries" ? (
+                      <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
+                        {menuPhoto && (
+                          <figure className="min-w-0">
+                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-40 w-full rounded-md object-cover" />
+                            <figcaption className={`mt-3 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment)/0.8)]" : "text-foreground/70"}`}>
+                              Sparkman-Hillcrest Memorial Park · Dallas
+                            </figcaption>
+                          </figure>
+                        )}
+                        <div className="grid grid-cols-2 gap-x-10">
+                          <p className={`col-span-2 mb-1 text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>Explore by region</p>
+                          {cityLinks.map((c, i) => (
+                            <div key={c.to} {...reveal(i)}>
+                              <Link to={c.to} onClick={closeMenu} className={`group/i flex min-h-20 min-w-0 items-center gap-4 border-b py-4 transition-colors ${dark ? "border-[hsl(var(--gold)/0.25)] text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "border-border text-foreground hover:text-primary"}`}>
+                                <span className={`self-start pt-1 text-xs ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>0{i + 1}</span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-display text-2xl leading-tight">{c.label}</span>
+                                  <span className={`mt-1 block text-xs ${dark ? "text-[hsl(var(--parchment))]" : "text-muted-foreground"}`}>{c.detail}</span>
+                                </span>
+                                <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover/i:translate-x-1" />
+                              </Link>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="container mx-auto px-6 py-5">
+                        <div className="mb-3 flex items-baseline justify-between">
+                          <p className={`text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>Most read guides</p>
+                          <Link to="/guides" onClick={closeMenu} className={`group/a inline-flex items-center gap-1.5 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment))] hover:text-[hsl(var(--gold))]" : "text-foreground/70 hover:text-primary"}`}>
+                            All guides <ArrowRight className="h-4 w-4 transition-transform group-hover/a:translate-x-1" />
+                          </Link>
+                        </div>
+                        <div className="grid grid-cols-4 gap-4">
+                          {featuredGuides.map((g, i) => (
+                            <div key={g.to} {...reveal(i)}>
+                              <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-44 flex-col justify-between overflow-hidden rounded-2xl p-5 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 object-contain opacity-90 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
+                                <div className="relative flex items-start justify-between">
+                                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-80">{g.kicker}</span>
+                                  <span className="font-display text-3xl leading-none opacity-40">{g.num}</span>
+                                </div>
+                                <div className="relative max-w-[75%]">
+                                  <p className="font-display text-xl leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
+                                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs opacity-80">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
+                                </div>
+                              </Link>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </nav>
 
