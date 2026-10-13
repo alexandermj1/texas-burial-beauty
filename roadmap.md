@@ -138,3 +138,4 @@
 ## Menu guide cards and sell-form example name
 - [x] Keep the lined grid texture on the menu guide cards and swap the pricing guide for the preneed guide; verified desktop/mobile
 - [x] Replace the "Jane Doe" example name at the start of the sell-your-plot form with another name
+- [x] Guides menu: drop the panel-wide background grid (cards keep theirs); replace the "Most read guides / All guides" header row with a vertical Vogue side rail reading "Most read" and "All seven guides"; verified desktop/mobile
