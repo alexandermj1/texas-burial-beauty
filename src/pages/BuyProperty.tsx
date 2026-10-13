@@ -299,20 +299,19 @@ const BuyProperty = () => {
       {/* Editorial masthead, aligned with every buying step below. */}
       <header className="pt-20 pb-4 sm:pb-6 bg-background">
         <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-end pb-8 sm:pb-10 lg:pb-12">
-            <h1 className="lg:col-span-8 font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
+          <div className="text-center pb-8 sm:pb-10 lg:pb-12">
+            <h1 className="mx-auto font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
               Buy a cemetery plot.<br />
               <span className="italic text-primary">With peace of mind.</span>
             </h1>
-            <div className="lg:col-span-4 lg:border-l border-foreground/20 lg:pl-8">
+            <div className="max-w-2xl mx-auto mt-6 sm:mt-8">
               <p className="text-xs text-accent uppercase font-medium">The private resale advantage</p>
-              <div className="relative mt-4 pl-12">
-                <svg viewBox="0 0 40 116" fill="none" className="absolute left-0 top-0 w-10 h-28 text-primary" aria-hidden="true">
-                  <path d="M30 8C5 12 6 33 17 49C31 69 30 86 16 103M16 103L14 87M16 103L31 97" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <div className="flex items-center justify-center gap-3 sm:gap-6 mt-4">
+                <p className="max-w-28 sm:max-w-40 text-xs sm:text-sm text-muted-foreground">Buying directly from the cemetery</p>
+                <svg viewBox="0 0 110 50" fill="none" className="w-16 sm:w-24 h-12 shrink-0 text-primary" aria-hidden="true">
+                  <path d="M5 30C22 3 61 3 97 28M97 28L81 27M97 28L91 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <p className="text-sm text-muted-foreground">Buying directly from the cemetery</p>
-                <span className="block w-full h-px bg-foreground/20 my-3" />
-                <p className="font-display text-3xl sm:text-4xl italic text-primary leading-none">Same cemetery.<br />Less to pay.</p>
+                <p className="font-display text-2xl sm:text-4xl italic text-primary leading-none">Same cemetery.<br />Less to pay.</p>
               </div>
               <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
                 Privately resold plots, niches and crypts can cost meaningfully less than cemetery retail. Your savings depend on the property — we help you compare the full purchase costs.
@@ -320,22 +319,22 @@ const BuyProperty = () => {
               <p className="mt-4 text-xs text-primary font-medium">Personal guidance · No concierge fee</p>
             </div>
           </div>
-          <div className="border-t border-foreground/20 pt-6 sm:pt-8">
+          <div className="max-w-5xl mx-auto border-t border-foreground/20 pt-6 sm:pt-8 text-center">
             <p className="text-xs text-accent font-medium mb-3">Find your property / {String(step).padStart(2, "0")} of 05</p>
-            <h2 className="font-display text-3xl sm:text-4xl text-foreground leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground leading-tight">
               {titles[step]}
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground mt-2">{subtitles[step]}</p>
           </div>
 
-          <div className="flex items-center gap-2 mt-5">
+          <div className="max-w-5xl mx-auto flex items-center gap-2 mt-5">
             {steps.map(s => (
               <Button
                 variant="ghost"
                 key={s.num}
                 onClick={() => { if (s.num < step) setStep(s.num as Step); }}
                 disabled={s.num > step}
-                className="group h-auto min-w-0 flex-1 flex flex-col items-start gap-1.5 p-0 rounded-none hover:bg-transparent"
+                className="group h-auto min-w-0 flex-1 flex flex-col items-center gap-1.5 p-0 rounded-none hover:bg-transparent"
                 aria-label={`Step ${s.num}: ${s.label}`}
               >
                 <span className={`h-[3px] w-full rounded-full transition-all ${s.num <= step ? "bg-primary" : "bg-muted"}`} />
@@ -349,7 +348,7 @@ const BuyProperty = () => {
       </header>
 
       <main className="flex-1 min-h-0">
-        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-4 sm:py-6">
+        <div className="w-full max-w-5xl mx-auto px-6 lg:px-0 pt-4 sm:pt-6 pb-10 sm:pb-14">
           <AnimatePresence mode="wait">
             {/* STEP 1 — Type */}
             {step === 1 && (
@@ -461,7 +460,7 @@ const BuyProperty = () => {
                 <p className="mb-5 text-sm text-muted-foreground leading-relaxed">
                   Private resale offers meaningful savings over buying directly from the cemetery. We’ll help you compare the available options.
                 </p>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {budgets.map(b => (
                     <button
                       key={b.id}
@@ -703,13 +702,13 @@ const BuyProperty = () => {
       {/* Buying editorial — shares the masthead's width and typographic hierarchy. */}
       <section className="border-t border-foreground/20 bg-background">
         <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-12 sm:py-16">
-          <p className="text-xs text-accent font-medium uppercase border-b border-foreground/20 pb-3">The buying perspective / Texas</p>
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-end py-8 sm:py-10">
-            <h2 className="lg:col-span-8 font-display text-4xl sm:text-5xl lg:text-6xl text-foreground leading-none">
+          <p className="text-center text-xs text-accent font-medium uppercase border-b border-foreground/20 pb-3">The buying perspective / Texas</p>
+          <div className="text-center py-8 sm:py-10">
+            <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-foreground leading-none">
               A place that feels right.<br />
               <span className="italic text-primary">A price that makes sense.</span>
             </h2>
-            <p className="lg:col-span-4 lg:border-l border-foreground/20 lg:pl-8 text-base text-muted-foreground leading-relaxed">
+            <p className="max-w-2xl mx-auto mt-5 text-base text-muted-foreground leading-relaxed">
               Burial plots, cremation niches, crypts and family estates across Dallas–Fort Worth, Houston, Austin, San Antonio and beyond. Considered choices, without navigating the resale process alone.
             </p>
           </div>
