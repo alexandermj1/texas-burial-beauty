@@ -346,20 +346,21 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       </div>
                     )}
                     {link.to === "/guides" && (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="mt-2 flex flex-col gap-2">
                         {featuredGuides.map(g => (
                           <Link
                             key={g.to}
                             to={g.to}
                             onClick={() => setMenuOpen(false)}
-                            className={`group relative flex min-h-28 flex-col justify-between overflow-hidden rounded-xl p-3 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
+                            className={`group relative flex min-h-24 items-end justify-between overflow-hidden rounded-xl p-4 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
                           >
-                            <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90" />
-                            <div className="relative flex items-start justify-between gap-1">
-                              <span className="text-[9px] uppercase tracking-[0.16em] opacity-80">{g.kicker}</span>
-                              <span className="font-display text-base leading-none opacity-40">{g.num}</span>
-                            </div>
-                            <p className="relative max-w-[80%] font-display text-sm leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
+                            <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 object-contain opacity-70" />
+                            <span className="relative">
+                              <span className="block text-[9px] uppercase tracking-[0.18em] opacity-90">{g.kicker} · N°{g.num}</span>
+                              <span className="mt-1.5 block max-w-[80%] font-display text-lg leading-tight">{g.title} <span className="italic">{g.accent}</span></span>
+                              <span className="mt-1 block text-[11px] font-medium opacity-90">{g.meta}</span>
+                            </span>
+                            <ArrowUpRight className="relative h-4 w-4 shrink-0 opacity-80" />
                           </Link>
                         ))}
                       </div>
