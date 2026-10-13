@@ -16,6 +16,13 @@ const featuredGuides = [
   { to: "/preneed-cemetery-plots-texas", num: "04", kicker: "The Preneed Edition", title: "Preneed Cemetery", accent: "Plots in Texas", meta: "9 chapters · 8 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBlossom.url },
 ];
 
+// The rest of the series, listed in the menu's contents rail
+const otherGuides = [
+  { to: "/guides/planning-a-funeral-in-texas", num: "00", title: "Planning a Funeral in Texas" },
+  { to: "/cemetery-plots-for-sale-texas", num: "02", title: "Cemetery Plots for Sale" },
+  { to: "/cemetery-plot-cost-texas", num: "03", title: "What a Plot Costs in Texas" },
+];
+
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
   const computeScrolled = () =>
     forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
