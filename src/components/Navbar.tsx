@@ -143,13 +143,16 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
                         {menuPhoto && (
                           <figure className="min-w-0">
-                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-32 w-full rounded-lg object-cover" />
-                            <figcaption className={`mt-2 text-xs ${dark ? "text-[hsl(var(--parchment))]" : "text-muted-foreground"}`}>
-                              Restland Memorial Park · Dallas
+                            <img src={menuPhoto.src} alt={menuPhoto.alt} loading="lazy" className="h-40 w-full rounded-md object-cover" />
+                            <figcaption className={`mt-3 font-display text-sm italic ${dark ? "text-[hsl(var(--parchment)/0.8)]" : "text-foreground/70"}`}>
+                              Sparkman-Hillcrest Memorial Park · Dallas
                             </figcaption>
                           </figure>
                         )}
-                        <div className="grid grid-cols-2 gap-x-8">
+                        <div className="grid grid-cols-2 gap-x-10">
+                          <p className={`col-span-2 mb-1 text-[10px] uppercase tracking-[0.28em] font-medium ${dark ? "text-[hsl(var(--gold))]" : "text-muted-foreground"}`}>
+                            Explore by region
+                          </p>
                           {cityLinks.map((c, i) => (
                             <Link
                               key={c.to}
