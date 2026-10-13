@@ -275,6 +275,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                             ))}
                           </div>
                         </div>
+                      </div>
                     )}
                   </div>
                 );
