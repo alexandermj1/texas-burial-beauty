@@ -360,7 +360,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                               <span className="text-[9px] uppercase tracking-[0.16em] opacity-80">{g.kicker}</span>
                               <span className="font-display text-base leading-none opacity-40">{g.num}</span>
                             </div>
-                            <p className="relative font-display text-sm leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
+                            <p className="relative max-w-[80%] font-display text-sm leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
                           </Link>
                         ))}
                       </div>
