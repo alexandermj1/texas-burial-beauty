@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
 import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
@@ -297,23 +297,25 @@ const BuyProperty = () => {
       <Navbar forceScrolled />
 
       {/* Editorial masthead, aligned with every buying step below. */}
-      <header className="pt-24 sm:pt-24 pb-4 sm:pb-6 bg-background">
+      <header className="pt-20 pb-4 sm:pb-6 bg-background">
         <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
-          <div className="flex items-center justify-between gap-4 border-y border-foreground/20 py-3">
-            <p className="text-xs text-accent font-medium uppercase">Texas Cemetery Brokers · Buying</p>
-            <Button asChild variant="link" className="h-auto p-0 text-xs text-foreground shrink-0">
-              <Link to="/cemeteries"><List className="w-3 h-3" /> Browse cemeteries</Link>
-            </Button>
-          </div>
-          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-end py-8 sm:py-10 lg:py-12">
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-end pb-8 sm:pb-10 lg:pb-12">
             <h1 className="lg:col-span-8 font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
               Buy a cemetery plot.<br />
               <span className="italic text-primary">With peace of mind.</span>
             </h1>
             <div className="lg:col-span-4 lg:border-l border-foreground/20 lg:pl-8">
-              <p className="font-display text-xl sm:text-2xl text-foreground leading-snug">The right place. A considered choice.</p>
-              <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-                The same cemeteries. A different way to buy. Privately resold plots, niches and crypts offer meaningful savings over buying directly from the cemetery — with personal guidance from first choice to final transfer.
+              <p className="text-xs text-accent uppercase font-medium">The private resale advantage</p>
+              <div className="relative mt-4 pl-12">
+                <svg viewBox="0 0 40 116" fill="none" className="absolute left-0 top-0 w-10 h-28 text-primary" aria-hidden="true">
+                  <path d="M30 8C5 12 6 33 17 49C31 69 30 86 16 103M16 103L14 87M16 103L31 97" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="text-sm text-muted-foreground">Buying directly from the cemetery</p>
+                <span className="block w-full h-px bg-foreground/20 my-3" />
+                <p className="font-display text-3xl sm:text-4xl italic text-primary leading-none">Same cemetery.<br />Less to pay.</p>
+              </div>
+              <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
+                Privately resold plots, niches and crypts can cost meaningfully less than cemetery retail. Your savings depend on the property — we help you compare the full purchase costs.
               </p>
               <p className="mt-4 text-xs text-primary font-medium">Personal guidance · No concierge fee</p>
             </div>
