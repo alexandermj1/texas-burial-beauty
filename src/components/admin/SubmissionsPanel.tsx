@@ -2266,10 +2266,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   )}
 
                   {(selected.message || selected.details) && (
-                    <details className="text-xs border-b border-border/60 pb-3">
-                      <summary className="cursor-pointer font-medium text-foreground">Original buyer request</summary>
-                      <p className="mt-2 whitespace-pre-wrap leading-relaxed text-muted-foreground">{selected.message || selected.details}</p>
-                    </details>
+                    <div className="text-xs border-y border-border/60 py-3 px-3.5 bg-card/60">
+                      <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-1.5">What they wrote</p>
+                      <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">{selected.message || selected.details}</p>
+                    </div>
                   )}
 
                   {/* Plot matches we can offer today */}
