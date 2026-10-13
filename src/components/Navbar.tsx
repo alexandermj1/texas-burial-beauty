@@ -203,7 +203,7 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                   style: { transitionDelay: shown && megaOpen ? `${90 + i * 50}ms` : "0ms" },
                 });
                 return (
-                  <div key={k} inert={!shown ? true : undefined} className={`[grid-area:1/1] transition-[opacity,transform] duration-[480ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${offset}`}>
+                  <div key={k} {...(!shown ? { inert: "" } : {})} className={`[grid-area:1/1] transition-[opacity,transform] duration-[480ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${offset}`}>
                     {k === "cemeteries" ? (
                       <div className="container mx-auto grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] items-center gap-8 px-6 py-5">
                         {menuPhoto && (
