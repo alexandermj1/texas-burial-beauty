@@ -5,7 +5,7 @@ import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import { SPARKMAN_HERO } from "@/data/sparkmanPhotos";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
+import pinkBlossom from "@/assets/flowers/pink-blossom.png.asset.json";
 
 type MenuKey = "cemeteries" | "guides";
 
@@ -13,7 +13,7 @@ type MenuKey = "cemeteries" | "guides";
 const featuredGuides = [
   { to: "/cemetery-transfer-process-texas", num: "05", kicker: "The Transfer Edition", title: "The Cemetery", accent: "Transfer Process", meta: "8 chapters · 17 min read", panel: "bg-[hsl(200_28%_34%)]", ink: "text-[hsl(40_30%_97%)]", flower: plumeriaCluster.url },
   { to: "/sell-cemetery-plot-texas", num: "01", kicker: "The Seller's Edition", title: "How to Sell a", accent: "Cemetery Plot", meta: "9 min read", panel: "bg-[hsl(16_50%_45%)]", ink: "text-[hsl(40_30%_97%)]", flower: hibiscusCoral.url },
-  { to: "/cemetery-plot-cost-texas", num: "03", kicker: "The Pricing Edition", title: "What a Plot", accent: "Really Costs", meta: "7 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBranch.url },
+  { to: "/preneed-cemetery-plots-texas", num: "04", kicker: "The Preneed Edition", title: "Preneed Cemetery", accent: "Plots in Texas", meta: "9 chapters · 8 min read", panel: "bg-[hsl(28_22%_38%)]", ink: "text-[hsl(40_30%_97%)]", flower: pinkBlossom.url },
 ];
 
 const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceScrolled?: boolean; dark?: boolean; warm?: boolean }) => {
@@ -231,15 +231,15 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                       </div>
                     ) : (
                       <div className="relative container mx-auto px-6 py-5">
-                        {/* Editorial paper texture — same soft dotted grid as the Guides page */}
+                        {/* Editorial paper texture — the same lined grid as the Guides page cards */}
                         <div
                           aria-hidden
-                          className="absolute inset-0 pointer-events-none opacity-40"
+                          className="absolute inset-0 pointer-events-none"
                           style={{
                             backgroundImage: dark
-                              ? "radial-gradient(hsl(var(--gold)/0.14) 1px, transparent 1px)"
-                              : "radial-gradient(hsl(28 20% 70% / 0.35) 1px, transparent 1px)",
-                            backgroundSize: "22px 22px",
+                              ? "linear-gradient(hsl(var(--gold)/0.12) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--gold)/0.12) 1px, transparent 1px)"
+                              : "linear-gradient(hsl(28 25% 30% / 0.10) 1px, transparent 1px), linear-gradient(90deg, hsl(28 25% 30% / 0.10) 1px, transparent 1px)",
+                            backgroundSize: "44px 44px",
                           }}
                         />
                         <div className="relative mb-3 flex items-baseline justify-between">
@@ -252,6 +252,15 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                           {featuredGuides.map((g, i) => (
                             <div key={g.to} {...reveal(i)}>
                               <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                <div
+                                  aria-hidden
+                                  className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
+                                  style={{
+                                    backgroundImage:
+                                      "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                                    backgroundSize: "44px 44px",
+                                  }}
+                                />
                                 <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 object-contain opacity-70 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
                                 <div className="relative flex items-start justify-between">
                                   <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">{g.kicker}</span>
@@ -354,6 +363,15 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                             onClick={() => setMenuOpen(false)}
                             className={`group relative flex min-h-24 items-end justify-between overflow-hidden rounded-xl p-4 ${g.panel} ${g.ink} active:scale-[0.98] transition-transform`}
                           >
+                            <div
+                              aria-hidden
+                              className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
+                              style={{
+                                backgroundImage:
+                                  "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                                backgroundSize: "34px 34px",
+                              }}
+                            />
                             <img src={g.flower} alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 object-contain opacity-70" />
                             <span className="relative">
                               <span className="block text-[9px] uppercase tracking-[0.18em] opacity-90">{g.kicker} · N°{g.num}</span>

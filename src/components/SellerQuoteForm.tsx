@@ -259,7 +259,7 @@ const SellerQuoteForm = ({
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Jane Doe"
+            placeholder="Maria Alvarez"
             maxLength={100}
             className="w-full bg-transparent border-0 border-b border-foreground/25 focus:border-primary focus:ring-0 focus:outline-none font-display text-3xl md:text-5xl text-foreground placeholder:text-foreground/25 placeholder:italic py-3"
           />
@@ -718,7 +718,7 @@ const SellerQuoteForm = ({
                       <div className="grid sm:grid-cols-2 gap-5">
                         <div>
                           <label className={labelCls}>Full name</label>
-                          <input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Jane Doe" maxLength={100} />
+                          <input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Maria Alvarez" maxLength={100} />
                         </div>
                         <div>
                           <label className={labelCls}>Email</label>
