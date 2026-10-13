@@ -137,4 +137,4 @@
 
 ## Menu guide cards and sell-form example name
 - [x] Keep the lined grid texture on the menu guide cards and swap the pricing guide for the preneed guide; verified desktop/mobile
-- [ ] Replace the "Jane Doe" example name at the start of the sell-your-plot form with another name
+- [x] Replace the "Jane Doe" example name at the start of the sell-your-plot form with another name
