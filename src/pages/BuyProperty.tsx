@@ -321,7 +321,7 @@ const BuyProperty = () => {
                   <path d="M5 30C22 3 61 3 97 28M97 28L81 27M97 28L91 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div className="text-center">
-                  <p className="font-display text-5xl sm:text-7xl italic text-primary leading-none">30–50%</p>
+                  <p className="font-display text-4xl sm:text-7xl italic text-primary leading-none whitespace-nowrap">30–50%</p>
                   <p className="text-xs sm:text-sm text-primary mt-2">less than cemetery retail</p>
                 </div>
               </div>
