@@ -9,7 +9,24 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
     forceScrolled || (typeof window !== "undefined" && window.scrollY > 40);
   const [scrolled, setScrolled] = useState(computeScrolled);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [megaOpen, setMegaOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<MenuKey | null>(null);
+  const [lastMenu, setLastMenu] = useState<MenuKey>("cemeteries");
+  const closeTimer = useRef<number | null>(null);
+  const openNow = (k: MenuKey) => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    setOpenMenu(k);
+    setLastMenu(k);
+  };
+  const closeMenu = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    setOpenMenu(null);
+  };
+  const scheduleClose = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setOpenMenu(null), 140);
+  };
+  useEffect(() => { setOpenMenu(null); }, [location.pathname]);
+  const megaOpen = openMenu !== null;
   const location = useLocation();
 
   useLayoutEffect(() => {
