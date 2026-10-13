@@ -253,6 +253,15 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                           {featuredGuides.map((g, i) => (
                             <div key={g.to} {...reveal(i)}>
                               <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                <div
+                                  aria-hidden
+                                  className="absolute inset-0 opacity-[0.10] mix-blend-overlay"
+                                  style={{
+                                    backgroundImage:
+                                      "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+                                    backgroundSize: "44px 44px",
+                                  }}
+                                />
                                 <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 object-contain opacity-70 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
                                 <div className="relative flex items-start justify-between">
                                   <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">{g.kicker}</span>
