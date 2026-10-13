@@ -248,18 +248,18 @@ const Navbar = ({ forceScrolled = false, dark = false, warm = false }: { forceSc
                             All guides <ArrowRight className="h-4 w-4 transition-transform group-hover/a:translate-x-1" />
                           </Link>
                         </div>
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                           {featuredGuides.map((g, i) => (
                             <div key={g.to} {...reveal(i)}>
-                              <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-44 flex-col justify-between overflow-hidden rounded-2xl p-5 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
-                                <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 object-contain opacity-90 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
+                              <Link to={g.to} onClick={closeMenu} className={`group/g relative flex h-52 flex-col justify-between overflow-hidden rounded-2xl p-6 ${g.panel} ${g.ink} transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1`}>
+                                <img src={g.flower} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 object-contain opacity-70 transition-transform duration-700 ease-out group-hover/g:scale-110 group-hover/g:-rotate-6" />
                                 <div className="relative flex items-start justify-between">
-                                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-80">{g.kicker}</span>
-                                  <span className="font-display text-3xl leading-none opacity-40">{g.num}</span>
+                                  <span className="text-[10px] uppercase tracking-[0.22em] opacity-90">{g.kicker}</span>
+                                  <span className="font-display text-3xl leading-none opacity-45">{g.num}</span>
                                 </div>
-                                <div className="relative max-w-[75%]">
-                                  <p className="font-display text-xl leading-tight">{g.title} <span className="italic">{g.accent}</span></p>
-                                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs opacity-80">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
+                                <div className="relative max-w-[68%]">
+                                  <p className="font-display text-[1.45rem] leading-[1.12]">{g.title} <span className="italic">{g.accent}</span></p>
+                                  <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium opacity-90">{g.meta} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/g:translate-x-0.5 group-hover/g:-translate-y-0.5" /></p>
                                 </div>
                               </Link>
                             </div>
