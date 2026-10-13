@@ -297,7 +297,7 @@ const BuyProperty = () => {
       <Navbar forceScrolled />
 
       {/* Editorial masthead, aligned with every buying step below. */}
-      <header className="pt-28 sm:pt-32 pb-4 sm:pb-6 bg-background">
+      <header className="pt-24 sm:pt-24 pb-4 sm:pb-6 bg-background">
         <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
           <div className="flex items-center justify-between gap-4 border-y border-foreground/20 py-3">
             <p className="text-xs text-accent font-medium uppercase">Texas Cemetery Brokers · Buying</p>
@@ -313,7 +313,7 @@ const BuyProperty = () => {
             <div className="lg:col-span-4 lg:border-l border-foreground/20 lg:pl-8">
               <p className="font-display text-xl sm:text-2xl text-foreground leading-snug">The right place. A considered choice.</p>
               <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-                Privately owned plots, niches and crypts across Texas, at meaningful savings over cemetery prices. We help you choose, view the property and handle the transfer.
+                The same cemeteries. A different way to buy. Privately resold plots, niches and crypts offer meaningful savings over buying directly from the cemetery — with personal guidance from first choice to final transfer.
               </p>
               <p className="mt-4 text-xs text-primary font-medium">Personal guidance · No concierge fee</p>
             </div>
@@ -698,34 +698,49 @@ const BuyProperty = () => {
         </div>
       </main>
 
-      {/* Slim SEO section — below the form so the wizard stays clean */}
-      <section className="border-t border-border bg-muted/30">
-        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-10 sm:py-14">
-          <h2 className="font-display text-3xl sm:text-4xl text-foreground leading-tight mb-8">
-            Burial plots for sale across Texas — at private resale prices
-          </h2>
-          <div className="grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 lg:gap-16 items-start">
-            <div className="space-y-3 text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-3xl">
-              <p>
-                Texas Cemetery Brokers helps families buy cemetery plots, cremation niches, mausoleum crypts and
-                family estates throughout Dallas–Fort Worth, Houston, Austin, San Antonio and the rest of Texas.
-                Because we work the private resale market rather than selling for the cemeteries themselves, the
-                properties we place can cost meaningfully less than a comparable space bought directly from the cemetery.
-              </p>
-              <p>
-                Tell us what you're looking for above — at-need, within six months, or pre-need — and a licensed broker
-                will send you a shortlist that matches your budget, usually within 24 hours. When you're ready, we can
-                also meet you at the cemetery and walk the sections with you in person before you commit. The concierge
-                is free and there's no obligation.
-              </p>
-            </div>
-            <figure className="m-0">
-              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover rounded-lg" />
-              <figcaption className="mt-2 text-xs text-muted-foreground leading-snug">A member of our team, ready to walk the grounds with you in person.</figcaption>
+      {/* Buying editorial — shares the masthead's width and typographic hierarchy. */}
+      <section className="border-t border-foreground/20 bg-background">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-12 sm:py-16">
+          <p className="text-xs text-accent font-medium uppercase border-b border-foreground/20 pb-3">The buying perspective / Texas</p>
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-end py-8 sm:py-10">
+            <h2 className="lg:col-span-8 font-display text-4xl sm:text-5xl lg:text-6xl text-foreground leading-none">
+              A place that feels right.<br />
+              <span className="italic text-primary">A price that makes sense.</span>
+            </h2>
+            <p className="lg:col-span-4 lg:border-l border-foreground/20 lg:pl-8 text-base text-muted-foreground leading-relaxed">
+              Burial plots, cremation niches, crypts and family estates across Dallas–Fort Worth, Houston, Austin, San Antonio and beyond. Considered choices, without navigating the resale process alone.
+            </p>
+          </div>
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 border-t border-foreground/20 pt-8 sm:pt-10">
+            <figure className="m-0 lg:col-span-5">
+              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member walking the cemetery grounds" className="w-full aspect-[4/3] object-cover rounded-lg" />
+              <figcaption className="mt-3 text-xs text-muted-foreground leading-relaxed">Personal guidance, on the grounds and throughout the transfer.</figcaption>
             </figure>
+            <div className="lg:col-span-7 divide-y divide-foreground/20">
+              {[
+                { title: "The cemetery you want. Less to pay.", text: "Private resale means buying from an existing owner, rather than the cemetery’s own inventory. A comparable space can cost meaningfully less — we help you compare the location, property and full purchase costs before you decide." },
+                { title: "See the place. Make it personal.", text: "Tell us your budget, preferred cemetery and when you need a space. We’ll put together a relevant shortlist, usually within 24 hours, and can meet you at the cemetery to walk the sections before you commit." },
+                { title: "A clear path from choice to ownership.", text: "We coordinate the paperwork and transfer with the cemetery. On selected pre-need properties, financing can spread the cost over up to two years at 0% interest. Our buyer concierge is free, with no obligation to proceed." },
+              ].map((item, index) => (
+                <article key={item.title} className={index === 0 ? "pb-6 sm:pb-8" : "py-6 sm:py-8"}>
+                  <div className="flex gap-4 sm:gap-6 items-baseline">
+                    <span className="font-display italic text-xl text-primary shrink-0">{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <h3 className="font-display text-2xl sm:text-3xl text-foreground leading-tight">{item.title}</h3>
+                      <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">{item.text}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-10 divide-y divide-border border-y border-border">
+          <div className="mt-12 sm:mt-16 grid lg:grid-cols-12 gap-6 lg:gap-12 border-t border-foreground/20 pt-8">
+            <div className="lg:col-span-5">
+              <p className="text-xs text-accent font-medium uppercase mb-3">Before you decide</p>
+              <h2 className="font-display text-3xl sm:text-4xl text-foreground leading-tight">A few things<br /><span className="italic text-primary">worth knowing.</span></h2>
+            </div>
+            <div className="lg:col-span-7 divide-y divide-border border-b border-border">
             {[
               {
                 q: "How much do burial plots cost in Texas?",
@@ -752,9 +767,10 @@ const BuyProperty = () => {
                 <p className="pb-4 text-sm text-muted-foreground leading-relaxed max-w-3xl">{f.a}</p>
               </details>
             ))}
+            </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <div className="mt-8 border-t border-foreground/20 pt-5 flex flex-wrap gap-x-6 gap-y-3 text-sm">
             <Link to="/cemetery-plots-for-sale-texas" className="text-primary font-medium hover:underline">How to buy a cemetery plot →</Link>
             <Link to="/cemetery-plot-cost-texas" className="text-primary font-medium hover:underline">Texas cemetery plot costs →</Link>
             <Link to="/cemeteries" className="text-primary font-medium hover:underline">Browse the cemetery directory →</Link>
