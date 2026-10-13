@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Sparkles, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, List, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
 import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 import singlePlotImg from "@/assets/property-types/single-plot.png";
 import nicheImg from "@/assets/property-types/cremation-niche.png";
@@ -9,6 +9,7 @@ import familyEstateImg from "@/assets/property-types/family-estate.png";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
+import { Button } from "@/components/ui/button";
 import { useCemeteryRegistry, REGISTRY_REGIONS, type RegistryCemetery } from "@/hooks/useCemeteryRegistry";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -210,7 +211,7 @@ const BuyProperty = () => {
   const subtitles: Record<Step, string> = {
     1: "Pick one — we'll tailor the options to suit.",
     2: "This helps us prioritize what to show you.",
-    3: "Our prices are 30–50% below cemeteries.",
+    3: "Choose a comfortable range — we’ll find options to match.",
     4: "Find your area or use your location.",
     5: "Choose how you'd prefer we contact you.",
   };
@@ -295,65 +296,58 @@ const BuyProperty = () => {
       />
       <Navbar forceScrolled />
 
-      {/* Integrated header — no hard border, blends into page */}
-      <header className="pt-24 sm:pt-28 pb-4 sm:pb-6 bg-background">
-        <div className="container mx-auto px-6 lg:px-10 max-w-6xl">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <p className="text-primary font-medium text-[11px] tracking-[0.2em] uppercase">Find Your Property · Step {step} of 5</p>
-            <div className="flex items-center gap-4">
-              <span className="hidden sm:inline text-[11px] text-muted-foreground">⏱ ~60 seconds</span>
-              <Link to="/cemeteries" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground">
-                <List className="w-3 h-3" /> Browse all
-              </Link>
+      {/* Editorial masthead, aligned with every buying step below. */}
+      <header className="pt-28 sm:pt-32 pb-4 sm:pb-6 bg-background">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
+          <div className="flex items-center justify-between gap-4 border-y border-foreground/20 py-3">
+            <p className="text-xs text-accent font-medium uppercase">Texas Cemetery Brokers · Buying</p>
+            <Button asChild variant="link" className="h-auto p-0 text-xs text-foreground shrink-0">
+              <Link to="/cemeteries"><List className="w-3 h-3" /> Browse cemeteries</Link>
+            </Button>
+          </div>
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-end py-8 sm:py-10 lg:py-12">
+            <h1 className="lg:col-span-8 font-display text-foreground text-5xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none">
+              Buy a cemetery plot.<br />
+              <span className="italic text-primary">With peace of mind.</span>
+            </h1>
+            <div className="lg:col-span-4 lg:border-l border-foreground/20 lg:pl-8">
+              <p className="font-display text-xl sm:text-2xl text-foreground leading-snug">The right place. A considered choice.</p>
+              <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Privately owned plots, niches and crypts across Texas, at meaningful savings over cemetery prices. We help you choose, view the property and handle the transfer.
+              </p>
+              <p className="mt-4 text-xs text-primary font-medium">Personal guidance · No concierge fee</p>
             </div>
           </div>
-          <h1 className="sr-only">Buy a cemetery plot in Texas — burial plots, niches and crypts at private resale prices</h1>
-          <h2 aria-hidden="true" className="font-display text-2xl sm:text-3xl lg:text-4xl text-foreground leading-tight tracking-tight">
-            {titles[step]}
-          </h2>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1.5 max-w-2xl">{subtitles[step]}</p>
-
-          {/* Prominent savings banner — explains the real value of going through us */}
-          <div className="mt-5 flex items-stretch gap-3 sm:gap-4 rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/[0.08] via-primary/[0.04] to-transparent p-4 sm:p-5">
-            <div className="shrink-0 hidden sm:flex w-12 h-12 rounded-full bg-primary/15 items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
-                <span className="font-display text-2xl sm:text-3xl text-primary leading-none tracking-tight">
-                  Save 30–50%
-                </span>
-                <span className="text-sm sm:text-base text-foreground font-medium">
-                  vs. buying direct from the cemetery
-                </span>
-              </div>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-snug">
-                We work the private resale market — same plots, same cemeteries, thousands less. No fees to use this concierge.
-              </p>
-            </div>
+          <div className="border-t border-foreground/20 pt-6 sm:pt-8">
+            <p className="text-xs text-accent font-medium mb-3">Find your property / {String(step).padStart(2, "0")} of 05</p>
+            <h2 className="font-display text-3xl sm:text-4xl text-foreground leading-tight">
+              {titles[step]}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground mt-2">{subtitles[step]}</p>
           </div>
 
           <div className="flex items-center gap-2 mt-5">
             {steps.map(s => (
-              <button
+              <Button
+                variant="ghost"
                 key={s.num}
                 onClick={() => { if (s.num < step) setStep(s.num as Step); }}
                 disabled={s.num > step}
-                className="group flex-1 flex flex-col items-start gap-1.5"
+                className="group h-auto min-w-0 flex-1 flex flex-col items-start gap-1.5 p-0 rounded-none hover:bg-transparent"
                 aria-label={`Step ${s.num}: ${s.label}`}
               >
                 <span className={`h-[3px] w-full rounded-full transition-all ${s.num <= step ? "bg-primary" : "bg-muted"}`} />
                 <span className={`text-[10px] tracking-wide ${s.num === step ? "text-foreground font-medium" : "text-muted-foreground"} hidden sm:inline`}>
                   {s.num}. {s.label}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       </header>
 
       <main className="flex-1 min-h-0">
-        <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-4 sm:py-6">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-4 sm:py-6">
           <AnimatePresence mode="wait">
             {/* STEP 1 — Type */}
             {step === 1 && (
@@ -462,12 +456,9 @@ const BuyProperty = () => {
                   )}
                 </div>
 
-                <div className="mb-4 p-3 rounded-lg bg-gradient-sage border border-primary/10 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                  <p className="text-xs sm:text-sm text-foreground">
-                    Our prices are <strong>30–50% below</strong> what cemeteries charge directly.
-                  </p>
-                </div>
+                <p className="mb-5 text-sm text-muted-foreground leading-relaxed">
+                  Private resale offers meaningful savings over buying directly from the cemetery. We’ll help you compare the available options.
+                </p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {budgets.map(b => (
                     <button
@@ -709,17 +700,17 @@ const BuyProperty = () => {
 
       {/* Slim SEO section — below the form so the wizard stays clean */}
       <section className="border-t border-border bg-muted/30">
-        <div className="container mx-auto px-6 lg:px-10 max-w-4xl py-10 sm:py-14">
-          <h2 className="font-display text-xl sm:text-2xl text-foreground tracking-tight mb-3">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-10 sm:py-14">
+          <h2 className="font-display text-3xl sm:text-4xl text-foreground leading-tight mb-8">
             Burial plots for sale across Texas — at private resale prices
           </h2>
-          <div className="grid sm:grid-cols-[minmax(0,1fr)_240px] gap-6 items-start">
+          <div className="grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 lg:gap-16 items-start">
             <div className="space-y-3 text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-3xl">
               <p>
                 Texas Cemetery Brokers helps families buy cemetery plots, cremation niches, mausoleum crypts and
                 family estates throughout Dallas–Fort Worth, Houston, Austin, San Antonio and the rest of Texas.
                 Because we work the private resale market rather than selling for the cemeteries themselves, the
-                properties we place are typically 30–50% below the price the cemetery would charge for a comparable space.
+                properties we place can cost meaningfully less than a comparable space bought directly from the cemetery.
               </p>
               <p>
                 Tell us what you're looking for above — at-need, within six months, or pre-need — and a licensed broker
@@ -729,16 +720,16 @@ const BuyProperty = () => {
               </p>
             </div>
             <figure className="m-0">
-              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover rounded-2xl border border-border" />
+              <img loading="lazy" decoding="async" src={teamWalkthroughAsset.url} alt="A Texas Cemetery Brokers team member on the grounds of a Texas cemetery, ready to walk a family through available burial plots in person" className="w-full aspect-[16/10] object-cover rounded-lg" />
               <figcaption className="mt-2 text-xs text-muted-foreground leading-snug">A member of our team, ready to walk the grounds with you in person.</figcaption>
             </figure>
           </div>
 
-          <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-card">
+          <div className="mt-10 divide-y divide-border border-y border-border">
             {[
               {
                 q: "How much do burial plots cost in Texas?",
-                a: "It varies widely by cemetery and section. Direct-from-cemetery single spaces in major Texas metros generally run from around $2,000 to well over $10,000, and premium mausoleum crypts considerably more. Private resales of the same properties typically sell for 30–50% less.",
+                a: "It varies widely by cemetery and section. Direct-from-cemetery single spaces in major Texas metros generally run from around $2,000 to well over $10,000, and premium mausoleum crypts considerably more. Private resales can offer meaningful savings; the exact difference depends on the property and location.",
               },
               {
                 q: "Is it legal to buy a cemetery plot from a private seller?",
@@ -753,7 +744,7 @@ const BuyProperty = () => {
                 a: "We cover cemeteries across Texas, with the most activity around Dallas–Fort Worth and Houston — including Restland Memorial Park, Sparkman/Hillcrest, Bluebonnet Hills, Forest Park and many more. Browse the directory or just tell us the cemetery you have in mind.",
               },
             ].map((f, i) => (
-              <details key={i} className="group px-5 sm:px-6">
+              <details key={i} className="group">
                 <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none text-sm sm:text-[15px] font-medium text-foreground hover:text-primary transition-colors [&::-webkit-details-marker]:hidden">
                   {f.q}
                   <span className="shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-45 text-lg leading-none">+</span>
@@ -773,7 +764,7 @@ const BuyProperty = () => {
 
       {/* Sticky footer */}
       <footer className="sticky bottom-0 border-t border-border bg-background/95 backdrop-blur z-20">
-        <div className="container mx-auto px-6 lg:px-10 max-w-6xl py-3 flex items-center justify-between gap-3">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 py-3 flex items-center justify-between gap-3">
           <button
             onClick={back}
             disabled={step === 1}
