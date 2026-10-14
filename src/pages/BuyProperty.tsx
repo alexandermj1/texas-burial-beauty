@@ -266,7 +266,7 @@ const BuyProperty = () => {
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
     if (emailError) console.warn("inquiry email failed", emailError);
     toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (214) 230-4740." });
-    navigate("/thank-you");
+    navigate("/thank-you/buyer");
   };
 
   const cardBase = "text-left rounded-xl border-2 transition-all duration-200 w-full";
