@@ -1262,11 +1262,25 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [editCemeteryInline, setEditCemeteryInline] = useState(false);
   const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
 
-  // Display saved summaries only. Browsing the list must never start AI work.
+  // Show saved summaries; request one (cheap model, cached server-side) only for
+  // records that have never been summarised, each id at most once per session.
+  const summaryRequested = useRef<Set<string>>(new Set());
   useEffect(() => {
     const seeded: Record<string, string> = {};
     for (const s of submissions as any[]) if (s.ai_summary) seeded[s.id] = s.ai_summary;
     setSummaryMap(prev => ({ ...seeded, ...prev }));
+    const missing = (submissions as any[])
+      .filter(s => !s.ai_summary && !s.deleted_at && !summaryRequested.current.has(s.id))
+      .slice(0, 12)
+      .map(s => s.id as string);
+    if (!missing.length) return;
+    missing.forEach(id => summaryRequested.current.add(id));
+    supabase.functions.invoke("summarize-submission", { body: { submissionIds: missing } })
+      .then(({ data }) => {
+        const got = (data as any)?.summaries;
+        if (got && typeof got === "object") setSummaryMap(prev => ({ ...prev, ...got }));
+      })
+      .catch(() => {});
   }, [submissions]);
 
 
