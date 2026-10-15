@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Current request
-- [ ] Replace homepage featured plots with reference-inspired botanical shopfronts, real inventory, rotating pages and desktop/mobile verification
+- [x] Add botanical homepage shopfronts, rotating pages and inquiry links; desktop/mobile presentation checked with saved inventory examples
+- [ ] Verify live homepage inventory read — blocked: test-browser listing requests return 401 signed out and 403 signed in; database read succeeds
 - [x] Integrate Muse’s cost-guide quick answer and relevant FAQs, with grounded pricing and editorial styling
 - [x] Improve directory introduction and add useful buying, transfer and inherited-sale questions without changing exclusions
 - [x] Update cost and Laurel Land Fort Worth metadata and correct the directory title truncation; desktop/mobile links, metadata and three regression tests verified; publication remains owner-controlled
