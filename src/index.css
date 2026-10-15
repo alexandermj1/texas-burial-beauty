@@ -463,13 +463,40 @@
 
 /* Paid featured properties, framed by the owner-supplied plumeria artwork. */
 .plot-shopfronts { background: hsl(var(--background)); border-bottom: 1px solid hsl(var(--border)); }
-.plot-featured-canopy { --canopy-paper: var(--sage-light); --canopy-stripe: 145 18% 81%; --canopy-trim: var(--gold); --canopy-shadow: 0 8px 10px -9px hsl(var(--foreground) / .3); position: relative; z-index: 1; margin-bottom: 16px; }
-.plot-featured-sign { position: relative; width: 100%; padding: 22px 20px 24px; text-align: center; background: hsl(var(--canopy-paper)); border: 1px solid hsl(var(--canopy-trim) / .6); border-radius: 6px 6px 0 0; }
-.plot-featured-sign::before { content: ''; position: absolute; inset: 7px; border: 1px solid hsl(var(--canopy-trim)); border-radius: 3px; pointer-events: none; }
-.plot-featured-sign p { font-size: 10px; text-transform: uppercase; color: hsl(var(--primary)); margin-bottom: 6px; }
-.plot-featured-sign h2 { font-size: 38px; line-height: 1.15; color: hsl(var(--foreground)); }
-.plot-featured-awning { height: 46px; background: repeating-linear-gradient(90deg, hsl(var(--canopy-stripe)) 0 32px, hsl(var(--background)) 32px 64px); border-top: 1px solid hsl(var(--canopy-trim) / .45); border-radius: 0 0 8px 8px; box-shadow: var(--canopy-shadow); mask-image: linear-gradient(to bottom, black calc(100% - 8px), transparent calc(100% - 8px)), radial-gradient(ellipse 16px 9px at 16px calc(100% - 8px), black 98%, transparent 100%); mask-size: 100% 100%, 32px 100%; mask-repeat: no-repeat, repeat-x; }
-@media (max-width: 640px) { .plot-featured-sign { padding: 20px 14px; } .plot-featured-sign h2 { font-size: 28px; } .plot-featured-awning { height: 34px; } }
+.plot-featured-canopy {
+  --canopy-paper: 40 35% 88%;
+  --canopy-stripe: 100 19% 80%;
+  --canopy-ivory: var(--parchment);
+  --canopy-trim: 39 36% 57%;
+  --canopy-shadow: 0 4px 3px hsl(var(--foreground) / .18);
+  --canopy-light: inset 0 1px 0 hsl(var(--background) / .8);
+  --canopy-roof-shade: linear-gradient(to bottom, hsl(var(--foreground) / .22), hsl(var(--foreground) / .06) 45%, hsl(var(--background) / .16) 85%);
+  --canopy-valance-shade: linear-gradient(to bottom, hsl(var(--background) / .1), hsl(var(--foreground) / .08));
+  position: relative; z-index: 1; margin-bottom: 24px; padding-inline: 10px;
+}
+.plot-featured-sign { position: relative; width: 100%; padding: 26px 24px 28px; text-align: center; background: hsl(var(--canopy-paper)); border: 5px solid hsl(var(--sand) / .6); border-radius: 7px 7px 0 0; box-shadow: var(--canopy-light); }
+.plot-featured-sign::before { content: ''; position: absolute; inset: 4px; border: 1px solid hsl(var(--canopy-trim) / .7); border-radius: 3px; pointer-events: none; }
+.plot-featured-sign::after { content: ''; position: absolute; inset: 8px; border: 1px solid hsl(var(--canopy-trim) / .22); border-radius: 2px; pointer-events: none; }
+.plot-featured-sign p { display: flex; align-items: center; justify-content: center; gap: 15px; font-size: 11px; font-weight: 500; text-transform: uppercase; color: hsl(var(--primary)); margin-bottom: 8px; }
+.plot-featured-sign p::before, .plot-featured-sign p::after { content: ''; width: 40px; height: 1px; background: hsl(var(--canopy-trim) / .65); }
+.plot-featured-sign h2 { font-size: 44px; line-height: 1.1; color: hsl(var(--foreground)); text-wrap: balance; }
+.plot-featured-awning { position: relative; margin-inline: -10px; filter: drop-shadow(var(--canopy-shadow)); }
+.plot-featured-awning-roof { height: 53px; background: var(--canopy-roof-shade), repeating-linear-gradient(90deg, hsl(var(--canopy-stripe)) 0 calc(100% / 28), hsl(var(--canopy-ivory)) calc(100% / 28) calc(100% / 14)); clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 100%, 0 100%); }
+.plot-featured-awning-valance { display: grid; grid-template-columns: repeat(28, minmax(0, 1fr)); }
+.plot-featured-awning-valance span { height: 19px; border-radius: 0 0 50% 50% / 0 0 85% 85%; background: var(--canopy-valance-shade), hsl(var(--canopy-stripe)); border-bottom: 2px solid hsl(var(--foreground) / .1); }
+.plot-featured-awning-valance span:nth-child(even) { background: var(--canopy-valance-shade), hsl(var(--canopy-ivory)); }
+@media (max-width: 640px) {
+  .plot-featured-canopy { padding-inline: 6px; margin-bottom: 18px; }
+  .plot-featured-sign { padding: 23px 12px 25px; border-width: 4px; }
+  .plot-featured-sign p { font-size: 9px; gap: 7px; }
+  .plot-featured-sign p::before, .plot-featured-sign p::after { width: 12px; }
+  .plot-featured-sign h2 { font-size: 30px; }
+  .plot-featured-awning { margin-inline: -6px; }
+  .plot-featured-awning-roof { height: 36px; background-size: auto, 200% 100%; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 100%, 0 100%); }
+  .plot-featured-awning-valance { grid-template-columns: repeat(14, minmax(0, 1fr)); }
+  .plot-featured-awning-valance span { height: 15px; }
+  .plot-featured-awning-valance span:nth-child(n+15) { display: none; }
+}
 .plot-shop { --shop-ink: var(--foreground); --shop-paper: 85 23% 86%; --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
 .plot-shop-art { position: relative; aspect-ratio: 646 / 846; }
 .plot-shop-price { min-height: 102px; padding: 12px 14px 16px; border-top: 1px solid hsl(var(--shop-ink) / .2); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px; text-align: center; }

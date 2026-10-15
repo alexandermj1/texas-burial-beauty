@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Refine the Featured sign with layered framing, warm paper, dimensional sloped stripes and rounded scallops; visually verified at 1381, 390 and 320px with no overflow or page errors
 - [x] Use the latest reference for a full-width muted shop sign and striped awning above the plots
 - [x] Shuffle the automatic cycle, wrap to fill desktop rows, omit visible totals and preserve muted artwork; every unique card verified automatically on desktop and phone, including pause and inquiry links
 - [x] Add verified broad retail/resale ranges only; comparisons available for 18 records, remaining records use inquiry fallback; 1280/768/390/320 layouts and all phone cards checked
