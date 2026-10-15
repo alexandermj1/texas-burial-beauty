@@ -40,7 +40,7 @@ const propertyLabel = (value: string) => {
 };
 
 const Shopfront = ({ listing, index }: { listing: FeaturedPlot; index: number }) => (
-  <Link to={`/buy?cemetery=${encodeURIComponent(listing.cemetery)}`} className={`plot-shop plot-shop-${index % 6} group`} aria-label={`Inquire about ${listing.cemetery}, ${listing.section || propertyLabel(listing.plot_type)}`}>
+  <Link data-listing-id={listing.id} to={`/buy?cemetery=${encodeURIComponent(listing.cemetery)}`} className={`plot-shop plot-shop-${index % 6} group`} aria-label={`Inquire about ${listing.cemetery}, ${listing.section || propertyLabel(listing.plot_type)}`}>
     <div className="plot-shop-art">
     <img src={backgrounds[index % backgrounds.length].url} alt="" loading="lazy" width={646} height={846} className="plot-shop-background" />
     <div className="plot-shop-content">
@@ -109,9 +109,12 @@ export default function FeaturedPlotShopfronts() {
   return (
     <section ref={ref} aria-labelledby="featured-plots-heading" className="plot-shopfronts py-8 sm:py-10">
       <div className="mx-auto max-w-[1536px] px-6 sm:px-10 lg:px-16">
-        <div className="mb-5">
-          <p className="text-[11px] uppercase text-primary mb-1">Private resale · Across Texas</p>
-          <h2 id="featured-plots-heading" className="font-display text-3xl sm:text-4xl leading-tight text-foreground">Featured properties<span className="text-primary">.</span></h2>
+        <div className="plot-featured-canopy">
+          <div className="plot-featured-sign">
+            <p>Private resale · Across Texas</p>
+            <h2 id="featured-plots-heading" className="font-display">Featured properties</h2>
+          </div>
+          <div className="plot-featured-awning" aria-hidden="true" />
         </div>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.25 }} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>

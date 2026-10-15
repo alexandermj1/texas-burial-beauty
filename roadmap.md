@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Current request
-- [ ] Restore the original website-style Featured heading, not the Texas or Parisian storefront label
+- [ ] Use the latest reference for a full-width muted shop sign and striped awning above the plots
 - [ ] Randomize automatic browsing, wrap to fill desktop rows, omit visible totals and preserve muted artwork
 - [ ] Add verified broad retail/resale ranges only; check all cards and mobile fit
 - [x] Replace shopfront artwork with supplied backgrounds, tighten spacing and refine names; move below the map
