@@ -7,6 +7,8 @@
 // or (c) presented explicitly as an estimated range. Never state a specific
 // asking price for a live listing here.
 
+import { LAUREL_FORT_WORTH_SEO } from "./publicSeoUpgrades";
+
 export type PriceTier = "premium" | "standard" | "value";
 
 export interface FlagshipSection {
@@ -352,9 +354,7 @@ export const FLAGSHIP_CEMETERIES: FlagshipCemetery[] = [
     ],
     nearby: ["laurel-land-memorial-park-dallas", "bluebonnet-hills-memorial-park", "grove-hill-memorial-park"],
     seo: {
-      title: "Laurel Land Fort Worth Plots for Sale | Prices & Fees",
-      description:
-        "Laurel Land Memorial Park Fort Worth plots, veteran crypts and niches for sale. Resale price ranges, the $595 transfer fee and free valuations for owners.",
+      ...LAUREL_FORT_WORTH_SEO,
       h1: "Laurel Land Memorial Park, Fort Worth",
     },
   },
