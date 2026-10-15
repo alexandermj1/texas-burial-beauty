@@ -6,6 +6,8 @@ const SITE_NAME = "Texas Cemetery Brokers";
 
 export interface SeoProps {
   title: string;
+  /** Keep an intentional long editorial title intact rather than cutting a word. */
+  preserveTitle?: boolean;
   description: string;
   /** Canonical path beginning with "/" — full URL is built from SITE_URL. */
   path?: string;
@@ -67,6 +69,7 @@ const setJsonLd = (data: Record<string, unknown> | Record<string, unknown>[]) =>
  */
 const Seo = ({
   title,
+  preserveTitle = false,
   description,
   path = "/",
   image = DEFAULT_OG,
@@ -76,7 +79,7 @@ const Seo = ({
 }: SeoProps) => {
   useEffect(() => {
     const fullTitle =
-      title.length > 60 ? title.slice(0, 57) + "..." : title;
+      !preserveTitle && title.length > 60 ? title.slice(0, 57) + "..." : title;
     const desc =
       description.length > 160 ? description.slice(0, 157) + "..." : description;
     const url = SITE_URL + (path.startsWith("/") ? path : "/" + path);
@@ -102,7 +105,7 @@ const Seo = ({
     upsertMeta("name", "twitter:image", image);
 
     if (jsonLd) setJsonLd(jsonLd);
-  }, [title, description, path, image, type, jsonLd, noindex]);
+  }, [title, preserveTitle, description, path, image, type, jsonLd, noindex]);
 
   return null;
 };

@@ -1,6 +1,9 @@
 # Roadmap
 
 ## Current request
+- [x] Integrate Muse’s cost-guide quick answer and relevant FAQs, with grounded pricing and editorial styling
+- [x] Improve directory introduction and add useful buying, transfer and inherited-sale questions without changing exclusions
+- [x] Update cost and Laurel Land Fort Worth metadata and correct the directory title truncation; desktop/mobile links, metadata and three regression tests verified; publication remains owner-controlled
 - [x] Keep the mobile navigation menu compact with Guides as a single row; verify desktop menu cards remain
 - [x] Give the buy page a consistent wide layout and replace the savings banner with refined editorial design; verified all five buying steps, matching 1536px section widths and mobile presentation
 - [x] Redesign broker value in the sell page’s editorial style, move below available properties, and verify presentation and links

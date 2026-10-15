@@ -2,9 +2,12 @@
 // static HTML shells with route-specific <title>, description, canonical,
 // and Open Graph tags — for social unfurl crawlers and non-JS bots.
 
+import { COST_GUIDE_SEO, DIRECTORY_SEO } from "../src/data/publicSeoUpgrades";
+
 export interface RouteMeta {
   path: string; // url path, e.g. "/buy"
   title: string; // <= 60 chars
+  preserveTitle?: boolean;
   description: string; // <= 160 chars
   ogImage?: string;
   type?: "website" | "article";
@@ -43,9 +46,8 @@ export const STATIC_ROUTES: RouteMeta[] = [
   },
   {
     path: "/cemeteries",
-    title: "Texas Cemetery Directory | Find a Cemetery Near You",
-    description:
-      "Browse cemeteries across Texas — Dallas, Houston, Austin, San Antonio, Fort Worth and El Paso. Search by city, region, or nearest location.",
+    ...DIRECTORY_SEO,
+    preserveTitle: true,
   },
   {
     path: "/contact",
@@ -110,9 +112,7 @@ export const STATIC_ROUTES: RouteMeta[] = [
   },
   {
     path: "/cemetery-plot-cost-texas",
-    title: "How Much Does a Cemetery Plot Cost in Texas? (2026)",
-    description:
-      "Texas cemetery plot prices by city, the fees cemeteries add on top, what resale spaces actually sell for, and how much cemetery brokers charge.",
+    ...COST_GUIDE_SEO,
     type: "article",
   },
   {

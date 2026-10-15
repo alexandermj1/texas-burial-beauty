@@ -11,6 +11,7 @@ import { RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
 import { MotionConfig } from "framer-motion";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import { Button } from "@/components/ui/button";
+import { COST_GUIDE_SEO } from "@/data/publicSeoUpgrades";
 
 
 
@@ -56,7 +57,7 @@ const extras = [
   { t: "Outer burial container / vault", d: "Most Texas memorial parks require one; some older municipal and church cemeteries do not. Prices vary widely by material and warranty.", n: "Usually required" },
   { t: "Marker or monument", d: "Bronze, granite, flat or upright — the range here is enormous, and cemeteries set rules on what is permitted in each section.", n: "Optional timing" },
   { t: "Marker foundation / setting", d: "A separate cemetery fee to pour the base and install the marker.", n: "With marker" },
-  { t: "Transfer / recording fee", d: "Paid to the cemetery when ownership changes hands. Across the Texas cemetery fee schedules we hold, most sit around $595–$995 per space, with the DFW memorial parks clustering near $595 and larger Houston and Dallas parks running from roughly $1,295 up to about $1,995. Small rural and church grounds can be nominal.", n: "On resale" },
+  { t: "Transfer / recording fee", d: "Paid to the cemetery when ownership changes hands. Fees vary by park: some are charged per space, others once for the transfer. We confirm the current amount, how it applies to your property and who pays it before closing.", n: "On resale" },
   { t: "Endowment / perpetual care", d: "Usually bundled into the original purchase, though some cemeteries add a care contribution on a resale transfer.", n: "Varies" },
 ];
 
@@ -75,11 +76,19 @@ const faqs = [
   },
   {
     q: "Do cemetery plots go up in value?",
-    a: "Cemetery retail pricing has risen steadily over time, and sold-out sections hold value best because no new supply can be created. Resale values track that retail curve at a discount. Our partner Bayer Cemetery Brokers publishes a detailed market-trend analysis of long-run grave plot price increases.",
+    a: "Some cemetery retail prices have increased over time, but that does not guarantee a gain on an individual resale. Demand, the section, available inventory and transfer costs all affect what an owner can recover. Our partner Bayer Cemetery Brokers publishes a long-run market-trend analysis; a current valuation is more useful than assuming future appreciation.",
   },
   {
     q: "What does it cost to transfer a cemetery plot in Texas?",
     a: "The cemetery sets its own recording or transfer fee, and the spread across Texas is wide — from nominal at some small cemeteries to well over a thousand dollars at others. We confirm the exact figure in writing with your cemetery before a sale completes, so it is never a surprise at closing.",
+  },
+  {
+    q: "What's the cheapest way to buy a cemetery plot in Texas?",
+    a: "Compare pre-owned spaces first: they can cost meaningfully less than comparable cemetery retail, depending on the cemetery and section, but there is no fixed discount. Buying before you need the space gives you more time to compare. Check the transfer fee, any buyer premium and what is included — opening and closing, a vault and the marker are often separate charges. Eligible veterans and family members should also check national cemetery benefits before buying.",
+  },
+  {
+    q: "How does buying a cemetery plot from a private seller work?",
+    a: "The seller's ownership and authority to sell are verified with the cemetery, you agree a price, and the cemetery records the transfer under its rules for a fee. A broker coordinates the verification, paperwork, payment and showing where available. Confirm the complete buyer price and the cemetery's requirements before committing.",
   },
 ];
 
@@ -87,9 +96,8 @@ const jsonLd: Record<string, unknown>[] = [
   {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: "How Much Does a Cemetery Plot Cost in Texas?",
-    description:
-      "What drives Texas cemetery plot prices, the fees cemeteries add on top, and why resale plots are priced below the cemetery's own counter price.",
+    headline: COST_GUIDE_SEO.title,
+    description: COST_GUIDE_SEO.description,
     mainEntityOfPage: FULL,
     url: FULL,
     inLanguage: "en-US",
@@ -116,8 +124,8 @@ const jsonLd: Record<string, unknown>[] = [
 const GuideCemeteryPlotCost = () => (
   <MotionConfig reducedMotion="user"><div className="cost-guide min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
-      title="How Much Does a Cemetery Plot Cost in Texas? (2026)"
-      description="What drives Texas cemetery plot prices, the fees cemeteries add on top, and why resale spaces are priced well below the cemetery's own price."
+      title={COST_GUIDE_SEO.title}
+      description={COST_GUIDE_SEO.description}
       path={PATH}
       type="article"
       jsonLd={jsonLd}
@@ -135,9 +143,12 @@ const GuideCemeteryPlotCost = () => (
           <h1 className="max-w-5xl font-display text-4xl sm:text-6xl md:text-7xl leading-tight text-foreground">
             How much does a cemetery plot <span className="italic text-primary">cost in Texas?</span>
           </h1>
-          <p className="mt-7 max-w-4xl text-lg md:text-xl font-light leading-relaxed text-foreground/75">
-            There is no single Texas price. A space in a small rural cemetery and a space in an established metro memorial park are different markets entirely. Here’s what shapes the price, what cemeteries charge on top, and why resale costs less.
-          </p>
+          <section aria-labelledby="cost-short-answer" className="mt-7 max-w-4xl border-l-2 border-primary pl-5 md:pl-6">
+            <h2 id="cost-short-answer" className="mb-3 text-sm font-semibold text-primary">The short answer</h2>
+            <p className="text-base leading-relaxed text-foreground/85 md:text-lg">
+              Texas plot prices vary by cemetery and section. Resale can offer substantial savings over comparable retail, but there is no fixed discount. Budget separately for burial services, any required vault, a marker and transfer fees; compare the complete buyer price, including any buyer premium.
+            </p>
+          </section>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="rounded-xl"><a href="#plot-value-calculator">Estimate your plot value <ArrowRight className="h-4 w-4" /></a></Button>
             <Button asChild variant="outline" size="lg" className="rounded-xl bg-background/80"><a href="tel:+12142304740"><Phone className="h-4 w-4" /> (214) 230-4740</a></Button>
@@ -231,7 +242,7 @@ const GuideCemeteryPlotCost = () => (
         <div className="not-prose my-8 p-7 md:p-9 rounded-xl bg-primary/5 border border-border/60">
           <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-3">Market trend</p>
           <p className="font-display text-2xl md:text-3xl text-foreground leading-snug mb-4">
-            Cemetery property has appreciated steadily, and sold-out sections hold value best.
+            Past retail price increases do not guarantee what a resale will return.
           </p>
           <a
             href={TRENDS_URL}
@@ -254,7 +265,7 @@ const GuideCemeteryPlotCost = () => (
       </Section>
 
       <div className="border-t border-border/60 pt-10 md:pt-14">
-        <PreneedBlock id="preneed" eyebrow="The cheapest it will ever be" />
+        <PreneedBlock id="preneed" eyebrow="More time to compare" />
       </div>
 
 

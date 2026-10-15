@@ -22,9 +22,9 @@ const esc = (s: string) =>
 // Replace the <title>, description, canonical, and og:* tags in the built
 // index.html with route-specific values. Other tags (geo, twitter, JSON-LD,
 // script tags) pass through untouched so the SPA still hydrates normally.
-function renderRouteHtml(shell: string, meta: RouteMeta): string {
+export function renderRouteHtml(shell: string, meta: RouteMeta): string {
   const url = SITE_URL + meta.path;
-  const title = meta.title.length > 60 ? meta.title.slice(0, 57) + "..." : meta.title;
+  const title = !meta.preserveTitle && meta.title.length > 60 ? meta.title.slice(0, 57) + "..." : meta.title;
   const desc =
     meta.description.length > 160
       ? meta.description.slice(0, 157) + "..."

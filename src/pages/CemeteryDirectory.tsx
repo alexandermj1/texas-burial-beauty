@@ -18,6 +18,8 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import DirectoryQuestions from "@/components/cemetery/DirectoryQuestions";
+import { DIRECTORY_SEO } from "@/data/publicSeoUpgrades";
 
 import { bayCemeteries, regions } from "@/data/cemeteries";
 import { slugify } from "@/lib/cemeterySlug";
@@ -753,8 +755,9 @@ const CemeteryDirectory = () => {
         </div>
       </div>
       <Seo
-        title="Texas Cemeteries We Serve — Buy & Sell Plots | Texas Cemetery Brokers"
-        description={`Browse ${total}+ cemeteries across Dallas–Fort Worth, Houston, Austin, San Antonio, El Paso & beyond. Get help buying or selling cemetery plots in Texas.`}
+        title={DIRECTORY_SEO.title}
+        description={DIRECTORY_SEO.description}
+        preserveTitle
         path="/cemeteries"
         jsonLd={jsonLd}
       />
@@ -775,8 +778,7 @@ const CemeteryDirectory = () => {
               <em className="not-italic text-primary">simply</em> bought and sold.
             </h1>
             <p className="mt-3 md:mt-4 text-foreground/70 text-[15px] md:text-base max-w-2xl mx-auto leading-relaxed">
-              {total}+ cemeteries from Dallas–Fort Worth to the Valley — at meaningfully below retail. We handle the
-              cemetery paperwork, transfer and title end to end.
+              Explore {total} Texas cemeteries across Dallas–Fort Worth, Greater Houston, Austin, San Antonio, El Paso and beyond. We help families find pre-owned plots, crypts and niches below comparable cemetery retail, and help owners sell unused property. Choose your metro or search by name to explore cemetery profiles and transfer fees. Don’t see yours? Ask us — we’ll check whether we can help.
             </p>
 
             <div className="mt-5 md:mt-6">
@@ -795,7 +797,7 @@ const CemeteryDirectory = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {total}+ cemeteries served
               </span>
-              <span>30–60% below retail</span>
+              <span>Savings vary by cemetery &amp; section</span>
               <a href="tel:+12142304740" className="text-foreground font-semibold hover:text-primary transition-colors">
                 (214) 230-4740
               </a>
@@ -1071,6 +1073,8 @@ const CemeteryDirectory = () => {
             ))}
           </div>
 
+          <DirectoryQuestions />
+
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1123,9 +1127,9 @@ const CemeteryDirectory = () => {
 
               <div className="hidden md:grid grid-cols-2 gap-3">
                 {[
-                  { k: "30+", v: "Years brokering Texas plots" },
+                  { k: "30+", v: "Years of partner resale experience" },
                   { k: "$299", v: "Listing packages from" },
-                  { k: "30–60%", v: "Avg. buyer savings vs retail" },
+                  { k: "Resale", v: "Below comparable cemetery retail" },
                   { k: "24h", v: "Valuation response time" },
                 ].map((s) => (
                   <div key={s.v} className="rounded-2xl bg-background/8 border border-background/15 backdrop-blur-md p-4">
