@@ -486,12 +486,12 @@
 .plot-featured-awning-valance span { height: 19px; border-radius: 0 0 50% 50% / 0 0 85% 85%; background: var(--canopy-valance-shade), hsl(var(--canopy-stripe)); border-bottom: 2px solid hsl(var(--foreground) / .1); }
 .plot-featured-awning-valance span:nth-child(even) { background: var(--canopy-valance-shade), hsl(var(--canopy-ivory)); }
 @media (max-width: 640px) {
-  .plot-featured-canopy { padding-inline: 6px; margin-bottom: 18px; }
+  .plot-featured-canopy { padding-inline: 6px; margin-bottom: 4px; }
   .plot-featured-sign { padding: 23px 12px 25px; border-width: 4px; }
   .plot-featured-sign p { font-size: 9px; gap: 7px; }
   .plot-featured-sign p::before, .plot-featured-sign p::after { width: 12px; }
-  .plot-featured-sign h2 { font-size: 30px; }
-  .plot-featured-awning { margin-inline: -6px; }
+  .plot-featured-sign h2 { font-size: 22px; letter-spacing: .12em; }
+  .plot-featured-awning { margin-inline: -10px; margin-bottom: -11px; }
   .plot-featured-awning-roof { height: 36px; background-size: auto, 200% 100%; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 100%, 0 100%); }
   .plot-featured-awning-valance { grid-template-columns: repeat(14, minmax(0, 1fr)); }
   .plot-featured-awning-valance span { height: 15px; }
