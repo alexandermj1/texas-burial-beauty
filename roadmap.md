@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Current request
-- [ ] Use the latest reference for a full-width muted shop sign and striped awning above the plots
-- [ ] Randomize automatic browsing, wrap to fill desktop rows, omit visible totals and preserve muted artwork
-- [ ] Add verified broad retail/resale ranges only; check all cards and mobile fit
+- [x] Use the latest reference for a full-width muted shop sign and striped awning above the plots
+- [x] Shuffle the automatic cycle, wrap to fill desktop rows, omit visible totals and preserve muted artwork; every unique card verified automatically on desktop and phone, including pause and inquiry links
+- [x] Add verified broad retail/resale ranges only; comparisons available for 18 records, remaining records use inquiry fallback; 1280/768/390/320 layouts and all phone cards checked
 - [x] Replace shopfront artwork with supplied backgrounds, tighten spacing and refine names; move below the map
 - [x] Use 20 verified paid Featured/legacy Featured properties only; check live inventory, all rotation pages, mobile text fit and inquiry links; hosted backgrounds verified (local screenshots use the same uploaded images)
 - [x] Add botanical homepage shopfronts, rotating pages and inquiry links; desktop/mobile presentation checked with saved inventory examples
