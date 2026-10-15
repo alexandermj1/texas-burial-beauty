@@ -17,6 +17,7 @@ interface FeaturedPlot { id: string; cemetery: string; city: string; plot_type: 
 const backgrounds = [sageBackground, blushBackground, midnightBackground, verdantBackground, clayBackground, terracottaBackground];
 
 const cleanText = (value: string) => value.trim().replace(/\s+/g, " ").replace(/\bLot\/Space\s*/gi, "");
+const cemeteryLabel = (value: string) => cleanText(value).replace(/ Funeral Home & Cemetery$/i, "").replace(/\//g, " / ");
 const propertyLabel = (value: string) => {
   if (/^burial plot/i.test(value)) return "Burial plots";
   if (/crypt.*mausoleum/i.test(value)) return "Mausoleum crypts";
@@ -29,7 +30,7 @@ const Shopfront = ({ listing, index }: { listing: FeaturedPlot; index: number })
     <img src={backgrounds[index % backgrounds.length].url} alt="" loading="lazy" width={646} height={846} className="plot-shop-background" />
     <div className="plot-shop-content">
       <p className="plot-shop-location">{listing.city ? `${cleanText(listing.city)}, Texas` : "Texas"}</p>
-      <h3 className="plot-shop-name font-display">{cleanText(listing.cemetery)}</h3>
+      <h3 className="plot-shop-name font-display">{cemeteryLabel(listing.cemetery)}</h3>
       <div className="plot-shop-rule" aria-hidden="true" />
       <p className="plot-shop-type">{propertyLabel(listing.plot_type)}</p>
       {listing.spaces > 0 && <p className="plot-shop-count font-display">{listing.spaces}<span>{listing.spaces === 1 ? "space" : "spaces"}</span></p>}

@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Current request
-- [ ] Replace shopfront artwork with supplied backgrounds, tighten spacing and refine names; move below the map
-- [ ] Use verified paid Featured properties only and check live desktop/mobile rotation and inquiries
+- [x] Replace shopfront artwork with supplied backgrounds, tighten spacing and refine names; move below the map
+- [x] Use 20 verified paid Featured/legacy Featured properties only; check live inventory, all rotation pages, mobile text fit and inquiry links; hosted backgrounds verified (local screenshots use the same uploaded images)
 - [x] Add botanical homepage shopfronts, rotating pages and inquiry links; desktop/mobile presentation checked with saved inventory examples
 - [x] Verify live homepage inventory read — added a visitor-safe inventory view (public_listing_cards) exposing only cemetery, city, plot type, section and spaces; signed-out desktop and phone checks now show the cards
 - [x] Integrate Muse’s cost-guide quick answer and relevant FAQs, with grounded pricing and editorial styling
