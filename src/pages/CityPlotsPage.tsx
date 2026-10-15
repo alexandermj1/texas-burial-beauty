@@ -11,13 +11,11 @@ import { getCityPage, CITY_PAGES } from "./city-page-data";
 import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
 import houstonPhoto from "@/assets/houston-skyline.png.asset.json";
 import austinPhoto from "@/assets/austin-skyline.webp.asset.json";
-import sanAntonioPhoto from "@/assets/san-antonio-riverwalk.webp.asset.json";
 
 const CITY_PHOTOS: Record<string, { src: string; alt: string; landmark: string; position: string }> = {
   dallas: { src: dallasPhoto.url, alt: "Downtown Dallas skyline at dusk with Reunion Tower and the Margaret Hunt Hill Bridge reflected in the Trinity River", landmark: "Reunion Tower · Trinity River", position: "62% center" },
   houston: { src: houstonPhoto.url, alt: "Downtown Houston skyline at night above Buffalo Bayou", landmark: "Buffalo Bayou · Downtown", position: "50% center" },
   austin: { src: austinPhoto.url, alt: "Downtown Austin skyline reflected in Lady Bird Lake at dusk", landmark: "Lady Bird Lake · Downtown", position: "50% center" },
-  "san-antonio": { src: sanAntonioPhoto.url, alt: "San Antonio River Walk at dusk with stone bridge, string lights and the Tower of the Americas", landmark: "River Walk · Tower of the Americas", position: "55% center" },
 };
 
 const SITE = "https://texascemeterybrokers.com";
