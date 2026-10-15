@@ -2303,6 +2303,13 @@ export type Database = {
             referencedRelation: "listings_internal"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "plot_reservations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listing_cards"
+            referencedColumns: ["id"]
+          },
         ]
       }
       poa_records: {
@@ -2707,6 +2714,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sales_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listing_cards"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sales_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
@@ -3106,6 +3120,36 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      public_listing_cards: {
+        Row: {
+          cemetery: string | null
+          city: string | null
+          created_at: string | null
+          id: string | null
+          plot_type: string | null
+          section: string | null
+          spaces: number | null
+        }
+        Insert: {
+          cemetery?: string | null
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          plot_type?: string | null
+          section?: string | null
+          spaces?: number | null
+        }
+        Update: {
+          cemetery?: string | null
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          plot_type?: string | null
+          section?: string | null
+          spaces?: number | null
         }
         Relationships: []
       }
