@@ -51,8 +51,8 @@ export default function FeaturedPlotShopfronts() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data, error } = await supabase.from("listings").select("id, cemetery, city, plot_type, section, spaces")
-        .is("deleted_at", null).eq("status", "active").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("public_listing_cards").select("id, cemetery, city, plot_type, section, spaces")
+        .order("created_at", { ascending: false });
       if (mounted && !error) setListings(data || []);
     };
     void load();
