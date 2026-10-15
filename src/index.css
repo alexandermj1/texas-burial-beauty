@@ -468,7 +468,7 @@
   --canopy-stripe: 100 19% 80%;
   --canopy-ivory: var(--parchment);
   --canopy-trim: 39 36% 57%;
-  --canopy-shadow: 0 5px 7px -4px hsl(var(--foreground) / .3);
+  --canopy-shadow: 0 4px 3px hsl(var(--foreground) / .18);
   --canopy-light: inset 0 1px 0 hsl(var(--background) / .8);
   --canopy-roof-shade: linear-gradient(to bottom, hsl(var(--foreground) / .22), hsl(var(--foreground) / .06) 45%, hsl(var(--background) / .16) 85%);
   --canopy-valance-shade: linear-gradient(to bottom, hsl(var(--background) / .1), hsl(var(--foreground) / .08));
