@@ -488,7 +488,7 @@
 @media (max-width: 640px) {
   .plot-featured-canopy { padding-inline: 6px; margin-bottom: 4px; }
   .plot-featured-sign { padding: 23px 12px 25px; border-width: 4px; }
-  .plot-featured-sign p { font-size: 9px; gap: 7px; }
+  .plot-featured-sign p { font-size: 9px; gap: 7px; letter-spacing: .24em; }
   .plot-featured-sign p::before, .plot-featured-sign p::after { width: 12px; }
   .plot-featured-sign h2 { font-size: 22px; letter-spacing: .12em; }
   .plot-featured-awning { margin-inline: -10px; margin-bottom: -11px; }
