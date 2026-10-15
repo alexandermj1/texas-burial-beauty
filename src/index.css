@@ -463,14 +463,6 @@
 
 /* Paid featured properties, framed by the owner-supplied plumeria artwork. */
 .plot-shopfronts { background: hsl(var(--background)); border-bottom: 1px solid hsl(var(--border)); }
-.plot-shop-masthead { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 24px; color: hsl(var(--primary)); }
-.plot-shop-masthead-rule { flex: 1; max-width: 180px; height: 5px; border-block: 1px solid hsl(var(--primary) / .35); }
-.plot-shop-facade { position: relative; width: 580px; max-width: 100%; padding: 56px 28px 18px; background: repeating-linear-gradient(90deg, hsl(var(--sage-light)), hsl(var(--sage-light)) 38px, hsl(var(--primary) / .18) 39px, hsl(var(--sage-light)) 41px); clip-path: polygon(0 30%, 12% 30%, 12% 16%, 28% 16%, 28% 0, 72% 0, 72% 16%, 88% 16%, 88% 30%, 100% 30%, 100% 100%, 0 100%); border-bottom: 6px solid hsl(var(--primary)); }
-.plot-shop-star { position: absolute; top: 7px; left: 0; width: 100%; text-align: center; font-size: 24px; color: hsl(var(--gold)); }
-.plot-shop-sign { text-align: center; padding: 14px 20px; border: 3px double hsl(var(--primary) / .65); border-radius: 0; background: hsl(var(--background)); }
-.plot-shop-sign-kicker { font-size: 10px; text-transform: uppercase; margin-bottom: 6px; }
-.plot-shop-sign h2 { font-size: 34px; line-height: 1.15; text-transform: uppercase; }
-.plot-shop-sign-caption { font-size: 11px; margin-top: 7px; font-style: italic; }
 .plot-shop { --shop-ink: var(--foreground); --shop-paper: 85 23% 86%; --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
 .plot-shop-art { position: relative; aspect-ratio: 646 / 846; }
 .plot-shop-price { min-height: 102px; padding: 12px 14px 16px; border-top: 1px solid hsl(var(--shop-ink) / .2); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px; text-align: center; }
@@ -505,5 +497,4 @@
   .plot-shop-inquire { margin-top: 8px; }
 }
 @media (max-width: 400px) { .plot-shop-content { inset-block: 20% 13%; } .plot-shop-name { font-size: 22px; } .plot-shop-rule { margin: 7px 0; } .plot-shop-count { margin: 6px 0; font-size: 28px; } .plot-shop-location { margin-bottom: 6px; font-size: 9px; } .plot-shop-inquire { margin-top: 8px; } .plot-shop-section { font-size: 10px; } }
-@media (max-width: 640px) { .plot-shop-masthead { gap: 12px; } .plot-shop-masthead-rule { display: none; } .plot-shop-sign { padding: 16px 20px 14px; width: 100%; } .plot-shop-sign h2 { font-size: 28px; } }
 @media (prefers-reduced-motion: reduce) { .plot-shop { transition: none; } .plot-shop:hover { transform: none; } }
