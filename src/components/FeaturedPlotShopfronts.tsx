@@ -114,7 +114,12 @@ export default function FeaturedPlotShopfronts() {
             <p>Private resale · Across Texas</p>
             <h2 id="featured-plots-heading" className="font-display">Featured properties</h2>
           </div>
-          <div className="plot-featured-awning" aria-hidden="true" />
+          <div className="plot-featured-awning" aria-hidden="true">
+            <div className="plot-featured-awning-roof" />
+            <div className="plot-featured-awning-valance">
+              {Array.from({ length: 28 }, (_, index) => <span key={index} />)}
+            </div>
+          </div>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.25 }} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>

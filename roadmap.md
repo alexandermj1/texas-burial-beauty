@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Refine the Featured sign to faithfully match the reference with layered framing and a dimensional scalloped awning; verify desktop and phone
 - [x] Use the latest reference for a full-width muted shop sign and striped awning above the plots
 - [x] Shuffle the automatic cycle, wrap to fill desktop rows, omit visible totals and preserve muted artwork; every unique card verified automatically on desktop and phone, including pause and inquiry links
 - [x] Add verified broad retail/resale ranges only; comparisons available for 18 records, remaining records use inquiry fallback; 1280/768/390/320 layouts and all phone cards checked
