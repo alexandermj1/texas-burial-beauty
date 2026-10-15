@@ -109,16 +109,9 @@ export default function FeaturedPlotShopfronts() {
   return (
     <section ref={ref} aria-labelledby="featured-plots-heading" className="plot-shopfronts py-8 sm:py-10">
       <div className="mx-auto max-w-[1536px] px-6 sm:px-10 lg:px-16">
-        <div className="plot-shop-masthead">
-          <span className="plot-shop-masthead-rule" aria-hidden="true" />
-          <div className="plot-shop-facade">
-          <span className="plot-shop-star" aria-hidden="true">★</span>
-          <div className="plot-shop-sign">
-            <p className="plot-shop-sign-kicker">★ Private resale · Texas ★</p>
-            <h2 id="featured-plots-heading" className="font-display">Featured properties</h2>
-          </div>
-          </div>
-          <span className="plot-shop-masthead-rule" aria-hidden="true" />
+        <div className="mb-5">
+          <p className="text-[11px] uppercase text-primary mb-1">Private resale · Across Texas</p>
+          <h2 id="featured-plots-heading" className="font-display text-3xl sm:text-4xl leading-tight text-foreground">Featured properties<span className="text-primary">.</span></h2>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.25 }} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>

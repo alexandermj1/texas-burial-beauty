@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Current request
-- [ ] Randomize the automatic cycle, wrap to fill desktop rows, and replace the heading with the supplied Texas storefront reference
-- [ ] Make Featured rotation automatic without clicks or visible totals; refine the Parisian masthead and preserve muted artwork
+- [ ] Restore the original website-style Featured heading, not the Texas or Parisian storefront label
+- [ ] Randomize automatic browsing, wrap to fill desktop rows, omit visible totals and preserve muted artwork
 - [ ] Add verified broad retail/resale ranges only; check all cards and mobile fit
 - [x] Replace shopfront artwork with supplied backgrounds, tighten spacing and refine names; move below the map
 - [x] Use 20 verified paid Featured/legacy Featured properties only; check live inventory, all rotation pages, mobile text fit and inquiry links; hosted backgrounds verified (local screenshots use the same uploaded images)
