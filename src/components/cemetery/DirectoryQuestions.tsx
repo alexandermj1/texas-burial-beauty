@@ -10,7 +10,7 @@ const questions = [
   },
   {
     q: "Are cemetery plots cheaper bought privately?",
-    a: "Usually, yes. Pre-owned plots can cost 30–50% less than comparable cemetery retail, depending on the park, section and available property. The space remains in the same cemetery. Compare the complete buyer price, including the cemetery’s transfer fee and any buyer premium, rather than the plot price alone.",
+    a: "Pre-owned plots can cost meaningfully less than comparable cemetery retail, depending on the park, section and available property. There is no fixed discount. The space remains in the same cemetery. Compare the complete buyer price, including the cemetery’s transfer fee and any buyer premium, rather than the plot price alone.",
     href: "/cemetery-plot-cost-texas", link: "Understand the full cost",
   },
   {

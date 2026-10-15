@@ -84,7 +84,7 @@ const faqs = [
   },
   {
     q: "What's the cheapest way to buy a cemetery plot in Texas?",
-    a: "Compare pre-owned spaces first: they can cost 30–50% less than comparable cemetery retail, depending on the cemetery and section. Buying before you need the space gives you more time to compare. Check the transfer fee, any buyer premium and what is included — opening and closing, a vault and the marker are often separate charges. Eligible veterans and family members should also check national cemetery benefits before buying.",
+    a: "Compare pre-owned spaces first: they can cost meaningfully less than comparable cemetery retail, depending on the cemetery and section, but there is no fixed discount. Buying before you need the space gives you more time to compare. Check the transfer fee, any buyer premium and what is included — opening and closing, a vault and the marker are often separate charges. Eligible veterans and family members should also check national cemetery benefits before buying.",
   },
   {
     q: "How does buying a cemetery plot from a private seller work?",
