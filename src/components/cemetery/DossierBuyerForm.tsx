@@ -23,6 +23,20 @@ const TIMELINES = [
   { id: "preneed", label: "Planning ahead" },
 ];
 
+const BUDGETS = [
+  { id: "under5k", label: "Under $5,000" },
+  { id: "5to10k", label: "$5,000 – $10,000" },
+  { id: "10to20k", label: "$10,000 – $20,000" },
+  { id: "over20k", label: "$20,000+" },
+  { id: "flexible", label: "Flexible / Not Sure" },
+];
+
+const CONTACT_PREFS = [
+  { id: "phone", label: "Call" },
+  { id: "email", label: "Email" },
+  { id: "either", label: "Either" },
+];
+
 interface Props {
   cemeteryName: string;
   region: string;
@@ -39,6 +53,8 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
   const [form, setForm] = useState({
     propertyType: "plot",
     timeline: "soon",
+    budget: "",
+    contactPref: "either",
     quantity: "1",
     name: "",
     phone: "",
@@ -56,11 +72,15 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
 
     const typeLabel = TYPES.find((t) => t.id === form.propertyType)?.label ?? form.propertyType;
     const timelineLabel = TIMELINES.find((t) => t.id === form.timeline)?.label ?? form.timeline;
+    const budgetLabel = BUDGETS.find((b) => b.id === form.budget)?.label ?? null;
+    const prefLabel = CONTACT_PREFS.find((c) => c.id === form.contactPref)?.label ?? "Either";
     const details = [
       `Cemetery: ${cemeteryName}`,
       `Property type: ${typeLabel}`,
       `Timeline: ${timelineLabel}`,
+      `Budget: ${budgetLabel ?? "Not given"}`,
       `Spaces wanted: ${form.quantity || "1"}`,
+      `Preferred contact: ${prefLabel}`,
       form.note.trim() ? `\nMessage from buyer:\n${form.note.trim()}` : null,
     ]
       .filter(Boolean)
@@ -77,6 +97,7 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
       phone: form.phone.trim() || null,
       property_type: typeLabel,
       timeline: timelineLabel,
+      budget: budgetLabel,
       region,
       cemetery: cemeteryName,
       details,
