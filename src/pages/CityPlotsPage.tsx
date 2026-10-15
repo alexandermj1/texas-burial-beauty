@@ -8,9 +8,17 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
-import dallasHeroArt from "@/assets/dallas-hero-illustration.png.asset.json";
-import houstonHeroArt from "@/assets/houston-hero-illustration.png.asset.json";
-import austinHeroArt from "@/assets/austin-hero-illustration.png.asset.json";
+import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
+import houstonPhoto from "@/assets/houston-skyline.png.asset.json";
+import austinPhoto from "@/assets/austin-skyline.webp.asset.json";
+import sanAntonioPhoto from "@/assets/san-antonio-riverwalk.webp.asset.json";
+
+const CITY_PHOTOS: Record<string, { src: string; alt: string; landmark: string; position: string }> = {
+  dallas: { src: dallasPhoto.url, alt: "Downtown Dallas skyline at dusk with Reunion Tower and the Margaret Hunt Hill Bridge reflected in the Trinity River", landmark: "Reunion Tower · Trinity River", position: "62% center" },
+  houston: { src: houstonPhoto.url, alt: "Downtown Houston skyline at night above Buffalo Bayou", landmark: "Buffalo Bayou · Downtown", position: "50% center" },
+  austin: { src: austinPhoto.url, alt: "Downtown Austin skyline reflected in Lady Bird Lake at dusk", landmark: "Lady Bird Lake · Downtown", position: "50% center" },
+  "san-antonio": { src: sanAntonioPhoto.url, alt: "San Antonio River Walk at dusk with stone bridge, string lights and the Tower of the Americas", landmark: "River Walk · Tower of the Americas", position: "55% center" },
+};
 
 const SITE = "https://texascemeterybrokers.com";
 
@@ -107,7 +115,7 @@ const CityPlotsPage = () => {
       <Navbar forceScrolled />
 
       {/* HERO */}
-      {data.slug === "houston" || data.slug === "austin" || data.slug === "dallas" ? (
+      {CITY_PHOTOS[data.slug] ? (
         <section className="relative overflow-hidden bg-[hsl(38_35%_95%)] pt-24 md:pt-28">
           <div className="grid lg:grid-cols-2 items-center gap-10 lg:gap-0">
             <motion.div
@@ -159,38 +167,37 @@ const CityPlotsPage = () => {
               </dl>
             </motion.div>
 
-            <div className="relative h-full lg:self-stretch">
-              <img
-                src={
-                  data.slug === "austin"
-                    ? austinHeroArt.url
-                    : data.slug === "dallas"
-                    ? dallasHeroArt.url
-                    : houstonHeroArt.url
-                }
-                alt={
-                  data.slug === "austin"
-                    ? "Watercolor illustration of an Austin, Texas cemetery entrance sign with mausoleum, headstones and the downtown Austin skyline behind it"
-                    : data.slug === "dallas"
-                    ? "Illustration of a Dallas, Texas cemetery with the downtown Dallas skyline behind it"
-                    : "Watercolor illustration of a Houston, Texas cemetery entrance sign with mausoleum, headstones and the downtown Houston skyline behind it"
-                }
-                title={`Cemetery plots for sale in ${data.city}, Texas`}
-                width={1744}
-                height={902}
-                className="w-full h-full object-cover mix-blend-multiply"
-                loading="eager"
-                fetchPriority="high"
-              />
-              {/* Dissolve the artwork into the cream field on every edge */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-32 md:h-44 bg-gradient-to-b from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/70 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-28 md:w-48 bg-gradient-to-r from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/60 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-16 md:w-28 bg-gradient-to-l from-[hsl(38_35%_95%)] to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 md:h-40 bg-gradient-to-t from-[hsl(38_35%_95%)] via-[hsl(38_35%_95%)]/70 to-transparent" />
-              <p className="absolute bottom-5 left-0 right-0 px-6 text-center text-[11px] tracking-[0.2em] uppercase text-foreground/55">
-                {data.metroCemeteryCount}+ cemeteries covered · Same-day showings
-              </p>
-            </div>
+            {(() => {
+              const photo = CITY_PHOTOS[data.slug] ?? CITY_PHOTOS.houston;
+              return (
+                <motion.figure
+                  initial={{ opacity: 0, scale: 1.02 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative px-6 lg:pl-0 lg:pr-[max(2.5rem,calc((100vw-1280px)/2+2.5rem))] pb-10 lg:py-10"
+                >
+                  <div className="relative overflow-hidden rounded-[28px] shadow-[0_30px_60px_-30px_hsl(var(--foreground)/0.45)] ring-1 ring-foreground/10 aspect-[4/5] sm:aspect-[5/4] lg:aspect-[4/5] xl:aspect-[5/6]">
+                    <img
+                      src={photo.src}
+                      alt={photo.alt}
+                      title={`Cemetery plots for sale in ${data.city}, Texas`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ objectPosition: photo.position }}
+                      loading="eager"
+                      fetchPriority="high"
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-foreground/75 via-foreground/25 to-transparent" />
+                    <figcaption className="absolute left-6 right-6 bottom-6 md:left-8 md:bottom-8 text-background">
+                      <p className="text-[10px] tracking-[0.32em] uppercase opacity-75">{photo.landmark}</p>
+                      <p className="mt-2 font-display text-3xl md:text-4xl leading-none">{data.city}, Texas</p>
+                      <p className="mt-4 pt-4 border-t border-background/25 text-[11px] tracking-[0.2em] uppercase opacity-80">
+                        {data.metroCemeteryCount}+ cemeteries covered · Same-day showings
+                      </p>
+                    </figcaption>
+                  </div>
+                </motion.figure>
+              );
+            })()}
           </div>
 
           {/* Blend the hero into the page below */}
