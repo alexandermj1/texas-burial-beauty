@@ -92,7 +92,7 @@ const PlotResaleCalculator = ({ compact = false, heading = "What is your cemeter
           {Array.from({ length: 5 }, (_, i) => <div key={i} className={`valuation-tile valuation-tile-${i}`} />)}
         </div>
         <div className="absolute inset-0 valuation-hero-overlay" aria-hidden="true" />
-        <div className={`relative z-10 flex flex-col items-center max-w-3xl ${compact ? "px-5 py-6 md:py-7 gap-3" : "px-6 py-10 md:py-14 gap-5"}`}>
+        <div className={`relative z-10 flex flex-col items-center max-w-3xl ${compact ? "px-5 py-6 md:py-7 gap-3" : "px-6 py-8 md:py-10 gap-4"}`}>
           <p className="flex items-center justify-center gap-2 text-[11px] font-semibold tracking-[0.22em] uppercase text-primary"><Sparkles className="w-4 h-4" /> Free instant estimate</p>
           <h2 className={`font-display ${compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl"} leading-[1.08] text-foreground`}>{heading}</h2>
           <p className={`${compact ? "text-sm" : "text-lg md:text-xl"} text-muted-foreground leading-relaxed max-w-xl`}>{compact ? "Compare resale value and time to sell." : "See what yours could sell for — compare a broker sale with selling privately, in seconds."}</p>
