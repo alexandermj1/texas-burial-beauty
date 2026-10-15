@@ -531,7 +531,7 @@ Deno.serve(async (req) => {
               'X-Connection-Api-Key': RESEND_KEY,
             },
             body: JSON.stringify({
-              from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
+              from: 'Texas Cemetery Brokers <info@texascemeterybrokers.com>',
               to: [to],
               bcc: ['contracts@texascemeterybrokers.com'],
               reply_to: 'info@texascemeterybrokers.com',
@@ -785,7 +785,7 @@ Deno.serve(async (req) => {
               'X-Connection-Api-Key': RESEND_KEY,
             },
             body: JSON.stringify({
-              from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
+              from: 'Texas Cemetery Brokers <info@texascemeterybrokers.com>',
               to: [sub.email],
               bcc: ['contracts@texascemeterybrokers.com'],
               reply_to: 'info@texascemeterybrokers.com',
@@ -802,7 +802,7 @@ Deno.serve(async (req) => {
               await svc.from('email_messages').insert({
                 matched_submission_id: c.submission_id,
                 direction: 'outbound',
-                from_email: 'contracts@texascemeterybrokers.com',
+                from_email: 'info@texascemeterybrokers.com',
                 to_email: sub.email,
                 subject,
                 body_html: html,
@@ -1048,7 +1048,7 @@ Deno.serve(async (req) => {
             'X-Connection-Api-Key': RESEND_KEY,
           },
           body: JSON.stringify({
-            from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
+            from: 'Texas Cemetery Brokers <info@texascemeterybrokers.com>',
             to: [to],
             bcc: ['contracts@texascemeterybrokers.com'],
               reply_to: 'info@texascemeterybrokers.com',
@@ -1066,7 +1066,7 @@ Deno.serve(async (req) => {
             await svc.from('email_messages').insert({
               matched_submission_id: c.submission_id,
               direction: 'outbound',
-              from_email: 'contracts@texascemeterybrokers.com',
+              from_email: 'info@texascemeterybrokers.com',
               to_email: to,
               subject: `Signature received — your ${docLabel} (copy attached)`,
               body_html: html,
