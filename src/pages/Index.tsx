@@ -1,4 +1,4 @@
-import FeaturedPlotShopfronts from "@/components/FeaturedPlotShopfronts";
+// import FeaturedPlotShopfronts from "@/components/FeaturedPlotShopfronts"; // hidden for now, component kept
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import AboutSeoSection from "@/components/AboutSeoSection";
@@ -91,7 +91,9 @@ const Index = () => {
       {/* On phones the "How selling works" story comes before the map */}
       {isMobile && <SellerPromoAnimation />}
       <HomeCemeteryMap />
-      <FeaturedPlotShopfronts />
+      {/* Temporarily hidden — component kept in src/components/FeaturedPlotShopfronts.tsx */}
+      {/* <FeaturedPlotShopfronts /> */}
+
 
       <StoryStrip
         img={featuredImg}
