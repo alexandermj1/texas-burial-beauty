@@ -460,3 +460,26 @@
     box-shadow: 0 8px 40px -8px hsl(25 20% 15% / 0.12);
   }
 }
+
+/* Botanical shopfronts: public inventory, never public asking prices. */
+.plot-shopfronts { background: hsl(var(--sand-light)); }
+.plot-shop { --shop-color: var(--primary); --shop-fg: var(--primary-foreground); display: block; min-width: 0; border-radius: 8px; overflow: hidden; background: hsl(var(--background)); transition: box-shadow 250ms ease; }
+.plot-shop:hover { box-shadow: 0 12px 30px -18px hsl(var(--foreground) / .35); }
+.plot-shop:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 5px; }
+.plot-shop-1 { --shop-color: var(--terracotta); }
+.plot-shop-2 { --shop-color: var(--foreground); }
+.plot-shop-3 { --shop-color: var(--sand); --shop-fg: var(--foreground); }
+.plot-shop-4 { --shop-color: var(--sage-light); --shop-fg: var(--foreground); }
+.plot-shop-5 { --shop-color: var(--terracotta-light); --shop-fg: var(--foreground); }
+.plot-shop-sign { position: relative; margin: 5px 5px 0; padding: 13px 18px; background: hsl(var(--shop-color)); color: hsl(var(--shop-fg)); text-align: center; min-height: 88px; display: flex; flex-direction: column; justify-content: center; }
+.plot-shop-sign::after { content: ''; position: absolute; inset: 5px; border: 1px solid hsl(var(--shop-fg) / .35); pointer-events: none; }
+.plot-shop-awning { display: flex; height: 30px; position: relative; z-index: 2; }
+.plot-shop-awning span { flex: 1; background: hsl(var(--shop-color)); border-radius: 0 0 7px 7px; border-bottom: 3px solid hsl(var(--foreground) / .12); }
+.plot-shop-awning span:nth-child(even) { background: hsl(var(--background)); }
+.plot-shop-window { position: relative; aspect-ratio: 1.55; margin: -5px 5px 0; overflow: hidden; background-color: hsl(var(--sand-light)); background-image: repeating-linear-gradient(0deg, hsl(var(--sand) / .35) 0 1px, transparent 1px 25px), repeating-linear-gradient(90deg, hsl(var(--sand) / .35) 0 1px, transparent 1px 60px); border-inline: 1px solid hsl(var(--border)); border-bottom: 7px solid hsl(var(--shop-color)); }
+.plot-shop-arch { position: absolute; inset: 16px 9% -30%; border-radius: 50% 50% 0 0; background: hsl(var(--shop-color)); border: 2px solid hsl(var(--gold)); }
+.plot-shop-botanicals { position: absolute; width: 84%; height: 135%; object-fit: fill; left: 8%; top: 12px; transition: transform 600ms ease; }
+.plot-shop:hover .plot-shop-botanicals { transform: translateY(-3px); }
+.plot-shop-ticket { position: absolute; left: 50%; top: 59%; transform: translate(-50%, -50%) rotate(-4deg); background: hsl(var(--background)); padding: 20px 14px; width: 48%; text-align: center; box-shadow: 0 4px 14px -6px hsl(var(--foreground) / .3); }
+.plot-shop-details { padding: 18px 20px; }
+@media (prefers-reduced-motion: reduce) { .plot-shop, .plot-shop-botanicals { transition: none; } }

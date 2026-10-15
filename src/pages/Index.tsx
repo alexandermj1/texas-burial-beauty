@@ -1,8 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
-import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import FeaturedPlotShopfronts from "@/components/FeaturedPlotShopfronts";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import AboutSeoSection from "@/components/AboutSeoSection";
@@ -26,7 +22,6 @@ import propertyTypesImg from "@/assets/story-property-types.png";
 import mobileImg from "@/assets/story-mobile.png";
 import Seo from "@/components/Seo";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ListingCard } from "@/pages/Properties";
 import { guides as guideEntries } from "@/pages/Guides";
 import GuidesCarousel from "@/components/GuidesCarousel";
 import hibiscusFlower from "@/assets/flowers/hibiscus-red.png.asset.json";
@@ -81,29 +76,7 @@ const HOME_FAQ_JSONLD = {
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const [allListings, setAllListings] = useState<any[]>([]);
-  const [rotationOffset, setRotationOffset] = useState(0);
-
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      const { data } = await supabase
-        .from("listings")
-        .select("id, cemetery, city, plot_type, section, spaces, asking_price, photos, description").is("deleted_at", null)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(24);
-      if (data) setAllListings(data);
-    };
-    fetchFeatured();
-  }, []);
-
-  // Rotate featured plots every 5 seconds when there are more than 6 listings.
-  useEffect(() => {
-    if (allListings.length <= 6) return;
-    const interval = setInterval(() => {
-      setRotationOffset((o) => (o + 1) % allListings.length);
-    }, 5000);
-    return () => clearInterval(interval);
+  return () => clearInterval(interval);
   }, [allListings.length]);
 
   const featuredListings = allListings.length > 0
@@ -123,45 +96,7 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
-      {/* Featured Available Plots — emerges from background as you scroll in */}
-      {featuredListings.length > 0 && (
-        <section className="relative py-14 sm:py-20 bg-gradient-warm overflow-hidden">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-12">
-              <span className="mb-3 block text-[11px] font-medium uppercase tracking-[0.3em] text-primary sm:text-xs">
-                Featured Listings · Texas
-              </span>
-              <h2 className="font-display text-4xl leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-6xl [text-wrap:balance]">
-                <span className="italic font-light">Featured Listings</span>
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-base font-light text-muted-foreground sm:text-lg">
-                Recently listed properties at below-market prices across Texas — Dallas, Houston & beyond.
-              </p>
-              <p className="mx-auto mt-3 max-w-xl text-sm font-light text-muted-foreground">
-                Planning ahead? Pre-need families can spread the cost over{" "}
-                <span className="font-medium text-foreground">24 months at 0% interest</span> — no interest, no finance charges.
-              </p>
-            </div>
-
-            {/* Mobile: horizontal swipe carousel. sm+: grid */}
-            <div className="max-w-6xl mx-auto">
-              <div className="-mx-6 px-6 sm:mx-0 sm:px-0 flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory sm:snap-none scroll-pl-6 pb-4 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {featuredListings.map((listing, i) => (
-                  <div key={listing.id} className="snap-start shrink-0 w-[85%] sm:w-auto">
-                    <ListingCard listing={listing} isAdmin={false} index={i} hidePrice />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="text-center mt-10">
-              <Link to="/cemeteries" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all">
-                View All Available Plots <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      <FeaturedPlotShopfronts />
 
       {/* On phones the "How selling works" story comes before the map */}
       {isMobile && <SellerPromoAnimation />}
