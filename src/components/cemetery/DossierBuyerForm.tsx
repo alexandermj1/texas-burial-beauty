@@ -213,6 +213,35 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
             </div>
           </div>
 
+          {[
+            { key: "budget", legend: "Budget", opts: BUDGETS },
+            { key: "contactPref", legend: "Best way to reach you", opts: CONTACT_PREFS },
+          ].map((g) => (
+            <fieldset key={g.key}>
+              <legend className={`${eyebrow} mb-3`}>{g.legend}</legend>
+              <div className="flex flex-wrap gap-2">
+                {g.opts.map((o) => {
+                  const active = (form as any)[g.key] === o.id;
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      onClick={() => set(g.key, o.id)}
+                      aria-pressed={active}
+                      className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                        active
+                          ? "border-[hsl(var(--gold))] bg-[hsl(var(--gold)/0.14)] text-[hsl(var(--parchment))]"
+                          : "border-[hsl(var(--gold)/0.25)] text-[hsl(var(--parchment)/0.75)] hover:border-[hsl(var(--gold)/0.6)]"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ))}
+
           <div className="grid sm:grid-cols-3 gap-3">
             <input
               aria-label="Your name"
