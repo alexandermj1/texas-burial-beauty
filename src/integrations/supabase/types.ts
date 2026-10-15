@@ -3203,6 +3203,22 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_public_featured_plot_ranges: {
+        Args: never
+        Returns: {
+          cemetery: string
+          city: string
+          created_at: string
+          id: string
+          plot_type: string
+          resale_high: number
+          resale_low: number
+          retail_high: number
+          retail_low: number
+          section: string
+          spaces: number
+        }[]
+      }
       get_public_featured_plots: {
         Args: never
         Returns: {

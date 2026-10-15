@@ -463,7 +463,20 @@
 
 /* Paid featured properties, framed by the owner-supplied plumeria artwork. */
 .plot-shopfronts { background: hsl(var(--background)); border-bottom: 1px solid hsl(var(--border)); }
-.plot-shop { --shop-ink: var(--foreground); --shop-paper: 85 23% 86%; --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; aspect-ratio: 646 / 846; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
+.plot-featured-canopy { --canopy-paper: var(--sage-light); --canopy-stripe: 145 18% 81%; --canopy-trim: var(--gold); --canopy-shadow: 0 8px 10px -9px hsl(var(--foreground) / .3); position: relative; z-index: 1; margin-bottom: 16px; }
+.plot-featured-sign { position: relative; width: 100%; padding: 22px 20px 24px; text-align: center; background: hsl(var(--canopy-paper)); border: 1px solid hsl(var(--canopy-trim) / .6); border-radius: 6px 6px 0 0; }
+.plot-featured-sign::before { content: ''; position: absolute; inset: 7px; border: 1px solid hsl(var(--canopy-trim)); border-radius: 3px; pointer-events: none; }
+.plot-featured-sign p { font-size: 10px; text-transform: uppercase; color: hsl(var(--primary)); margin-bottom: 6px; }
+.plot-featured-sign h2 { font-size: 38px; line-height: 1.15; color: hsl(var(--foreground)); }
+.plot-featured-awning { height: 46px; background: repeating-linear-gradient(90deg, hsl(var(--canopy-stripe)) 0 32px, hsl(var(--background)) 32px 64px); border-top: 1px solid hsl(var(--canopy-trim) / .45); border-radius: 0 0 8px 8px; box-shadow: var(--canopy-shadow); mask-image: linear-gradient(to bottom, black calc(100% - 8px), transparent calc(100% - 8px)), radial-gradient(ellipse 16px 9px at 16px calc(100% - 8px), black 98%, transparent 100%); mask-size: 100% 100%, 32px 100%; mask-repeat: no-repeat, repeat-x; }
+@media (max-width: 640px) { .plot-featured-sign { padding: 20px 14px; } .plot-featured-sign h2 { font-size: 28px; } .plot-featured-awning { height: 34px; } }
+.plot-shop { --shop-ink: var(--foreground); --shop-paper: 85 23% 86%; --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
+.plot-shop-art { position: relative; aspect-ratio: 646 / 846; }
+.plot-shop-price { min-height: 102px; padding: 12px 14px 16px; border-top: 1px solid hsl(var(--shop-ink) / .2); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px; text-align: center; }
+.plot-shop-price span { font-size: 9px; display: block; margin-bottom: 4px; }
+.plot-shop-price p { font-size: 13px; white-space: nowrap; }
+.plot-shop-price .plot-shop-resale p { font-size: 20px; }
+.plot-shop-price-pending { font-style: italic; opacity: .8; }
 .plot-shop:hover { box-shadow: var(--shop-shadow); transform: translateY(-3px); }
 .plot-shop:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
 .plot-shop-2, .plot-shop-3, .plot-shop-5 { --shop-ink: var(--primary-foreground); }
