@@ -463,12 +463,17 @@
 
 /* Paid featured properties, framed by the owner-supplied plumeria artwork. */
 .plot-shopfronts { background: hsl(var(--background)); border-bottom: 1px solid hsl(var(--border)); }
-.plot-shop { --shop-ink: var(--foreground); --shop-paper: var(--sand-light); --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; aspect-ratio: 646 / 846; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
+.plot-shop { --shop-ink: var(--foreground); --shop-paper: 85 23% 86%; --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; aspect-ratio: 646 / 846; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
 .plot-shop:hover { box-shadow: var(--shop-shadow); transform: translateY(-3px); }
 .plot-shop:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
 .plot-shop-2, .plot-shop-3, .plot-shop-5 { --shop-ink: var(--primary-foreground); }
+.plot-shop-1 { --shop-paper: 21 52% 81%; }
+.plot-shop-2 { --shop-paper: 21 20% 14%; }
+.plot-shop-3 { --shop-paper: 141 27% 33%; }
+.plot-shop-4 { --shop-paper: 40 43% 90%; }
+.plot-shop-5 { --shop-paper: 16 51% 53%; }
 .plot-shop-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.plot-shop-content { position: absolute; inset: 28% 17% 17%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.plot-shop-content { position: absolute; inset: 23% 14% 16%; padding: 12px 10px; border-radius: 48% 48% 3px 3px / 16% 16% 3px 3px; background: hsl(var(--shop-paper)); border: 1px solid hsl(var(--shop-ink) / .25); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 .plot-shop-location { font-size: 10px; text-transform: uppercase; margin-bottom: 10px; }
 .plot-shop-name { font-size: 27px; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
 .plot-shop-rule { width: 32px; height: 1px; background: hsl(var(--shop-ink) / .55); margin: 12px 0; flex-shrink: 0; }
@@ -485,4 +490,5 @@
   .plot-shop-count { font-size: 26px; margin: 5px 0; }
   .plot-shop-inquire { margin-top: 8px; }
 }
+@media (max-width: 400px) { .plot-shop-name { font-size: 22px; } .plot-shop-rule { margin: 7px 0; } .plot-shop-count { margin: 6px 0; font-size: 28px; } .plot-shop-location { margin-bottom: 6px; font-size: 9px; } .plot-shop-inquire { margin-top: 8px; } .plot-shop-section { font-size: 10px; } }
 @media (prefers-reduced-motion: reduce) { .plot-shop { transition: none; } .plot-shop:hover { transform: none; } }

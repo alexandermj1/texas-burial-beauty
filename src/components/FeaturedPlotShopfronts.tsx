@@ -48,7 +48,14 @@ export default function FeaturedPlotShopfronts() {
   const visible = useInView(ref, { amount: 0.2 });
   const reducedMotion = useReducedMotion();
   const mobile = useIsMobile();
-  const pageSize = mobile ? 1 : 3;
+  const [wide, setWide] = useState(() => window.matchMedia("(min-width: 1200px)").matches);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1200px)");
+    const update = () => setWide(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  const pageSize = mobile ? 1 : wide ? 3 : 2;
   const pageCount = Math.ceil(listings.length / pageSize);
   const currentPage = pageCount ? page % pageCount : 0;
   useEffect(() => {
@@ -82,7 +89,7 @@ export default function FeaturedPlotShopfronts() {
           <Button asChild variant="link" className="shrink-0 self-start sm:self-auto px-0"><Link to="/buy">Find your place <ArrowRight /></Link></Button>
         </div>
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.25 }} className="grid md:grid-cols-3 gap-4 lg:gap-5">
+          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.25 }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
             {shown.map((listing, index) => <Shopfront key={listing.id} listing={listing} index={currentPage * pageSize + index} />)}
           </motion.div>
         </AnimatePresence>
