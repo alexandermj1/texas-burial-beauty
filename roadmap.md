@@ -2,7 +2,7 @@
 
 ## Current request
 - [x] Add botanical homepage shopfronts, rotating pages and inquiry links; desktop/mobile presentation checked with saved inventory examples
-- [ ] Verify live homepage inventory read — blocked: test-browser listing requests return 401 signed out and 403 signed in; database read succeeds
+- [x] Verify live homepage inventory read — added a visitor-safe inventory view (public_listing_cards) exposing only cemetery, city, plot type, section and spaces; signed-out desktop and phone checks now show the cards
 - [x] Integrate Muse’s cost-guide quick answer and relevant FAQs, with grounded pricing and editorial styling
 - [x] Improve directory introduction and add useful buying, transfer and inherited-sale questions without changing exclusions
 - [x] Update cost and Laurel Land Fort Worth metadata and correct the directory title truncation; desktop/mobile links, metadata and three regression tests verified; publication remains owner-controlled
