@@ -114,7 +114,7 @@ export default function FeaturedPlotShopfronts() {
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-border">
-          <p className="text-xs text-muted-foreground max-w-md">Approximate ranges for a separately purchased space; resale includes recorded transfer fees and buyer charges. Buying together may cost less per space. Final pricing and availability confirmed on inquiry.</p>
+          <p className="text-xs text-muted-foreground max-w-md">Each card shows the cemetery, its section and the number of spaces available. Final pricing and availability confirmed on inquiry.</p>
           <Button asChild variant="link" className="px-0"><Link to="/buy">Find your place <ArrowRight /></Link></Button>
           {pageCount > 1 && <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" aria-label="Previous featured plots" title="Previous featured plots" onClick={() => move(-1)}><ArrowLeft /></Button>
