@@ -18,4 +18,4 @@
 - Submission lists display cached summaries and call summarize-submission (cheap model, fingerprint-cached) only for records with no summary yet, once per id per session; seller-agent rejects automatic cron requests — why: new inquiries need a summary line without browsing burning AI credits.
 - Use publicSeoUpgrades in both SEO renderers and preserve directory titles — why: crawler and live metadata must agree.
 
-- Shopfronts page active listings without prices; pause on interaction — why: private, accessible browsing.
+- Homepage featured properties use get_public_featured_plots, a fixed public projection of unsold paid Featured/legacy custom_plus and higher-tier seller records, never the general inventory; pause rotation on interaction — why: honour paid placement without exposing private seller data or prices.
