@@ -490,5 +490,5 @@
   .plot-shop-count { font-size: 26px; margin: 5px 0; }
   .plot-shop-inquire { margin-top: 8px; }
 }
-@media (max-width: 400px) { .plot-shop-name { font-size: 22px; } .plot-shop-rule { margin: 7px 0; } .plot-shop-count { margin: 6px 0; font-size: 28px; } .plot-shop-location { margin-bottom: 6px; font-size: 9px; } .plot-shop-inquire { margin-top: 8px; } .plot-shop-section { font-size: 10px; } }
+@media (max-width: 400px) { .plot-shop-content { inset-block: 20% 13%; } .plot-shop-name { font-size: 22px; } .plot-shop-rule { margin: 7px 0; } .plot-shop-count { margin: 6px 0; font-size: 28px; } .plot-shop-location { margin-bottom: 6px; font-size: 9px; } .plot-shop-inquire { margin-top: 8px; } .plot-shop-section { font-size: 10px; } }
 @media (prefers-reduced-motion: reduce) { .plot-shop { transition: none; } .plot-shop:hover { transform: none; } }
