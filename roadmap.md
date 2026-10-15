@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [x] Hide the homepage Featured shopfronts for now (import and render commented in Index.tsx); component file kept intact, homepage verified clean with no errors
+
 - [x] Refine the Featured sign with layered framing, warm paper, dimensional sloped stripes and rounded scallops; visually verified at 1381, 390 and 320px with no overflow or page errors
 - [x] Use the latest reference for a full-width muted shop sign and striped awning above the plots
 - [x] Shuffle the automatic cycle, wrap to fill desktop rows, omit visible totals and preserve muted artwork; every unique card verified automatically on desktop and phone, including pause and inquiry links
