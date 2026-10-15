@@ -88,11 +88,10 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
-      <FeaturedPlotShopfronts />
-
       {/* On phones the "How selling works" story comes before the map */}
       {isMobile && <SellerPromoAnimation />}
       <HomeCemeteryMap />
+      <FeaturedPlotShopfronts />
 
       <StoryStrip
         img={featuredImg}
