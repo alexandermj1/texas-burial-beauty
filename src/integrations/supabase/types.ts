@@ -3203,6 +3203,18 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_public_featured_plots: {
+        Args: never
+        Returns: {
+          cemetery: string
+          city: string
+          created_at: string
+          id: string
+          plot_type: string
+          section: string
+          spaces: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
