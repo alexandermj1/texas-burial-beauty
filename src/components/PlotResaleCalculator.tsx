@@ -99,7 +99,7 @@ const PlotResaleCalculator = ({ compact = false, heading = "What is your cemeter
           {!compact && <span className="inline-flex gap-2 items-center text-xs font-medium text-foreground/75 rounded-full border border-primary/30 bg-background/70 backdrop-blur px-4 py-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> No contact details needed</span>}
         </div>
       </div>
-      <div className="grid grid-cols-1">
+      <div className={`grid grid-cols-1 ${compact ? "" : "lg:grid-cols-2"}`}>
         <form onSubmit={run} className={`${compact ? "p-4 sm:p-6 space-y-4" : "p-6 md:p-9 space-y-6"} min-w-0`}>
           <div ref={boxRef} className="relative">
             <label htmlFor="value-cemetery" className="text-sm font-medium mb-2 block">Cemetery</label>
@@ -130,7 +130,7 @@ const PlotResaleCalculator = ({ compact = false, heading = "What is your cemeter
           <Button type="submit" disabled={loading} className="w-full h-13 min-h-12 text-sm">{loading ? <Loader2 className="animate-spin" /> : <Sparkles />}{loading ? "Calculating your estimate…" : "Estimate my plot value"}<ArrowRight className="ml-auto" /></Button>
           {err && <p role="alert" className="text-sm text-destructive">{err} <Link to={sellHref} className="underline">Get a free quote</Link></p>}
         </form>
-        <div className={`${compact ? "p-4 sm:p-6" : "p-6 md:p-9 min-h-[420px]"} bg-card text-foreground min-w-0 rounded-b-xl border-t border-primary/20 relative overflow-hidden`} aria-live="polite" aria-busy={loading}>
+        <div className={`${compact ? "p-4 sm:p-6" : "p-6 md:p-9 min-h-[420px]"} bg-card text-foreground min-w-0 rounded-b-xl border-t border-primary/20 ${compact ? "" : "lg:border-t-0 lg:border-l lg:rounded-bl-none"} relative overflow-hidden`} aria-live="polite" aria-busy={loading}>
           <AnimatePresence mode="wait">
             {!est ? <motion.div key={loading ? "loading" : "empty"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={transition} className="h-full flex flex-col justify-center text-center">
               {!compact && <>
