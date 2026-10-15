@@ -1166,6 +1166,11 @@ const OwnershipConfirm = () => {
                                   </div>
                                   {h.yes ? (<React.Fragment>
                                     <input value={h.spouseName ?? ""} onChange={h.setSpouse} placeholder={h.placeholder} style={{"width": "100%", "marginTop": "11px", "padding": "11px 13px", "fontSize": "15.5px", "fontWeight": "400", "color": "#1d1d1f", "background": "#ffffff", "border": `1px solid ${h.clash ? "#e6c3b4" : "#e3e3e8"}`, "borderRadius": "11px", "outline": "none", "animation": "fade .3s both"}} className="dcx20" />
+                                    {!(h.spouseName ?? "").trim() ? (
+                                      <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "500", "color": "#a8654c"}}>
+                                        Please type their name here to move on to the last step.
+                                      </div>
+                                    ) : null}
                                     <div style={{"marginTop": "7px", "fontSize": "13px", "fontWeight": "400", "color": h.clash ? "#a8654c" : "#4a6b54"}}>
                                       {h.clash ? h.clashNote : h.pair}
                                     </div>

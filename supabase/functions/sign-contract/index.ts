@@ -508,7 +508,7 @@ Deno.serve(async (req) => {
 
           <p style="margin:0 0 16px;font-size:14px;color:#4a5568;">
             <strong style="color:#1f2a37;">Once it's notarized</strong>, just email the signed PDF back to
-            <a href="mailto:contracts@texascemeterybrokers.com" style="color:#1f2a37;">contracts@texascemeterybrokers.com</a>
+            <a href="mailto:info@texascemeterybrokers.com" style="color:#1f2a37;">info@texascemeterybrokers.com</a>
             (or reply to this email with a photo/scan) and we'll file it with the cemetery to complete your transfer.
           </p>
           <p style="margin:20px 0 0;font-size:13px;color:#4a5568;">
@@ -534,6 +534,7 @@ Deno.serve(async (req) => {
               from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
               to: [to],
               bcc: ['contracts@texascemeterybrokers.com'],
+              reply_to: 'info@texascemeterybrokers.com',
               subject: `Your ${docName}${sub?.cemetery ? ` for ${sub.cemetery}` : ''} — notary packet attached`,
               html,
               attachments: [{ filename, content: b64 }],
@@ -787,6 +788,7 @@ Deno.serve(async (req) => {
               from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
               to: [sub.email],
               bcc: ['contracts@texascemeterybrokers.com'],
+              reply_to: 'info@texascemeterybrokers.com',
               subject,
               html,
               attachments: [{ filename, content: b64 }],
@@ -1049,6 +1051,7 @@ Deno.serve(async (req) => {
             from: 'Texas Cemetery Brokers <contracts@texascemeterybrokers.com>',
             to: [to],
             bcc: ['contracts@texascemeterybrokers.com'],
+              reply_to: 'info@texascemeterybrokers.com',
             subject: `Signature received — your ${docLabel} (copy attached)`,
             html,
             attachments: [{ filename, content: b64 }],
