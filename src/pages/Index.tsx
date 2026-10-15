@@ -76,14 +76,6 @@ const HOME_FAQ_JSONLD = {
 
 const Index = () => {
   const isMobile = useIsMobile();
-  return () => clearInterval(interval);
-  }, [allListings.length]);
-
-  const featuredListings = allListings.length > 0
-    ? Array.from({ length: Math.min(6, allListings.length) }, (_, i) =>
-        allListings[(rotationOffset + i) % allListings.length]
-      )
-    : [];
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
