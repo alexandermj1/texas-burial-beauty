@@ -29,6 +29,13 @@
       "when": 1792100134632,
       "tag": "0003_paid_featured_public_inventory",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792100238733,
+      "tag": "0004_featured_cemetery_display_names",
+      "breakpoints": true
     }
   ]
 }
