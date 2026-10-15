@@ -14,10 +14,6 @@ import terracottaBackground from "@/assets/plumeria-terracotta-tall.png.asset.js
 
 interface FeaturedPlot { id: string; cemetery: string; city: string; plot_type: string; section: string; spaces: number; retail_low?: number | null; retail_high?: number | null; resale_low?: number | null; resale_high?: number | null; }
 
-const priceRange = (low: number, high: number) => {
-  const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-  return low === 0 ? `Under ${money.format(high)}` : `${money.format(low)}–${money.format(high)}`;
-};
 
 const backgrounds = [sageBackground, blushBackground, midnightBackground, verdantBackground, clayBackground, terracottaBackground];
 const shuffle = <T,>(items: T[]) => {
@@ -32,32 +28,19 @@ const shuffle = <T,>(items: T[]) => {
 
 const cleanText = (value: string) => value.trim().replace(/\s+/g, " ").replace(/\bLot\/Space\s*/gi, "");
 const cemeteryLabel = (value: string) => cleanText(value).replace(/ Funeral Home & Cemetery$/i, "").replace(/\//g, " / ");
-const propertyLabel = (value: string) => {
-  if (/^burial plot/i.test(value)) return "Burial plots";
-  if (/crypt.*mausoleum/i.test(value)) return "Mausoleum crypts";
-  if (/double depth lc/i.test(value)) return "Double-depth lawn crypt";
-  return cleanText(value) || "Cemetery property";
-};
 
 const Shopfront = ({ listing, index }: { listing: FeaturedPlot; index: number }) => (
-  <Link data-listing-id={listing.id} to={`/buy?cemetery=${encodeURIComponent(listing.cemetery)}`} className={`plot-shop plot-shop-${index % 6} group`} aria-label={`Inquire about ${listing.cemetery}, ${listing.section || propertyLabel(listing.plot_type)}`}>
+  <Link data-listing-id={listing.id} to={`/buy?cemetery=${encodeURIComponent(listing.cemetery)}`} className={`plot-shop plot-shop-${index % 6} group`} aria-label={`Inquire about ${listing.cemetery}${listing.section ? `, ${cleanText(listing.section)}` : ""}`}>
     <div className="plot-shop-art">
     <img src={backgrounds[index % backgrounds.length].url} alt="" loading="lazy" width={646} height={846} className="plot-shop-background" />
     <div className="plot-shop-content">
       <p className="plot-shop-location">{listing.city ? `${cleanText(listing.city)}, Texas` : "Texas"}</p>
       <h3 className="plot-shop-name font-display">{cemeteryLabel(listing.cemetery)}</h3>
       <div className="plot-shop-rule" aria-hidden="true" />
-      <p className="plot-shop-type">{propertyLabel(listing.plot_type)}</p>
       {listing.spaces > 0 && <p className="plot-shop-count font-display">{listing.spaces}<span>{listing.spaces === 1 ? "space" : "spaces"}</span></p>}
       <p className="plot-shop-section">{cleanText(listing.section) || "Location details on request"}</p>
       <span className="plot-shop-inquire">Inquire <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" /></span>
     </div>
-    </div>
-    <div className="plot-shop-price">
-      {listing.retail_low != null && listing.retail_high != null && listing.resale_low != null && listing.resale_high != null ? <>
-        <div><span>Approx. retail / space</span><p>{priceRange(listing.retail_low, listing.retail_high)}</p></div>
-        <div className="plot-shop-resale"><span>Approx. resale / space</span><p className="font-display">{priceRange(listing.resale_low, listing.resale_high)}</p></div>
-      </> : <p className="plot-shop-price-pending">Price guidance on inquiry</p>}
     </div>
   </Link>
 );
