@@ -100,7 +100,7 @@ export default function FeaturedPlotShopfronts() {
   useEffect(() => { setPage(0); }, [pageSize]);
   useEffect(() => {
     if (pageCount <= 1 || paused || interacting || !visible) return;
-    const timer = window.setInterval(() => { if (!document.hidden) setPage(value => value + 1); }, 6500);
+    const timer = window.setInterval(() => { if (!document.hidden) setPage(value => value + 1); }, 9000);
     return () => window.clearInterval(timer);
   }, [pageCount, paused, interacting, visible, reducedMotion]);
   if (!listings.length) return null;
@@ -122,8 +122,12 @@ export default function FeaturedPlotShopfronts() {
           </div>
         </div>
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reducedMotion ? 0 : 0.25 }} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
-            {shown.map((listing, index) => <Shopfront key={listing.id} listing={listing} index={currentPage * pageSize + index} />)}
+          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }} transition={{ duration: reducedMotion ? 0 : 0.45, ease: "easeOut" }} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+            {shown.map((listing, index) => (
+              <motion.div key={listing.id} initial={{ opacity: 0, y: reducedMotion ? 0 : 28 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reducedMotion ? 0 : 0.12 + index * 0.16, duration: reducedMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}>
+                <Shopfront listing={listing} index={currentPage * pageSize + index} />
+              </motion.div>
+            ))}
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-border">
