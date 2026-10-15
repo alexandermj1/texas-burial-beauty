@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Replace homepage featured plots with reference-inspired botanical shopfronts, real inventory, rotating pages and desktop/mobile verification
 - [x] Integrate Muse’s cost-guide quick answer and relevant FAQs, with grounded pricing and editorial styling
 - [x] Improve directory introduction and add useful buying, transfer and inherited-sale questions without changing exclusions
 - [x] Update cost and Laurel Land Fort Worth metadata and correct the directory title truncation; desktop/mobile links, metadata and three regression tests verified; publication remains owner-controlled
