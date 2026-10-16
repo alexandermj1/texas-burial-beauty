@@ -100,9 +100,18 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
           {showSnapshot && (
             <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
               {draft.inventory_snapshot.map((x, i) => (
-                <li key={i} className="rounded-lg bg-card/70 border border-indigo-500/20 px-3 py-2 text-xs">
+                <li key={x.listing_id ?? i} className="relative rounded-lg bg-card/70 border border-indigo-500/20 px-3 py-2 pr-16 text-xs">
+                  {x.seller_name && <span className="block font-semibold text-foreground">{x.seller_name}</span>}
                   <span className="font-medium text-foreground">{x.garden || "Garden not named"}</span> · {x.spaces} space{x.spaces === 1 ? "" : "s"}<br />
-                  <span className="text-muted-foreground">Retail {x.retail_total} · ours {x.our_total} · {x.readiness}</span>
+                  {x.spaces > 1 && x.our_price_per_space && <span className="text-muted-foreground">Per space: retail {x.retail_per_space} · ours {x.our_price_per_space}<br /></span>}
+                  <span className="text-muted-foreground">{x.spaces > 1 ? "All spaces: " : ""}Retail {x.retail_total} · ours {x.our_total} · {x.readiness}</span>
+                  {x.listing_id && draft.status === "proposed" && (
+                    <button type="button" disabled={!!busy}
+                      onClick={() => act("exclude", { action: "exclude", draft_id: draft.id, listing_id: x.listing_id }, "Plot removed — email redrafted")}
+                      className="absolute right-2 top-2 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-destructive hover:border-destructive/50 disabled:opacity-50">
+                      {busy === "exclude" ? "…" : "Remove"}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
