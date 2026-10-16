@@ -502,6 +502,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           error: string | null
+          excluded_listing_ids: string[]
           id: string
           inventory_snapshot: Json
           reason: string | null
@@ -521,6 +522,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           error?: string | null
+          excluded_listing_ids?: string[]
           id?: string
           inventory_snapshot?: Json
           reason?: string | null
@@ -540,6 +542,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           error?: string | null
+          excluded_listing_ids?: string[]
           id?: string
           inventory_snapshot?: Json
           reason?: string | null

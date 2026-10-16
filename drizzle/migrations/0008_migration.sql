@@ -1,0 +1,1 @@
+ALTER TABLE public.buyer_ai_drafts ADD COLUMN IF NOT EXISTS excluded_listing_ids uuid[] NOT NULL DEFAULT '{}';
