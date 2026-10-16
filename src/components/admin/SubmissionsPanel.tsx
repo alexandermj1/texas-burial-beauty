@@ -10,6 +10,7 @@ import CustomerKindBadge, { resolveKind } from "./CustomerKindBadge";
 import BayerBadge from "./BayerBadge";
 import CustomerJourney from "./CustomerJourney";
 import BuyerJourneyPanel from "./BuyerJourneyPanel";
+import BuyerAiDraftCard from "./BuyerAiDraftCard";
 import BuyerCemeteryInventory from "./BuyerCemeteryInventory";
 import BayerPipelinePanel, { deriveBayerStage, BAYER_STAGE_META, BAYER_STAGE_ORDER, type BayerStage } from "./BayerPipelinePanel";
 import { buildSellerIntakeTemplate, buildBuyerHaveItTemplate, buildBuyerNoInventoryTemplate, buildSellerListingOptionsTemplate, buildSellerListingAgreementTemplate, buildSellerFamilyTreeTemplate } from "@/lib/emailTemplates";
@@ -3012,6 +3013,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
             {/* Files the seller uploaded with the form */}
+            {kind === "buyer" && aiOn && <BuyerAiDraftCard submissionId={selected.id} />}
             {kind !== "buyer" && sellerWorkspaceTab === "files" && Array.isArray((selected as any).seller_attachments) && (selected as any).seller_attachments.length > 0 && (
               <SellerAttachmentsBlock files={(selected as any).seller_attachments} />
             )}
