@@ -67,7 +67,7 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
     const base = { quoteAmount: s.quote_amount, acceptedAmount: s.accepted_quote_amount, transferFee: fee, buyerFees: normalizeBuyerFees(s.buyer_fees) };
     const figures = quoteFigures({ ...base, plotCount: count });
     // Buyers can take part of a group: price exactly the number of spaces they asked for.
-    const want = Math.floor(Number(String(buyer.spaces ?? "").match(/\d+/)?.[0] ?? 0));
+    const want = Math.floor(Number(String(buyer.spaces ?? "").match(/\d+/)?.[0] ?? String(buyer.message ?? "").match(/(?:plots|spaces|niches|crypts)\s*(?:wanted|needed)?\s*:\s*(\d+)/i)?.[1] ?? 0));
     const part = want >= 1 && want < count && fee != null ? quoteFigures({ ...base, plotCount: want }) : null;
     const ourTotal = figures.hasQuote && fee != null ? figures.buyerPriceTotal : null;
     const retail = Number(s.cemetery_retail) > 0 ? Number(s.cemetery_retail) * count : null;
