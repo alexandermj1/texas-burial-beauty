@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
     const { data: d } = await db.from("buyer_ai_drafts").select("*").eq("id", b.draft_id).is("deleted_at", null).maybeSingle();
     if (!d || d.status !== "proposed") return json({ error: "Draft is no longer awaiting approval" }, 409);
     const decided = { decided_by_name: user.name, decided_by_user_id: user.id, decided_at: new Date().toISOString(), updated_at: new Date().toISOString() };
-    if (b.action === "reject") { await db.from("buyer_ai_drafts").update({ ...decided, status: "rejected", error: b.reason }).eq("id", d.id); return json({ ok: true }); }
+    if (b.action === "reject") { await db.from("buyer_ai_drafts").update({ ...decided, status: "rejected", decision_reason: b.reason }).eq("id", d.id); return json({ ok: true }); }
     const { data: s } = await db.from("contact_submissions").select("*").eq("id", d.submission_id).maybeSingle();
     if (!s?.email) return json({ error: "Buyer email missing" }, 400);
     if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return json({ error: "Buyer record is closed or paused" }, 409);
