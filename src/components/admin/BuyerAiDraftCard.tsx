@@ -101,7 +101,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
             <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
               {draft.inventory_snapshot.map((x, i) => (
                 <li key={i} className="rounded-lg bg-card/70 border border-indigo-500/20 px-3 py-2 text-xs">
-                  <span className="font-medium text-foreground">{x.garden}</span> · {x.spaces} space{x.spaces === 1 ? "" : "s"}<br />
+                  <span className="font-medium text-foreground">{x.garden || "Garden not named"}</span> · {x.spaces} space{x.spaces === 1 ? "" : "s"}<br />
                   <span className="text-muted-foreground">Retail {x.retail_total} · ours {x.our_total} · {x.readiness}</span>
                 </li>
               ))}
