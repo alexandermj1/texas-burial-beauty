@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Navbar from "@/components/Navbar";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -371,12 +372,12 @@ const DeedCopy = ({ file }: { file?: Attachment }) => {
   if (!file) return null;
   const isPdf = (file.mime ?? "").includes("pdf") || /\.pdf$/i.test(file.name);
   return (
-    <aside style={{ flex: "1 1 300px", minWidth: 0, maxWidth: 460, position: "sticky", top: 96, display: "flex", flexDirection: "column", gap: 12 }}>
+    <aside className="ocq-deed" style={{ flex: "1 1 300px", minWidth: 0, maxWidth: 460, position: "sticky", top: 150, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
         <span style={caps}>Your copy of the deed</span>
         <a href={file.url} target="_blank" rel="noreferrer" style={{ fontSize: 13.5 }}>Open full size</a>
       </div>
-      <div style={{ position: "relative", width: "100%", aspectRatio: "8.5 / 11", borderRadius: 16, overflow: "hidden", background: CARD, border: `1px solid ${LINE}`, boxShadow: "0 24px 50px -32px rgba(31,42,55,0.45)" }}>
+      <div className="ocq-deedbox" style={{ position: "relative", width: "100%", aspectRatio: "8.5 / 11", borderRadius: 16, overflow: "hidden", background: CARD, border: `1px solid ${LINE}`, boxShadow: "0 24px 50px -32px rgba(31,42,55,0.45)" }}>
         {isPdf ? (
           <iframe src={`${file.url}#toolbar=0&view=FitH`} title={file.name} style={{ width: "100%", height: "100%", border: 0 }} />
         ) : broken ? (
@@ -403,6 +404,7 @@ const OwnershipConfirmV3 = () => {
   const [done, setDone] = useState(false);
   const [save, setSave] = useState<"idle" | "saving" | "saved">("idle");
   const [whyOpen, setWhyOpen] = useState(false);
+  const [deedOpen, setDeedOpen] = useState<boolean | null>(null);
   const preset = useRef<Set<string>>(new Set());
   const stage = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
@@ -523,7 +525,7 @@ const OwnershipConfirmV3 = () => {
   const location = packet?.plot_description?.trim() || [packet?.lawn, packet?.space_numbers ? `Spaces ${packet.space_numbers}` : ""].filter(Boolean).join(", ") || "The spaces on your deed";
   const files = packet?.attachments ?? [];
   const deedFile = files.find((f) => /deed|certificate|ownership/i.test(f.name)) ?? files[0];
-  const showDeed = !done && q.isDeed && !!deedFile;
+  const showDeed = !done && !!deedFile && (deedOpen ?? !!q.isDeed);
   const inStage = q.stage ? Qs.filter((x) => x.stage === q.stage) : [];
   const counter = !done && inStage.length > 1 ? `${inStage.indexOf(q) + 1} of ${inStage.length}` : "";
   const pct = done ? 100 : Math.round((cur / Math.max(Qs.length, cur + 5)) * 100);
@@ -541,12 +543,13 @@ const OwnershipConfirmV3 = () => {
         <div style={{ height: "100%", background: SAGE, width: `${pct}%`, transition: "width .7s cubic-bezier(.2,.7,.2,1)" }} />
       </div>
 
-      <header style={{ borderBottom: "1px solid #e7e0d4", background: "rgba(246,242,235,0.9)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 20 }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "14px clamp(18px,4vw,32px)", display: "flex", alignItems: "center", gap: 14 }}>
-          <button onClick={() => canBack && go(cur - 1, -1)} aria-label="Back" className="ocq-ghost"
-            style={{ flex: "none", width: 44, height: 44, borderRadius: "50%", border: "1px solid #ddd4c5", background: CARD, color: INK, fontSize: 18, cursor: "pointer", opacity: canBack ? 1 : 0, pointerEvents: canBack ? "auto" : "none", transition: "opacity .3s" }}>←</button>
-          <span style={{ fontFamily: SERIF, fontSize: 19, whiteSpace: "nowrap" }}>Texas Cemetery Brokers</span>
-          <span style={{ width: 1, height: 18, background: "#d9cfbf" }} />
+      <Navbar forceScrolled />
+      <style>{`@media (max-width: 820px){ .ocq-deed{ order:-1; position:static !important; max-width:none !important; } .ocq-deed .ocq-deedbox{ aspect-ratio:auto !important; height:46vh; } }`}</style>
+      <div style={{ height: 72 }} />
+      <header style={{ borderBottom: "1px solid #e7e0d4", background: "rgba(246,242,235,0.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "sticky", top: 72, zIndex: 20 }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "10px clamp(14px,4vw,32px)", display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => canBack && go(cur - 1, -1)} aria-label="Back" disabled={!canBack} className="ocq-ghost"
+            style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: 6, height: 40, padding: "0 14px 0 10px", borderRadius: 999, border: "1px solid #ddd4c5", background: CARD, color: INK, fontSize: 14.5, fontWeight: 500, cursor: canBack ? "pointer" : "default", opacity: canBack ? 1 : 0.4 }}>← Back</button>
           <span style={{ fontSize: 14, color: MUTED, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{cemetery}</span>
           <span style={{ flex: 1 }} />
           {save !== "idle" && (
@@ -555,10 +558,16 @@ const OwnershipConfirmV3 = () => {
               {save === "saving" ? "Saving…" : "Saved"}
             </span>
           )}
+          {deedFile && !done && (
+            <button onClick={() => setDeedOpen(!showDeed)} className="ocq-ghost"
+              style={{ flex: "none", height: 40, padding: "0 14px", borderRadius: 999, border: `1px solid ${GOLD}`, background: showDeed ? INK : CARD, color: showDeed ? "#fff" : INK, fontSize: 14, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+              {showDeed ? "Hide deed" : "View deed"}
+            </button>
+          )}
         </div>
       </header>
 
-      <div style={{ flex: 1, width: "100%", maxWidth: showDeed ? 1160 : 700, margin: "0 auto", padding: "clamp(32px,7vh,80px) clamp(18px,4vw,32px) 48px", display: "flex", flexWrap: "wrap", gap: 40, alignItems: "flex-start" }}>
+      <div style={{ flex: 1, width: "100%", maxWidth: showDeed ? 1160 : 700, margin: "0 auto", padding: "clamp(28px,6vh,72px) clamp(18px,4vw,32px) 48px", display: "flex", flexWrap: "wrap", gap: 32, alignItems: "flex-start" }}>
         <main style={{ flex: "1 1 380px", minWidth: 0, display: "flex", flexDirection: "column" }}>
           <div ref={stage} style={{ display: "flex", flexDirection: "column", gap: 30, maxWidth: 640 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
