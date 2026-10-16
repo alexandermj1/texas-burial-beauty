@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { homepageSections } from "@/config/homepageSections";
 import sageBackground from "@/assets/plumeria-sage-tall.png.asset.json";
 import blushBackground from "@/assets/plumeria-blush-tall.png.asset.json";
 import midnightBackground from "@/assets/plumeria-midnight-tall.png.asset.json";
@@ -55,6 +56,7 @@ export default function FeaturedPlotShopfronts() {
   const [paused, setPaused] = useState(false);
   const [interacting, setInteracting] = useState(false);
   const ref = useRef<HTMLElement>(null);
+  const touchX = useRef<number | null>(null);
   const [visible, setVisible] = useState(false);
   const reducedMotion = useReducedMotion();
   const mobile = useIsMobile();
@@ -99,6 +101,7 @@ export default function FeaturedPlotShopfronts() {
   return (
     <section ref={ref} aria-labelledby="featured-plots-heading" className="plot-shopfronts py-8 sm:py-10">
       <div className="mx-auto max-w-[1536px] px-6 sm:px-10 lg:px-16">
+        {homepageSections.featuredHeadingStyle === "awning" ? (
         <div className="plot-featured-canopy">
           <div className="plot-featured-sign">
             <p>Private resale · Across Texas</p>
@@ -111,8 +114,15 @@ export default function FeaturedPlotShopfronts() {
             </div>
           </div>
         </div>
+        ) : (
+        <div className="plot-featured-vogue">
+          <p>Private resale · Across Texas</p>
+          <h2 id="featured-plots-heading" className="font-display">Featured Properties</h2>
+          <div className="plot-featured-vogue-rule" aria-hidden="true" />
+        </div>
+        )}
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }} transition={{ duration: reducedMotion ? 0 : 0.45, ease: "easeOut" }} onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }} transition={{ duration: reducedMotion ? 0 : 0.45, ease: "easeOut" }} onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} onTouchStart={event => { touchX.current = event.touches[0]?.clientX ?? null; setInteracting(true); }} onTouchEnd={event => { const start = touchX.current; const end = event.changedTouches[0]?.clientX; touchX.current = null; setInteracting(false); if (start == null || end == null) return; const delta = end - start; if (Math.abs(delta) > 40) move(delta < 0 ? 1 : -1); }} style={{ touchAction: "pan-y" }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
             {shown.map((listing, index) => (
               <motion.div key={listing.id} initial={{ opacity: 0, y: reducedMotion ? 0 : 28 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reducedMotion ? 0 : 0.12 + index * 0.16, duration: reducedMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}>
                 <Shopfront listing={listing} index={currentPage * pageSize + index} />

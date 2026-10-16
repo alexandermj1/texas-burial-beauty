@@ -535,3 +535,16 @@
 }
 @media (max-width: 400px) { .plot-shop-content { inset-block: 20% 13%; } .plot-shop-name { font-size: 22px; } .plot-shop-rule { margin: 7px 0; } .plot-shop-count { margin: 6px 0; font-size: 28px; } .plot-shop-location { margin-bottom: 6px; font-size: 9px; } .plot-shop-inquire { margin-top: 8px; } .plot-shop-section { font-size: 10px; } }
 @media (prefers-reduced-motion: reduce) { .plot-shop { transition: none; } .plot-shop:hover { transform: none; } }
+/* Vogue editorial heading */
+.plot-featured-vogue { text-align: center; padding: 6px 0 22px; }
+.plot-featured-vogue p { font-size: 10px; font-weight: 500; letter-spacing: .32em; text-transform: uppercase; color: hsl(var(--primary)); margin-bottom: 10px; }
+.plot-featured-vogue h2 { font-size: clamp(30px, 5vw, 56px); line-height: 1.05; text-transform: uppercase; letter-spacing: .16em; color: hsl(var(--foreground)); text-wrap: balance; }
+.plot-featured-vogue-rule { width: 64px; height: 1px; margin: 16px auto 0; background: hsl(var(--foreground) / .5); box-shadow: 0 4px 0 -0px hsl(var(--foreground) / .2); }
+/* Card refinements: vogue double border, clearer type, larger panel */
+.plot-shop::after { content: ''; position: absolute; inset: 7px; border: 1px solid hsl(var(--shop-ink) / .45); outline: 1px solid hsl(var(--shop-ink) / .2); outline-offset: 3px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.plot-shop-content { inset: 19% 10% 13%; }
+.plot-shop-name { font-size: 30px; font-weight: 500; }
+.plot-shop-count { font-size: 38px; font-weight: 500; }
+.plot-shop-count span { font-size: 16px; }
+.plot-shop-section { font-size: 12px; font-weight: 500; }
+@media (max-width: 767px) { .plot-shop-name { font-size: 25px; } .plot-shop-count { font-size: 32px; } .plot-shop-section { font-size: 11px; } }
