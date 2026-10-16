@@ -92,7 +92,7 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
   if (buyer.deleted_at || buyer.archived_at || buyer.closed_at || buyer.ai_paused_at || !buyer.email) return { status: "skipped", reason: "Inquiry is closed, paused or has no email" };
   const { data: old } = await db.from("buyer_ai_drafts").select("id,status").eq("submission_id", id).maybeSingle();
   if (old && !force) return { status: "skipped", reason: "Already drafted" };
-  if (old?.status === "sent") return { status: "skipped", reason: "Reply already sent" };
+  if (["sent", "sending", "send_failed"].includes(old?.status)) return { status: "skipped", reason: "A reply was already sent or attempted; check the email thread" };
   const row = { submission_id: id, status: "processing", error: null, updated_at: new Date().toISOString(), deleted_at: null };
   const { data: claimed, error } = old ? await db.from("buyer_ai_drafts").update(row).eq("id", old.id).neq("status", "processing").select("id").maybeSingle() : await db.from("buyer_ai_drafts").insert(row).select("id").maybeSingle();
   if (error || !claimed) return { status: "skipped", reason: "Draft already in progress" };

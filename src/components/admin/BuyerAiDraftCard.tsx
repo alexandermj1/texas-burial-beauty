@@ -56,7 +56,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
           <Button size="sm" variant="ghost" onClick={() => act("reject", { action: "reject", draft_id: draft.id, reason: null }, "Draft declined")} disabled={!!busy}><X className="w-4 h-4 mr-1.5" />Decline</Button>
         </div>
       </div>}
-      {draft && ["sent", "rejected"].includes(draft.status) && <p className="text-xs text-muted-foreground">This reply was {draft.status === "sent" ? "approved and sent" : "declined"}.</p>}
+      {draft && ["sent", "rejected", "sending", "send_failed"].includes(draft.status) && <p className="text-xs text-muted-foreground">{draft.status === "sent" ? "This reply was approved and sent." : draft.status === "rejected" ? "This reply was declined." : draft.status === "sending" ? "Sending…" : draft.error}</p>}
     </section>
   );
 }
