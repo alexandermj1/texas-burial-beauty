@@ -490,6 +490,71 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_ai_drafts: {
+        Row: {
+          body: string | null
+          context_key: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by_name: string | null
+          decided_by_user_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          error: string | null
+          id: string
+          inventory_snapshot: Json
+          reason: string | null
+          status: string
+          subject: string | null
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          context_key?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by_name?: string | null
+          decided_by_user_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          error?: string | null
+          id?: string
+          inventory_snapshot?: Json
+          reason?: string | null
+          status?: string
+          subject?: string | null
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          context_key?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by_name?: string | null
+          decided_by_user_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          error?: string | null
+          id?: string
+          inventory_snapshot?: Json
+          reason?: string | null
+          status?: string
+          subject?: string | null
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_ai_drafts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: true
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyer_recommendations: {
         Row: {
           asking_price: number | null
