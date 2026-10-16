@@ -93,6 +93,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
       {working && <p className="text-xs text-muted-foreground">Checking matching spaces and drafting…</p>}
       {stuck && <p className="text-xs text-destructive">That draft stopped responding. Press Draft again to start a fresh one.</p>}
       {draft?.status === "failed" && <p className="text-sm text-destructive">Last draft failed: {draft.error}</p>}
+      {draft?.status === "held" && <p className="text-sm text-foreground"><span className="font-medium">AI held off emailing this buyer.</span> Press Draft again if you still want a reply.</p>}
       {draft?.reason && !proposed && <p className="text-xs text-muted-foreground">{draft.reason}</p>}
 
       {!!draft?.inventory_snapshot?.length && (
