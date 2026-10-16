@@ -2244,6 +2244,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 (selected as any).timeline ? { k: "Timeline", v: String((selected as any).timeline) } : null,
                 (selected as any).region ? { k: "Area", v: String((selected as any).region) } : null,
               ].filter(Boolean) as { k: string; v: string }[];
+              // Fold the form's "Key: value" lines into the same strip; keep any free text as a note.
+              const wroteNote: string[] = [];
+              {
+                const norm = (k: string) => k.toLowerCase().replace(/property type/, "property").replace(/plots wanted|spaces wanted|number of spaces/, "spaces").replace(/region|area/, "area").trim();
+                const have = new Set(wants.map(w => norm(w.k)));
+                String(selected.message || selected.details || "").split(/\n+/).forEach(line => {
+                  const m = line.match(/^\s*([A-Za-z][A-Za-z /]{1,30}):\s*(.+)$/);
+                  if (m) { const k = norm(m[1]); if (!have.has(k)) { have.add(k); wants.push({ k: m[1].trim(), v: m[2].trim() }); } }
+                  else if (line.trim()) wroteNote.push(line.trim());
+                });
+              }
 
               const tags = ["Ready to buy", "Pre-need", "Just browsing", "Plots sent", "Waiting on inventory"];
               const currentTag = ((selected as any).custom_tag || "").trim();
@@ -2277,13 +2288,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </span>
                       ))}
                       </div>
-                    </div>
-                  )}
-
-                  {(selected.message || selected.details) && (
-                    <div className="text-xs border-y border-border/60 py-3 px-3.5 bg-card/60">
-                      <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-1.5">What they wrote</p>
-                      <p className="whitespace-pre-wrap leading-relaxed text-foreground/90">{selected.message || selected.details}</p>
+                      {wroteNote.length > 0 && (
+                        <p className="mt-2 text-xs whitespace-pre-wrap leading-relaxed text-foreground/90">{wroteNote.join("\n")}</p>
+                      )}
                     </div>
                   )}
 
