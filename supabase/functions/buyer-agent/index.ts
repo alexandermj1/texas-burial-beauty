@@ -131,7 +131,9 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
   if (old && !force) return { status: "skipped", reason: "Already drafted" };
   if (["sent", "sending", "send_failed"].includes(old?.status)) return { status: "skipped", reason: "A reply was already sent or attempted; check the email thread" };
   const row = { submission_id: id, status: "processing", error: null, updated_at: new Date().toISOString(), deleted_at: null };
-  const { data: claimed, error } = old ? await db.from("buyer_ai_drafts").update(row).eq("id", old.id).neq("status", "processing").select("id").maybeSingle() : await db.from("buyer_ai_drafts").insert(row).select("id").maybeSingle();
+  // A run whose request died mid-flight leaves the row stuck on "processing"; let a stale one be re-claimed.
+  const staleBefore = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data: claimed, error } = old ? await db.from("buyer_ai_drafts").update(row).eq("id", old.id).or(`status.neq.processing,updated_at.lt.${staleBefore}`).select("id").maybeSingle() : await db.from("buyer_ai_drafts").insert(row).select("id").maybeSingle();
   if (error || !claimed) return { status: "skipped", reason: "Draft already in progress" };
   try {
     const { kind, items } = await inventory(db, buyer, old?.excluded_listing_ids ?? []);
