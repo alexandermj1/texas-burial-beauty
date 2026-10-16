@@ -1,6 +1,9 @@
 # Roadmap
 
 ## Current request
+- [ ] Restore the homepage shopfront with general lawn labels and space counts, percentage savings only, and a single visibility setting
+- [ ] Include all paid Featured plots and up to 50 additional verified available properties without inventing or altering inventory
+- [ ] Verify privacy-safe labels, savings and desktop/mobile display
 - [x] Hide the homepage Featured shopfronts for now (import and render commented in Index.tsx); component file kept intact, homepage verified clean with no errors
 
 - [x] Refine the Featured sign with layered framing, warm paper, dimensional sloped stripes and rounded scallops; visually verified at 1381, 390 and 320px with no overflow or page errors
