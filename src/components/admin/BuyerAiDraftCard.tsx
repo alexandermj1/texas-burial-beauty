@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 type Draft = {
   id: string; status: string; subject: string | null; body: string | null;
   reason: string | null; error: string | null; inventory_snapshot: any[];
-  created_at: string; decided_by_name?: string | null; decision_reason?: string | null;
+  created_at: string; updated_at?: string; decided_by_name?: string | null; decision_reason?: string | null;
 };
 
 async function callBuyerAi(body: Record<string, unknown>) {
@@ -55,7 +55,9 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
   };
 
   const proposed = draft?.status === "proposed";
-  const working = busy === "run" || draft?.status === "processing";
+  // A draft whose request died mid-run must not leave the card waiting forever.
+  const stuck = !!draft && draft.status === "processing" && !!draft.updated_at && Date.now() - new Date(draft.updated_at).getTime() > 4 * 60 * 1000;
+  const working = (busy === "run" || draft?.status === "processing") && !stuck;
 
   return (
     <section aria-label="Buyer AI Agent" className="rounded-2xl border border-indigo-500/40 bg-indigo-500/5 ring-1 ring-indigo-500/15 p-4 space-y-3">
@@ -70,7 +72,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
             </p>
           </div>
         </div>
-        <Button size="sm" variant="outline" onClick={() => act("run", { action: "run", submission_id: submissionId }, "Buyer reply drafted")} disabled={!!busy || !!pauseReason || ["processing", "sending", "sent", "send_failed"].includes(draft?.status ?? "")} className="border-indigo-500/40 text-indigo-700 dark:text-indigo-300">
+        <Button size="sm" variant="outline" onClick={() => act("run", { action: "run", submission_id: submissionId }, "Buyer reply drafted")} disabled={!!busy || !!pauseReason || (["processing", "sending", "sent", "send_failed"].includes(draft?.status ?? "") && !stuck)} className="border-indigo-500/40 text-indigo-700 dark:text-indigo-300">
           {working ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
           {draft ? "Draft again" : "Draft reply"}
         </Button>
@@ -89,6 +91,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
         <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No reply drafted yet. New buyer forms are drafted automatically; you can also press Draft reply.</p>
       )}
       {working && <p className="text-xs text-muted-foreground">Checking matching spaces and drafting…</p>}
+      {stuck && <p className="text-xs text-destructive">That draft stopped responding. Press Draft again to start a fresh one.</p>}
       {draft?.status === "failed" && <p className="text-sm text-destructive">Last draft failed: {draft.error}</p>}
       {draft?.reason && !proposed && <p className="text-xs text-muted-foreground">{draft.reason}</p>}
 
@@ -104,7 +107,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
                   {x.seller_name && <span className="block font-semibold text-foreground">{x.seller_name}</span>}
                   <span className="font-medium text-foreground">{x.garden || "Garden not named"}</span> · {x.spaces} space{x.spaces === 1 ? "" : "s"}<br />
                   {x.spaces > 1 && x.our_price_per_space && <span className="text-muted-foreground">Per space: retail {x.retail_per_space} · ours {x.our_price_per_space}<br /></span>}
-                  <span className="text-muted-foreground">{x.spaces > 1 ? "All spaces: " : ""}Retail {x.retail_total} · ours {x.our_total} · {x.readiness}</span>
+                  <span className="text-muted-foreground">{x.spaces > 1 ? "All spaces: " : ""}Retail {x.retail_total} · ours {x.our_total} · {x.readiness}{x.transfer_fee ? ` · incl. ${x.transfer_fee} transfer fee, charged once` : ""}</span>
                   {x.listing_id && draft.status === "proposed" && (
                     <button type="button" disabled={!!busy}
                       onClick={() => act("exclude", { action: "exclude", draft_id: draft.id, listing_id: x.listing_id }, "Plot removed — email redrafted")}

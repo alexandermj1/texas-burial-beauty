@@ -4,6 +4,8 @@
 - [x] Add approval-only Buyer AI drafts with cemetery/type matching, saved prices, private lawn labels and readiness wording
 - [x] Prepare first replies immediately from buyer-form notifications; duplicate checks, persistent pause and processing leases added
 - [x] Add buyer AI review/approve controls, hidden from Cici; authenticated live draft read back through the UI without sending an email; pricing tests pass
+- [x] Round buyer AI prices to clean figures, state the transfer fee plainly as included in the final price, and drop buyer's premium wording; redeployed, both drafts redrafted, no email sent
+- [x] Verify the Remove control on matched plots (removed plot leaves the list and the redrafted email); restore plots removed during testing; recover a draft left stuck mid-run
 - [ ] Verify automatic new-form timing and approved delivery with a user-authorized test inquiry (no customer or owner emails sent during verification)
 - [x] Restore the homepage shopfront with general lawn labels and space counts, percentage savings only, and a single visibility setting
 - [x] Include all 20 paid Featured plots and 50 additional paid signed available properties without inventing or altering inventory; Featured priority preserved
