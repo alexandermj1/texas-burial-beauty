@@ -53,7 +53,7 @@ async function inventory(db: any, buyer: any) {
     const received = own.filter((d: any) => ["received", "signed", "notarized", "completed"].includes(String(d.status))).length;
     const readiness = s.documents_completed_at || (own.length && received === own.length) ? "available now"
       : own.length && received / own.length >= 0.75 ? "available in about 2 weeks"
-      : s.la_signed_at ? "available, with transfer paperwork in progress" : "available through an accepted seller quote";
+      : "available";
     return { garden: lawn(s), spaces: count, type: category(s.property_type), readiness, retail_total: retail ? money(retail) : null, our_total: ourTotal ? money(ourTotal) : null };
   }).filter((x: any) => x.our_total && x.retail_total).slice(0, 6);
   return { kind, items };
