@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     if (!s) throw new Error("No submission provided");
 
     // Start an approval-only Buyer AI draft immediately; the owner email must not wait on AI.
-    if (s.id) {
+    if (s.id && (s.customer_kind === "buyer" || ["buy_property_wizard", "buy_inquiry", "cemetery_page_buyer", "preneed_guide_form"].includes(s.source))) {
       const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const task = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/buyer-agent`, {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key },

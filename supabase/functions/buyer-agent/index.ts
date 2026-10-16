@@ -90,6 +90,8 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
   const { data: buyer } = await db.from("contact_submissions").select("*").eq("id", id).maybeSingle();
   if (!buyer || !isBuyer(buyer)) return { status: "skipped", reason: "Not a buyer inquiry" };
   if (buyer.deleted_at || buyer.archived_at || buyer.closed_at || buyer.ai_paused_at || !buyer.email) return { status: "skipped", reason: "Inquiry is closed, paused or has no email" };
+  const { data: replies } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", id).is("deleted_at", null).order("received_at", { ascending: false }).limit(8);
+  if ((replies ?? []).some((r: any) => /texascemeterybrokers|bayercemeterybrokers/i.test(r.from_email ?? "") && new Date(r.received_at) >= new Date(buyer.created_at))) return { status: "skipped", reason: "Staff have already replied" };
   const { data: old } = await db.from("buyer_ai_drafts").select("id,status").eq("submission_id", id).maybeSingle();
   if (old && !force) return { status: "skipped", reason: "Already drafted" };
   if (["sent", "sending", "send_failed"].includes(old?.status)) return { status: "skipped", reason: "A reply was already sent or attempted; check the email thread" };
@@ -121,7 +123,12 @@ Deno.serve(async (req) => {
     if (b.action === "auto") {
       if ((req.headers.get("authorization") ?? "") !== `Bearer ${service}`) return json({ error: "Forbidden" }, 403);
       if (!apiKey) return json({ error: "AI is not configured" }, 500);
-      return json(await draft(db, apiKey, b.submission_id, false));
+      const run = crypto.randomUUID(), job = `buyer-ai-${b.submission_id}`;
+      const { data: locked, error } = await db.rpc("claim_automation_job", { _job_name: job, _run_id: run, _lease_seconds: 600 });
+      if (error) throw new Error(error.message);
+      if (!locked) return json({ status: "skipped", reason: "Draft already being processed" });
+      try { return json(await draft(db, apiKey, b.submission_id, false)); }
+      finally { await db.rpc("release_automation_job", { _job_name: job, _run_id: run, _completed: true }); }
     }
     const user = await staff(db, req);
     if (!user) return json({ error: "Admin or staff only" }, 403);
