@@ -20,13 +20,16 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [pauseReason, setPauseReason] = useState<string | null>(null);
   const load = useCallback(async () => {
     const { data } = await supabase.from("buyer_ai_drafts").select("id,status,subject,body,reason,error,inventory_snapshot").eq("submission_id", submissionId).is("deleted_at", null).maybeSingle();
     const d = data as Draft | null;
     setDraft(d); setSubject(d?.subject ?? ""); setBody(d?.body ?? "");
+    const { data: state } = await supabase.from("automation_job_state").select("status,pause_reason").eq("job_name", "buyer-ai-drafts").maybeSingle();
+    setPauseReason(state?.status === "paused" ? state.pause_reason || "Buyer AI is paused." : null);
   }, [submissionId]);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { if (draft?.status !== "processing") return; const t = setTimeout(load, 4000); return () => clearTimeout(t); }, [draft?.status, load]);
+  useEffect(() => { if (draft?.status !== "processing") return; const t = setInterval(load, 4000); return () => clearInterval(t); }, [draft?.status, load]);
 
   const act = async (name: string, payload: Record<string, unknown>, done: string) => {
     setBusy(name);
@@ -39,10 +42,11 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
     <section className="rounded-xl border border-primary/30 bg-card p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" /><h4 className="text-sm font-medium text-foreground">Buyer AI reply</h4></div>
-        <Button size="sm" variant="outline" onClick={() => act("run", { action: "run", submission_id: submissionId }, "Buyer reply drafted")} disabled={!!busy || draft?.status === "processing" || draft?.status === "sent"}>
+        <Button size="sm" variant="outline" onClick={() => act("run", { action: "run", submission_id: submissionId }, "Buyer reply drafted")} disabled={!!busy || !!pauseReason || ["processing", "sending", "sent", "send_failed"].includes(draft?.status ?? "")}>
           {busy === "run" || draft?.status === "processing" ? <Loader2 className="w-4 h-4 animate-spin" /> : draft ? "Draft again" : "Draft reply"}
         </Button>
       </div>
+      {pauseReason && <div className="space-y-2"><p className="text-xs text-destructive">{pauseReason}</p><Button size="sm" variant="outline" disabled={!!busy} onClick={() => act("resume", { action: "resume" }, "Buyer AI resumed")}>Resume after restoring access</Button></div>}
       {!draft && <p className="text-xs text-muted-foreground">No buyer AI reply yet. New buyer forms are drafted automatically, and nothing is sent until someone approves it.</p>}
       {draft?.status === "processing" && <p className="text-xs text-muted-foreground">Checking matching spaces and drafting…</p>}
       {draft?.status === "failed" && <p className="text-xs text-destructive">{draft.error}</p>}

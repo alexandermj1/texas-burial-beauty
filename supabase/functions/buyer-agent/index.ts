@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.ts";
+import { quoteFigures, normalizeBuyerFees } from "./quoteFigures.ts";
 
 const MODEL = "openai/gpt-6-astra";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
@@ -48,10 +49,8 @@ async function inventory(db: any, buyer: any) {
   if (docsError) throw new Error(docsError.message);
   const items = rows.map((s: any) => {
     const count = Math.max(1, Number(s.plot_count) || Number(s.spaces) || 1);
-    const net = Number(s.accepted_quote_amount) || Number(s.quote_amount) || 0;
-    const fee = Math.max(0, Number(s.transfer_fee_amount) || 0);
-    const extra = Array.isArray(s.buyer_fees) ? s.buyer_fees.reduce((a: number, f: any) => a + Math.max(0, Number(f?.amount) || 0), 0) : 0;
-    const ourTotal = net > 0 && s.transfer_fee_amount != null ? Math.round((net * count + fee) * 1.15 + extra) : null;
+    const figures = quoteFigures({ quoteAmount: s.quote_amount, acceptedAmount: s.accepted_quote_amount, transferFee: s.transfer_fee_amount, plotCount: count, buyerFees: normalizeBuyerFees(s.buyer_fees) });
+    const ourTotal = figures.hasQuote && s.transfer_fee_amount != null ? figures.buyerPriceTotal : null;
     const retail = Number(s.cemetery_retail) > 0 ? Number(s.cemetery_retail) * count : null;
     const own = (docs ?? []).filter((d: any) => d.submission_id === s.id);
     const received = own.filter((d: any) => ["received", "completed"].includes(String(d.status))).length;
@@ -65,7 +64,7 @@ async function inventory(db: any, buyer: any) {
 }
 
 async function model(apiKey: string, buyer: any, items: any[], kind: string) {
-  const preneed = /pre|future|planning|not urgent|year/i.test(`${buyer.timeline ?? ""} ${buyer.message ?? ""}`);
+  const preneed = /pre.?need|future|planning|not urgent|year|ahead/i.test(`${buyer.timeline ?? ""} ${buyer.message ?? ""}`);
   const instructions = `You draft one warm, concise email from Texas Cemetery Brokers to a cemetery-property buyer. A staff member reviews it before sending.
 Rules: use only the supplied facts. Match ${kind === "any" ? "the requested property" : kind} type. Do not focus on or mention their budget/price range. For each option state garden, number of spaces, cemetery retail and our price exactly as supplied. Never give lot, block, row, grave, crypt, niche or space identifiers. Do not invent features, availability or fees.
 ${preneed ? "This is preneed planning: for agreement_signed options that are not already ready, say available within about a month if that meets their timeframe. For other options use their readiness, without promising a month." : "Use each option's readiness wording exactly; never imply we do not have the space."}
@@ -142,7 +141,8 @@ Deno.serve(async (req) => {
     if (!s?.email) return json({ error: "Buyer email missing" }, 400);
     if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return json({ error: "Buyer record is closed or paused" }, 409);
     const current = await inventory(db, s);
-    if (JSON.stringify(current.items) !== JSON.stringify(d.inventory_snapshot)) return json({ error: "Inventory changed. Draft again before approving." }, 409);
+    const canonical = (items: any[]) => JSON.stringify(items.map(x => Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)))).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
+    if (canonical(current.items) !== canonical(d.inventory_snapshot as any[])) return json({ error: "Inventory changed. Draft again before approving." }, 409);
     const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
     if (!sending) return json({ error: "Reply already being sent" }, 409);
     const html = `<div data-tcb-email="buyer_ai" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${b.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`;
