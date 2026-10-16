@@ -209,6 +209,28 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
   }
 }
 
+async function sendDraft(db: any, url: string, auth: string, d: any, subject: string, text_: string, actor: string, note: string, decided: Record<string, unknown>) {
+  const fail = (error: string, status: number) => ({ error, status });
+    const { data: s } = await db.from("contact_submissions").select("*").eq("id", d.submission_id).maybeSingle();
+    if (!s?.email) return fail("Buyer email missing" , 400);
+    if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return fail("Buyer record is closed or paused" , 409);
+    // One person, one reply: block if anything already went to this email address since this draft was made (e.g. a second form they filled in).
+    const { data: already } = await db.from("email_messages").select("id").ilike("to_email", `%${String(s.email).toLowerCase()}%`).or("from_email.ilike.%texascemeterybrokers%,from_email.ilike.%bayercemeterybrokers%").gte("received_at", d.created_at).is("deleted_at", null).limit(1);
+    if (already?.length) return fail("We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." , 409);
+    const current = await matches(db, s, d.excluded_listing_ids ?? []);
+    const canonical = (items: any[]) => JSON.stringify(items.map(x => Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)))).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
+    if (canonical(current.items) !== canonical(d.inventory_snapshot as any[])) return fail("Inventory changed. Draft again before approving." , 409);
+    const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
+    if (!sending) return fail("Reply already being sent" , 409);
+    const html = `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${text_.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`;
+    const res = await fetch(`${url}/functions/v1/gmail-action`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: auth, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" }, body: JSON.stringify({ action: "send", to: s.email, subject: subject, body: text_, htmlBody: html, submissionId: s.id, actorName: actor }) });
+    const text = await res.text();
+    if (!res.ok || /"error"/.test(text)) { await db.from("buyer_ai_drafts").update({ status: "send_failed", error: "Send failed; check the email thread before trying again." }).eq("id", d.id); return fail(`Email failed: ${text.slice(0, 300)}` , 502); }
+    await db.from("buyer_ai_drafts").update({ ...decided, status: "sent", subject: subject, body: text_ }).eq("id", d.id);
+    await db.from("customer_notes").insert({ submission_id: s.id, customer_profile_id: s.customer_profile_id, body: note, author_name: actor });
+    return { ok: true };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const url = Deno.env.get("SUPABASE_URL"), service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"), apiKey = Deno.env.get("LOVABLE_API_KEY");
@@ -242,24 +264,8 @@ Deno.serve(async (req) => {
       return json(await draft(db, apiKey, d.submission_id, true));
     }
     if (b.action === "reject") { await db.from("buyer_ai_drafts").update({ ...decided, status: "rejected", decision_reason: b.reason }).eq("id", d.id); return json({ ok: true }); }
-    const { data: s } = await db.from("contact_submissions").select("*").eq("id", d.submission_id).maybeSingle();
-    if (!s?.email) return json({ error: "Buyer email missing" }, 400);
-    if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return json({ error: "Buyer record is closed or paused" }, 409);
-    // One person, one reply: block if anything already went to this email address since this draft was made (e.g. a second form they filled in).
-    const { data: already } = await db.from("email_messages").select("id").ilike("to_email", `%${String(s.email).toLowerCase()}%`).or("from_email.ilike.%texascemeterybrokers%,from_email.ilike.%bayercemeterybrokers%").gte("received_at", d.created_at).is("deleted_at", null).limit(1);
-    if (already?.length) return json({ error: "We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." }, 409);
-    const current = await matches(db, s, d.excluded_listing_ids ?? []);
-    const canonical = (items: any[]) => JSON.stringify(items.map(x => Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)))).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
-    if (canonical(current.items) !== canonical(d.inventory_snapshot as any[])) return json({ error: "Inventory changed. Draft again before approving." }, 409);
-    const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
-    if (!sending) return json({ error: "Reply already being sent" }, 409);
-    const html = `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${b.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`;
-    const res = await fetch(`${url}/functions/v1/gmail-action`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization") ?? "", apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" }, body: JSON.stringify({ action: "send", to: s.email, subject: b.subject, body: b.body, htmlBody: html, submissionId: s.id, actorName: `Buyer AI (approved by ${user.name})` }) });
-    const text = await res.text();
-    if (!res.ok || /"error"/.test(text)) { await db.from("buyer_ai_drafts").update({ status: "send_failed", error: "Send failed; check the email thread before trying again." }).eq("id", d.id); return json({ error: `Email failed: ${text.slice(0, 300)}` }, 502); }
-    await db.from("buyer_ai_drafts").update({ ...decided, status: "sent", subject: b.subject, body: b.body }).eq("id", d.id);
-    await db.from("customer_notes").insert({ submission_id: s.id, customer_profile_id: s.customer_profile_id, body: "Buyer AI reply approved and emailed.", author_name: `Buyer AI (approved by ${user.name})` });
-    return json({ ok: true });
+    const r = await sendDraft(db, url, req.headers.get("authorization") ?? "", d, b.subject, b.body, `Buyer AI (approved by ${user.name})`, "Buyer AI reply approved and emailed.", decided);
+    return "error" in r ? json({ error: r.error }, r.status) : json({ ok: true });
   } catch (e) {
     const status = (e as any).status;
     return json({ error: String((e as Error).message) }, [402, 403, 429].includes(status) ? status : 500);
