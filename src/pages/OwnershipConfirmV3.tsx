@@ -559,7 +559,7 @@ const OwnershipConfirmV3 = () => {
             </span>
           )}
           {deedFile && !done && (
-            <button onClick={() => setDeedOpen((o) => !o)} className="ocq-ghost"
+            <button onClick={() => setDeedOpen(!showDeed)} className="ocq-ghost"
               style={{ flex: "none", height: 40, padding: "0 14px", borderRadius: 999, border: `1px solid ${GOLD}`, background: showDeed ? INK : CARD, color: showDeed ? "#fff" : INK, fontSize: 14, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
               {showDeed ? "Hide deed" : "View deed"}
             </button>
