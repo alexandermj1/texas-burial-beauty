@@ -499,6 +499,9 @@
 }
 .plot-shop { --shop-ink: var(--foreground); --shop-paper: 85 23% 86%; --shop-shadow: 0 12px 28px -20px hsl(var(--foreground) / .4); position: relative; display: block; min-width: 0; border-radius: 6px; overflow: hidden; color: hsl(var(--shop-ink)); background: hsl(var(--shop-paper)); transition: box-shadow 250ms ease, transform 250ms ease; }
 .plot-shop-art { position: relative; aspect-ratio: 646 / 846; }
+.plot-shop-savings { min-height: 64px; padding: 12px 14px; border-top: 1px solid hsl(var(--shop-ink) / .2); text-align: center; color: hsl(var(--shop-ink)); }
+.plot-shop-savings span { display: block; font-size: 9px; line-height: 1.5; }
+.plot-shop-savings p { font-size: 13px; line-height: 1.5; margin-top: 3px; }
 .plot-shop-price { min-height: 102px; padding: 12px 14px 16px; border-top: 1px solid hsl(var(--shop-ink) / .2); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px; text-align: center; }
 .plot-shop-price span { font-size: 9px; display: block; margin-bottom: 4px; }
 .plot-shop-price p { font-size: 13px; white-space: nowrap; }

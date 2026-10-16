@@ -18,4 +18,5 @@
 - Submission lists display cached summaries and call summarize-submission (cheap model, fingerprint-cached) only for records with no summary yet, once per id per session; seller-agent rejects automatic cron requests — why: new inquiries need a summary line without browsing burning AI credits.
 - Use publicSeoUpgrades in both SEO renderers and preserve directory titles — why: crawler and live metadata must agree.
 
-- Homepage shopfronts use get_public_featured_plot_ranges over paid unsold Featured records; derive broad price bands server-side via quoteFigures' separate-space buyer basis, never return exact prices, and pause rotation on card interaction — why: safe paid placement and honest comparisons.
+- Homepage shopfronts use get_public_shopfront_plots: preserve Featured priority and label additional paid signed inventory separately; sanitize named lawns and round verified savings down server-side using quoteFigures' separate-space buyer basis, never return currency or plot identifiers, and pause rotation on interaction — why: honest paid placement and competitor-safe inventory.
+- Toggle homepage shopfront visibility only through homepageSections.featuredShopfronts, preserving the component and inventory feed — why: one-prompt show/hide requests must not delete the design.
