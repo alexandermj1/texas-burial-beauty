@@ -48,7 +48,7 @@ async function staff(db: any, req: Request) {
 }
 
 async function inventory(db: any, buyer: any, exclude: string[] = []) {
-  const want = canon(buyer.cemetery), kind = category(`${buyer.property_type ?? ""} ${buyer.message ?? ""}`);
+  const want = canon(buyer.cemetery), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (!want) return { kind, items: [] as any[] };
   const { data, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_completed_at,reserved_until,customer_kind,source")
     .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
@@ -104,7 +104,7 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
     }
     return { kind: own.kind, items: alt.slice(0, 4), area: null };
   }
-  const area = areaOf(buyer), kind = category(`${buyer.property_type ?? ""} ${buyer.message ?? ""}`);
+  const area = areaOf(buyer), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (area.length < 3) return { kind, items: [] as any[], area: null };
   const like = `%${area.replace(/[%_,()]/g, " ")}%`;
   const { data: cems } = await db.from("texas_cemeteries").select("name").is("deleted_at", null).or(`region.ilike.${like},city.ilike.${like},county.ilike.${like}`).order("name").limit(80);
