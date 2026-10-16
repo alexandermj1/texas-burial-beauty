@@ -139,15 +139,24 @@ Deno.serve(async (req) => {
       )
       .join("");
 
+    const BUYER_SOURCES = ["buy_property_wizard", "buy_inquiry", "cemetery_page_buyer", "preneed_guide_form"];
+    const kindRaw = String(s.customer_kind || "").toLowerCase();
+    const src = String(s.source || "").toLowerCase();
+    const kind: "BUYER" | "SELLER" | "GENERAL INQUIRY" =
+      kindRaw === "buyer" || BUYER_SOURCES.includes(s.source) || /buy/.test(src) ? "BUYER"
+      : kindRaw === "seller" || /sell|quote|valuation/.test(src) || s.inquiry_channel === "bayer_sell_a_plot" || s.asking_price || s.deed_owner ? "SELLER"
+      : "GENERAL INQUIRY";
+    const kindColor = kind === "BUYER" ? "#2f5d8a" : kind === "SELLER" ? "#a0522d" : "#666";
     const headerName = s.name || s.email || "New lead";
     const cemeteryBit = s.cemetery ? ` — ${s.cemetery}` : "";
-    const rawSubject = `Customer inquiry — ${region}: ${headerName}${cemeteryBit}`;
+    const rawSubject = `${kind} — Customer inquiry — ${region}: ${headerName}${cemeteryBit}`;
     const subject = encodeSubject(rawSubject);
 
     const adminUrl = `https://www.texascemeterybrokers.com/admin?submission=${encodeURIComponent(s.id ?? "")}`;
 
     const html = `
 <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;color:#222;">
+  <p style="margin:0 0 10px 0;"><span style="display:inline-block;background:${kindColor};color:#fff;font-weight:700;letter-spacing:0.08em;font-size:18px;padding:8px 16px;border-radius:8px;">${kind}</span></p>
   <h1 style="border-bottom:2px solid ${regionColor};padding-bottom:8px;color:#3d4a2e;margin-bottom:4px;">Customer inquiry</h1>
   <p style="margin:6px 0 14px 0;"><span style="display:inline-block;background:${regionColor};color:#fff;font-weight:600;letter-spacing:0.06em;font-size:12px;padding:4px 10px;border-radius:999px;text-transform:uppercase;">${region}</span></p>
   <p style="color:#666;margin-top:0;">A new inquiry just came in.</p>
