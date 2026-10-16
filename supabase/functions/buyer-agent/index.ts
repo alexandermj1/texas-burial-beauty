@@ -167,6 +167,7 @@ Close politely: say these are our best current matches at that cemetery, and tha
 Reply like a real person: respond briefly and helpfully to anything else the buyer raised in their message, form details or prior emails (questions, headstone or location preferences, timing, family circumstances) using only supplied facts; if we cannot answer something from the facts, say Simon will confirm it.
 When an option has partial_offer, the option is a group larger than the buyer needs: say clearly we can sell them just the number of spaces they want from that group, and give partial_offer.our_total as our total for those spaces (it also already includes the transfer fee once). Still state the full-group figures too. Plain text, short paragraphs, no markdown. Return JSON only.
 FIRST decide whether to email at all, like a careful broker checking the file. Read prior_emails and staff_notes (last_contact_at is when our team last emailed or noted this buyer). Set should_send false, with a short reason for staff, when: we are already in conversation with them by phone or email about something else, a note says not to contact them or that they are handled, they have bought elsewhere or said they are no longer interested, or a new email would be redundant or awkward. If they were contacted before, only send when an option is genuinely new since then (listed_at after last_contact_at) AND our most recent email to them said we would reach back out if something came available; otherwise later communication belongs to our team, so hold; open by mentioning a space has come available. When unsure, hold. If should_send is false, subject and body may be empty.
+PROBLEM PLOTS: never hold the whole email just because one option has a problem. If a seller record shows that seller withdrawing, cancelling, asking for a refund or no longer selling, silently leave that option out and offer the remaining ones (or the waitlist if none remain). If an option's garden or section in the record conflicts with its deed, go by the deed and describe it broadly. Only hold for buyer-side reasons, such as the contact rules above.
 If staff_feedback_on_previous_draft is present, a staff member declined the last draft for that reason — correct that specific problem in the new draft while still following every rule above.`;
   const gateway = createLovableAiGatewayRunIdFetch();
   const res = await gateway.fetch(GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
@@ -311,7 +312,13 @@ Deno.serve(async (req) => {
       const { data: locked, error } = await db.rpc("claim_automation_job", { _job_name: job, _run_id: run, _lease_seconds: 600 });
       if (error) throw new Error(error.message);
       if (!locked) return json({ status: "skipped", reason: "Draft already being processed" });
-      try { return json(await draft(db, apiKey, b.submission_id, false)); }
+      try {
+        const r: any = await draft(db, apiKey, b.submission_id, false);
+        if (r.status !== "proposed") return json(r);
+        const { data: d } = await db.from("buyer_ai_drafts").select("*").eq("id", r.draft_id).maybeSingle();
+        const sent = await sendDraft(db, url, `Bearer ${service}`, d, d.subject, d.body, "Buyer AI (automatic)", "Buyer AI reply emailed automatically.", { decided_by_name: "Buyer AI (automatic)", decided_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        return json({ ...r, sent: !("error" in sent), error: (sent as any).error });
+      }
       finally { await db.rpc("release_automation_job", { _job_name: job, _run_id: run, _completed: true }); }
     }
     if (b.action === "sweep") return json(await sweep(db, url, service, apiKey));
