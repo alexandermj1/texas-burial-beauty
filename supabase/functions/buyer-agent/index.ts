@@ -20,6 +20,9 @@ const Body = z.discriminatedUnion("action", [
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 const canon = (s: unknown) => String(s ?? "").toLowerCase().replace(/\([^)]*\)/g, " ").replace(/memorial\s+park|funeral\s+home|cemetery|mortuary|mausoleum|memorial|gardens?|[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+// Buyer-facing price points read better as clean figures. Rounded DOWN only, so a
+// quoted price is never above the recorded one and can never breach the buyer ceiling.
+const tidy = (n: number) => { const step = n >= 1000 ? 100 : 50; return money(Math.floor(n / step) * step); };
 const category = (s: unknown) => { const t = String(s ?? "").toLowerCase(); return /niche|urn|columbar|cremain|cremat/.test(t) ? "niche" : /crypt|mausoleum|entomb/.test(t) ? "crypt" : t.trim() ? "burial" : "any"; };
 const isBuyer = (s: any) => s.customer_kind === "buyer" || (!["seller", "partner"].includes(s.customer_kind) && BUYER_SOURCES.has(s.source));
 // Broad, competitor-safe garden name: no lot, block, row, grave or space identifiers.

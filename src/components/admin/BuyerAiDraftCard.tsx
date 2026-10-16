@@ -104,7 +104,7 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
                   {x.seller_name && <span className="block font-semibold text-foreground">{x.seller_name}</span>}
                   <span className="font-medium text-foreground">{x.garden || "Garden not named"}</span> · {x.spaces} space{x.spaces === 1 ? "" : "s"}<br />
                   {x.spaces > 1 && x.our_price_per_space && <span className="text-muted-foreground">Per space: retail {x.retail_per_space} · ours {x.our_price_per_space}<br /></span>}
-                  <span className="text-muted-foreground">{x.spaces > 1 ? "All spaces: " : ""}Retail {x.retail_total} · ours {x.our_total} · {x.readiness}</span>
+                  <span className="text-muted-foreground">{x.spaces > 1 ? "All spaces: " : ""}Retail {x.retail_total} · ours {x.our_total} · {x.readiness}{x.transfer_fee ? ` · incl. ${x.transfer_fee} transfer fee, charged once` : ""}</span>
                   {x.listing_id && draft.status === "proposed" && (
                     <button type="button" disabled={!!busy}
                       onClick={() => act("exclude", { action: "exclude", draft_id: draft.id, listing_id: x.listing_id }, "Plot removed — email redrafted")}
