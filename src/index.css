@@ -541,7 +541,7 @@
 .plot-featured-vogue h2 { font-size: clamp(30px, 5vw, 56px); line-height: 1.05; text-transform: uppercase; letter-spacing: .16em; color: hsl(var(--foreground)); text-wrap: balance; }
 .plot-featured-vogue-rule { width: 64px; height: 1px; margin: 16px auto 0; background: hsl(var(--foreground) / .5); box-shadow: 0 4px 0 -0px hsl(var(--foreground) / .2); }
 /* Card refinements: vogue double border, clearer type, larger panel */
-.plot-shop::after { content: ''; position: absolute; inset: 7px; border: 1px solid hsl(var(--shop-ink) / .45); outline: 1px solid hsl(var(--shop-ink) / .2); outline-offset: 3px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.plot-shop::after { content: ''; position: absolute; inset: 5px; border: 1px solid hsl(var(--gold) / .55); border-radius: 3px; pointer-events: none; z-index: 2; box-shadow: inset 0 0 0 1px hsl(var(--gold) / .12); }
 .plot-shop-content { inset: 19% 10% 13%; }
 .plot-shop-name { font-size: 30px; font-weight: 500; }
 .plot-shop-count { font-size: 38px; font-weight: 500; }
