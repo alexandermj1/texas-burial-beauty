@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Current request
-- [ ] Correct the immediate buyer auto path, enforce the minimum 20-minute delay at sending, test and deploy without emailing anyone
+- [x] Correct immediate buyer auto path; enforce minimum 20-minute delay before drafting and automatic sending; six tests plus actual-handler isolated checks pass; deployed without test emails
 - [x] Add approval-only Buyer AI drafts with cemetery/type matching, saved prices, private lawn labels and readiness wording
-- [x] Prepare first replies immediately from buyer-form notifications; duplicate checks, persistent pause and processing leases added
+- [x] Defer immediate buyer-form notifications to the eligible scheduled sweep; duplicate checks, persistent pause and processing leases preserved
 - [x] Add buyer AI review/approve controls, hidden from Cici; authenticated live draft read back through the UI without sending an email; pricing tests pass
 - [x] Round buyer AI prices to clean figures, state the transfer fee plainly as included in the final price, and drop buyer's premium wording; redeployed, both drafts redrafted, no email sent
 - [x] Verify the Remove control on matched plots (removed plot leaves the list and the redrafted email); restore plots removed during testing; recover a draft left stuck mid-run
