@@ -498,6 +498,7 @@ export type Database = {
           decided_at: string | null
           decided_by_name: string | null
           decided_by_user_id: string | null
+          decision_reason: string | null
           deleted_at: string | null
           deleted_by: string | null
           error: string | null
@@ -516,6 +517,7 @@ export type Database = {
           decided_at?: string | null
           decided_by_name?: string | null
           decided_by_user_id?: string | null
+          decision_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           error?: string | null
@@ -534,6 +536,7 @@ export type Database = {
           decided_at?: string | null
           decided_by_name?: string | null
           decided_by_user_id?: string | null
+          decision_reason?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           error?: string | null
