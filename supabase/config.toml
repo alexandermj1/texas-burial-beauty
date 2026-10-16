@@ -24,3 +24,4 @@ verify_jwt = false
 
 [functions.plot-value-estimator]
 verify_jwt = false
+

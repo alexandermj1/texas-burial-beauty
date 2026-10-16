@@ -7,7 +7,7 @@
 - Public estimator directory includes the entire active cemetery registry; typo-tolerant section matching stays server-side and rejects contradictory qualifiers — why: coverage must not reveal which cemeteries have prices, or make similar section names falsely precise.
 - Calculator motion is rendered locally with semantic brand tokens and reduced-motion support; result bars use returned estimate ratios, while introductory curves are labelled illustrative — why: engaging visuals must not imply fabricated price forecasts or require video playback.
 - Embed the shared calculator in the cost, selling, transfer and plot-worth guides, with related-guide links in the shared calculator; keep the retired standalone URL redirected to the cost guide and excluded from sitemap/route metadata — why: a single estimator funnels visitors into maintained editorial content without a duplicate tool page.
-- Use the shared calculator's compact prop for secondary article placements, with a shorter animated header, tighter form and timeline-first empty state; keep both sizes single-column — why: secondary embeds should not overwhelm the article or sacrifice mobile usability.
+- Use compact calculator embeds in secondary articles; keep both sizes single-column — why: articles stay readable on mobile.
 - Keep plot-worth editorial photography, local cemetery links and team context in a guide-specific supporting module, reusing existing cemetery photo data; distinguish published team statements from personal quotations — why: the calculator remains shared while article authority stays traceable and honest.
 
 - New listing agreement fee templates are versioned in contract fill data; signing refreshes preserve that version and historical quotes retain their original terms — why: a fee update must not rewrite a customer’s contractual history.
@@ -16,7 +16,8 @@
 - Keep the sell-page broker comparison in SellerBrokerValue, with estimate-model comparisons explicitly distinguished from measured returns and net proceeds — why: marketing must not turn calculator assumptions into guaranteed outcomes.
 - Buyer cemetery inventory uses buyerInventoryPricing with quoteFigures for saved per-space quotes and one-time transfer fees; show separate-purchase prices and whole-transfer totals distinctly, never invent space identifiers — why: buyers must not confuse seller prices, bundle totals or repeated transfer fees.
 - Submission lists display cached summaries and call summarize-submission (cheap model, fingerprint-cached) only for records with no summary yet, once per id per session; seller-agent rejects automatic cron requests — why: new inquiries need a summary line without browsing burning AI credits.
-- Use publicSeoUpgrades in both SEO renderers and preserve directory titles — why: crawler and live metadata must agree.
+- Buyer AI: buyer-agent drafts once; staff approve sends — why: controlled replies.
+- Use publicSeoUpgrades in both SEO renderers; preserve directory titles — why: metadata agrees.
 
 - Homepage shopfronts use get_public_shopfront_plots: preserve Featured priority and label additional paid signed inventory separately; sanitize named lawns and round verified savings down server-side using quoteFigures' separate-space buyer basis, never return currency or plot identifiers, and pause rotation on interaction — why: honest paid placement and competitor-safe inventory.
 - Toggle homepage shopfront visibility only through homepageSections.featuredShopfronts, preserving the component and inventory feed — why: one-prompt show/hide requests must not delete the design.

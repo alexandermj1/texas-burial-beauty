@@ -50,6 +50,13 @@
       "when": 1792143648620,
       "tag": "0006_privacy_safe_homepage_shopfront_inventory",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792145921478,
+      "tag": "0007_buyer_ai_approval_drafts",
+      "breakpoints": true
     }
   ]
 }
