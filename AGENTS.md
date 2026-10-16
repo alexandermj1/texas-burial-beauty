@@ -16,7 +16,7 @@
 - Keep the sell-page broker comparison in SellerBrokerValue, with estimate-model comparisons explicitly distinguished from measured returns and net proceeds — why: marketing must not turn calculator assumptions into guaranteed outcomes.
 - Buyer cemetery inventory uses buyerInventoryPricing with quoteFigures for saved per-space quotes and one-time transfer fees; show separate-purchase prices and whole-transfer totals distinctly, never invent space identifiers — why: buyers must not confuse seller prices, bundle totals or repeated transfer fees.
 - Submission lists display cached summaries and call summarize-submission (cheap model, fingerprint-cached) only for records with no summary yet, once per id per session; seller-agent rejects automatic cron requests — why: new inquiries need a summary line without browsing burning AI credits.
-- Buyer AI: sweep auto-sends new inquiries via sendDraft checks — why: no duplicates.
+- Buyer AI: auto defers undrafted inquiries to sweep; sendDraft guards automatic timing, staff approval excepted — why: no early or duplicate sends.
 - Use publicSeoUpgrades in both SEO renderers; preserve directory titles — why: metadata agrees.
 
 - Homepage shopfronts use get_public_shopfront_plots: preserve Featured priority and label additional paid signed inventory separately; sanitize named lawns and round verified savings down server-side using quoteFigures' separate-space buyer basis, never return currency or plot identifiers, and pause rotation on interaction — why: honest paid placement and competitor-safe inventory.

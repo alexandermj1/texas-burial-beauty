@@ -4,6 +4,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.ts";
 import { quoteFigures, normalizeBuyerFees } from "./quoteFigures.ts";
+import { automaticReplyTiming, BUYER_REPLY_MIN_DELAY_MS } from "./replyTiming.ts";
 
 const MODEL = "openai/gpt-6-astra";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
@@ -238,7 +239,7 @@ async function sweep(db: any, url: string, service: string, apiKey?: string) {
   if (!locked) return { status: "skipped", reason: "Another run is in progress" };
   const done: any[] = [];
   try {
-    const due = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    const due = new Date(Date.now() - BUYER_REPLY_MIN_DELAY_MS).toISOString();
     const { data: cands } = await db.from("contact_submissions").select("id,email,customer_kind,source").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("ai_paused_at", null).not("email", "is", null).lte("created_at", due).order("created_at", { ascending: false }).limit(1000);
     // First round of outreach only: any buyer (or email address) the AI has already looked at is never re-read.
     const buyers = (cands ?? []).filter(isBuyer);
@@ -265,11 +266,13 @@ async function sweep(db: any, url: string, service: string, apiKey?: string) {
   } finally { await db.rpc("release_automation_job", { _job_name: "buyer-ai-sweep", _run_id: run, _completed: true }); }
 }
 
-async function sendDraft(db: any, url: string, auth: string, d: any, subject: string, text_: string, actor: string, note: string, decided: Record<string, unknown>) {
+async function sendDraft(db: any, url: string, auth: string, d: any, subject: string, text_: string, actor: string, note: string, decided: Record<string, unknown>, automatic = true) {
   const fail = (error: string, status: number) => ({ error, status });
     const { data: s } = await db.from("contact_submissions").select("*").eq("id", d.submission_id).maybeSingle();
     if (!s?.email) return fail("Buyer email missing" , 400);
     if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return fail("Buyer record is closed or paused" , 409);
+    // Final shared guard before inventory work, claiming or Gmail.
+    if (automatic && !automaticReplyTiming(s.created_at).due) return fail("Automatic replies must wait at least 20 minutes after the buyer inquiry arrived.", 409);
     // One person, one reply: block if anything already went to this email address since this draft was made (e.g. a second form they filled in).
     const { data: already } = await db.from("email_messages").select("id").ilike("to_email", `%${String(s.email).toLowerCase()}%`).or("from_email.ilike.%texascemeterybrokers%,from_email.ilike.%bayercemeterybrokers%").gte("received_at", d.created_at).is("deleted_at", null).limit(1);
     if (already?.length) return fail("We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." , 409);
@@ -308,6 +311,12 @@ Deno.serve(async (req) => {
     if (b.action === "auto") {
       if ((req.headers.get("authorization") ?? "") !== `Bearer ${service}`) return json({ error: "Forbidden" }, 403);
       if (!apiKey) return json({ error: "AI is not configured" }, 500);
+      // Immediate form notifications defer without creating a draft, so the sweep's
+      // first-round 'already drafted' filter does not strand this inquiry.
+      const { data: inquiry, error: inquiryError } = await db.from("contact_submissions").select("created_at").eq("id", b.submission_id).maybeSingle();
+      if (inquiryError) throw new Error(inquiryError.message);
+      const timing = automaticReplyTiming(inquiry?.created_at);
+      if (!timing.due) return json({ status: "deferred", reason: "Automatic replies wait at least 20 minutes after inquiry creation; the scheduled sweep will process this inquiry.", eligible_at: timing.eligibleAt });
       const run = crypto.randomUUID(), job = `buyer-ai-${b.submission_id}`;
       const { data: locked, error } = await db.rpc("claim_automation_job", { _job_name: job, _run_id: run, _lease_seconds: 600 });
       if (error) throw new Error(error.message);
@@ -336,7 +345,7 @@ Deno.serve(async (req) => {
       return json(await draft(db, apiKey, d.submission_id, true));
     }
     if (b.action === "reject") { await db.from("buyer_ai_drafts").update({ ...decided, status: "rejected", decision_reason: b.reason }).eq("id", d.id); return json({ ok: true }); }
-    const r = await sendDraft(db, url, req.headers.get("authorization") ?? "", d, b.subject, b.body, `Buyer AI (approved by ${user.name})`, "Buyer AI reply approved and emailed.", decided);
+    const r = await sendDraft(db, url, req.headers.get("authorization") ?? "", d, b.subject, b.body, `Buyer AI (approved by ${user.name})`, "Buyer AI reply approved and emailed.", decided, false);
     return "error" in r ? json({ error: r.error }, r.status) : json({ ok: true });
   } catch (e) {
     const status = (e as any).status;
