@@ -43,6 +43,13 @@
       "when": 1792101120630,
       "tag": "0005_featured_approximate_price_ranges",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792143648620,
+      "tag": "0006_privacy_safe_homepage_shopfront_inventory",
+      "breakpoints": true
     }
   ]
 }

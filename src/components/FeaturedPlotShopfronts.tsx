@@ -12,7 +12,7 @@ import verdantBackground from "@/assets/plumeria-verdant-tall.png.asset.json";
 import clayBackground from "@/assets/plumeria-clay-tall.png.asset.json";
 import terracottaBackground from "@/assets/plumeria-terracotta-tall.png.asset.json";
 
-interface FeaturedPlot { id: string; cemetery: string; city: string; plot_type: string; section: string; spaces: number; retail_low?: number | null; retail_high?: number | null; resale_low?: number | null; resale_high?: number | null; }
+interface FeaturedPlot { id: string; cemetery: string; city: string; section: string; spaces: number; savings_percent: number | null; is_featured: boolean; }
 
 
 const backgrounds = [sageBackground, blushBackground, midnightBackground, verdantBackground, clayBackground, terracottaBackground];
@@ -41,6 +41,10 @@ const Shopfront = ({ listing, index }: { listing: FeaturedPlot; index: number })
       <p className="plot-shop-section">{cleanText(listing.section) || "Location details on request"}</p>
       <span className="plot-shop-inquire">Inquire <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" /></span>
     </div>
+    </div>
+    <div className="plot-shop-savings">
+      <span>{listing.is_featured ? "Featured property" : "Private resale"}</span>
+      {listing.savings_percent != null && listing.savings_percent > 0 && <p>Approx. {listing.savings_percent}% below retail</p>}
     </div>
   </Link>
 );
@@ -74,8 +78,11 @@ export default function FeaturedPlotShopfronts() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data, error } = await supabase.rpc("get_public_featured_plot_ranges");
-      if (mounted && !error) setListings(shuffle(data || []));
+      const { data, error } = await supabase.rpc("get_public_shopfront_plots");
+      if (mounted && !error) {
+        const available = data || [];
+        setListings([...shuffle(available.filter(listing => listing.is_featured)), ...shuffle(available.filter(listing => !listing.is_featured))]);
+      }
     };
     void load();
     return () => { mounted = false; };
@@ -105,7 +112,7 @@ export default function FeaturedPlotShopfronts() {
           </div>
         </div>
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }} transition={{ duration: reducedMotion ? 0 : 0.45, ease: "easeOut" }} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+          <motion.div key={`${pageSize}-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }} transition={{ duration: reducedMotion ? 0 : 0.45, ease: "easeOut" }} onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }} className={`grid gap-4 lg:gap-5 ${pageSize === 3 ? "grid-cols-3" : pageSize === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
             {shown.map((listing, index) => (
               <motion.div key={listing.id} initial={{ opacity: 0, y: reducedMotion ? 0 : 28 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reducedMotion ? 0 : 0.12 + index * 0.16, duration: reducedMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}>
                 <Shopfront listing={listing} index={currentPage * pageSize + index} />
@@ -114,7 +121,7 @@ export default function FeaturedPlotShopfronts() {
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-border">
-          <p className="text-xs text-muted-foreground max-w-md">Each card shows the cemetery, its section and the number of spaces available. Final pricing and availability confirmed on inquiry.</p>
+          <p className="text-xs text-muted-foreground max-w-md">Availability confirmed on inquiry. Approximate savings vary by property; fees may apply.</p>
           <Button asChild variant="link" className="px-0"><Link to="/buy">Find your place <ArrowRight /></Link></Button>
           {pageCount > 1 && <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" aria-label="Previous featured plots" title="Previous featured plots" onClick={() => move(-1)}><ArrowLeft /></Button>
