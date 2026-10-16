@@ -166,7 +166,7 @@ Each option includes private_seller_record: the full seller record (record field
 Close politely: say these are our best current matches at that cemetery, and that if none of these quite fit, or they are looking for something else (a different number of spaces, location or timing), they should simply let us know and we will be glad to help. Do not just ask "which option would you like to learn about". Sign off warmly from Simon, as: "Warm regards,\nSimon\nTexas Cemetery Brokers\nMy personal cell: (310) 804-9586", and in the closing paragraph have Simon say they are welcome to call or text him on his personal cell, "this is my personal phone number".
 Reply like a real person: respond briefly and helpfully to anything else the buyer raised in their message, form details or prior emails (questions, headstone or location preferences, timing, family circumstances) using only supplied facts; if we cannot answer something from the facts, say Simon will confirm it.
 When an option has partial_offer, the option is a group larger than the buyer needs: say clearly we can sell them just the number of spaces they want from that group, and give partial_offer.our_total as our total for those spaces (it also already includes the transfer fee once). Still state the full-group figures too. Plain text, short paragraphs, no markdown. Return JSON only.
-FIRST decide whether to email at all, like a careful broker checking the file. Read prior_emails and staff_notes (last_contact_at is when our team last emailed or noted this buyer). Set should_send false, with a short reason for staff, when: we are already in conversation with them by phone or email about something else, a note says not to contact them or that they are handled, they have bought elsewhere or said they are no longer interested, or a new email would be redundant or awkward. If they were contacted before, only send when an option is genuinely new since then (listed_at after last_contact_at) and nothing in the file says otherwise; open by mentioning a space has come available. When unsure, hold. If should_send is false, subject and body may be empty.
+FIRST decide whether to email at all, like a careful broker checking the file. Read prior_emails and staff_notes (last_contact_at is when our team last emailed or noted this buyer). Set should_send false, with a short reason for staff, when: we are already in conversation with them by phone or email about something else, a note says not to contact them or that they are handled, they have bought elsewhere or said they are no longer interested, or a new email would be redundant or awkward. If they were contacted before, only send when an option is genuinely new since then (listed_at after last_contact_at) AND our most recent email to them said we would reach back out if something came available; otherwise later communication belongs to our team, so hold; open by mentioning a space has come available. When unsure, hold. If should_send is false, subject and body may be empty.
 If staff_feedback_on_previous_draft is present, a staff member declined the last draft for that reason — correct that specific problem in the new draft while still following every rule above.`;
   const gateway = createLovableAiGatewayRunIdFetch();
   const res = await gateway.fetch(GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
@@ -226,9 +226,8 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
 }
 
 // Scheduled every 10 minutes: replies automatically to new buyer inquiries about 20 minutes after they arrive.
-// Only inquiries from AUTO_SINCE onward (older ones were reviewed by hand), at most 3 per run, single-flight,
+// Covers every open buyer record, newest first, first-round outreach only (one AI look per buyer/address), at most 3 per run, single-flight,
 // and every safety check of the approval path (prior contact, file review, duplicate address, inventory) still applies.
-const AUTO_SINCE = "2026-10-16T13:30:00Z";
 async function sweep(db: any, url: string, service: string, apiKey?: string) {
   if (!apiKey) return { status: "skipped", reason: "AI is not configured" };
   const { data: state } = await db.from("automation_job_state").select("status").eq("job_name", "buyer-ai-drafts").maybeSingle();
@@ -238,11 +237,20 @@ async function sweep(db: any, url: string, service: string, apiKey?: string) {
   if (!locked) return { status: "skipped", reason: "Another run is in progress" };
   const done: any[] = [];
   try {
-    const due = new Date(Date.now() - 20 * 60 * 1000).toISOString(), floor = new Date(Math.max(Date.parse(AUTO_SINCE), Date.now() - 3 * 86400000)).toISOString();
-    const { data: cands } = await db.from("contact_submissions").select("id,customer_kind,source").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("ai_paused_at", null).not("email", "is", null).gte("created_at", floor).lte("created_at", due).order("created_at").limit(50);
-    const ids = (cands ?? []).filter(isBuyer).map((c: any) => c.id);
-    const { data: had } = ids.length ? await db.from("buyer_ai_drafts").select("submission_id").in("submission_id", ids) : { data: [] };
-    const todo = ids.filter((id: string) => !(had ?? []).some((h: any) => h.submission_id === id)).slice(0, 3);
+    const due = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    const { data: cands } = await db.from("contact_submissions").select("id,email,customer_kind,source").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("ai_paused_at", null).not("email", "is", null).lte("created_at", due).order("created_at", { ascending: false }).limit(1000);
+    // First round of outreach only: any buyer (or email address) the AI has already looked at is never re-read.
+    const buyers = (cands ?? []).filter(isBuyer);
+    const { data: had } = await db.from("buyer_ai_drafts").select("submission_id").limit(5000);
+    const seenIds = new Set((had ?? []).map((h: any) => h.submission_id));
+    const seenEmails = new Set(buyers.filter((b: any) => seenIds.has(b.id)).map((b: any) => String(b.email).toLowerCase().trim()));
+    const todo: string[] = [];
+    for (const b of buyers) {
+      const e = String(b.email).toLowerCase().trim();
+      if (seenIds.has(b.id) || seenEmails.has(e)) continue;
+      seenEmails.add(e); todo.push(b.id);
+      if (todo.length >= 3) break;
+    }
     for (const id of todo) {
       const r: any = await draft(db, apiKey, id, false);
       if (r.status !== "proposed") { done.push({ id, ...r }); continue; }
