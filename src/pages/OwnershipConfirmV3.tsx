@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Navbar from "@/components/Navbar";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -403,6 +404,7 @@ const OwnershipConfirmV3 = () => {
   const [done, setDone] = useState(false);
   const [save, setSave] = useState<"idle" | "saving" | "saved">("idle");
   const [whyOpen, setWhyOpen] = useState(false);
+  const [deedOpen, setDeedOpen] = useState<boolean | null>(null);
   const preset = useRef<Set<string>>(new Set());
   const stage = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
@@ -542,7 +544,7 @@ const OwnershipConfirmV3 = () => {
       </div>
 
       <Navbar forceScrolled />
-      <style>{`@media (max-width: 820px){ .ocq-deed{ order:-1; position:static !important; max-width:none !important; } .ocq-deed .ocq-deedbox{ aspect-ratio:auto !important; max-height:46vh; } }`}</style>
+      <style>{`@media (max-width: 820px){ .ocq-deed{ order:-1; position:static !important; max-width:none !important; } .ocq-deed .ocq-deedbox{ aspect-ratio:auto !important; height:46vh; } }`}</style>
       <div style={{ height: 72 }} />
       <header style={{ borderBottom: "1px solid #e7e0d4", background: "rgba(246,242,235,0.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "sticky", top: 72, zIndex: 20 }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "10px clamp(14px,4vw,32px)", display: "flex", alignItems: "center", gap: 12 }}>
