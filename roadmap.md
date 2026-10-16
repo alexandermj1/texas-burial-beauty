@@ -163,3 +163,4 @@
 - [x] Replace the "Jane Doe" example name at the start of the sell-your-plot form with another name
 - [x] Guides menu: drop the panel-wide background grid (cards keep theirs); replace the "Most read guides / All guides" header row with a vertical Vogue side rail reading "Most read" and "All seven guides"; verified desktop/mobile
 - [x] Guides menu: replace the upside-down side label with a proper contents rail — "Also in the series" listing N°00 Planning a Funeral in Texas, N°02 Cemetery Plots for Sale, N°03 What a Plot Costs in Texas, then "All seven guides →"; cards now stretch to fill the panel so the dead space below is gone (panel 297px → 250px); verified desktop/mobile
+- [ ] Buyer AI: check record first (prior contact, notes, phone) before drafting; target uncontacted buyers or new matches; auto emails wait for owner go-ahead
