@@ -245,6 +245,9 @@ Deno.serve(async (req) => {
     const { data: s } = await db.from("contact_submissions").select("*").eq("id", d.submission_id).maybeSingle();
     if (!s?.email) return json({ error: "Buyer email missing" }, 400);
     if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return json({ error: "Buyer record is closed or paused" }, 409);
+    // One person, one reply: block if anything already went to this email address since this draft was made (e.g. a second form they filled in).
+    const { data: already } = await db.from("email_messages").select("id").ilike("to_email", `%${String(s.email).toLowerCase()}%`).or("from_email.ilike.%texascemeterybrokers%,from_email.ilike.%bayercemeterybrokers%").gte("received_at", d.created_at).is("deleted_at", null).limit(1);
+    if (already?.length) return json({ error: "We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." }, 409);
     const current = await matches(db, s, d.excluded_listing_ids ?? []);
     const canonical = (items: any[]) => JSON.stringify(items.map(x => Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)))).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
     if (canonical(current.items) !== canonical(d.inventory_snapshot as any[])) return json({ error: "Inventory changed. Draft again before approving." }, 409);
