@@ -75,6 +75,16 @@ Deno.serve(async (req) => {
 
     if (!s) throw new Error("No submission provided");
 
+    // Start an approval-only Buyer AI draft immediately; the owner email must not wait on AI.
+    if (s.id) {
+      const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const task = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/buyer-agent`, {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, apikey: key },
+        body: JSON.stringify({ action: "auto", submission_id: s.id }),
+      }).then(async (r) => { if (!r.ok) console.error("buyer draft failed", r.status, await r.text()); }).catch((e) => console.error("buyer draft failed", e));
+      (globalThis as any).EdgeRuntime?.waitUntil?.(task);
+    }
+
     // Region: matches the badge in the admin Submissions panel — Bayer only
     // when the inquiry channel is the Bayer "Sell a Plot" form; everything
     // else (including all website forms) is Texas. We deliberately ignore the
