@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
     if (canonical(current.items) !== canonical(d.inventory_snapshot as any[])) return json({ error: "Inventory changed. Draft again before approving." }, 409);
     const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
     if (!sending) return json({ error: "Reply already being sent" }, 409);
-    const html = `<div data-tcb-email="buyer_ai" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${b.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`;
+    const html = `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${b.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`;
     const res = await fetch(`${url}/functions/v1/gmail-action`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization") ?? "", apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" }, body: JSON.stringify({ action: "send", to: s.email, subject: b.subject, body: b.body, htmlBody: html, submissionId: s.id, actorName: `Buyer AI (approved by ${user.name})` }) });
     const text = await res.text();
     if (!res.ok || /"error"/.test(text)) { await db.from("buyer_ai_drafts").update({ status: "send_failed", error: "Send failed; check the email thread before trying again." }).eq("id", d.id); return json({ error: `Email failed: ${text.slice(0, 300)}` }, 502); }
