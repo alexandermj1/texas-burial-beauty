@@ -64,7 +64,7 @@ async function inventory(db: any, buyer: any) {
   return { kind, items };
 }
 
-async function model(apiKey: string, buyer: any, items: any[], kind: string) {
+async function model(apiKey: string, buyer: any, items: any[], kind: string, feedback?: string | null) {
   const preneed = isPreneed(buyer);
   const instructions = `You draft one warm, concise email from Texas Cemetery Brokers to a cemetery-property buyer. A staff member reviews it before sending.
 Rules: use only the supplied facts. Match ${kind === "any" ? "the requested property" : kind} type. Do not focus on or mention their budget/price range. For each option state garden, number of spaces, cemetery retail and our price exactly as supplied. Never give lot, block, row, grave, crypt, niche or space identifiers. Do not invent features, availability or fees.
@@ -74,7 +74,7 @@ If there are no options, say we currently have no matching space at that cemeter
   const gateway = createLovableAiGatewayRunIdFetch();
   const res = await gateway.fetch(GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
     model: MODEL, instructions, stream: true, store: false, reasoning: { effort: "low", summary: "auto" }, include: ["reasoning.encrypted_content"],
-    input: [{ role: "user", content: JSON.stringify({ buyer: { first_name: String(buyer.name ?? "").split(/\s+/)[0] || "there", cemetery: buyer.cemetery, type: buyer.property_type, spaces: buyer.spaces, timeline: buyer.timeline, message: buyer.message, details: buyer.details }, options: items }) }],
+    input: [{ role: "user", content: JSON.stringify({ buyer: { first_name: String(buyer.name ?? "").split(/\s+/)[0] || "there", cemetery: buyer.cemetery, type: buyer.property_type, spaces: buyer.spaces, timeline: buyer.timeline, message: buyer.message, details: buyer.details }, options: items, staff_feedback_on_previous_draft: feedback ?? null }) }],
     text: { format: { type: "json_schema", name: "buyer_reply", strict: true, schema: { type: "object", additionalProperties: false, required: ["subject", "body", "reason"], properties: { subject: { type: "string" }, body: { type: "string" }, reason: { type: "string" } } } } },
   }) });
   if (!res.ok || !res.body) { let message = await res.text(); try { const j = JSON.parse(message); message = j.message ?? j.error?.message ?? j.error ?? message; } catch { /* keep */ } const e = new Error(String(message).slice(0, 500)) as Error & { status?: number }; e.status = res.status; throw e; }
