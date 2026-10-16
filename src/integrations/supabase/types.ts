@@ -3231,6 +3231,18 @@ export type Database = {
           spaces: number
         }[]
       }
+      get_public_shopfront_plots: {
+        Args: never
+        Returns: {
+          cemetery: string
+          city: string
+          id: string
+          is_featured: boolean
+          savings_percent: number
+          section: string
+          spaces: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3252,6 +3264,7 @@ export type Database = {
         Args: { _completed?: boolean; _job_name: string; _run_id: string }
         Returns: undefined
       }
+      shopfront_lawn_label: { Args: { value: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user" | "agent" | "staff"
