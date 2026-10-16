@@ -101,7 +101,7 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
   if (error || !claimed) return { status: "skipped", reason: "Draft already in progress" };
   try {
     const { kind, items } = await inventory(db, buyer);
-    const r = await model(apiKey, buyer, items, kind);
+    const r = await model(apiKey, buyer, items, kind, old?.status === "rejected" ? old.decision_reason : null);
     await db.from("buyer_ai_drafts").update({ status: "proposed", subject: r.subject, body: r.body, reason: r.reason, inventory_snapshot: items, updated_at: new Date().toISOString() }).eq("id", claimed.id);
     return { status: "proposed", draft_id: claimed.id, options: items.length };
   } catch (e) {
