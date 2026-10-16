@@ -25,5 +25,3 @@ verify_jwt = false
 [functions.plot-value-estimator]
 verify_jwt = false
 
-[functions.buyer-agent]
-verify_jwt = false
