@@ -17,7 +17,7 @@
 - Buyer inventory uses buyerInventoryPricing/quoteFigures for per-space quotes and one-time fees; distinguish separate purchases from bundles, never invent identifiers. Workspace and AI share documentReadiness; a deed alone is not completed paperwork; agreement/acceptance eligibility stays separate — why: honest pricing and readiness.
 - Submission lists display cached summaries and call summarize-submission (cheap model, fingerprint-cached) only for records with no summary yet, once per id per session; seller-agent rejects automatic cron requests — why: new inquiries need a summary line without browsing burning AI credits.
 - Buyer AI: auto defers undrafted inquiries to sweep; sendDraft guards automatic timing, staff approval excepted — why: no early or duplicate sends.
-- Use publicSeoUpgrades in both SEO renderers; preserve directory titles — why: metadata agrees.
+- Share publicSeoUpgrades across SEO renderers; preserve directory titles. Transfer-guide data uses a public-only snapshot and curated links, no private contacts/prices — why: safe, consistent publication.
 
 - Homepage shopfronts use get_public_shopfront_plots: preserve Featured priority and label additional paid signed inventory separately; sanitize named lawns and round verified savings down server-side using quoteFigures' separate-space buyer basis, never return currency or plot identifiers, and pause rotation on interaction — why: honest paid placement and competitor-safe inventory.
-- Toggle homepage shopfront visibility only through homepageSections.featuredShopfronts, preserving the component and inventory feed — why: one-prompt show/hide requests must not delete the design.
+- Toggle shopfronts via homepageSections.featuredShopfronts; keep code/feed — why: hiding must preserve design.

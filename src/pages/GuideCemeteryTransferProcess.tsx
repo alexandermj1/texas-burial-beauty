@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
+import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
+import { TRANSFER_GUIDE_SEO } from "@/data/publicSeoUpgrades";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import restlandLawn from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
@@ -46,12 +48,12 @@ const jsonLd: Record<string, unknown>[] = [
   {
     "@context": "https://schema.org", "@type": "Article",
     headline: "Who Actually Owns Grandma's Cemetery Plot? A Texas Guide",
-    description: "A plain-English guide to who owns an inherited cemetery plot in Texas, who must sign a transfer, and how cemetery, heirship and spousal rights work together.",
+    description: TRANSFER_GUIDE_SEO.description,
     mainEntityOfPage: FULL, url: FULL, inLanguage: "en-US",
-    dateModified: "2026-09-20",
+    dateModified: "2026-10-17",
     author: { "@type": "Organization", name: "Texas Cemetery Brokers", url: `${SITE}/` },
     publisher: { "@type": "Organization", name: "Texas Cemetery Brokers", url: `${SITE}/` },
-    about: ["Texas cemetery plot inheritance", "Cemetery plot transfer", "Right of sepulture", "Texas heirship"],
+    about: ["Texas cemetery plot inheritance", "Cemetery plot transfer", "Right of sepulture", "Texas heirship", "Recorded cemetery transfer fees", "Texas cemetery addresses"],
   },
   {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
@@ -69,7 +71,7 @@ const jsonLd: Record<string, unknown>[] = [
 
 const GuideCemeteryTransferProcess = () => (
   <div className="flex min-h-screen flex-col bg-background [&>footer]:mt-auto">
-    <Seo title="Who Owns an Inherited Cemetery Plot in Texas?" description="Who inherits a Texas cemetery plot, who must sign its transfer, and how spousal rights, heirs and cemetery rules work together." path={PATH} type="article" jsonLd={jsonLd} />
+    <Seo {...TRANSFER_GUIDE_SEO} path={PATH} type="article" jsonLd={jsonLd} />
     <Navbar forceScrolled />
 
     <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-20 pt-28 md:pb-28">
@@ -93,7 +95,7 @@ const GuideCemeteryTransferProcess = () => (
               A friendly Texas guide to the three authorities that decide who owns an unused cemetery space, who has to sign, and why the cemetery gets the final word.
             </p>
             <div className="border-l border-border pl-6 text-sm leading-relaxed text-muted-foreground md:col-span-4">
-              <p>Texas Cemetery Brokers</p><p>Updated September 2026</p><p>17 min read · 8 chapters</p>
+              <p>Texas Cemetery Brokers</p><p>Updated October 2026</p><a href="#cemetery-transfer-fees" className="text-primary underline decoration-primary/30 underline-offset-4">Cemetery fees & addresses ↓</a>
             </div>
           </div>
           <div className="mt-10 flex flex-wrap gap-3">
@@ -112,7 +114,7 @@ const GuideCemeteryTransferProcess = () => (
           </p>
           <nav aria-label="Article chapters" className="mt-8 border-l border-border pl-6 text-sm text-muted-foreground md:mt-0">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/50">In this guide</p>
-            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
+            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['cemetery-transfer-fees','Fees & addresses'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
           <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:mt-0">
             <img src={restlandLawn.url} alt="The lawn at Restland Memorial Park in Dallas" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
@@ -277,6 +279,8 @@ const GuideCemeteryTransferProcess = () => (
             {[['1','Confirm the cemetery record','Ask whose name appears on the controlling record and whether every space is unused.'],['2','Ask for its transfer rules','Get its forms, fee, right-of-first-refusal terms and buyer restrictions.'],['3','Identify every required signer','Compare the owner’s burial location, spouse, will and heirs with the cemetery’s requirements.'],['4','Record the completed transfer','The sale is not finished until the cemetery accepts and records the conveyance.']].map(([n,t,d])=><div key={n} className="bg-card p-6"><span className="text-[10px] font-bold tracking-[0.2em] text-primary">STEP {n}</span><h3 className="mt-3 font-display text-xl text-foreground">{t}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p></div>)}
           </div>
         </Section>
+
+        <CemeteryTransferDirectory />
 
         <Section id="file" eyebrow="Before anyone signs" title="Get someone to look at your actual file">
           <p>If you’ve read this far, you’ve probably noticed something uncomfortable: a single plot worth a few thousand dollars can generate a genuinely complicated legal question.</p>
