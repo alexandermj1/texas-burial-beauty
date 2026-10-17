@@ -2,7 +2,7 @@
 // static HTML shells with route-specific <title>, description, canonical,
 // and Open Graph tags — for social unfurl crawlers and non-JS bots.
 
-import { COST_GUIDE_SEO, DIRECTORY_SEO } from "../src/data/publicSeoUpgrades";
+import { COST_GUIDE_SEO, DIRECTORY_SEO, TRANSFER_GUIDE_SEO } from "../src/data/publicSeoUpgrades";
 
 export interface RouteMeta {
   path: string; // url path, e.g. "/buy"
@@ -117,9 +117,7 @@ export const STATIC_ROUTES: RouteMeta[] = [
   },
   {
     path: "/cemetery-transfer-process-texas",
-    title: "Who Owns an Inherited Cemetery Plot in Texas?",
-    description:
-      "Who inherits a Texas cemetery plot, who must sign its transfer, and how spousal rights, heirs and cemetery rules work together.",
+    ...TRANSFER_GUIDE_SEO,
     type: "article",
   },
   {

@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Add transfer-guide table for 206 cemetery records with addresses, 52 recorded fees, curated websites and accuracy notice; align SEO/sitemap, pass six tests and verify search/filter/pages at desktop, 390px and 320px; not published
 - [x] Correct Maria’s deed-only false “Docs complete” label; share document readiness with buyer AI, deploy, pass 10 tests and verify Shawn’s signed-in page now shows “Quote sent”; no email sent
 - [x] Correct immediate buyer auto path; enforce minimum 20-minute delay before drafting and automatic sending; six tests plus actual-handler isolated checks pass; deployed without test emails
 - [x] Add approval-only Buyer AI drafts with cemetery/type matching, saved prices, private lawn labels and readiness wording
