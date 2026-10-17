@@ -298,9 +298,6 @@ const GuideCemeteryTransferProcess = () => (
             {[['1','Confirm the cemetery record','Ask whose name appears on the controlling record and whether every space is unused.'],['2','Ask for its transfer rules','Get its forms, fee, right-of-first-refusal terms and buyer restrictions.'],['3','Identify every required signer','Compare the owner’s burial location, spouse, will and heirs with the cemetery’s requirements.'],['4','Record the completed transfer','The sale is not finished until the cemetery accepts and records the conveyance.']].map(([n,t,d])=><div key={n} className="border-t border-foreground/15 py-5"><span className="text-[10px] font-bold tracking-[0.2em] text-primary">STEP {n}</span><h3 className="mt-3 font-display text-xl text-foreground">{t}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p></div>)}
           </div>
         </Section>
-
-        <CemeteryTransferDirectory />
-
         <Section id="file" eyebrow="Before anyone signs" title="Get someone to look at your actual file">
           <p>If you’ve read this far, you’ve probably noticed something uncomfortable: a single plot worth a few thousand dollars can generate a genuinely complicated legal question.</p>
           <p>Three overlapping authorities, a statute that inverts the marital property rules you thought you knew, a signature list that flips depending on where the deceased is buried, and a cemetery with its own view of all of it.</p>
