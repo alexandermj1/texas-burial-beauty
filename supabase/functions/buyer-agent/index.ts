@@ -127,7 +127,13 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
   const area = areaOf(buyer), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (area.length < 3) return { kind, items: [] as any[], area: null };
   const like = `%${area.replace(/[%_,()]/g, " ")}%`;
-  const { data: cems } = await db.from("texas_cemeteries").select("name").is("deleted_at", null).or(`region.ilike.${like},city.ilike.${like},county.ilike.${like}`).order("name").limit(80);
+  let { data: cems } = await db.from("texas_cemeteries").select("name").is("deleted_at", null).or(`region.ilike.${like},city.ilike.${like},county.ilike.${like}`).order("name").limit(80);
+  // If the area text barely matched anything, widen to the whole state rather than miss cemeteries.
+  if ((cems ?? []).length < 3) {
+    const { data: allCems } = await db.from("texas_cemeteries").select("name").is("deleted_at", null).order("name").limit(2000);
+    const have = new Set((cems ?? []).map((c: any) => c.name));
+    cems = [...(cems ?? []), ...(allCems ?? []).filter((c: any) => !have.has(c.name))];
+  }
   const items: any[] = [];
   for (const c of cems ?? []) {
     if (items.length >= 6) break;
