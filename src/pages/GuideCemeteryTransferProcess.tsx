@@ -11,7 +11,6 @@ import { TRANSFER_GUIDE_SEO } from "@/data/publicSeoUpgrades";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
-import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import restlandLawn from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
@@ -30,12 +29,12 @@ const Ext = ({ href, children }: { href: string; children: React.ReactNode }) =>
 
 const Section = ({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
   <section id={id} className="relative scroll-mt-28 border-t border-foreground/20 py-12 md:py-16">
-    <div className="relative">
-      <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
+    <div className="relative grid gap-x-12 gap-y-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.3fr)]">
+      <div><p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
         <span className="h-px w-10 bg-primary/40" />{eyebrow}
       </p>
-      <h2 className="mb-8 max-w-4xl font-display text-3xl leading-[1.08] text-foreground md:text-5xl">{title}</h2>
-      <div className="prose prose-lg max-w-none text-foreground/80 [&_p]:mb-5 [&_p]:max-w-4xl [&_p]:leading-[1.8] [&_li]:leading-relaxed [&_h3]:mt-9 [&_h3]:max-w-4xl [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
+      <h2 className="mb-8 max-w-4xl font-display text-3xl leading-[1.08] text-foreground md:text-5xl lg:sticky lg:top-28">{title}</h2></div>
+      <div className="min-w-0 text-base text-foreground/80 [&_p]:mb-5 [&_p]:leading-[1.8] [&_li]:leading-relaxed [&_h3]:mb-3 [&_h3]:mt-9 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:text-foreground [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
     </div>
   </section>
 );
@@ -51,7 +50,7 @@ const faqs = [
 const jsonLd: Record<string, unknown>[] = [
   {
     "@context": "https://schema.org", "@type": "Article",
-    headline: "Who Actually Owns Grandma's Cemetery Plot? A Texas Guide",
+    headline: "How to transfer your cemetery plot in Texas",
     description: TRANSFER_GUIDE_SEO.description,
     mainEntityOfPage: FULL, url: FULL, inLanguage: "en-US",
     dateModified: "2026-10-17",
@@ -79,10 +78,9 @@ const GuideCemeteryTransferProcess = () => (
     <Navbar forceScrolled />
 
     <header className="relative overflow-hidden pb-10 pt-24 md:pb-14 md:pt-28">
-      <img src={bananaLeaf.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -left-60 top-40 hidden w-[28rem] -rotate-12 opacity-10 md:block" />
-      <img src={palmFan.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -right-44 bottom-10 hidden w-[26rem] rotate-6 opacity-10 lg:block" />
-      <img src={hibiscusCoral.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute right-[6%] top-32 hidden w-24 rotate-6 opacity-80 md:block" />
-      <img src={pinkBranch.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute bottom-20 left-[4%] hidden w-28 -rotate-6 opacity-50 lg:block" />
+      <img src={bananaLeaf.url} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} className="pointer-events-none absolute -left-60 top-24 hidden w-[28rem] -rotate-12 opacity-10 md:block" />
+      <img src={palmFan.url} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} className="pointer-events-none absolute -right-44 top-24 hidden w-[26rem] rotate-6 opacity-10 lg:block" />
+      <img src={hibiscusCoral.url} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} className="pointer-events-none absolute right-[3%] top-24 hidden w-24 rotate-6 opacity-80 md:block" />
       <div className="container relative mx-auto px-6">
         <div className="mx-auto grid max-w-7xl grid-cols-12 gap-x-6 gap-y-8 md:gap-y-10">
           <div className="col-span-12">
@@ -91,7 +89,7 @@ const GuideCemeteryTransferProcess = () => (
           <div className="col-span-12 text-left lg:text-center">
             <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.3em] text-accent">A guide for Texas families · Ownership & transfers</p>
             <h1 className="font-display text-[2.5rem] leading-[0.95] text-foreground sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem]">
-              <span className="block">Transfer your plot</span><span className="block">the <span className="font-medium italic text-primary">right</span> way.</span>
+              <span className="block">How to transfer</span><span className="block">your <span className="font-medium italic text-primary">cemetery</span> plot.</span>
             </h1>
           </div>
           <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
@@ -102,29 +100,37 @@ const GuideCemeteryTransferProcess = () => (
             <p className="font-display text-2xl italic leading-snug text-foreground/85">The deed. The family. The cemetery.<br />A clear transfer starts with all three.</p>
             <div className="mt-5 flex flex-wrap items-center gap-3"><Button asChild size="sm"><Link to="/sell">Review my plot <ArrowRight className="ml-2 h-4 w-4" /></Link></Button><Button asChild variant="link" size="sm" className="px-0"><a href="tel:+12142304740"><Phone className="mr-2 h-3.5 w-3.5" />(214) 230-4740</a></Button></div>
           </aside>
-          <div className="col-span-12 mt-2"><TransferIllustratedNavigation /></div>
+          
         </div>
       </div>
     </header>
 
     <main>
+      <div className="container mx-auto max-w-[1328px] px-6 pb-10"><TransferIllustratedNavigation /></div>
       <article className="container mx-auto max-w-[1328px] px-6 pb-12">
-        <div className="grid overflow-hidden border-b border-foreground/20 py-10 md:grid-cols-[1fr_220px] md:items-stretch md:py-12 lg:grid-cols-[1fr_220px_270px]">
-          <p className="pr-8 text-xl leading-[1.75] text-foreground/85 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-primary">
-            Here’s a question that sounds simple and isn’t: your father died, he owned four cemetery plots, only one got used, and your family wants to sell the other three. Who signs?
-          </p>
-          <nav aria-label="Article chapters" className="mt-8 border-l border-border pl-6 text-sm text-muted-foreground md:mt-0">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/50">In this guide</p>
-            {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['cemetery-transfer-fees','Fees & addresses'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
-          </nav>
-          <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:col-span-2 lg:col-span-1 lg:mt-0">
-            <img src={restlandLawn.url} alt="The lawn at Restland Memorial Park in Dallas" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-            <figcaption className="absolute inset-x-0 bottom-0 bg-foreground/75 px-4 py-3 text-xs leading-relaxed text-background">The cemetery’s own record is where every transfer begins.</figcaption>
-          </figure>
-        </div>
+        <nav aria-label="Guide chapters" className="flex flex-wrap gap-x-6 gap-y-3 border-b border-foreground/20 pb-8 text-xs text-muted-foreground">
+          {[['transfer-timing','Appointments & timing'],['save-on-fees','Save on fees'],['nature','The deed'],['owner-buried','Who signs?'],['cemetery-transfer-fees','Fees & addresses'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="border-b border-primary/25 py-2 transition-colors hover:text-primary">{label}</a>)}
+        </nav>
+
+        <section id="transfer-timing" className="scroll-mt-28 border-b border-foreground/20 py-12 md:py-16">
+          <div className="grid gap-7 lg:grid-cols-[0.85fr_1.3fr] lg:gap-12">
+            <div><p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.28em] text-accent">Plan the appointment</p><h2 className="font-display text-4xl leading-[1.08] text-foreground md:text-6xl">When do you <span className="italic text-primary">need the space?</span></h2></div>
+            <p className="self-end text-lg leading-relaxed text-muted-foreground">An immediate need following a death and a transfer arranged ahead of time follow different schedules. Call the cemetery first: its availability, paperwork and appointment rules determine the timing.</p>
+          </div>
+          <div className="mt-10 grid gap-8 md:grid-cols-2 md:gap-12">
+            <div className="border-t border-primary/30 pt-6"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">At need · Following a death</p><p className="mt-4 font-display text-5xl text-foreground md:text-6xl">1–2 <span className="text-3xl italic">days</span></p><h3 className="mt-5 font-display text-2xl text-foreground">Usually a quicker transfer.</h3><p className="mt-3 leading-relaxed text-muted-foreground">At-need cemetery transfers can usually be completed within one or two days, and sometimes you do not even need an appointment. Call the cemetery first to check its requirements and whether the documents are ready.</p></div>
+            <div className="border-t border-accent/30 pt-6"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">Planning ahead · No immediate need</p><p className="mt-4 font-display text-5xl text-foreground md:text-6xl">2 weeks <span className="text-3xl italic">to a month</span></p><h3 className="mt-5 font-display text-2xl text-foreground">Book an appointment in advance.</h3><p className="mt-3 leading-relaxed text-muted-foreground">When the buyer does not need to use the space immediately following a death, an advance appointment with the cemetery is required. In Texas Cemetery Brokers’ experience, you can typically expect an appointment in two weeks to a month; at busier cemeteries, the wait can sometimes be upwards of a month.</p></div>
+          </div>
+          <p className="mt-7 text-xs leading-relaxed text-muted-foreground">These are typical experiences, not guaranteed deadlines. Cemetery availability and the completeness of the ownership documents can affect the schedule.</p>
+        </section>
+
+        <Section id="save-on-fees" eyebrow="A little planning can save money" title={<>One deed. One transfer.<br /><span className="italic text-primary">Fewer repeat fees.</span></>}>
+          <p>If you are transferring several cemetery properties on one deed, ask the cemetery about transferring them all together rather than arranging separate transfers. Where the cemetery charges per deed or per transfer, this can avoid paying the transfer fee twice and save you money.</p>
+          <p>Confirm the fee basis before you decide: some cemeteries charge per space, and extra charges may still apply. The cemetery must also agree to the transfer and any division of collectively conveyed spaces.</p>
+        </Section>
 
         <div className="relative my-10 overflow-hidden border-y border-primary/20 py-8 md:py-10">
-          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
+          <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
           <div className="relative">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">The honest answer</p>
           <p className="font-display text-2xl leading-snug text-foreground md:text-3xl">Three different authorities must line up before anything happens.</p>
@@ -143,7 +149,7 @@ const GuideCemeteryTransferProcess = () => (
           <p>This trips people up immediately, so let’s clear it up.</p>
           <p>When you “buy a cemetery plot” in Texas, you don’t buy the land. You buy something called the <strong>exclusive right of sepulture</strong> — a right to bury someone in a particular spot. The cemetery still owns the dirt. Texas courts have described what you hold as something closer to an easement or a licence than to real estate.</p>
           <p>Practically, this means the deed isn’t at the county clerk’s office. It’s at the cemetery. The certificate of ownership in your father’s filing cabinet is a copy; the cemetery’s records are the original, and they’re what control.</p>
-          <div className="not-prose mt-8 grid overflow-hidden rounded-lg border border-border md:grid-cols-2">
+          <div className="not-prose mt-8 grid border-y border-foreground/20 md:grid-cols-2">
             <div className="bg-card p-6"><FileText className="h-6 w-6 text-primary"/><p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The family holds</p><p className="mt-2 font-display text-xl text-foreground">The certificate and supporting papers</p></div>
             <div className="border-t border-border bg-secondary/30 p-6 md:border-l md:border-t-0"><Building2 className="h-6 w-6 text-primary"/><p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The cemetery holds</p><p className="mt-2 font-display text-xl text-foreground">The controlling ownership record</p></div>
           </div>
@@ -159,7 +165,7 @@ const GuideCemeteryTransferProcess = () => (
           <p>Subsection (b) gives the spouse of the plot owner a <strong>vested right of interment</strong> — a right to actually be buried there. It attaches while they’re married, or if they’re married when the owner dies.</p>
           <p>And subsection (c) puts teeth in it: an attempted conveyance or other action without the spouse’s joinder or written, attached consent doesn’t divest that right. So if the children sell the plots out from under the widow, the buyer takes the plots subject to her right to be buried in one. Which is exactly the kind of mess nobody wants to discover later.</p>
           <p>That right ends in only two ways, under subsection (d): a final divorce decree, unless the decree says otherwise, or the spouse being buried somewhere else.</p>
-          <div className="not-prose mt-8 rounded-lg border border-accent/30 bg-accent/10 p-6">
+          <div className="not-prose mt-8 border-l-2 border-accent/40 pl-6">
             <p className="font-semibold text-foreground">A burial right is not exactly the same thing as ownership.</p>
             <p className="mt-2 text-sm leading-relaxed text-foreground/70">The spouse’s protected right can remain attached even when ownership interests pass to heirs. That distinction is one reason a transfer needs careful document review.</p>
           </div>
@@ -170,14 +176,14 @@ const GuideCemeteryTransferProcess = () => (
           <h2 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-5xl">Is the owner buried in the plot?</h2>
           <p className="mt-5 max-w-3xl text-lg leading-relaxed text-foreground/75">This is the question that determines who signs.</p>
           <div className="mt-9 grid gap-5 md:grid-cols-2">
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-7">
+            <div className="border-y border-primary/30 py-7">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">Yes</div>
               <h3 className="mt-5 font-display text-2xl text-foreground">The owner is buried there</h3>
               <p className="mt-4 leading-relaxed text-foreground/75">Subsection (g) applies. Unless there is a specific disposition by express reference to the space in the owner’s will or in a written declaration filed with the cemetery:</p>
               <div className="mt-5 flex items-center gap-3 border-t border-primary/20 pt-5 text-foreground"><Users className="h-5 w-5 text-primary"/><strong>Surviving spouse + heirs-at-law sign together</strong></div>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">Read that “and” carefully. The widow alone can’t sell. The children alone can’t sell. Everyone signs.</p>
             </div>
-            <div className="rounded-lg border border-accent/30 bg-accent/5 p-7">
+            <div className="border-y border-accent/30 py-7">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">No</div>
               <h3 className="mt-5 font-display text-2xl text-foreground">The owner is not buried there</h3>
               <p className="mt-4 leading-relaxed text-foreground/75">Subsection (h) applies. Absent a specific disposition, the right vests on death in the heirs-at-law and may be conveyed by them:</p>
@@ -185,7 +191,7 @@ const GuideCemeteryTransferProcess = () => (
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">One grave, niche or crypt remains reserved for the surviving spouse.</p>
             </div>
           </div>
-          <div className="mt-5 flex items-start gap-3 rounded-lg border border-border bg-card p-5"><Scale className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><p className="text-sm leading-relaxed text-foreground/75"><strong className="text-foreground">Same family, same plots, different signature list</strong> — depending on where Dad ended up.</p></div>
+          <div className="mt-5 flex items-start gap-3 border-b border-foreground/20 py-5"><Scale className="mt-0.5 h-5 w-5 shrink-0 text-primary"/><p className="text-sm leading-relaxed text-foreground/75"><strong className="text-foreground">Same family, same plots, different signature list</strong> — depending on where Dad ended up.</p></div>
         </section>
 
         <Section id="children" eyebrow="Interment rights" title="And the children have their own rights">
@@ -198,7 +204,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <div className="my-4 grid gap-4 sm:grid-cols-2">
-          {[{src:resthavenOakPath.url,alt:'Oak-lined path at Resthaven Memorial Park in Texas',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:restlandLawn.url,alt:'The lawn at Restland Memorial Park in Dallas',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden rounded-lg border border-border bg-card"><img src={p.src} alt={p.alt} width={1536} height={1024} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="p-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
+          {[{src:resthavenOakPath.url,alt:'Oak-lined path at Resthaven Memorial Park in Texas',name:'The cemetery record is the starting point',caption:'Every transfer begins by confirming exactly how the cemetery has the ownership recorded.'},{src:restlandLawn.url,alt:'The lawn at Restland Memorial Park in Dallas',name:'The cemetery is also the gatekeeper',caption:'Its forms, fees and consent requirements decide what will be accepted and recorded.'}].map((p)=><figure key={p.name} className="overflow-hidden border-b border-foreground/20"><img src={p.src} alt={p.alt} width={1536} height={1024} className="aspect-[16/10] w-full object-cover" loading="lazy"/><figcaption className="py-5"><p className="font-display text-xl text-foreground">{p.name}</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.caption}</p></figcaption></figure>)}
         </div>
 
         <Section id="estates-code" eyebrow="Authority two" title="The Texas Estates Code">
@@ -206,15 +212,15 @@ const GuideCemeteryTransferProcess = () => (
           <p>That elsewhere is <Ext href={`${ES}201.htm`}>Estates Code Chapter 201</Ext>, the intestate succession rules. And because of the separate property presumption we met earlier, you’ll generally be in the separate-property provisions rather than the community property ones — which is precisely why children end up with a share that families don’t expect.</p>
           <p>Working out exactly who the heirs are can require a <Ext href={`${ES}202.htm`}>determination of heirship under Chapter 202</Ext>, or in some cases evidence under <Ext href={`${ES}203.htm`}>Chapter 203</Ext>. A <Ext href={`${ES}205.htm`}>small estate affidavit under Chapter 205</Ext> has specific eligibility rules and is not a universal substitute for probate. Many cemeteries will accept an affidavit rather than making you open a probate, which saves considerable time and money — but that’s their choice, not your right.</p>
           <p>One thing to watch: heirs are determined as of the date of death. If a child predeceased the owner, that child’s own children may step into the slot. Families who assume the list is “Mom and the three of us” sometimes discover it’s actually “Mom, two of us, and four grandchildren scattered across three states.”</p>
-          <div className="not-prose my-8 rounded-lg border border-border bg-secondary/35 p-7">
+          <div className="not-prose my-8 border-l-2 border-primary/30 pl-6">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">An unsettled corner</p>
             <h3 className="mt-3 font-display text-2xl text-foreground">Real property or personal property?</h3>
             <p className="mt-4 leading-relaxed text-foreground/75">Texas applies different intestacy fractions to real property and personal property. Given that courts describe the right of sepulture as more like an easement or licence than land, there is an argument either way. If the shares matter — usually because the family disagrees — this is a question for a lawyer, not for a blog post.</p>
           </div>
         </Section>
 
-        <section id="sample-scenario" className="relative my-6 scroll-mt-28 overflow-hidden rounded-lg border border-primary/20 bg-secondary/40 p-6 md:p-10">
-          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-14 -top-14 w-64 opacity-20" />
+        <section id="sample-scenario" className="relative my-6 scroll-mt-28 overflow-hidden border-y border-foreground/20 py-10 md:py-14">
+          <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-14 -top-14 w-64 opacity-20" />
           <div className="relative">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-primary/20 pb-6">
               <div>
@@ -276,8 +282,8 @@ const GuideCemeteryTransferProcess = () => (
           <p>And § 711.0381 sets out the paperwork: the conveyance has to name the person on the certificate as seller, plus the purchaser and any broker assisting, and it must be filed and recorded with the cemetery within three business days of the sale.</p>
           <p>There’s one more provision families hit unexpectedly. Under <Ext href={`${HS_711}#711.0395`}>§ 711.0395</Ext>, a cemetery may not make more than one interment in a plot unless each owner consents. If three siblings jointly hold the plots, each burial needs all three to agree.</p>
           <p>The uncomfortable truth is that cemeteries tend to be conservative, because they’re the ones who get sued if a forgotten heir turns up in five years. So they’ll often ask for more signatures than the statute strictly requires. That’s their risk management, not a statement of law — but arguing with them rarely pays.</p>
-          <div className="not-prose mt-9 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
-            {[['1','Confirm the cemetery record','Ask whose name appears on the controlling record and whether every space is unused.'],['2','Ask for its transfer rules','Get its forms, fee, right-of-first-refusal terms and buyer restrictions.'],['3','Identify every required signer','Compare the owner’s burial location, spouse, will and heirs with the cemetery’s requirements.'],['4','Record the completed transfer','The sale is not finished until the cemetery accepts and records the conveyance.']].map(([n,t,d])=><div key={n} className="bg-card p-6"><span className="text-[10px] font-bold tracking-[0.2em] text-primary">STEP {n}</span><h3 className="mt-3 font-display text-xl text-foreground">{t}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p></div>)}
+          <div className="not-prose mt-9 grid gap-x-8 gap-y-6 border-y border-foreground/20 py-5 sm:grid-cols-2">
+            {[['1','Confirm the cemetery record','Ask whose name appears on the controlling record and whether every space is unused.'],['2','Ask for its transfer rules','Get its forms, fee, right-of-first-refusal terms and buyer restrictions.'],['3','Identify every required signer','Compare the owner’s burial location, spouse, will and heirs with the cemetery’s requirements.'],['4','Record the completed transfer','The sale is not finished until the cemetery accepts and records the conveyance.']].map(([n,t,d])=><div key={n} className="border-t border-foreground/15 py-5"><span className="text-[10px] font-bold tracking-[0.2em] text-primary">STEP {n}</span><h3 className="mt-3 font-display text-xl text-foreground">{t}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p></div>)}
           </div>
         </Section>
 
@@ -287,7 +293,7 @@ const GuideCemeteryTransferProcess = () => (
           <p>If you’ve read this far, you’ve probably noticed something uncomfortable: a single plot worth a few thousand dollars can generate a genuinely complicated legal question.</p>
           <p>Three overlapping authorities, a statute that inverts the marital property rules you thought you knew, a signature list that flips depending on where the deceased is buried, and a cemetery with its own view of all of it.</p>
           <p>And everything in this article is the general shape of the law. Your situation turns on particulars that no article can anticipate — exactly how the names read on the certificate, whether there’s a will with an express reference to the plot, whether a child predeceased, whether the plots were conveyed as a block, and what your specific cemetery requires.</p>
-          <div className="not-prose my-8 rounded-lg border border-border bg-card p-7">
+          <div className="not-prose my-8 border-y border-foreground/20 py-7">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">Bring these first</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {['Certificate of ownership or deed','Owner’s death certificate','Will or recorded declaration, if any','Names of spouse, children and deceased children','Cemetery correspondence and forms','Any prior transfer or waiver documents'].map((x)=><div key={x} className="flex items-start gap-3 text-sm text-foreground/80"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary"/><span>{x}</span></div>)}
@@ -304,8 +310,8 @@ const GuideCemeteryTransferProcess = () => (
           <PlotResaleCalculator compact />
         </section>
 
-        <section className="relative my-8 overflow-hidden rounded-lg border border-primary/20 bg-primary/10 px-7 py-9 text-foreground md:px-10 md:py-11">
-          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -bottom-16 -right-10 w-64 opacity-20" />
+        <section className="relative my-8 overflow-hidden border-y border-primary/30 py-10 text-foreground md:py-14">
+          <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -bottom-16 -right-10 w-64 opacity-20" />
           <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
             <div className="relative"><ShieldCheck className="h-7 w-7 text-primary"/><h2 className="mt-4 font-display text-3xl md:text-4xl">Get help from a cemetery broker.</h2><p className="mt-4 max-w-2xl leading-relaxed text-foreground/70">If the family agrees and the goal is a clean sale, we can check the cemetery record, identify the likely signers and explain the transfer requirements before you commit to anything.</p></div>
             <Link to="/sell" className="relative inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Work through your file <ArrowRight className="h-4 w-4"/></Link>

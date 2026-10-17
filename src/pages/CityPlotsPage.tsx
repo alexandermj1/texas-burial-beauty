@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
+import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
@@ -19,6 +20,7 @@ const CITY_PHOTOS: Record<string, { src: string; alt: string; landmark: string; 
 };
 
 const SITE = "https://texascemeterybrokers.com";
+const TRANSFER_SCOPES: Record<string, string> = { houston: "Greater Houston", dallas: "Dallas–Fort Worth", "san-antonio": "San Antonio", austin: "Austin" };
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-4">{children}</p>
@@ -573,6 +575,7 @@ const CityPlotsPage = () => {
         </section>
       </article>
 
+      {TRANSFER_SCOPES[data.slug] && <div className="bg-sand-light"><div className="mx-auto max-w-[1328px] px-6 lg:px-10"><CemeteryTransferDirectory key={data.slug} area={data.slug === "dallas" ? "Dallas–Fort Worth" : data.city} scope={TRANSFER_SCOPES[data.slug]} /></div></div>}
       <Footer />
     </div>
   );
