@@ -5,6 +5,7 @@ import { z } from "npm:zod@3";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.ts";
 import { quoteFigures, normalizeBuyerFees } from "./quoteFigures.ts";
 import { automaticReplyTiming, BUYER_REPLY_MIN_DELAY_MS } from "./replyTiming.ts";
+import { buyerDocumentReadiness, countBuyerDocuments } from "./documentReadiness.ts";
 
 const MODEL = "openai/gpt-6-astra";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
@@ -51,7 +52,7 @@ async function staff(db: any, req: Request) {
 async function inventory(db: any, buyer: any, exclude: string[] = []) {
   const want = canon(buyer.cemetery), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (!want) return { kind, items: [] as any[] };
-  const { data, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_completed_at,reserved_until,customer_kind,source")
+  const { data, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_requested_at,documents_completed_at,reserved_until,customer_kind,source")
     .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
     .or("la_signed_at.not.is.null,quote_response.eq.accepted").limit(1000);
   if (inventoryError) throw new Error(inventoryError.message);
@@ -61,7 +62,7 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
   const rows = (data ?? []).filter((s: any) => !exclude.includes(s.id) && !isBuyer(s) && canon(s.cemetery) === want && (!s.reserved_until || new Date(s.reserved_until) < new Date()) && (kind === "any" || category(s.property_type) === kind));
   if (!rows.length) return { kind, items: [] };
   const ids = rows.map((r: any) => r.id);
-  const { data: docs, error: docsError } = await db.from("submission_documents").select("submission_id,status").in("submission_id", ids).is("deleted_at", null);
+  const { data: docs, error: docsError } = await db.from("submission_documents").select("submission_id,status,doc_code,document_type").in("submission_id", ids).is("deleted_at", null);
   if (docsError) throw new Error(docsError.message);
   const items = rows.map((s: any) => {
     const count = Math.max(1, Number(s.plot_count) || Number(s.spaces) || 1);
@@ -74,9 +75,9 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
     const ourTotal = figures.hasQuote && fee != null ? figures.buyerPriceTotal : null;
     const retail = Number(s.cemetery_retail) > 0 ? Number(s.cemetery_retail) * count : null;
     const own = (docs ?? []).filter((d: any) => d.submission_id === s.id);
-    const received = own.filter((d: any) => ["received", "completed"].includes(String(d.status))).length;
-    const readiness = s.documents_completed_at || (own.length && received === own.length) ? "available now"
-      : own.length && received / own.length >= 0.75 ? "available in about 2 weeks"
+    const documentReadiness = buyerDocumentReadiness(s, countBuyerDocuments(own));
+    const readiness = documentReadiness.complete ? "available now"
+      : documentReadiness.almostComplete ? "available in about 2 weeks"
       : isPreneed(buyer) && s.la_signed_at ? "available within about a month, if that meets your timeframe" : "available";
     const rt = retail != null ? roundDown(retail) : null;
     const ot = ourTotal != null ? roundDown(ourTotal) : null;
