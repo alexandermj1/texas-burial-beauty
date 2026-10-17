@@ -144,6 +144,42 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
   return { kind, items: items.slice(0, 6), area, area_widened: areaWidened };
 }
 
+// Inventory search the model can call itself, so it can look around like a broker
+// when the first options don't suit the buyer. Returns only safe, supplied fields.
+async function searchTool(db: any, buyer: any, exclude: string[], args: any) {
+  const type = args.property_type && args.property_type !== "any" ? args.property_type : buyer.property_type;
+  const { data: all } = await db.from("texas_cemeteries").select("name,city,region,county,latitude,longitude").is("deleted_at", null).limit(2000);
+  const cems = all ?? [];
+  const find = (n: string) => cems.find((c: any) => canon(c.name) === canon(n)) ?? cems.find((c: any) => canon(c.name).includes(canon(n)) || canon(n).includes(canon(c.name)));
+  const dist = (a: any, b: any) => {
+    if (!a || !b || a.latitude == null || b.latitude == null || a.longitude == null || b.longitude == null) return null;
+    const r = Math.PI / 180, dLat = (b.latitude - a.latitude) * r, dLng = (b.longitude - a.longitude) * r;
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * r) * Math.cos(b.latitude * r) * Math.sin(dLng / 2) ** 2;
+    return Math.round(3959 * 2 * Math.asin(Math.sqrt(h)));
+  };
+  let targets: any[] = [];
+  let origin: any = null;
+  if (args.cemetery) { const c = find(String(args.cemetery)); if (!c) return { error: "No cemetery we serve by that name", items: [] }; targets = [c]; }
+  else if (args.near_cemetery) {
+    origin = find(String(args.near_cemetery));
+    if (!origin) return { error: "No cemetery we serve by that name", items: [] };
+    const max = Number(args.max_miles) || 30;
+    targets = cems.filter((c: any) => c !== origin).map((c: any) => ({ ...c, _d: dist(origin, c) })).filter((c: any) => c._d != null && c._d <= max).sort((a: any, b: any) => a._d - b._d).slice(0, 40);
+  } else if (args.area) {
+    const q = String(args.area).toLowerCase();
+    targets = cems.filter((c: any) => [c.city, c.region, c.county, c.name].some((v: any) => String(v ?? "").toLowerCase().includes(q))).slice(0, 60);
+  } else return { error: "Give cemetery, near_cemetery or area", items: [] };
+  const items: any[] = [];
+  for (const c of targets) {
+    if (items.length >= 25) break;
+    try {
+      const r = await inventory(db, { ...buyer, cemetery: c.name, property_type: type }, exclude);
+      for (const x of r.items) items.push({ ...x, cemetery: c.name, city: c.city, miles_away: origin ? c._d : undefined });
+    } catch { /* pricing needs staff */ }
+  }
+  return { cemeteries_checked: targets.length, items };
+}
+
 async function sharedContext(db: any, buyer: any) {
   const email = String(buyer.email ?? "").toLowerCase();
   const [pb, emails, notes] = await Promise.all([
@@ -181,7 +217,7 @@ async function recordContext(db: any, items: any[]) {
   return out;
 }
 
-async function model(apiKey: string, buyer: any, items: any[], kind: string, feedback?: string | null, ctx: any = { playbook: "", emails: [], notes: [] }, records: Record<string, any> = {}, lastContact: string | null = null, area: string | null = null, location: { nearest_miles_away?: number | null; area_widened?: boolean } = {}) {
+async function model(apiKey: string, buyer: any, items: any[], kind: string, feedback?: string | null, ctx: any = { playbook: "", emails: [], notes: [] }, records: Record<string, any> = {}, lastContact: string | null = null, area: string | null = null, location: { nearest_miles_away?: number | null; area_widened?: boolean } = {}, tool?: { db: any; exclude: string[]; found: Map<string, any> }) {
   const preneed = isPreneed(buyer);
   const instructions = `${ctx.playbook ? `HOUSE PLAYBOOK (shared with our seller AI — follow its tone, politeness, voice and sign-off rules; seller-only procedures like quotes, listing agreements and paperwork do not apply to buyers):\n${ctx.playbook}\n\nBUYER REPLY RULES (these override the playbook for buyers):\n` : ""}Think like an experienced, gracious broker writing personally to this buyer. Understand what they actually want from their form, emails and notes, decide which options genuinely suit them and in what order, and write a natural email a person would send — not a template. You draft one warm, concise email from Texas Cemetery Brokers to a cemetery-property buyer. A staff member reviews it before sending.
 Rules: use only the supplied facts. Match ${kind === "any" ? "the requested property" : kind} type. Do not focus on or mention their budget/price range. For each option state garden, number of spaces, cemetery retail and our price exactly as supplied. The retail_total and our_total figures are the exact price for all spaces in that option and must always be stated. The retail_per_space and our_price_per_space figures are what those totals work out to per space: state one plainly when it multiplied by the number of spaces equals the total, otherwise introduce it with "about". Never multiply per-space figures together to reach a different total. Never give lot, block, row, grave, crypt, niche or space identifiers. Do not invent features, availability or fees.
@@ -198,18 +234,41 @@ Reply like a real person: respond briefly and helpfully to anything else the buy
 When an option has partial_offer, the option is a group larger than the buyer needs: say clearly we can sell them just the number of spaces they want from that group, and give partial_offer.our_total as our total for those spaces (it also already includes the transfer fee once). Still state the full-group figures too. Plain text, short paragraphs, no markdown. Return JSON only.
 FIRST decide whether to email at all, like a careful broker checking the file. Read prior_emails and staff_notes (last_contact_at is when our team last emailed or noted this buyer). Set should_send false, with a short reason for staff, when: we are already in conversation with them by phone or email about something else, a note says not to contact them or that they are handled, they have bought elsewhere or said they are no longer interested, or a new email would be redundant or awkward. If they were contacted before, only send when an option is genuinely new since then (listed_at after last_contact_at) AND our most recent email to them said we would reach back out if something came available; otherwise later communication belongs to our team, so hold; open by mentioning a space has come available. When unsure, hold. If should_send is false, subject and body may be empty.
 PROBLEM PLOTS: never hold the whole email just because one option has a problem. If a seller record shows that seller withdrawing, cancelling, asking for a refund or no longer selling, silently leave that option out and offer the remaining ones (or the waitlist if none remain). If an option's garden or section in the record conflicts with its deed, go by the deed and describe it broadly. Only hold for buyer-side reasons, such as the contact rules above.
+LOOK AROUND YOURSELF: you have a search_inventory tool over all our live inventory. The options supplied are only a first pass. If they do not genuinely suit what the buyer really needs (wrong number of spaces, wrong type, a family estate, too far away, or none at all), search before writing: other cemeteries near the one they asked for (start around 15-30 miles, widen if needed), the city or area they mention, or a different property type if their message suggests it. Use judgement, a few searches at most. Any option you present — supplied or found — must be listed in chosen_listing_ids, and only those may appear in the email, with figures exactly as returned. Found options follow every rule above; mention miles_away for them when present.
 If staff_feedback_on_previous_draft is present, a staff member declined the last draft for that reason — correct that specific problem in the new draft while still following every rule above.`;
   const gateway = createLovableAiGatewayRunIdFetch();
-  const res = await gateway.fetch(GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
-    model: MODEL, instructions, stream: true, store: false, reasoning: { effort: "high", summary: "auto" }, include: ["reasoning.encrypted_content"],
-    input: [{ role: "user", content: JSON.stringify({ buyer: { first_name: String(buyer.name ?? "").split(/\s+/)[0] || "there", cemetery: buyer.cemetery, type: buyer.property_type, spaces: buyer.spaces, timeline: buyer.timeline, message: buyer.message, details: buyer.details }, prior_emails: ctx.emails, staff_notes: ctx.notes, options: items.map(({ listing_id, seller_name, ...o }: any) => ({ ...o, private_seller_record: records[listing_id] ?? null })), staff_feedback_on_previous_draft: feedback ?? null, last_contact_at: lastContact, searched_area: area, nearest_miles_away: location.nearest_miles_away ?? null, area_widened: !!location.area_widened, inquiry_age_days: Math.floor((Date.now() - new Date(buyer.created_at).getTime()) / 86400000) }) }],
-    text: { format: { type: "json_schema", name: "buyer_reply", strict: true, schema: { type: "object", additionalProperties: false, required: ["should_send", "subject", "body", "reason"], properties: { should_send: { type: "boolean" }, subject: { type: "string" }, body: { type: "string" }, reason: { type: "string" } } } } },
-  }) });
-  if (!res.ok || !res.body) { let message = await res.text(); try { const j = JSON.parse(message); message = j.message ?? j.error?.message ?? j.error ?? message; } catch { /* keep */ } const e = new Error(String(message).slice(0, 500)) as Error & { status?: number }; e.status = res.status; throw e; }
-  const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "", out = "", failed = "";
-  while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n")) >= 0) { const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line.startsWith("data:")) continue; try { const e = JSON.parse(line.slice(5)); if (e.type === "response.output_text.delta") out += e.delta ?? ""; if (e.type === "response.failed" || e.type === "error") failed = JSON.stringify(e).slice(0, 300); } catch { /* partial */ } } }
-  if (failed || !out.trim()) throw new Error(failed || "AI returned no answer or refused this request");
-  return JSON.parse(out);
+  const tools = tool ? [{ type: "function", name: "search_inventory", description: "Search our live cemetery property inventory. Provide exactly one of cemetery, near_cemetery (with max_miles) or area (city/region/county text).", strict: false, parameters: { type: "object", properties: { cemetery: { type: "string" }, near_cemetery: { type: "string" }, max_miles: { type: "number" }, area: { type: "string" }, property_type: { type: "string", description: "burial, niche, crypt, etc. Omit to use the buyer's" } } } }] : undefined;
+  for (const it of items) tool?.found.set(it.listing_id, it);
+  const input: any[] = [{ role: "user", content: JSON.stringify({ buyer: { first_name: String(buyer.name ?? "").split(/\s+/)[0] || "there", cemetery: buyer.cemetery, type: buyer.property_type, spaces: buyer.spaces, timeline: buyer.timeline, message: buyer.message, details: buyer.details }, prior_emails: ctx.emails, staff_notes: ctx.notes, options: items.map(({ seller_name, ...o }: any) => ({ ...o, private_seller_record: records[o.listing_id] ?? null })), staff_feedback_on_previous_draft: feedback ?? null, last_contact_at: lastContact, searched_area: area, nearest_miles_away: location.nearest_miles_away ?? null, area_widened: !!location.area_widened, inquiry_age_days: Math.floor((Date.now() - new Date(buyer.created_at).getTime()) / 86400000) }) }];
+  for (let round = 0; round < 6; round++) {
+    const res = await gateway.fetch(GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
+      model: MODEL, instructions, stream: true, store: false, reasoning: { effort: "high", summary: "auto" }, include: ["reasoning.encrypted_content"], input,
+      ...(tools && round < 5 ? { tools } : {}),
+      text: { format: { type: "json_schema", name: "buyer_reply", strict: true, schema: { type: "object", additionalProperties: false, required: ["should_send", "subject", "body", "reason", "chosen_listing_ids"], properties: { should_send: { type: "boolean" }, subject: { type: "string" }, body: { type: "string" }, reason: { type: "string" }, chosen_listing_ids: { type: "array", items: { type: "string" } } } } } },
+    }) });
+    if (!res.ok || !res.body) { let message = await res.text(); try { const j = JSON.parse(message); message = j.message ?? j.error?.message ?? j.error ?? message; } catch { /* keep */ } const e = new Error(String(message).slice(0, 500)) as Error & { status?: number }; e.status = res.status; throw e; }
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "", out = "", failed = ""; const outputs: any[] = [];
+    while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n")) >= 0) { const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line.startsWith("data:")) continue; try { const e = JSON.parse(line.slice(5)); if (e.type === "response.output_text.delta") out += e.delta ?? ""; if (e.type === "response.output_item.done" && e.item) outputs.push(e.item); if (e.type === "response.failed" || e.type === "error") failed = JSON.stringify(e).slice(0, 300); } catch { /* partial */ } } }
+    if (failed) throw new Error(failed);
+    const calls = outputs.filter((o: any) => o.type === "function_call");
+    if (calls.length && tool) {
+      input.push(...outputs.filter((o: any) => o.type === "reasoning" || o.type === "function_call"));
+      for (const c of calls) {
+        let result: any;
+        try {
+          result = await searchTool(tool.db, buyer, tool.exclude, JSON.parse(c.arguments || "{}"));
+          const recs = await recordContext(tool.db, result.items ?? []);
+          for (const it of result.items ?? []) tool.found.set(it.listing_id, it);
+          result.items = (result.items ?? []).map(({ seller_name, ...o }: any) => ({ ...o, private_seller_record: recs[o.listing_id] ?? null }));
+        } catch (e) { result = { error: String((e as Error).message).slice(0, 200), items: [] }; }
+        input.push({ type: "function_call_output", call_id: c.call_id, output: JSON.stringify(result).slice(0, 60000) });
+      }
+      continue;
+    }
+    if (!out.trim()) throw new Error("AI returned no answer or refused this request");
+    return JSON.parse(out);
+  }
+  throw new Error("AI searched too long without finishing a reply");
 }
 
 async function draft(db: any, apiKey: string, id: string, force: boolean) {
@@ -241,13 +300,15 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
       await db.from("buyer_ai_drafts").update({ status: "held", reason: "Already contacted by our team and no new matching space has come up since, so no email was drafted.", inventory_snapshot: items, updated_at: new Date().toISOString() }).eq("id", claimed.id);
       return { status: "held" };
     }
-    const r = await model(apiKey, buyer, items, kind, old?.status === "rejected" ? old.decision_reason : null, await sharedContext(db, buyer), await recordContext(db, items), lastContact, area, { nearest_miles_away, area_widened });
+    const found = new Map<string, any>();
+    const r = await model(apiKey, buyer, items, kind, old?.status === "rejected" ? old.decision_reason : null, await sharedContext(db, buyer), await recordContext(db, items), lastContact, area, { nearest_miles_away, area_widened }, { db, exclude: old?.excluded_listing_ids ?? [], found });
+    const chosen = (r.chosen_listing_ids ?? []).map((lid: string) => found.get(lid)).filter(Boolean);
     if (!r.should_send) {
       await db.from("buyer_ai_drafts").update({ status: "held", reason: r.reason, inventory_snapshot: items, updated_at: new Date().toISOString() }).eq("id", claimed.id);
       return { status: "held", reason: r.reason };
     }
-    await db.from("buyer_ai_drafts").update({ status: "proposed", subject: r.subject, body: r.body, reason: r.reason, inventory_snapshot: items, updated_at: new Date().toISOString() }).eq("id", claimed.id);
-    return { status: "proposed", draft_id: claimed.id, options: items.length };
+    await db.from("buyer_ai_drafts").update({ status: "proposed", subject: r.subject, body: r.body, reason: r.reason, inventory_snapshot: chosen, updated_at: new Date().toISOString() }).eq("id", claimed.id);
+    return { status: "proposed", draft_id: claimed.id, options: chosen.length };
   } catch (e) {
     const status = (e as any).status;
     if ([402, 403, 429].includes(status)) await db.from("automation_job_state").upsert({ job_name: "buyer-ai-drafts", status: "paused", pause_reason: String((e as Error).message).slice(0, 500), updated_at: new Date().toISOString() });
@@ -305,9 +366,16 @@ async function sendDraft(db: any, url: string, auth: string, d: any, subject: st
     // One person, one reply: block if anything already went to this email address since this draft was made (e.g. a second form they filled in).
     const { data: already } = await db.from("email_messages").select("id").ilike("to_email", `%${String(s.email).toLowerCase()}%`).or("from_email.ilike.%texascemeterybrokers%,from_email.ilike.%bayercemeterybrokers%").gte("received_at", d.created_at).is("deleted_at", null).limit(1);
     if (already?.length) return fail("We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." , 409);
-    const current = await matches(db, s, d.excluded_listing_ids ?? []);
-    const canonical = (items: any[]) => JSON.stringify(items.map(x => Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b)))).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
-    if (canonical(current.items) !== canonical(d.inventory_snapshot as any[])) return fail("Inventory changed. Draft again before approving." , 409);
+    // Every option the email offers must still be available at the same figures.
+    const snap = (d.inventory_snapshot as any[]) ?? [];
+    const key = (x: any) => JSON.stringify([x.listing_id, x.spaces, x.our_total, x.retail_total, x.transfer_fee, x.readiness]);
+    for (const g of [...new Set(snap.map((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type])))]) {
+      const [cem, type] = JSON.parse(g);
+      let live: any[] = [];
+      try { live = (await inventory(db, { ...s, cemetery: cem, property_type: type }, d.excluded_listing_ids ?? [])).items; } catch { /* pricing needs staff */ }
+      const liveKeys = new Set(live.map(key));
+      if (snap.filter((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type]) === g).some((x: any) => !liveKeys.has(key(x)))) return fail("Inventory changed. Draft again before approving.", 409);
+    }
     const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
     if (!sending) return fail("Reply already being sent" , 409);
     const html = `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${text_.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`;
