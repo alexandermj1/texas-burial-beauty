@@ -271,6 +271,8 @@ const CityPlotsPage = () => {
 
 
 
+      {TRANSFER_SCOPES[data.slug] && <div className="border-b border-border/60 bg-sand-light"><div className="mx-auto max-w-[1328px] px-6 lg:px-10"><CemeteryTransferDirectory compact key={data.slug} area={data.slug === "dallas" ? "Dallas–Fort Worth" : data.city} scope={TRANSFER_SCOPES[data.slug]} /></div></div>}
+
       {/* Coverage map */}
       <section className="border-b border-border/60 bg-background">
         <div className="mx-auto w-full max-w-[1440px] px-6 lg:px-10">
@@ -575,7 +577,6 @@ const CityPlotsPage = () => {
         </section>
       </article>
 
-      {TRANSFER_SCOPES[data.slug] && <div className="bg-sand-light"><div className="mx-auto max-w-[1328px] px-6 lg:px-10"><CemeteryTransferDirectory key={data.slug} area={data.slug === "dallas" ? "Dallas–Fort Worth" : data.city} scope={TRANSFER_SCOPES[data.slug]} /></div></div>}
       <Footer />
     </div>
   );

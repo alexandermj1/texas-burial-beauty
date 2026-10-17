@@ -57,17 +57,17 @@ export default function CemeteryTransferDirectory({ area, scope, compact = false
               <tbody className="block md:table-row-group">
                 {visible.map((record, index) => (
                   <tr key={`${record.name}-${record.city}`} className={`group grid grid-cols-2 gap-x-4 gap-y-5 border-b border-foreground/10 px-4 py-6 transition-colors last:border-b-0 hover:bg-primary/[0.04] md:table-row md:px-0 md:py-0 md:align-top ${compact ? "py-4 gap-y-3" : ""}`}>
-                    <td aria-hidden="true" className="hidden md:table-cell ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}"><span className="font-display text-sm italic text-muted-foreground/70">{pad(current * size + index + 1)}</span></td>
-                    <th scope="row" className="col-span-2 min-w-0 text-left align-top font-normal ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}">
+                    <td aria-hidden="true" className={`hidden md:table-cell ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}`}><span className="font-display text-sm italic text-muted-foreground/70">{pad(current * size + index + 1)}</span></td>
+                    <th scope="row" className={`col-span-2 min-w-0 text-left align-top font-normal ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}`}>
                       <p className={`break-words font-display leading-snug text-foreground ${compact ? "text-lg" : "text-xl md:text-2xl"}`}>{record.name}</p>
                       <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-muted-foreground">{[record.city, record.county ? `${record.county} Co.` : null].filter(Boolean).join(" · ") || record.region}</p>
                       {record.website && <a href={record.website} target="_blank" rel="noopener noreferrer" aria-label={`Official website for ${record.name}`} className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary">Official website <ExternalLink className="h-3 w-3" /></a>}
                     </th>
-                    <td className="col-span-2 align-top text-sm leading-relaxed text-foreground/75 ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}">
+                    <td className={`col-span-2 align-top text-sm leading-relaxed text-foreground/75 ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}`}>
                       <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Address</span>
                       <div className="flex items-start gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" /><span className="break-words">{record.address || "Address not recorded"}{record.address && record.city && <span className="block text-muted-foreground">{record.city}, Texas</span>}</span></div>
                     </td>
-                    <td className="col-span-2 align-top ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}">
+                    <td className={`col-span-2 align-top ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}`}>
                       <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Transfer fee on file</span>
                       <p className={`font-display ${compact ? "" : "text-3xl"} tabular-nums leading-none text-primary ${compact ? "text-2xl" : "md:text-4xl"}`}>{recordedTransferFee(record.transferFee)}</p>
                       <p className="mt-2.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{record.transferFee === null ? "Confirm with cemetery" : "Recorded amount · USD"}</p>
