@@ -64,13 +64,13 @@ export default function CemeteryTransferDirectory({ area, scope, compact = false
                       {record.website && <a href={record.website} target="_blank" rel="noopener noreferrer" aria-label={`Official website for ${record.name}`} className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary">Official website <ExternalLink className="h-3 w-3" /></a>}
                     </th>
                     <td className={`col-span-2 align-top text-sm leading-relaxed text-foreground/75 ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}`}>
-                      <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Address</span>
-                      <div className="flex items-start gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" /><span className="break-words">{record.address || "Address not recorded"}{record.address && record.city && <span className="block text-muted-foreground">{record.city}, Texas</span>}</span></div>
+                      {!compact && <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Address</span>}
+                      <div className="flex items-start gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" /><span className="break-words">{record.address || "Address not recorded"}{!compact && record.address && record.city && <span className="block text-muted-foreground">{record.city}, Texas</span>}</span></div>
                     </td>
                     <td className={`col-span-2 align-top ${compact ? "md:px-3 md:py-3.5" : "md:px-4 md:py-6"}`}>
                       <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground md:hidden">Transfer fee on file</span>
                       <p className={`font-display ${compact ? "" : "text-3xl"} tabular-nums leading-none text-primary ${compact ? "text-2xl" : "md:text-4xl"}`}>{recordedTransferFee(record.transferFee)}</p>
-                      <p className="mt-2.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{record.transferFee === null ? "Confirm with cemetery" : "Recorded amount · USD"}</p>
+                      {!compact && <p className="mt-2.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{record.transferFee === null ? "Confirm with cemetery" : "Recorded amount · USD"}</p>}
                     </td>
                   </tr>
                 ))}
@@ -80,7 +80,7 @@ export default function CemeteryTransferDirectory({ area, scope, compact = false
             {!visible.length && <p role="status" className="py-12 text-center text-muted-foreground">No cemeteries match this search.</p>}
 
             {/* Ornament */}
-            {visible.length > 0 && (
+            {!compact && visible.length > 0 && (
               <div aria-hidden="true" className="flex items-center justify-center gap-4 py-6">
                 <span className="h-px w-16 bg-foreground/20" />
                 <span className="text-xs text-primary/70">✦</span>
