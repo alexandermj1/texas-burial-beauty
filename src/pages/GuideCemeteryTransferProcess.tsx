@@ -109,7 +109,7 @@ const GuideCemeteryTransferProcess = () => (
       <div className="container mx-auto max-w-[1328px] px-6 pb-10"><TransferIllustratedNavigation /></div>
       <article className="container mx-auto max-w-[1328px] px-6 pb-12">
         <nav aria-label="Guide chapters" className="flex flex-wrap gap-x-6 gap-y-3 border-b border-foreground/20 pb-8 text-xs text-muted-foreground">
-          {[['transfer-timing','Appointments & timing'],['save-on-fees','Save on fees'],['nature','The deed'],['owner-buried','Who signs?'],['cemetery-transfer-fees','Fees & addresses'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="border-b border-primary/25 py-2 transition-colors hover:text-primary">{label}</a>)}
+          {[['transfer-timing','Appointments & timing'],['save-on-fees','Save on fees'],['cemetery-transfer-fees','Fees & addresses'],['nature','The deed'],['owner-buried','Who signs?'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="border-b border-primary/25 py-2 transition-colors hover:text-primary">{label}</a>)}
         </nav>
 
         <section id="transfer-timing" className="scroll-mt-28 border-b border-foreground/20 py-9 md:py-11">
@@ -130,6 +130,9 @@ const GuideCemeteryTransferProcess = () => (
           <p>Because of this, our advice is that if you wish to save money on a cemetery property transfer, you ensure that you transfer all the plots on the deed at the same time. While you generally cannot avoid paying the fee at least once, you can reduce the number of times you pay it where the cemetery charges per deed or per transfer.</p>
           <p>Confirm the fee basis with the cemetery first: some cemeteries charge per space, so transferring everything together may not reduce that charge. The cemetery must also agree to the transfer and any division of collectively conveyed spaces.</p>
         </Section>
+
+        <CemeteryTransferDirectory />
+
 
         <div className="relative my-10 overflow-hidden border-y border-primary/20 py-8 md:py-10">
           <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
