@@ -109,7 +109,7 @@ const GuideCemeteryTransferProcess = () => (
       <div className="container mx-auto max-w-[1328px] px-6 pb-10"><TransferIllustratedNavigation /></div>
       <article className="container mx-auto max-w-[1328px] px-6 pb-12">
         <nav aria-label="Guide chapters" className="flex flex-wrap gap-x-6 gap-y-3 border-b border-foreground/20 pb-8 text-xs text-muted-foreground">
-          {[['transfer-timing','Appointments & timing'],['save-on-fees','Save on fees'],['nature','The deed'],['owner-buried','Who signs?'],['cemetery-transfer-fees','Fees & addresses'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="border-b border-primary/25 py-2 transition-colors hover:text-primary">{label}</a>)}
+          {[['transfer-timing','Appointments & timing'],['save-on-fees','Save on fees'],['cemetery-transfer-fees','Fees & addresses'],['nature','The deed'],['owner-buried','Who signs?'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="border-b border-primary/25 py-2 transition-colors hover:text-primary">{label}</a>)}
         </nav>
 
         <section id="transfer-timing" className="scroll-mt-28 border-b border-foreground/20 py-9 md:py-11">
@@ -130,6 +130,9 @@ const GuideCemeteryTransferProcess = () => (
           <p>Because of this, our advice is that if you wish to save money on a cemetery property transfer, you ensure that you transfer all the plots on the deed at the same time. While you generally cannot avoid paying the fee at least once, you can reduce the number of times you pay it where the cemetery charges per deed or per transfer.</p>
           <p>Confirm the fee basis with the cemetery first: some cemeteries charge per space, so transferring everything together may not reduce that charge. The cemetery must also agree to the transfer and any division of collectively conveyed spaces.</p>
         </Section>
+
+        <CemeteryTransferDirectory />
+
 
         <div className="relative my-10 overflow-hidden border-y border-primary/20 py-8 md:py-10">
           <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
@@ -295,9 +298,6 @@ const GuideCemeteryTransferProcess = () => (
             {[['1','Confirm the cemetery record','Ask whose name appears on the controlling record and whether every space is unused.'],['2','Ask for its transfer rules','Get its forms, fee, right-of-first-refusal terms and buyer restrictions.'],['3','Identify every required signer','Compare the owner’s burial location, spouse, will and heirs with the cemetery’s requirements.'],['4','Record the completed transfer','The sale is not finished until the cemetery accepts and records the conveyance.']].map(([n,t,d])=><div key={n} className="border-t border-foreground/15 py-5"><span className="text-[10px] font-bold tracking-[0.2em] text-primary">STEP {n}</span><h3 className="mt-3 font-display text-xl text-foreground">{t}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</p></div>)}
           </div>
         </Section>
-
-        <CemeteryTransferDirectory />
-
         <Section id="file" eyebrow="Before anyone signs" title="Get someone to look at your actual file">
           <p>If you’ve read this far, you’ve probably noticed something uncomfortable: a single plot worth a few thousand dollars can generate a genuinely complicated legal question.</p>
           <p>Three overlapping authorities, a statute that inverts the marital property rules you thought you knew, a signature list that flips depending on where the deceased is buried, and a cemetery with its own view of all of it.</p>
