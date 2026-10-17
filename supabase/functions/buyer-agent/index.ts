@@ -120,16 +120,20 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
     const alt: any[] = [];
     for (const c of near) {
       if (alt.length >= 4) break;
-      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); alt.push(...r.items.slice(0, 2).map((x: any) => ({ ...x, cemetery: c.name, nearby_alternative: true }))); } catch { /* needs staff pricing */ }
+      const away = Math.round(miles(c));
+      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); alt.push(...r.items.slice(0, 2).map((x: any) => ({ ...x, cemetery: c.name, nearby_alternative: true, miles_away: away }))); } catch { /* needs staff pricing */ }
     }
-    return { kind: own.kind, items: alt.slice(0, 4), area: null };
+    const kept = alt.slice(0, 4);
+    return { kind: own.kind, items: kept, area: null, nearest_miles_away: kept.length ? Math.min(...kept.map((x: any) => x.miles_away ?? 9999)) : null };
   }
   const area = areaOf(buyer), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (area.length < 3) return { kind, items: [] as any[], area: null };
   const like = `%${area.replace(/[%_,()]/g, " ")}%`;
   let { data: cems } = await db.from("texas_cemeteries").select("name").is("deleted_at", null).or(`region.ilike.${like},city.ilike.${like},county.ilike.${like}`).order("name").limit(80);
   // If the area text barely matched anything, widen to the whole state rather than miss cemeteries.
+  let areaWidened = false;
   if ((cems ?? []).length < 3) {
+    areaWidened = true;
     const { data: allCems } = await db.from("texas_cemeteries").select("name").is("deleted_at", null).order("name").limit(2000);
     const have = new Set((cems ?? []).map((c: any) => c.name));
     cems = [...(cems ?? []), ...(allCems ?? []).filter((c: any) => !have.has(c.name))];
@@ -139,7 +143,7 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
     if (items.length >= 6) break;
     try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); items.push(...r.items.slice(0, 2).map((x: any) => ({ ...x, cemetery: c.name }))); } catch { /* pricing needs staff; skip that cemetery */ }
   }
-  return { kind, items: items.slice(0, 6), area };
+  return { kind, items: items.slice(0, 6), area, area_widened: areaWidened };
 }
 
 async function sharedContext(db: any, buyer: any) {
@@ -179,7 +183,7 @@ async function recordContext(db: any, items: any[]) {
   return out;
 }
 
-async function model(apiKey: string, buyer: any, items: any[], kind: string, feedback?: string | null, ctx: any = { playbook: "", emails: [], notes: [] }, records: Record<string, any> = {}, lastContact: string | null = null, area: string | null = null) {
+async function model(apiKey: string, buyer: any, items: any[], kind: string, feedback?: string | null, ctx: any = { playbook: "", emails: [], notes: [] }, records: Record<string, any> = {}, lastContact: string | null = null, area: string | null = null, location: { nearest_miles_away?: number | null; area_widened?: boolean } = {}) {
   const preneed = isPreneed(buyer);
   const instructions = `${ctx.playbook ? `HOUSE PLAYBOOK (shared with our seller AI — follow its tone, politeness, voice and sign-off rules; seller-only procedures like quotes, listing agreements and paperwork do not apply to buyers):\n${ctx.playbook}\n\nBUYER REPLY RULES (these override the playbook for buyers):\n` : ""}Think like an experienced, gracious broker writing personally to this buyer. Understand what they actually want from their form, emails and notes, decide which options genuinely suit them and in what order, and write a natural email a person would send — not a template. You draft one warm, concise email from Texas Cemetery Brokers to a cemetery-property buyer. A staff member reviews it before sending.
 Rules: use only the supplied facts. Match ${kind === "any" ? "the requested property" : kind} type. Do not focus on or mention their budget/price range. For each option state garden, number of spaces, cemetery retail and our price exactly as supplied. The retail_total and our_total figures are the exact price for all spaces in that option and must always be stated. The retail_per_space and our_price_per_space figures are what those totals work out to per space: state one plainly when it multiplied by the number of spaces equals the total, otherwise introduce it with "about". Never multiply per-space figures together to reach a different total. Never give lot, block, row, grave, crypt, niche or space identifiers. Do not invent features, availability or fees.
