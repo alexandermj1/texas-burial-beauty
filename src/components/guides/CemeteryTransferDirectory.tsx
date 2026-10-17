@@ -18,7 +18,7 @@ export default function CemeteryTransferDirectory({ area, scope, compact = false
   const visible = matches.slice(current * size, (current + 1) * size);
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
-    <section id="cemetery-transfer-fees" className={`scroll-mt-28 ${compact ? "mx-auto max-w-4xl py-8 md:py-10" : "border-t border-foreground/20 py-12 md:py-16"}`} aria-labelledby="transfer-directory-heading">
+    <section id="cemetery-transfer-fees" className={`scroll-mt-28 ${compact ? "py-10 md:py-14" : "border-t border-foreground/20 py-12 md:py-16"}`} aria-labelledby="transfer-directory-heading">
       <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary"><span className="h-px w-10 bg-primary/40" />The cemetery reference</p>
       <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div className="max-w-3xl"><h2 id="transfer-directory-heading" className={`font-display ${compact ? "" : "text-4xl"} leading-[1.08] text-foreground ${compact ? "md:text-4xl text-3xl" : "md:text-6xl"}`}>{area || "Texas"} cemetery transfer fees <span className="italic text-primary">& addresses.</span></h2><p className="mt-4 text-base leading-relaxed text-muted-foreground">{area ? `A local reference for ${area}, showing only cemeteries with a transfer fee in our records.` : "A Texas reference showing only cemeteries with a transfer fee in our records."} Find the address, recorded charge and official website where available.</p></div>
