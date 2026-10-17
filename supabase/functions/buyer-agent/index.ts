@@ -369,11 +369,12 @@ async function sendDraft(db: any, url: string, auth: string, d: any, subject: st
     // Every option the email offers must still be available at the same figures.
     const snap = (d.inventory_snapshot as any[]) ?? [];
     const key = (x: any) => JSON.stringify([x.listing_id, x.spaces, x.our_total, x.retail_total, x.transfer_fee, x.readiness]);
-    for (const cem of [...new Set(snap.map((x: any) => x.cemetery ?? s.cemetery))]) {
+    for (const g of [...new Set(snap.map((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type])))]) {
+      const [cem, type] = JSON.parse(g);
       let live: any[] = [];
-      try { live = (await inventory(db, { ...s, cemetery: cem, property_type: "any" }, d.excluded_listing_ids ?? [])).items; } catch { /* pricing needs staff */ }
+      try { live = (await inventory(db, { ...s, cemetery: cem, property_type: type }, d.excluded_listing_ids ?? [])).items; } catch { /* pricing needs staff */ }
       const liveKeys = new Set(live.map(key));
-      if (snap.filter((x: any) => (x.cemetery ?? s.cemetery) === cem).some((x: any) => !liveKeys.has(key(x)))) return fail("Inventory changed. Draft again before approving.", 409);
+      if (snap.filter((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type]) === g).some((x: any) => !liveKeys.has(key(x)))) return fail("Inventory changed. Draft again before approving.", 409);
     }
     const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
     if (!sending) return fail("Reply already being sent" , 409);
