@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Integrate Alexander’s transfer-guide copy with light grammar edits, update the introduction and remove endowment care from shared tables; verify desktop/mobile without publishing.
 - [x] Add recorded-fee-only tables to Houston (12), Dallas–Fort Worth (15), San Antonio (2) and Austin (4); test region scope, search, pagination and 390px/320px layouts.
 - [x] Refine transfer guide throughout with Vogue editorial layout, separate unobscured illustrations, revised title/SEO, fee-saving and appointment advice; 11 tests pass, desktop/mobile browser checks pass, not published.
 - [x] Restyle transfer guide with selling-page editorial masthead and wider sections; add three custom watercolor navigation illustrations; verify all jumps, table search and no overflow at desktop/390px/320px, six tests pass; existing CDN photos/botanicals unavailable in sandbox, not published

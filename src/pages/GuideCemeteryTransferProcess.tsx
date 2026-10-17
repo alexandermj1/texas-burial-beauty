@@ -93,7 +93,7 @@ const GuideCemeteryTransferProcess = () => (
             </h1>
           </div>
           <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
-            <p className="text-base font-light leading-relaxed text-foreground/80 first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-display first-letter:text-6xl first-letter:leading-none first-letter:text-primary md:text-lg">A cemetery plot carries more than a name on a deed. This guide explains who owns an unused space, which family members may need to sign, and how the cemetery records the transfer.</p>
+            <p className="text-base font-light leading-relaxed text-foreground/80 first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-display first-letter:text-6xl first-letter:leading-none first-letter:text-primary md:text-lg">This guide will ensure that you have all the information you need to transfer your cemetery property in accordance with Texas cemetery law, inheritance law and cemetery rules. It also guides you on how to make the process as seamless and cost-efficient as possible, from our experience as a cemetery broker.</p>
             <div className="mt-6 flex flex-wrap items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground"><span>By Texas Cemetery Brokers</span><span className="h-px w-8 bg-foreground/20" /><span>October 2026</span></div>
           </div>
           <aside className="col-span-12 border-l border-foreground/20 pl-6 md:col-span-6 lg:col-span-4 lg:col-start-8">
@@ -125,8 +125,10 @@ const GuideCemeteryTransferProcess = () => (
         </section>
 
         <Section id="save-on-fees" eyebrow="A little planning can save money" title={<>One deed. One transfer. <span className="italic text-primary">Fewer repeat fees.</span></>}>
-          <p>If you are transferring several cemetery properties on one deed, ask the cemetery about transferring them all together rather than arranging separate transfers. Where the cemetery charges per deed or per transfer, this can avoid paying the transfer fee twice and save you money.</p>
-          <p>Confirm the fee basis before you decide: some cemeteries charge per space, and extra charges may still apply. The cemetery must also agree to the transfer and any division of collectively conveyed spaces.</p>
+          <p>Families are often shocked by the size of transfer fees, sometimes being in the thousands. Many ask us if there is any way they can get out of paying the fee or get a reduction, particularly for plots bought a long time ago, where the fee can now be larger than the price paid for the plot.</p>
+          <p>Unfortunately, these fees are almost never waived in our experience. Most cemeteries we work with consider it unfair and discriminatory to waive the fee for some customers and not others.</p>
+          <p>Because of this, our advice is that if you wish to save money on a cemetery property transfer, you ensure that you transfer all the plots on the deed at the same time. While you generally cannot avoid paying the fee at least once, you can reduce the number of times you pay it where the cemetery charges per deed or per transfer.</p>
+          <p>Confirm the fee basis with the cemetery first: some cemeteries charge per space, so transferring everything together may not reduce that charge. The cemetery must also agree to the transfer and any division of collectively conveyed spaces.</p>
         </Section>
 
         <div className="relative my-10 overflow-hidden border-y border-primary/20 py-8 md:py-10">
@@ -145,14 +147,21 @@ const GuideCemeteryTransferProcess = () => (
           </div>
         </div>
 
-        <Section id="nature" eyebrow="The nature of the interest" title="First, a plot isn’t really property">
-          <p>This trips people up immediately, so let’s clear it up.</p>
-          <p>When you “buy a cemetery plot” in Texas, you don’t buy the land. You buy something called the <strong>exclusive right of sepulture</strong> — a right to bury someone in a particular spot. The cemetery still owns the dirt. Texas courts have described what you hold as something closer to an easement or a licence than to real estate.</p>
-          <p>Practically, this means the deed isn’t at the county clerk’s office. It’s at the cemetery. The certificate of ownership in your father’s filing cabinet is a copy; the cemetery’s records are the original, and they’re what control.</p>
+        <Section id="nature" eyebrow="The nature of the interest" title="A cemetery plot is not the same as a real estate deed">
+          <p>When you own a deed to a cemetery plot, you don’t own the land. Instead, you own the <strong>right of burial</strong> in that particular piece of land. This difference creates a unique situation and is why cemetery property often has its own laws governing its use and ownership in Texas and across the United States.</p>
+          <p>In court disputes over these rights, the right of burial has been described as something closer to a licence or an easement than a real estate deed.</p>
+          <p>In terms of how this affects a cemetery plot owner, it means that ownership records are generally not kept by the county clerk. Instead, these records are kept by the cemetery.</p>
+          <p>It also means that a cemetery property owner should be aware of the rules and regulations of their particular cemetery. Alongside applicable law, these rules govern how their burial rights can be used and transferred, and there is much more latitude for the cemetery to impose its own rules than property owners are often aware.</p>
           <div className="not-prose mt-8 grid border-y border-foreground/20 md:grid-cols-2">
             <div className="bg-card p-6"><FileText className="h-6 w-6 text-primary"/><p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The family holds</p><p className="mt-2 font-display text-xl text-foreground">The certificate and supporting papers</p></div>
             <div className="border-t border-border bg-secondary/30 p-6 md:border-l md:border-t-0"><Building2 className="h-6 w-6 text-primary"/><p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The cemetery holds</p><p className="mt-2 font-display text-xl text-foreground">The controlling ownership record</p></div>
           </div>
+        </Section>
+
+        <Section id="planning-deeds" eyebrow="Fewer names, simpler paperwork" title={<>Plan the deed <span className="italic text-primary">before you buy.</span></>}>
+          <p>It is also our advice that, when purchasing cemetery plots, families put the fewest number of people on the deed as possible, or get separate deeds for separate plots. This way, when it comes to a transfer, there are fewer signers and the transfer is more likely to go through at the cemetery without requiring additional paperwork.</p>
+          <p>For example, if you are purchasing three plots for three siblings, instead of asking for one deed and putting all three siblings on it, request three separate deeds with each sibling on their own deed.</p>
+          <p>The reasons for doing so are explained further down in the <a href="#sample-scenario" className="font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary">diagram of the signatures that are required</a>. Separate deeds do not remove a spouse’s protected burial rights or future inheritance requirements, and the cemetery must approve how the plots are deeded. Ask about any additional deed or transfer charges before deciding.</p>
         </Section>
 
         <Section id="health-code" eyebrow="Authority one" title="The Texas Health and Safety Code">
