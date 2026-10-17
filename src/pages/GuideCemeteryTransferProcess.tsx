@@ -28,13 +28,13 @@ const Ext = ({ href, children }: { href: string; children: React.ReactNode }) =>
 );
 
 const Section = ({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
-  <section id={id} className="relative scroll-mt-28 border-t border-foreground/20 py-12 md:py-16">
-    <div className="relative grid gap-x-12 gap-y-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.3fr)]">
-      <div><p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
+  <section id={id} className="relative scroll-mt-28 border-t border-foreground/20 py-9 md:py-11">
+    <div className="relative">
+      <div className="mb-6"><p className="mb-3 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
         <span className="h-px w-10 bg-primary/40" />{eyebrow}
       </p>
-      <h2 className="mb-8 max-w-4xl font-display text-3xl leading-[1.08] text-foreground md:text-5xl lg:sticky lg:top-28">{title}</h2></div>
-      <div className="min-w-0 text-base text-foreground/80 [&_p]:mb-5 [&_p]:leading-[1.8] [&_li]:leading-relaxed [&_h3]:mb-3 [&_h3]:mt-9 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:text-foreground [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
+      <div className="flex items-center gap-6"><h2 className="font-display text-3xl leading-[1.08] text-foreground md:text-5xl">{title}</h2><span aria-hidden="true" className="hidden h-px min-w-12 flex-1 bg-foreground/15 md:block" /></div></div>
+      <div className="min-w-0 text-base text-foreground/80 [&_p]:mb-4 [&_p]:leading-[1.75] [&_li]:leading-relaxed [&_h3]:mb-3 [&_h3]:mt-7 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:text-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&>p:last-child]:mb-0">{children}</div>
     </div>
   </section>
 );
@@ -112,19 +112,19 @@ const GuideCemeteryTransferProcess = () => (
           {[['transfer-timing','Appointments & timing'],['save-on-fees','Save on fees'],['nature','The deed'],['owner-buried','Who signs?'],['cemetery-transfer-fees','Fees & addresses'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="border-b border-primary/25 py-2 transition-colors hover:text-primary">{label}</a>)}
         </nav>
 
-        <section id="transfer-timing" className="scroll-mt-28 border-b border-foreground/20 py-12 md:py-16">
-          <div className="grid gap-7 lg:grid-cols-[0.85fr_1.3fr] lg:gap-12">
+        <section id="transfer-timing" className="scroll-mt-28 border-b border-foreground/20 py-9 md:py-11">
+          <div className="space-y-5">
             <div><p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.28em] text-accent">Plan the appointment</p><h2 className="font-display text-4xl leading-[1.08] text-foreground md:text-6xl">When do you <span className="italic text-primary">need the space?</span></h2></div>
-            <p className="self-end text-lg leading-relaxed text-muted-foreground">An immediate need following a death and a transfer arranged ahead of time follow different schedules. Call the cemetery first: its availability, paperwork and appointment rules determine the timing.</p>
+            <p className="text-base leading-relaxed text-muted-foreground">An immediate need following a death and a transfer arranged ahead of time follow different schedules. Call the cemetery first: its availability, paperwork and appointment rules determine the timing.</p>
           </div>
-          <div className="mt-10 grid gap-8 md:grid-cols-2 md:gap-12">
+          <div className="mt-7 grid gap-8 md:grid-cols-2 md:gap-12">
             <div className="border-t border-primary/30 pt-6"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">At need · Following a death</p><p className="mt-4 font-display text-5xl text-foreground md:text-6xl">1–2 <span className="text-3xl italic">days</span></p><h3 className="mt-5 font-display text-2xl text-foreground">Usually a quicker transfer.</h3><p className="mt-3 leading-relaxed text-muted-foreground">At-need cemetery transfers can usually be completed within one or two days, and sometimes you do not even need an appointment. Call the cemetery first to check its requirements and whether the documents are ready.</p></div>
             <div className="border-t border-accent/30 pt-6"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent">Planning ahead · No immediate need</p><p className="mt-4 font-display text-5xl text-foreground md:text-6xl">2 weeks <span className="text-3xl italic">to a month</span></p><h3 className="mt-5 font-display text-2xl text-foreground">Book an appointment in advance.</h3><p className="mt-3 leading-relaxed text-muted-foreground">When the buyer does not need to use the space immediately following a death, an advance appointment with the cemetery is required. In Texas Cemetery Brokers’ experience, you can typically expect an appointment in two weeks to a month; at busier cemeteries, the wait can sometimes be upwards of a month.</p></div>
           </div>
           <p className="mt-7 text-xs leading-relaxed text-muted-foreground">These are typical experiences, not guaranteed deadlines. Cemetery availability and the completeness of the ownership documents can affect the schedule.</p>
         </section>
 
-        <Section id="save-on-fees" eyebrow="A little planning can save money" title={<>One deed. One transfer.<br /><span className="italic text-primary">Fewer repeat fees.</span></>}>
+        <Section id="save-on-fees" eyebrow="A little planning can save money" title={<>One deed. One transfer. <span className="italic text-primary">Fewer repeat fees.</span></>}>
           <p>If you are transferring several cemetery properties on one deed, ask the cemetery about transferring them all together rather than arranging separate transfers. Where the cemetery charges per deed or per transfer, this can avoid paying the transfer fee twice and save you money.</p>
           <p>Confirm the fee basis before you decide: some cemeteries charge per space, and extra charges may still apply. The cemetery must also agree to the transfer and any division of collectively conveyed spaces.</p>
         </Section>
