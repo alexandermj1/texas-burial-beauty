@@ -1,4 +1,4 @@
-- AI Seller Agent uses seller-agent and ai_agent_* tables; latest ai_playbook is the sole prompt source, with staff-approved actions — why: safe rollout and consistent guidance.
+- Seller AI uses seller-agent and ai_agent_*; latest ai_playbook is the sole prompt source, with staff-approved actions — why: safe, consistent rollout.
 - AI agent actions must execute through the same edge functions/dialogs staff use (autopilot, send-contract-link, SendQuoteDialog, document-request review) and are gated by allowedActions() at proposal and execution — why: AI-made records must be identical to human ones.
 - AI document-request changes: seller-agent `plan_packet` only plans; OwnershipPaperworkPanel applies them with the staff add/remove/plot-rebuild code, prepares POA and blank affidavit PDFs, and blocks review/send until requested prepared PDFs exist — why: AI-made requests must match human ones and never promise missing attachments.
 - DB triggers supersede seller-agent proposals on newer emails/non-AI notes; reviews run only on staff click, never email/note/record-change triggers — why: prevent stale suggestions and automatic AI costs.
@@ -7,7 +7,7 @@
 - Public estimator directory includes the entire active cemetery registry; typo-tolerant section matching stays server-side and rejects contradictory qualifiers — why: coverage must not reveal which cemeteries have prices, or make similar section names falsely precise.
 - Calculator motion is rendered locally with semantic brand tokens and reduced-motion support; result bars use returned estimate ratios, while introductory curves are labelled illustrative — why: engaging visuals must not imply fabricated price forecasts or require video playback.
 - Embed the shared calculator in the cost, selling, transfer and plot-worth guides, with related-guide links in the shared calculator; keep the retired standalone URL redirected to the cost guide and excluded from sitemap/route metadata — why: a single estimator funnels visitors into maintained editorial content without a duplicate tool page.
-- Use compact calculator embeds in secondary articles; keep both sizes single-column — why: articles stay readable on mobile.
+- Secondary articles use compact calculators; both sizes stay single-column — why: mobile readability.
 - Keep plot-worth editorial photography, local cemetery links and team context in a guide-specific supporting module, reusing existing cemetery photo data; distinguish published team statements from personal quotations — why: the calculator remains shared while article authority stays traceable and honest.
 
 - New listing agreement fee templates are versioned in contract fill data; signing refreshes preserve that version and historical quotes retain their original terms — why: a fee update must not rewrite a customer’s contractual history.
