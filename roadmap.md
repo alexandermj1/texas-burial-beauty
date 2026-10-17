@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [ ] Add recorded-fee-only tables to Houston, Dallas, San Antonio and Austin; verify regional filtering and mobile presentation.
+- [ ] Refine transfer guide throughout with Vogue editorial layout, clear illustrations, revised title, fee-saving and appointment advice; verify preview without publishing.
 - [x] Restyle transfer guide with selling-page editorial masthead and wider sections; add three custom watercolor navigation illustrations; verify all jumps, table search and no overflow at desktop/390px/320px, six tests pass; existing CDN photos/botanicals unavailable in sandbox, not published
 - [x] Add transfer-guide table for 206 cemetery records with addresses, 52 recorded fees, curated websites and accuracy notice; align SEO/sitemap, pass six tests and verify search/filter/pages at desktop, 390px and 320px; not published
 - [x] Correct Maria’s deed-only false “Docs complete” label; share document readiness with buyer AI, deploy, pass 10 tests and verify Shawn’s signed-in page now shows “Quote sent”; no email sent
