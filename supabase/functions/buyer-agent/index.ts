@@ -101,12 +101,22 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
   if (canon(buyer.cemetery)) {
     const own = await inventory(db, buyer, exclude);
     if (own.items.length) return { ...own, area: null as string | null };
-    // Nothing at their cemetery: offer the waitlist plus nearby cemeteries we serve, same city first, then region.
-    const { data: all } = await db.from("texas_cemeteries").select("name,city,region").is("deleted_at", null).limit(2000);
+    // Nothing at their cemetery: offer the waitlist plus nearby cemeteries we serve.
+    // Start close and widen: same city first, then the rest of the region, then
+    // statewide — always ordered by real distance from their cemetery when we
+    // have coordinates, so nothing close is missed.
+    const { data: all } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude").is("deleted_at", null).limit(2000);
     const me = (all ?? []).find((c: any) => canon(c.name) === canon(buyer.cemetery));
     if (!me) return { ...own, area: null };
-    const near = (all ?? []).filter((c: any) => canon(c.name) !== canon(me.name) && ((me.city && c.city === me.city) || (me.region && c.region === me.region)))
-      .sort((a: any, b: any) => Number(b.city === me.city) - Number(a.city === me.city) || a.name.localeCompare(b.name));
+    const miles = (a: any) => {
+      if (me.latitude == null || me.longitude == null || a.latitude == null || a.longitude == null) return 9999;
+      const rad = Math.PI / 180, dLat = (a.latitude - me.latitude) * rad, dLng = (a.longitude - me.longitude) * rad;
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(me.latitude * rad) * Math.cos(a.latitude * rad) * Math.sin(dLng / 2) ** 2;
+      return 3959 * 2 * Math.asin(Math.sqrt(h));
+    };
+    const rank = (c: any) => (me.city && c.city === me.city ? 0 : me.region && c.region === me.region ? 1 : 2);
+    const near = (all ?? []).filter((c: any) => canon(c.name) !== canon(me.name))
+      .sort((a: any, b: any) => rank(a) - rank(b) || miles(a) - miles(b) || a.name.localeCompare(b.name));
     const alt: any[] = [];
     for (const c of near) {
       if (alt.length >= 4) break;
