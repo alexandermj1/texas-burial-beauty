@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Building2, CheckCircle2, FileText, Phone, Scale, ShieldCheck, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -6,7 +5,13 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
+import TransferIllustratedNavigation from "@/components/guides/TransferIllustratedNavigation";
+import { Button } from "@/components/ui/button";
 import { TRANSFER_GUIDE_SEO } from "@/data/publicSeoUpgrades";
+import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
+import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
+import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import restlandLawn from "@/assets/restland/restland-hero-lawn.jpg.asset.json";
 import resthavenOakPath from "@/assets/resthaven/resthaven-oak-path.jpg.asset.json";
@@ -24,14 +29,13 @@ const Ext = ({ href, children }: { href: string; children: React.ReactNode }) =>
 );
 
 const Section = ({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: React.ReactNode; children: React.ReactNode }) => (
-  <section id={id} className="relative scroll-mt-28 border-t border-border/60 py-10 md:py-14">
-    <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-20 -top-20 hidden w-64 opacity-[0.1] md:block" />
+  <section id={id} className="relative scroll-mt-28 border-t border-foreground/20 py-12 md:py-16">
     <div className="relative">
       <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">
         <span className="h-px w-10 bg-primary/40" />{eyebrow}
       </p>
-      <h2 className="mb-7 max-w-3xl font-display text-3xl leading-[1.08] text-foreground md:text-[2.5rem]">{title}</h2>
-      <div className="prose prose-lg max-w-none text-foreground/80 [&_p]:mb-5 [&_p]:max-w-3xl [&_p]:leading-[1.8] [&_li]:leading-relaxed [&_h3]:mt-9 [&_h3]:max-w-3xl [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
+      <h2 className="mb-8 max-w-4xl font-display text-3xl leading-[1.08] text-foreground md:text-5xl">{title}</h2>
+      <div className="prose prose-lg max-w-none text-foreground/80 [&_p]:mb-5 [&_p]:max-w-4xl [&_p]:leading-[1.8] [&_li]:leading-relaxed [&_h3]:mt-9 [&_h3]:max-w-4xl [&_strong]:font-semibold [&_strong]:text-foreground">{children}</div>
     </div>
   </section>
 );
@@ -70,45 +74,42 @@ const jsonLd: Record<string, unknown>[] = [
 ];
 
 const GuideCemeteryTransferProcess = () => (
-  <div className="flex min-h-screen flex-col bg-background [&>footer]:mt-auto">
+  <div className="flex min-h-screen flex-col bg-sand-light [&>footer]:mt-auto">
     <Seo {...TRANSFER_GUIDE_SEO} path={PATH} type="article" jsonLd={jsonLd} />
     <Navbar forceScrolled />
 
-    <header className="relative overflow-hidden border-b border-border/50 bg-secondary/40 pb-20 pt-28 md:pb-28">
-      <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(hsl(var(--stone)/0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-      <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -right-24 top-10 w-[460px] opacity-55 md:right-0 md:top-4 md:w-[570px] lg:right-6 lg:w-[650px]" />
-      <span className="absolute bottom-0 left-0 h-1 w-1/3 bg-primary/50" />
-      <div className="container relative mx-auto max-w-[1280px] px-6 lg:px-10">
-        <Link to="/guides" className="mb-12 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground transition-colors hover:text-foreground">
-          <ArrowLeft className="h-3.5 w-3.5" /> All guides
-        </Link>
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65 }}>
-          <div className="mb-8 flex items-center gap-4">
-            <span className="h-px w-16 bg-primary/40" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-primary">Issue N°05 · The Transfer Edition</p>
+    <header className="relative overflow-hidden pb-10 pt-24 md:pb-14 md:pt-28">
+      <img src={bananaLeaf.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -left-60 top-40 hidden w-[28rem] -rotate-12 opacity-10 md:block" />
+      <img src={palmFan.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -right-44 bottom-10 hidden w-[26rem] rotate-6 opacity-10 lg:block" />
+      <img src={hibiscusCoral.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute right-[6%] top-32 hidden w-24 rotate-6 opacity-80 md:block" />
+      <img src={pinkBranch.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute bottom-20 left-[4%] hidden w-28 -rotate-6 opacity-50 lg:block" />
+      <div className="container relative mx-auto px-6">
+        <div className="mx-auto grid max-w-7xl grid-cols-12 gap-x-6 gap-y-8 md:gap-y-10">
+          <div className="col-span-12">
+            <Button asChild variant="link" className="h-auto p-0 text-xs text-muted-foreground"><Link to="/guides"><ArrowLeft className="mr-2 h-3.5 w-3.5" />All guides</Link></Button>
           </div>
-          <h1 className="max-w-4xl font-display text-[2.9rem] leading-[0.98] text-foreground sm:text-6xl md:text-7xl lg:text-[5.25rem]">
-            Who Actually Owns Grandma’s <span className="italic text-primary">Cemetery Plot?</span>
-          </h1>
-           <div className="mt-9 grid max-w-4xl gap-8 md:grid-cols-12 md:items-end">
-             <p className="text-lg font-light leading-relaxed text-foreground/75 md:col-span-8 md:text-2xl">
-              A friendly Texas guide to the three authorities that decide who owns an unused cemetery space, who has to sign, and why the cemetery gets the final word.
-            </p>
-            <div className="border-l border-border pl-6 text-sm leading-relaxed text-muted-foreground md:col-span-4">
-              <p>Texas Cemetery Brokers</p><p>Updated October 2026</p><a href="#cemetery-transfer-fees" className="text-primary underline decoration-primary/30 underline-offset-4">Cemetery fees & addresses ↓</a>
-            </div>
+          <div className="col-span-12 text-left lg:text-center">
+            <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.3em] text-accent">A guide for Texas families · Ownership & transfers</p>
+            <h1 className="font-display text-[2.5rem] leading-[0.95] text-foreground sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7.5rem]">
+              <span className="block">Transfer your plot</span><span className="block">the <span className="font-medium italic text-primary">right</span> way.</span>
+            </h1>
           </div>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link to="/sell" className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Have us review your plot <ArrowRight className="h-4 w-4" /></Link>
-            <a href="tel:+12142304740" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/80 px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted"><Phone className="h-4 w-4" /> (214) 230-4740</a>
+          <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
+            <p className="text-base font-light leading-relaxed text-foreground/80 first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-display first-letter:text-6xl first-letter:leading-none first-letter:text-primary md:text-lg">A cemetery plot carries more than a name on a deed. This guide explains who owns an unused space, which family members may need to sign, and how the cemetery records the transfer.</p>
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground"><span>By Texas Cemetery Brokers</span><span className="h-px w-8 bg-foreground/20" /><span>October 2026</span></div>
           </div>
-        </motion.div>
+          <aside className="col-span-12 border-l border-foreground/20 pl-6 md:col-span-6 lg:col-span-4 lg:col-start-8">
+            <p className="font-display text-2xl italic leading-snug text-foreground/85">The deed. The family. The cemetery.<br />A clear transfer starts with all three.</p>
+            <div className="mt-5 flex flex-wrap items-center gap-3"><Button asChild size="sm"><Link to="/sell">Review my plot <ArrowRight className="ml-2 h-4 w-4" /></Link></Button><Button asChild variant="link" size="sm" className="px-0"><a href="tel:+12142304740"><Phone className="mr-2 h-3.5 w-3.5" />(214) 230-4740</a></Button></div>
+          </aside>
+          <div className="col-span-12 mt-2"><TransferIllustratedNavigation /></div>
+        </div>
       </div>
     </header>
 
     <main>
-      <article className="container mx-auto max-w-[1120px] px-6 pb-12 lg:px-10">
-        <div className="grid overflow-hidden border-b border-border py-10 md:grid-cols-[1fr_240px_250px] md:items-stretch md:py-12">
+      <article className="container mx-auto max-w-[1328px] px-6 pb-12">
+        <div className="grid overflow-hidden border-b border-foreground/20 py-10 md:grid-cols-[1fr_220px] md:items-stretch md:py-12 lg:grid-cols-[1fr_220px_270px]">
           <p className="pr-8 text-xl leading-[1.75] text-foreground/85 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-7xl first-letter:leading-[0.8] first-letter:text-primary">
             Here’s a question that sounds simple and isn’t: your father died, he owned four cemetery plots, only one got used, and your family wants to sell the other three. Who signs?
           </p>
@@ -116,13 +117,13 @@ const GuideCemeteryTransferProcess = () => (
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground/50">In this guide</p>
             {[['nature','What a plot is'],['health-code','Health & Safety Code'],['owner-buried','Who signs?'],['estates-code','Heirs-at-law'],['sample-scenario','Sample family'],['cemetery','The cemetery'],['cemetery-transfer-fees','Fees & addresses'],['file','Your actual file'],['faq','Questions']].map(([id,label]) => <a key={id} href={`#${id}`} className="block py-1.5 transition-colors hover:text-primary">{label}</a>)}
           </nav>
-          <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:mt-0">
+          <figure className="relative mt-8 min-h-52 overflow-hidden rounded-md md:col-span-2 lg:col-span-1 lg:mt-0">
             <img src={restlandLawn.url} alt="The lawn at Restland Memorial Park in Dallas" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
             <figcaption className="absolute inset-x-0 bottom-0 bg-foreground/75 px-4 py-3 text-xs leading-relaxed text-background">The cemetery’s own record is where every transfer begins.</figcaption>
           </figure>
         </div>
 
-        <div className="relative my-10 overflow-hidden rounded-lg border border-primary/20 bg-primary/5 p-7 md:p-9">
+        <div className="relative my-10 overflow-hidden border-y border-primary/20 py-8 md:py-10">
           <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
           <div className="relative">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">The honest answer</p>
