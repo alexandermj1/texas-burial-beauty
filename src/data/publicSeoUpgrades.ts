@@ -1,7 +1,7 @@
 /** Shared by the live pages and build-time metadata shells. */
 export const TRANSFER_GUIDE_SEO = {
-  title: "Texas Cemetery Plot Transfers: Rules, Fees & Addresses",
-  description: "Understand Texas cemetery plot inheritance and transfer rules. Find cemetery addresses and transfer fees from our records; confirm current charges.",
+  title: "How to Transfer Your Cemetery Plot in Texas: Fees & Timing",
+  description: "Learn how to transfer a Texas cemetery plot, who signs, appointment timing and ways to save on fees. Browse recorded cemetery fees and addresses; confirm charges.",
 };
 
 export const COST_GUIDE_SEO = {

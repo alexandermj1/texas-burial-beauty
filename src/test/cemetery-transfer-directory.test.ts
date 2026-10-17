@@ -13,4 +13,15 @@ describe("Recorded cemetery transfer directory", () => {
     expect(filterTransferRecords("2380 Victory", "East Texas").map((record) => record.name)).toEqual(["Algoma Cemetery"]);
     expect(filterTransferRecords("2380 Victory", "Austin")).toEqual([]);
   });
+  it("publishes only the 52 cemeteries with recorded transfer fees", () => {
+    const published = filterTransferRecords("", "all");
+    expect(published).toHaveLength(52);
+    expect(published.every((record) => record.transferFee !== null)).toBe(true);
+  });
+  it.each([["Greater Houston", 12], ["Dallas–Fort Worth", 15], ["San Antonio", 2], ["Austin", 4]])("limits a local table to %s", (scope, count) => {
+    const local = filterTransferRecords("", "all", scope);
+    expect(local).toHaveLength(count);
+    expect(local.every((record) => record.region === scope)).toBe(true);
+    expect(filterTransferRecords("", "East Texas", scope)).toEqual([]);
+  });
 });

@@ -1,32 +1,33 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, ExternalLink, MapPin, Search, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { filterTransferRecords, recordedTransferFee, transferRegions } from "@/lib/cemeteryTransferDirectory";
 const PAGE_SIZE = 12;
-export default function CemeteryTransferDirectory() {
+export default function CemeteryTransferDirectory({ area, scope }: { area?: string; scope?: string }) {
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("all");
   const [page, setPage] = useState(0);
-  const matches = filterTransferRecords(query, region);
+  const matches = filterTransferRecords(query, region, scope);
   const pages = Math.max(1, Math.ceil(matches.length / PAGE_SIZE));
   const current = Math.min(page, pages - 1);
   const visible = matches.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
   return (
-    <section id="cemetery-transfer-fees" className="scroll-mt-28 border-t border-border py-12 md:py-16" aria-labelledby="transfer-directory-heading">
+    <section id="cemetery-transfer-fees" className="scroll-mt-28 border-t border-foreground/20 py-12 md:py-16" aria-labelledby="transfer-directory-heading">
       <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary"><span className="h-px w-10 bg-primary/40" />The cemetery reference</p>
       <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <div className="max-w-2xl"><h2 id="transfer-directory-heading" className="font-display text-3xl leading-tight text-foreground md:text-[2.5rem]">Texas cemetery transfer fees <span className="italic text-primary">& addresses.</span></h2><p className="mt-4 text-base leading-relaxed text-muted-foreground">Cemeteries in our coverage records, with locations, official website links where available, and transfer charges on file.</p></div>
+        <div className="max-w-3xl"><h2 id="transfer-directory-heading" className="font-display text-4xl leading-[1.08] text-foreground md:text-6xl">{area || "Texas"} cemetery transfer fees <span className="italic text-primary">& addresses.</span></h2><p className="mt-4 text-base leading-relaxed text-muted-foreground">{area ? `A local reference for ${area}, showing only cemeteries with a transfer fee in our records.` : "A Texas reference showing only cemeteries with a transfer fee in our records."} Find the address, recorded charge and official website where available.</p></div>
         <p className="shrink-0 text-xs text-muted-foreground">Compiled · October 17, 2026</p>
       </div>
       <aside className="my-7 flex items-start gap-3 border-y border-primary/20 bg-primary/5 px-4 py-5 md:px-6" aria-label="Recorded fee accuracy notice">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div className="text-sm leading-relaxed text-foreground/80"><p><strong className="font-semibold text-foreground">From our records, not a current cemetery quote.</strong> These transfer fees may be outdated or incorrect. Confirm the current fee, whether it applies per space or per transfer, and any additional charges directly with the cemetery before making arrangements.</p><p className="mt-2 text-muted-foreground">“Not recorded” means we do not have that information—not that the transfer is free or that endowment care is included. Endowment-care charges may apply separately. The compilation date is not a fee-verification date.</p></div>
       </aside>
-      <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_240px]">
+      <div className={`mb-5 grid gap-3 ${scope ? "sm:max-w-lg" : "sm:grid-cols-[1fr_240px]"}`}>
         <div className="relative"><Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Search cemeteries, cities or addresses" placeholder="Search cemetery, city or address" value={query} onChange={(event) => { setQuery(event.target.value); setPage(0); }} className="h-11 bg-card pl-10" /></div>
-        <Select value={region} onValueChange={(value) => { setRegion(value); setPage(0); }}><SelectTrigger aria-label="Filter by region" className="h-11 bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All Texas regions</SelectItem>{transferRegions.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
+        {!scope && <Select value={region} onValueChange={(value) => { setRegion(value); setPage(0); }}><SelectTrigger aria-label="Filter by region" className="h-11 bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All Texas regions</SelectItem>{transferRegions.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>}
       </div>
       <table className="block w-full border-b border-border md:table md:table-fixed">
         <caption className="sr-only">Cemetery addresses and transfer fees from our records; charges may be outdated or incorrect.</caption>
@@ -42,6 +43,7 @@ export default function CemeteryTransferDirectory() {
       </table>
       {!visible.length && <p role="status" className="border-b border-border py-12 text-center text-muted-foreground">No cemeteries match this search.</p>}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4"><p aria-live="polite" className="text-xs text-muted-foreground">{matches.length ? `${current * PAGE_SIZE + 1}–${Math.min((current + 1) * PAGE_SIZE, matches.length)} of ${matches.length} cemeteries` : "0 cemeteries"}</p><nav aria-label="Cemetery table pages" className="flex items-center gap-3"><Button variant="outline" size="icon" aria-label="Previous cemetery page" disabled={current === 0} onClick={() => setPage(current - 1)}><ArrowLeft className="h-4 w-4" /></Button><span className="min-w-14 text-center text-xs tabular-nums text-muted-foreground">{current + 1} / {pages}</span><Button variant="outline" size="icon" aria-label="Next cemetery page" disabled={current >= pages - 1} onClick={() => setPage(current + 1)}><ArrowRight className="h-4 w-4" /></Button></nav></div>
+      {area && <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-foreground/20 pt-6"><p className="max-w-xl text-sm leading-relaxed text-muted-foreground">Moving several spaces on one deed? Ask whether transferring them together can avoid a second transfer charge.</p><Button asChild variant="link" className="h-auto whitespace-normal p-0 text-left"><Link to="/cemetery-transfer-process-texas">Read the transfer guide <ArrowRight className="ml-2 h-4 w-4 shrink-0" /></Link></Button></div>}
     </section>
   );
 }
