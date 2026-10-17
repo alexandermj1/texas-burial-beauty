@@ -64,13 +64,14 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
   const ids = rows.map((r: any) => r.id);
   const { data: docs, error: docsError } = await db.from("submission_documents").select("submission_id,status,doc_code,document_type").in("submission_id", ids).is("deleted_at", null);
   if (docsError) throw new Error(docsError.message);
-  const items = rows.map((s: any) => {
+  // How many spaces the buyer asked for (form field, then message).
+  const want = Math.floor(Number(String(buyer.spaces ?? "").match(/\d+/)?.[0] ?? String(buyer.message ?? "").match(/(?:plots|spaces|niches|crypts)\s*(?:wanted|needed)?\s*:\s*(\d+)/i)?.[1] ?? 0));
+  let items = rows.map((s: any) => {
     const count = Math.max(1, Number(s.plot_count) || Number(s.spaces) || 1);
     const fee = dirFee ?? s.transfer_fee_amount;
     const base = { quoteAmount: s.quote_amount, acceptedAmount: s.accepted_quote_amount, transferFee: fee, buyerFees: normalizeBuyerFees(s.buyer_fees) };
     const figures = quoteFigures({ ...base, plotCount: count });
     // Buyers can take part of a group: price exactly the number of spaces they asked for.
-    const want = Math.floor(Number(String(buyer.spaces ?? "").match(/\d+/)?.[0] ?? String(buyer.message ?? "").match(/(?:plots|spaces|niches|crypts)\s*(?:wanted|needed)?\s*:\s*(\d+)/i)?.[1] ?? 0));
     const part = want >= 1 && want < count && fee != null ? quoteFigures({ ...base, plotCount: want }) : null;
     const ourTotal = figures.hasQuote && fee != null ? figures.buyerPriceTotal : null;
     const retail = Number(s.cemetery_retail) > 0 ? Number(s.cemetery_retail) * count : null;
@@ -83,6 +84,7 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
     const ot = ourTotal != null ? roundDown(ourTotal) : null;
     return { listing_id: s.id, seller_name: s.name ?? null, garden: lawn(s), spaces: count, retail_per_space: rt != null ? money(near(rt / count)) : null, our_price_per_space: ot != null ? money(near(ot / count)) : null, type: category(s.property_type), readiness, listed_at: String(s.la_signed_at ?? s.created_at ?? "").slice(0, 10), agreement_signed: !!s.la_signed_at, savings_percent: rt && ot ? Math.floor((1 - ot / rt) * 100) : null, retail_total: rt != null ? money(rt) : null, our_total: ot != null ? money(ot) : null, transfer_fee: fee != null && Number(fee) > 0 ? money(Number(fee)) : null, partial_offer: part?.hasQuote ? { spaces: want, our_total: money(roundDown(part.buyerPriceTotal)) } : null, add_on_fees: figures.buyerFees.map((f: any) => `${f.label} ${money(f.amount)}`) };
   }).filter((x: any) => x.our_total && x.retail_total);
+  if (rows.length && !items.length) throw new Error("Matching spaces exist, but retail or buyer pricing needs staff confirmation. No waitlist reply has been drafted.");
   // Space-count fit: never offer a far-off match. A buyer wanting 3+ spaces should
   // not be offered a single space; a buyer wanting 2 should not be offered one
   // unless nothing else exists. Prefer the closest space counts first.
@@ -90,7 +92,6 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
   else if (want === 2 && items.some((x: any) => x.spaces >= 2)) items = items.filter((x: any) => x.spaces >= 2);
   if (want >= 1) items.sort((a: any, b: any) => Math.abs(a.spaces - want) - Math.abs(b.spaces - want));
   items = items.slice(0, 6);
-  if (rows.length && !items.length) throw new Error("Matching spaces exist, but retail or buyer pricing needs staff confirmation. No waitlist reply has been drafted.");
   return { kind, items };
 }
 
