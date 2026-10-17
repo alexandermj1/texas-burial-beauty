@@ -14,7 +14,7 @@
 
 - Public listing promotions use a fixed Texas-time deadline, never a resetting countdown; private quote/contract tiers remain separate from the public three-package display — why: offers must expire honestly without removing private package choices.
 - Keep the sell-page broker comparison in SellerBrokerValue, with estimate-model comparisons explicitly distinguished from measured returns and net proceeds — why: marketing must not turn calculator assumptions into guaranteed outcomes.
-- Buyer cemetery inventory uses buyerInventoryPricing with quoteFigures for saved per-space quotes and one-time transfer fees; show separate-purchase prices and whole-transfer totals distinctly, never invent space identifiers — why: buyers must not confuse seller prices, bundle totals or repeated transfer fees.
+- Buyer inventory uses buyerInventoryPricing/quoteFigures for per-space quotes and one-time fees; distinguish separate purchases from bundles, never invent identifiers. Workspace and AI share documentReadiness; a deed alone is not completed paperwork; agreement/acceptance eligibility stays separate — why: honest pricing and readiness.
 - Submission lists display cached summaries and call summarize-submission (cheap model, fingerprint-cached) only for records with no summary yet, once per id per session; seller-agent rejects automatic cron requests — why: new inquiries need a summary line without browsing burning AI credits.
 - Buyer AI: auto defers undrafted inquiries to sweep; sendDraft guards automatic timing, staff approval excepted — why: no early or duplicate sends.
 - Use publicSeoUpgrades in both SEO renderers; preserve directory titles — why: metadata agrees.

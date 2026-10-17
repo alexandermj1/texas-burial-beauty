@@ -9,6 +9,7 @@ import type { Submission } from "./SubmissionsPanel";
 import { Button } from "@/components/ui/button";
 import { useCemeteryMeta } from "@/hooks/useCemeteryMeta";
 import { buyerInventoryPricing } from "@/lib/buyerInventoryPricing";
+import { buyerDocumentReadiness, countBuyerDocuments, type BuyerDocumentCount } from "../../../supabase/functions/buyer-agent/documentReadiness";
 
 const money = (v: any) => (v != null && v !== "" && !isNaN(Number(v)) ? `$${Number(v).toLocaleString()}` : null);
 const spacesLabel = (n: any) => (n ? `${n} space${Number(n) > 1 ? "s" : ""}` : null);
@@ -22,7 +23,7 @@ interface Props {
   onRemoveManual: (id: string) => void;
 }
 
-type DocCount = { total: number; received: number; poaPending: number };
+type DocCount = BuyerDocumentCount & { poaPending: number };
 
 // Detailed seller progress, read straight from the milestones on the record
 // plus the live document checklist — so "Docs out 3/7" etc. is always current.
@@ -47,8 +48,7 @@ const STEP = Object.fromEntries(STEPS.map((x, i) => [x.key, { ...x, i }])) as Re
 
 const progressOf = (s: any, d?: DocCount): { key: StepKey; text: string } => {
   const a = s.ownership_answers || {};
-  const docsReq = (d && d.total > 0) || !!s.documents_requested_at;
-  const docsDone = !!s.documents_completed_at || (d && d.total > 0 && d.received >= d.total);
+  const { requested: docsReq, complete: docsDone } = buyerDocumentReadiness(s, d);
   if (s.sold_at) return { key: "sold", text: "Sold" };
   if (s.listing_live_at) return { key: "live", text: "Listing live" };
   if (s.listing_number) return { key: "compiled", text: "File compiled" };
@@ -95,10 +95,12 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
         .in("submission_id", idsKey.split(","));
       const m: Record<string, DocCount> = {};
       for (const r of (data as any[]) || []) {
-        const c = (m[r.submission_id] ||= { total: 0, received: 0, poaPending: 0 });
-        c.total++;
-        if (r.status === "received") c.received++;
-        else if (/poa/i.test(`${r.doc_code || ""} ${r.document_type || ""}`)) c.poaPending++;
+        const c = (m[r.submission_id] ||= { total: 0, received: 0, paperwork: 0, poaPending: 0 });
+        const count = countBuyerDocuments([r]);
+        c.total += count.total;
+        c.received += count.received;
+        c.paperwork += count.paperwork;
+        if (!count.received && /poa/i.test(`${r.doc_code || ""} ${r.document_type || ""}`)) c.poaPending++;
       }
       if (live) setDocs(m);
     })();
@@ -220,8 +222,8 @@ const BuyerCemeteryInventory = ({ cemetery, listings, sellers, manualIds, onRemo
                 ...(paidTier ? [{ label: "Listing fee paid", done: !!(x.payment_received_at || x.listing_paid_at), note: fmtDate(x.payment_received_at || x.listing_paid_at) }] : []),
                 { label: "Family tree sent", done: !!a.questionsSentAt, note: fmtDate(a.questionsSentAt) },
                 { label: "Family tree completed", done: !!a.sellerConfirmedAt, note: fmtDate(a.sellerConfirmedAt) },
-                { label: "Docs requested", done: !!(d?.total || x.documents_requested_at), note: d?.total ? `${d.total} items` : fmtDate(x.documents_requested_at) },
-                { label: "Docs received", done: !!x.documents_completed_at || (!!d && d.total > 0 && d.received >= d.total), note: d?.total ? `${d.received}/${d.total}` : null },
+                { label: "Docs requested", done: buyerDocumentReadiness(x, d).requested, note: d?.total ? `${d.total} items on file` : fmtDate(x.documents_requested_at) },
+                { label: "Docs received", done: buyerDocumentReadiness(x, d).complete, note: d?.total ? `${d.received}/${d.total} on file` : null },
                 { label: "POA signed & notarised", done: !!x.poa_notarized_at, note: d?.poaPending ? `${d.poaPending} POA outstanding` : fmtDate(x.poa_notarized_at) },
                 { label: "Counter-signed", done: !!x.la_countersigned_at, note: fmtDate(x.la_countersigned_at) },
                 { label: "Listing live", done: !!x.listing_live_at, note: x.listing_number ? `#${x.listing_number}` : fmtDate(x.listing_live_at) },
