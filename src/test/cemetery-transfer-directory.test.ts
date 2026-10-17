@@ -10,8 +10,8 @@ describe("Recorded cemetery transfer directory", () => {
     expect(transferRecords.filter((record) => record.transferFee !== null)).toHaveLength(52);
   });
   it("matches addresses and applies region restrictions together", () => {
-    expect(filterTransferRecords("2380 Victory", "East Texas").map((record) => record.name)).toEqual(["Algoma Cemetery"]);
-    expect(filterTransferRecords("2380 Victory", "Austin")).toEqual([]);
+    expect(filterTransferRecords("1011 East First", "East Texas").map((record) => record.name)).toEqual(["Cathedral in the Pines Memorial Gardens"]);
+    expect(filterTransferRecords("1011 East First", "Austin")).toEqual([]);
   });
   it("publishes only the 52 cemeteries with recorded transfer fees", () => {
     const published = filterTransferRecords("", "all");
