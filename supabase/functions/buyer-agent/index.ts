@@ -82,7 +82,14 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
     const rt = retail != null ? roundDown(retail) : null;
     const ot = ourTotal != null ? roundDown(ourTotal) : null;
     return { listing_id: s.id, seller_name: s.name ?? null, garden: lawn(s), spaces: count, retail_per_space: rt != null ? money(near(rt / count)) : null, our_price_per_space: ot != null ? money(near(ot / count)) : null, type: category(s.property_type), readiness, listed_at: String(s.la_signed_at ?? s.created_at ?? "").slice(0, 10), agreement_signed: !!s.la_signed_at, savings_percent: rt && ot ? Math.floor((1 - ot / rt) * 100) : null, retail_total: rt != null ? money(rt) : null, our_total: ot != null ? money(ot) : null, transfer_fee: fee != null && Number(fee) > 0 ? money(Number(fee)) : null, partial_offer: part?.hasQuote ? { spaces: want, our_total: money(roundDown(part.buyerPriceTotal)) } : null, add_on_fees: figures.buyerFees.map((f: any) => `${f.label} ${money(f.amount)}`) };
-  }).filter((x: any) => x.our_total && x.retail_total).slice(0, 6);
+  }).filter((x: any) => x.our_total && x.retail_total);
+  // Space-count fit: never offer a far-off match. A buyer wanting 3+ spaces should
+  // not be offered a single space; a buyer wanting 2 should not be offered one
+  // unless nothing else exists. Prefer the closest space counts first.
+  if (want >= 3) items = items.filter((x: any) => x.spaces >= Math.min(want, 2));
+  else if (want === 2 && items.some((x: any) => x.spaces >= 2)) items = items.filter((x: any) => x.spaces >= 2);
+  if (want >= 1) items.sort((a: any, b: any) => Math.abs(a.spaces - want) - Math.abs(b.spaces - want));
+  items = items.slice(0, 6);
   if (rows.length && !items.length) throw new Error("Matching spaces exist, but retail or buyer pricing needs staff confirmation. No waitlist reply has been drafted.");
   return { kind, items };
 }
