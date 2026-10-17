@@ -144,6 +144,42 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
   return { kind, items: items.slice(0, 6), area, area_widened: areaWidened };
 }
 
+// Inventory search the model can call itself, so it can look around like a broker
+// when the first options don't suit the buyer. Returns only safe, supplied fields.
+async function searchTool(db: any, buyer: any, exclude: string[], args: any) {
+  const type = args.property_type && args.property_type !== "any" ? args.property_type : buyer.property_type;
+  const { data: all } = await db.from("texas_cemeteries").select("name,city,region,county,latitude,longitude").is("deleted_at", null).limit(2000);
+  const cems = all ?? [];
+  const find = (n: string) => cems.find((c: any) => canon(c.name) === canon(n)) ?? cems.find((c: any) => canon(c.name).includes(canon(n)) || canon(n).includes(canon(c.name)));
+  const dist = (a: any, b: any) => {
+    if (!a || !b || a.latitude == null || b.latitude == null || a.longitude == null || b.longitude == null) return null;
+    const r = Math.PI / 180, dLat = (b.latitude - a.latitude) * r, dLng = (b.longitude - a.longitude) * r;
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * r) * Math.cos(b.latitude * r) * Math.sin(dLng / 2) ** 2;
+    return Math.round(3959 * 2 * Math.asin(Math.sqrt(h)));
+  };
+  let targets: any[] = [];
+  let origin: any = null;
+  if (args.cemetery) { const c = find(String(args.cemetery)); if (!c) return { error: "No cemetery we serve by that name", items: [] }; targets = [c]; }
+  else if (args.near_cemetery) {
+    origin = find(String(args.near_cemetery));
+    if (!origin) return { error: "No cemetery we serve by that name", items: [] };
+    const max = Number(args.max_miles) || 30;
+    targets = cems.filter((c: any) => c !== origin).map((c: any) => ({ ...c, _d: dist(origin, c) })).filter((c: any) => c._d != null && c._d <= max).sort((a: any, b: any) => a._d - b._d).slice(0, 40);
+  } else if (args.area) {
+    const q = String(args.area).toLowerCase();
+    targets = cems.filter((c: any) => [c.city, c.region, c.county, c.name].some((v: any) => String(v ?? "").toLowerCase().includes(q))).slice(0, 60);
+  } else return { error: "Give cemetery, near_cemetery or area", items: [] };
+  const items: any[] = [];
+  for (const c of targets) {
+    if (items.length >= 25) break;
+    try {
+      const r = await inventory(db, { ...buyer, cemetery: c.name, property_type: type }, exclude);
+      for (const x of r.items) items.push({ ...x, cemetery: c.name, city: c.city, miles_away: origin ? c._d : undefined });
+    } catch { /* pricing needs staff */ }
+  }
+  return { cemeteries_checked: targets.length, items };
+}
+
 async function sharedContext(db: any, buyer: any) {
   const email = String(buyer.email ?? "").toLowerCase();
   const [pb, emails, notes] = await Promise.all([
