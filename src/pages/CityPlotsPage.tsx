@@ -271,7 +271,6 @@ const CityPlotsPage = () => {
 
 
 
-      {TRANSFER_SCOPES[data.slug] && <div className="border-b border-border/60 bg-sand-light"><div className="mx-auto max-w-[1328px] px-6 lg:px-10"><CemeteryTransferDirectory compact key={data.slug} area={data.slug === "dallas" ? "Dallas–Fort Worth" : data.city} scope={TRANSFER_SCOPES[data.slug]} /></div></div>}
 
       {/* Coverage map */}
       <section className="border-b border-border/60 bg-background">
@@ -343,7 +342,18 @@ const CityPlotsPage = () => {
           </p>
         </Section>
 
+        {/* Transfer fees */}
+        {TRANSFER_SCOPES[data.slug] && (
+          <CemeteryTransferDirectory
+            compact
+            key={`fees-${data.slug}`}
+            area={data.slug === "dallas" ? "Dallas–Fort Worth" : data.city}
+            scope={TRANSFER_SCOPES[data.slug]}
+          />
+        )}
+
         {/* Buyers / Sellers */}
+
         <Section id="how" eyebrow="How it works" title={`Buying and selling in ${data.city}`}>
           <div className="not-prose grid md:grid-cols-2 gap-4">
             <div className="p-6 rounded-3xl bg-card border border-border/60">
