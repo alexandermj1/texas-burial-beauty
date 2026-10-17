@@ -50,16 +50,16 @@ async function staff(db: any, req: Request) {
 }
 
 async function inventory(db: any, buyer: any, exclude: string[] = []) {
-  const want = canon(buyer.cemetery), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
-  if (!want) return { kind, items: [] as any[] };
+  const wantCem = canon(buyer.cemetery), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
+  if (!wantCem) return { kind, items: [] as any[] };
   const { data, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_requested_at,documents_completed_at,reserved_until,customer_kind,source")
     .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
     .or("la_signed_at.not.is.null,quote_response.eq.accepted").limit(1000);
   if (inventoryError) throw new Error(inventoryError.message);
   // Same transfer fee the buyer workspace uses: the cemetery directory's fee first, the record's own fee as fallback.
   const { data: dir } = await db.from("texas_cemeteries").select("name,transfer_fee").not("transfer_fee", "is", null).limit(2000);
-  const dirFee = (dir ?? []).find((c: any) => canon(c.name) === want)?.transfer_fee ?? null;
-  const rows = (data ?? []).filter((s: any) => !exclude.includes(s.id) && !isBuyer(s) && canon(s.cemetery) === want && (!s.reserved_until || new Date(s.reserved_until) < new Date()) && (kind === "any" || category(s.property_type) === kind));
+  const dirFee = (dir ?? []).find((c: any) => canon(c.name) === wantCem)?.transfer_fee ?? null;
+  const rows = (data ?? []).filter((s: any) => !exclude.includes(s.id) && !isBuyer(s) && canon(s.cemetery) === wantCem && (!s.reserved_until || new Date(s.reserved_until) < new Date()) && (kind === "any" || category(s.property_type) === kind));
   if (!rows.length) return { kind, items: [] };
   const ids = rows.map((r: any) => r.id);
   const { data: docs, error: docsError } = await db.from("submission_documents").select("submission_id,status,doc_code,document_type").in("submission_id", ids).is("deleted_at", null);
