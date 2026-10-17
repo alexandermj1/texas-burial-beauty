@@ -78,9 +78,9 @@ const GuideCemeteryTransferProcess = () => (
     <Navbar forceScrolled />
 
     <header className="relative overflow-hidden pb-10 pt-24 md:pb-14 md:pt-28">
-      <img src={bananaLeaf.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -left-60 top-24 hidden w-[28rem] -rotate-12 opacity-10 md:block" />
-      <img src={palmFan.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute -right-44 top-24 hidden w-[26rem] rotate-6 opacity-10 lg:block" />
-      <img src={hibiscusCoral.url} alt="" aria-hidden width={1024} height={1024} className="pointer-events-none absolute right-[3%] top-24 hidden w-24 rotate-6 opacity-80 md:block" />
+      <img src={bananaLeaf.url} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} className="pointer-events-none absolute -left-60 top-24 hidden w-[28rem] -rotate-12 opacity-10 md:block" />
+      <img src={palmFan.url} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} className="pointer-events-none absolute -right-44 top-24 hidden w-[26rem] rotate-6 opacity-10 lg:block" />
+      <img src={hibiscusCoral.url} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} className="pointer-events-none absolute right-[3%] top-24 hidden w-24 rotate-6 opacity-80 md:block" />
       <div className="container relative mx-auto px-6">
         <div className="mx-auto grid max-w-7xl grid-cols-12 gap-x-6 gap-y-8 md:gap-y-10">
           <div className="col-span-12">
@@ -130,7 +130,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <div className="relative my-10 overflow-hidden border-y border-primary/20 py-8 md:py-10">
-          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
+          <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-24 -top-28 w-72 opacity-[0.18]" />
           <div className="relative">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-primary">The honest answer</p>
           <p className="font-display text-2xl leading-snug text-foreground md:text-3xl">Three different authorities must line up before anything happens.</p>
@@ -220,7 +220,7 @@ const GuideCemeteryTransferProcess = () => (
         </Section>
 
         <section id="sample-scenario" className="relative my-6 scroll-mt-28 overflow-hidden border-y border-foreground/20 py-10 md:py-14">
-          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-14 -top-14 w-64 opacity-20" />
+          <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -right-14 -top-14 w-64 opacity-20" />
           <div className="relative">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-primary/20 pb-6">
               <div>
@@ -311,7 +311,7 @@ const GuideCemeteryTransferProcess = () => (
         </section>
 
         <section className="relative my-8 overflow-hidden border-y border-primary/30 py-10 text-foreground md:py-14">
-          <img src={transferBotanical} alt="" aria-hidden width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -bottom-16 -right-10 w-64 opacity-20" />
+          <img src={transferBotanical} alt="" aria-hidden onError={(event) => event.currentTarget.classList.add("invisible")} width={1024} height={1024} loading="lazy" className="pointer-events-none absolute -bottom-16 -right-10 w-64 opacity-20" />
           <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
             <div className="relative"><ShieldCheck className="h-7 w-7 text-primary"/><h2 className="mt-4 font-display text-3xl md:text-4xl">Get help from a cemetery broker.</h2><p className="mt-4 max-w-2xl leading-relaxed text-foreground/70">If the family agrees and the goal is a clean sale, we can check the cemetery record, identify the likely signers and explain the transfer requirements before you commit to anything.</p></div>
             <Link to="/sell" className="relative inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Work through your file <ArrowRight className="h-4 w-4"/></Link>
