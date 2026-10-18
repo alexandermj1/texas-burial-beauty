@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 type Draft = {
@@ -30,7 +32,12 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
   const [why, setWhy] = useState("");
   const [showSnapshot, setShowSnapshot] = useState(true);
 
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState<boolean | null>(null);
+  const [preferenceBusy, setPreferenceBusy] = useState(false);
+
   const load = useCallback(async () => {
+    const { data: buyer, error } = await supabase.from("contact_submissions").select("buyer_ai_auto_reply_disabled").eq("id", submissionId).maybeSingle();
+    setAutoReplyEnabled(error || !buyer ? null : !buyer.buyer_ai_auto_reply_disabled);
     const { data } = await supabase.from("buyer_ai_drafts").select("*").eq("submission_id", submissionId).is("deleted_at", null).maybeSingle();
     const d = data as Draft | null;
     setDraft(d);
@@ -40,6 +47,17 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
   }, [submissionId]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { if (draft?.status !== "processing") return; const t = setInterval(load, 4000); return () => clearInterval(t); }, [draft?.status, load]);
+
+  const toggleAutoReply = async (enabled: boolean) => {
+    setPreferenceBusy(true);
+    try {
+      await callBuyerAi({ action: "set_auto_reply", submission_id: submissionId, enabled });
+      setAutoReplyEnabled(enabled);
+      toast({ title: enabled ? "Automatic AI replies turned on" : "Automatic AI replies turned off" });
+    } catch (e) {
+      toast({ title: "Couldn't change automatic replies", description: (e as Error).message, variant: "destructive" });
+    } finally { setPreferenceBusy(false); }
+  };
 
   const act = async (name: string, payload: Record<string, unknown>, done: string) => {
     setBusy(name);
@@ -85,7 +103,13 @@ export default function BuyerAiDraftCard({ submissionId }: { submissionId: strin
         </div>
       )}
 
-      <p className="text-[11px] text-muted-foreground">Approve the AI's reply, decline it and say why, or edit the wording first. Nothing is sent until you approve it.</p>
+      <div className="flex items-center justify-between gap-3 border-y border-border py-3">
+        <div className="space-y-1">
+          <Label htmlFor={`buyer-auto-${submissionId}`} className="text-sm">Automatic AI replies</Label>
+          <p className="text-xs text-muted-foreground">{autoReplyEnabled === null ? "Loading reply setting…" : autoReplyEnabled ? "On · first reply after at least 20 minutes" : "Off for this buyer · manual review still available"}</p>
+        </div>
+        <Switch id={`buyer-auto-${submissionId}`} checked={autoReplyEnabled === true} onCheckedChange={toggleAutoReply} disabled={preferenceBusy || autoReplyEnabled === null} aria-label="Automatic AI replies" />
+      </div>
 
       {!draft && !working && (
         <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No reply drafted yet. New buyer forms are drafted automatically; you can also press Draft reply.</p>
