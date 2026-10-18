@@ -108,23 +108,17 @@ const AboutSeoSection = () => {
             transition={{ duration: 0.6, delay: 0.05 }}
             className="space-y-6 text-base sm:text-lg font-light text-muted-foreground leading-relaxed"
           >
-            <p className="text-lg sm:text-xl text-foreground/85 font-light leading-relaxed">
-              <strong className="text-foreground font-medium">Texas Cemetery Brokers</strong> helps families across
-              the state <strong className="text-foreground font-medium">buy and sell cemetery property</strong>{" "}
-              — burial plots, columbarium niches, lawn crypts and private mausoleum spaces — at prices typically{" "}
-              <strong className="text-foreground font-medium">30–50% below what cemeteries charge directly</strong>.
+            <p data-simon-review className="text-lg sm:text-xl text-foreground/85 font-light leading-relaxed">
+              People buy plots thinking they’ll be in one location, and ten or twenty years later they’re in a different state. Their connection back to the original location and the original cemetery is pretty weak. Others are looking through a relative’s paperwork, and suddenly there’s the deed. If that property is no longer needed, there may be a way to get some value from it.
             </p>
-            <p>
-              We work the private resale market in <strong className="text-foreground font-medium">Dallas–Fort
-              Worth, Greater Houston, Austin, San Antonio and El Paso</strong>, then handle the cemetery's transfer
-              paperwork from start to finish — so you never deal with the cemetery office yourself.
+            <p data-simon-review>
+              That’s where <strong className="text-foreground font-medium">Texas Cemetery Brokers</strong> can help. For most people coming into this, it’s brand new. Most people just don’t know how the system works, and neither should they. We explain the role of a broker, the role of a cemetery and the role of a funeral director, and how these different people can help.
             </p>
-            <p>
-              For sellers, we list cemetery plots inherited or no longer needed — with a{" "}
-              <strong className="text-foreground font-medium">listing package from $299</strong> and full control
-              over your asking price. For buyers planning at-need or pre-need, we match you to verified properties at
-              the right cemetery, in the right section, for the right price. Pre-need buyers get our best pricing plus
-              interest-free financing.
+            <p data-simon-review>
+              Whether a plot is sold to a relative, to a third party or through a broker, there’s a lot of paperwork to get through. Cemeteries want to be very precise, making sure the person selling has the full and complete authority and that any other co-owners give the required consent. We help organize that work across <strong className="text-foreground font-medium">Dallas–Fort Worth, Greater Houston, Austin, San Antonio and El Paso</strong>. Seller listing packages start at $299; valuations are free.
+            </p>
+            <p data-simon-review>
+              For buyers, it’s a deeply personal decision. Some want to be near a tree, others want to be as far away as possible. Some would like a slope with a view, others want it as flat as possible. There’s a great deal about relatives visiting and the ease of getting to the plot. We help you find a space that fits, with resale prices typically 30–50% below cemetery retail and interest-free financing available for pre-need buyers.
             </p>
             <p>
               Every transaction is handled in partnership with Bayer Cemetery Brokers, a licensed California brokerage.
