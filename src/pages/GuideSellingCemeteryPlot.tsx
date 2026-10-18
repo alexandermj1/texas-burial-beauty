@@ -175,15 +175,13 @@ const GuideSellingCemeteryPlot = () => (
             How to Sell a Cemetery Plot in <span className="italic text-primary">Texas</span>
           </h1>
           <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">
-            Everything Texas families ask us — what your plot is really worth, the legal steps, and the fastest way to turn unwanted property into cash. Written by the brokers who handle these sales every day.
+            <span data-simon-review>When someone comes to me and says they’ve got a cemetery plot they’d like to sell, I nearly always ask a little bit about the history — when it was originally purchased, and the thinking behind selling it.</span>
           </p>
 
           {/* Meta strip */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs tracking-wide text-foreground/60 mb-9">
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Texas Cemetery Brokers</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Updated 2025</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 9 min read</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 7 chapters</span>
+            <span data-simon-review className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Simon James · Texas Cemetery Brokers</span>
+            <span data-simon-review className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Updated October 2026</span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
@@ -201,6 +199,9 @@ const GuideSellingCemeteryPlot = () => (
             <div className="flex flex-wrap gap-2">
               {[
                 { href: "#can-you-sell", t: "Can you sell?" },
+                { href: "#plans-change", t: "Why people sell" },
+                { href: "#selling-options", t: "Five options" },
+                { href: "#selling-patience", t: "How long?" },
                 { href: "#key-questions", t: "Before you list" },
                 { href: "#value", t: "What it's worth" },
                 { href: "#why", t: "Why a broker" },
@@ -225,9 +226,20 @@ const GuideSellingCemeteryPlot = () => (
     <article className="py-16">
       <div className="container mx-auto px-6 max-w-5xl">
         {/* Intro */}
-        <p className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
-          Plans change. Families move to other cities or out of state, often people make alternative burial arrangements, or inherit plots they'll never use. The good news: cemetery properties located in Texas can legally be resold to another person who needs them, and the value of your asset can be released. The challenge is that, just like in other states, private resales on the secondary market can be slow and challenging. Many people assume that selling cemetery property is just like real estate, but plots are a unique type of asset with several important quirks when it comes to transferring ownership, which need to be carefully understood to be successful. This guide explains what affects your plot's value, the legal steps, and the most reliable way to sell it.
+        <p data-simon-review className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
+          For most people coming into this, it’s brand new. It’s not a business or an industry that you experience multiple times. Unlike selling a car — you might buy and sell ten different cars over a lifetime — cemetery plots are probably a once-in-a-lifetime experience. Most people who come into the situation just don’t know how the system works, and neither should they. That’s understandable. So as brokers we often have to explain how the industry is structured: the role of a broker, the role of a cemetery, the role of a funeral director, and how all these different people can help.
         </p>
+
+        <section id="plans-change" className="scroll-mt-24 my-12 space-y-5 text-lg leading-relaxed">
+          <h2 data-simon-review className="font-display text-3xl md:text-4xl">Plans change — why people sell</h2>
+          <p data-simon-review>You get a broad range of stories. At one end, I’ve had a family whose great-great-grandparent bought plots in the 1920s, lots of plots for everybody, and everybody’s plans changed and moved and evolved. The deeds still exist, the plots are still there, they’re unused, and they certainly have value.</p>
+          <p data-simon-review>At the other end, I’ve come across people who purchased a plot last year and something’s changed in their life, and they don’t want the plot anymore. That’s actually a harder one to deal with.</p>
+          <p data-simon-review>The most common reason, in my experience, is people moving. People buy plots thinking they’ll be in one location, and 10, 20 years later — life evolves in such an odd way, it’s so hard to predict for all of us — they’re in a different state, and their connection back to the original location and the original cemetery is pretty weak. Maybe relatives and children tell their parents they won’t be able to visit, and ask them to pick a closer location.</p>
+          <p data-simon-review>There’s also been a bit of an evolution toward cremation. Many people bought plots, or groups of plots, really for caskets, and what they want to do has changed. Another factor is just the overall cost of funerals. It’s expensive, and many people are saying they just want a much cheaper solution.</p>
+          <h3 data-simon-review className="font-display text-2xl">Discovering you own a plot</h3>
+          <p data-simon-review>Often people come to me and they’ve just found that they are an owner, or part-owner, of a plot. They’re going through the records of a recently deceased relative — I probably get two or three of these a week. Maybe they’re the executor of the will, or there’s a trust. Maybe it’s a parent, and you’re just looking through collections of paperwork, and suddenly there’s the deed, and you realize there’s cemetery property and wonder what you’re going to do with it.</p>
+          <p data-simon-review>If you as a descendant don’t want to use that property, then you’re looking to see if you can in some way get some value from it. Finding the deed is the starting point; who owns the rights and who must sign still need to be checked.</p>
+        </section>
 
         {/* Short answer callout */}
         <div className="relative rounded-3xl p-8 md:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/5 border border-primary/15 overflow-hidden my-12">
@@ -278,8 +290,8 @@ const GuideSellingCemeteryPlot = () => (
           <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             Yes — typically you can sell grave plots, mausoleum crypts, cremation niches and urn spaces you own in Texas, and release the value of your cemetery property assets. In Texas, whoever initially bought your plot from the cemetery acquired the <strong className="text-foreground">exclusive right of sepulture</strong> — the legal right to bury someone in a specific grave space, or to entomb someone in a specific mausoleum crypt. The exclusive right to use that particular plot for its intended purpose is what is presumed to be the cemetery property asset.
           </p>
-          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
-            People often get confused and believe they own an actual piece of land at a cemetery, but that is not the case. To sum up, what is commonly referred to as a "grave plot" or "cemetery property" in Texas is the exclusive right of sepulture. If you own these cemetery property rights, you are entitled to sell or transfer them to a third party.
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            Most people think cemetery property is real estate and can be thought of and dealt with just like real estate. That’s not surprising — we use the same language. We say it’s property. But you don’t get to own the land and exercise choice over how that land is presented. What you actually have as an asset is the right to have your remains interred in that plot — sometimes two interments, or even more, where permitted. That’s essentially what the asset is. A sale transfers those rights, subject to applicable law and the cemetery’s rules.
           </p>
           <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             However, it is not easy. Reselling cemetery property is typically far more complex than selling other personal assets. It tends to be very time-consuming and requires several highly specific steps to be followed for the transfer to be legal and for the sale to go through. The first step toward selling your Texas cemetery property is to find the answer to three key questions:
@@ -303,8 +315,8 @@ const GuideSellingCemeteryPlot = () => (
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Three key questions before you <span className="italic text-primary">sell</span></h2>
 
           <h3 className="font-display text-2xl text-foreground mt-10 mb-4 leading-snug">1. Does your contract have a right-of-first-refusal clause?</h3>
-          <p className="text-foreground/80 leading-relaxed mb-5">
-            Sometimes, Texas cemetery properties have a right-of-first-refusal clause. Begin by checking whether any pre-existing restrictions limit your ability to sell the plot. Start by examining the original purchase records and the certificate of ownership or deed. If your contract contains this kind of limitation, you can only resell your plot if the cemetery declines to take up their right of first refusal to buy it back. Depending on the exact language of the agreement, you will need the cemetery administration to first officially approve your property for transfer to a third party — a future buyer or other individual.
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-5">
+            When you make the decision to sell your plot, clearly read the original contract. There are a few cemeteries — a minority in my experience — that have specific clauses around right of first refusal. They tend to be more religion-based, and sometimes municipal ones — city or local-government owned. They have clauses giving them the right to potentially buy it back at a certain price. So double-check that. The exact contract wording determines whether, and on what terms, a third-party sale can proceed.
           </p>
           <p className="text-foreground/80 leading-relaxed mb-5">
             So how does the cemetery decide how much they will give you to buy back your plot? The answer depends on the specific language in your original contract. Spoiler alert: it won't be 100% of the retail list price that the cemetery markets and sells comparable new plots for today. Depending on the cemetery's regulations and the specific language of your original agreement, the amount is determined according to a predetermined method. Formulas vary widely, but common buyback offers we see at Texas Cemetery Brokers determine the dollar amount to be:
@@ -321,8 +333,8 @@ const GuideSellingCemeteryPlot = () => (
               </li>
             ))}
           </ul>
-          <p className="text-foreground/80 leading-relaxed mb-5">
-            Another important consideration we have noticed with cemetery buybacks is that property owners are often required to pay administrative fees upfront when initiating the transaction. These fees are non-refundable and apply even if you change your mind later in the process, or you do not complete the buyback transfer for some reason — for example, if you fail to provide the correct documents or co-signatures.
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-5">
+            When you work with a cemetery, they might well ask to have administrative fees paid up front. In one case I know of, the cemetery requires — if the plot is in the name of a deceased individual — that it be put into a living relative’s name before it can be transferred to a third party. Check which fees are refundable and what steps your cemetery requires; this is not the same at every cemetery.
           </p>
           <p className="text-foreground/80 leading-relaxed mb-5">
             Finally, remember the buyback amount will be calculated on the price paid for the exclusive right of sepulture only — not for any additional services, interest charges, administration fees, and so on that you purchased along with the plot.
@@ -332,8 +344,8 @@ const GuideSellingCemeteryPlot = () => (
           <p className="text-foreground/80 leading-relaxed mb-5">
             Texas has numerous and unique laws that govern how cemetery property is passed down within families. These laws concern who has a legal interest in the plot — whether that means an ownership share, the right to use the plot personally, or the authority to decide who is buried there. These Texas laws, such as the <Ext href="https://statutes.capitol.texas.gov/Docs/HS/htm/HS.711.htm">Health and Safety Code, Chapter 711</Ext>, were designed to make sure family members' rights are respected when it comes to who can "use" a particular plot, and who can authorize its sale or transfer.
           </p>
-          <p className="text-foreground/80 leading-relaxed mb-5">
-            In practice, it means that owners of cemetery property often assume they can proceed with selling their plot, only to discover later that other individuals — typically their family members, their spouses, or other co-heirs — will need to be involved. Under Texas community property rules, written agreement and sign-off to transfer or sell cemetery property is frequently required from spouses, siblings, or even more distant family members because they qualify as co-owners. People can get surprised by these restrictions because they have no idea they apply in their situation. Common misunderstandings occur because these rules still apply even if:
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-5">
+            You will almost certainly need to work out who the signers, the co-owners — and maybe the co-signers, they can be different things — are to sell the plot. If you have a group of co-owners, you need everybody’s approval, and it has to be written; it can’t just be a verbal okay. In multi-generational cases, cousins can be in different parts of the world, and sometimes we’ve lost contact with them. Generally, the absence of a required co-signer isn’t going to fly with the cemetery. Saying you just can’t find one of the cousins is not a substitute for their required consent. The exact signing requirements depend on the ownership, family facts, Texas cemetery and inheritance law, and cemetery rules. These issues can arise even if:
           </p>
           <ul className="space-y-4 mb-6">
             {[
@@ -353,9 +365,10 @@ const GuideSellingCemeteryPlot = () => (
           </ul>
 
           <h3 className="font-display text-2xl text-foreground mt-12 mb-4 leading-snug">3. What is the cemetery's transfer policy, documentation and fees?</h3>
-          <p className="text-foreground/80 leading-relaxed mb-5">
-            Each Texas cemetery has its own regulations, quitclaim and conveyancing forms, documentation requirements, fees and policies for recording a transfer. These need to be understood and adhered to for any resale to go through.
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-5">
+            Always worth checking the cemetery’s transfer policy — the cemetery should willingly give this out. It may have its own forms; sometimes they accept third-party forms. A classic case is the affidavit of heirship: you can find a well-written document online, but the cemetery could say no, they want their own one. The form also needs to fit your family’s legal situation; it is not a universal substitute for probate.
           </p>
+          <p data-simon-review className="mb-5 leading-relaxed">You may come across the phrase “quitclaim” — a quitclaim form essentially says: I’m transferring my claim from this to someone else. The cemetery may be able to arrange notarization if you transfer there. If you’re doing a transfer remotely and mailing documents, ask which signatures must be notarized. A bank or a notary service may be able to help; confirm the current charge rather than assume a fixed fee.</p>
         </section>
 
         {/* H2: Value factors */}
@@ -391,21 +404,37 @@ const GuideSellingCemeteryPlot = () => (
           <PlotResaleCalculator compact />
         </section>
 
+        <section id="selling-options" className="scroll-mt-24 mt-20 space-y-5 text-lg leading-relaxed">
+          <h2 data-simon-review className="font-display text-3xl md:text-4xl">My advice: five options for selling</h2>
+          <p data-simon-review>When someone comes to me and says they’ve got such a property and they want my advice, I pretty much say the same things. If you want to get some money back for the plot or plots, or find someone who can actually use the plot, then my advice is as follows.</p>
+          <h3 data-simon-review className="font-display text-2xl">1. Check friends and family first</h3>
+          <p data-simon-review>Firstly, I would contact friends and family — extended friends and extended family — and potentially use social media, and give that a few weeks or months. You may be pleasantly surprised that someone in your extended circle comes back, is very grateful, has a great need, and you’re able to make an arrangement that works out great for both of you. I have seen that happen, and I always advise everybody to do that first. As a broker, clearly I’d love to help people find a third-party buyer, but I always advise: check friends and family first.</p>
+          <h3 data-simon-review className="font-display text-2xl">2. Ask the cemetery</h3>
+          <p data-simon-review>Most people I speak to have already done it — it’s one of the first things they think of. Most cemeteries I deal with will not purchase a plot from a customer and bring it back into the cemetery’s ownership. It’s logical: they’re in the business of selling plots, not buying them. They’re trying to develop new lawns and sell the plots in those lawns, and they view buying plots in older lawns as going backwards.</p>
+          <p data-simon-review>It’s rare, but I have had cases where the cemetery came back and said, we can buy your plot and give you a decent price for it. If you get that offer and the price is better than you can get from a broker or a third-party sale, go ahead and take it — that’s a great option. More commonly, the cemetery offers the price originally paid, probably minus some fees. But I always say try it out and check — just see what happens.</p>
+          <h3 data-simon-review className="font-display text-2xl">3. Use a broker</h3>
+          <p data-simon-review>The third option is to use a broker. Obviously we are brokers, so I’m going to talk more about what we do and our role and how we can help. But before I get into that in more detail, options four and five.</p>
+          <h3 data-simon-review className="font-display text-2xl">4. Arrange a private sale</h3>
+          <p data-simon-review>There are a bunch of internet-based marketplaces and sites focused just on cemetery plots. You have the freedom to say what you want about your plot; usually you can pick your own price and put up your own pictures. So that part is attractive. Check each site’s current listing rules before paying or posting.</p>
+          <p data-simon-review>You also have to put up with scam artists and members of the public who aren’t going to behave honorably. It’s very difficult to verify people and legitimize their interest in your plots, and you get a lot of individuals who aren’t serious about buying. You have to be very cautious of scams — there’s a large amount of money involved. Be very, very cautious.</p>
+          <p data-simon-review>The other headache is the paperwork. It doesn’t matter whether you sell your plot to your brother, to a third party, or go through a broker. There’s a lot of paperwork to get through. Cemeteries want to be very precise, making sure the person selling has the full and complete authority, and that any other co-owners or individuals give the required consent.</p>
+          <p data-simon-review>If you’re dealing on a marketplace, you’re going to have to organize all that paperwork yourself. I’ll be honest — it’s tough even for a broker, and we see so many cases and deal with so many cemeteries. You have to be pretty cautious about that part.</p>
+          <h3 data-simon-review className="font-display text-2xl">5. Consider a donation</h3>
+          <p data-simon-review>The fifth way is a donation, which I see people do — clearly a very honorable and good thing to do. Churches and other institutions may accept plots. If you want the tax benefit of a donation, you’ve got to be very careful with the paperwork and valuation requirements. Ask a tax adviser whether the gift qualifies and whether a qualified appraisal is required. You still need to transfer the plots, even to a church — which means the cemetery’s paperwork again.</p>
+        </section>
+
+        <section id="selling-patience" className="scroll-mt-24 mt-16 space-y-5 text-lg leading-relaxed">
+          <h2 data-simon-review className="font-display text-3xl md:text-4xl">How long will it take to sell?</h2>
+          <p data-simon-review>I always urge patience. This is probably the number one question I get: how quickly can you sell the plot? Markets change. Back in the COVID times there was, if anything, greater demand than supply for plots — maybe not surprisingly, and sadly. In the post-COVID market I’ve been seeing more sellers than buyers. Part of that is that buyers don’t even know you can get resale plots — so there’s an education part to this.</p>
+          <p data-simon-review>I’ve seen terrific plots take a long time to sell, and plots that surprisingly sell quickly. A plot can sell in as little as a month, but frankly it can take a year — I’ve seen fantastic plots take way over a year to sell. Those are my experiences, not a promise of a buyer or a deadline for your property.</p>
+          <p data-simon-review>It’s a very, very personal decision. You’re looking at something you’re potentially buying for yourself, or for a loved one, or someone recently deceased — you could be suffering a bereavement. Some want to be near a tree, others want to be as far away as possible. Some want to be near a curb, some don’t. Some would like a slope with a view, others want to be as flat as possible. There’s a great deal about relatives visiting and the ease of getting to the plot.</p>
+          <p data-simon-review>You have a buyer come, look at the plot, and say it’s an absolute perfect fit — but another family can come along and it just doesn’t work for them.</p>
+        </section>
+
         <section id="why" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 03 · The case for a broker</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Why selling through Texas Cemetery Brokers is the <span className="italic text-primary">safest, fastest route</span></h2>
-          <p className="text-foreground/80 leading-relaxed mb-5 text-lg">
-            You have a few options for selling a plot, and it helps to understand what each one really asks of you.
-          </p>
-          <p className="text-foreground/80 leading-relaxed mb-5">
-            <strong className="text-foreground">Selling it back to the cemetery</strong> is the simplest, but many cemeteries either decline or pay only what you originally paid — often well below today's value.
-          </p>
-          <p className="text-foreground/80 leading-relaxed mb-5">
-            <strong className="text-foreground">Listing it yourself</strong> on a classified or auction site can look appealing at first, but these sites usually charge you a fee just to post — and once you've paid, the entire sale is still yours to manage. You set the price, field the inquiries, sort genuine buyers from time-wasters, handle the negotiation, and work out the cemetery's transfer paperwork on your own. Many private listings sit for months, and it is not unusual for a plot to take years to sell this way — if it ever sells at all. You can spend money on listing fees and still be left with the property.
-          </p>
-          <p className="text-foreground/80 leading-relaxed mb-10">
-            <strong className="text-foreground">Working with a broker</strong> is the option built to take all of that off your hands. We do the pricing, the marketing, the buyer screening, the showings and the paperwork for you — which gives your property a far better chance of actually selling, and often for more than you would achieve alone. Here is what that looks like with us.
-          </p>
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-10 text-lg">So those are the five options I mention to most people who want to sell a plot. Now let’s talk more about the broker option — what we do and how we help people.</p>
 
           <div className="space-y-8">
             {brokerReasons.map((r) => (

@@ -15,7 +15,7 @@ export const faqs = [
 ];
 
 export const jsonLd: Record<string, unknown>[] = [
-  { "@context": "https://schema.org", "@type": "Article", headline: "How to Sell a Cemetery Plot in Texas", mainEntityOfPage: URL, author: { "@type": "Organization", name: "Texas Cemetery Brokers" }, publisher: { "@type": "Organization", name: "Texas Cemetery Brokers" } },
+  { "@context": "https://schema.org", "@type": "Article", headline: "How to Sell a Cemetery Plot in Texas", mainEntityOfPage: URL, author: { "@type": "Person", name: "Simon James", worksFor: { "@type": "Organization", name: "Texas Cemetery Brokers" } }, publisher: { "@type": "Organization", name: "Texas Cemetery Brokers" } },
   { "@context": "https://schema.org", "@type": "Service", name: "Cemetery Plot Resale Brokerage", areaServed: { "@type": "State", name: "Texas" }, provider: { "@type": "LocalBusiness", name: "Texas Cemetery Brokers", telephone: PHONE, email: EMAIL, sameAs: ["https://bayercemeterybrokers.com/"] } },
   { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
   { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
