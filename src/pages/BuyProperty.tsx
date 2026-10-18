@@ -322,8 +322,8 @@ const BuyProperty = () => {
                   <p className="text-xs sm:text-sm text-primary mt-2">less — often thousands</p>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                Families across Texas are selling spaces they no longer need — often in the cemetery you want. We find them and handle every step.
+              <p data-simon-review className="mt-4 text-sm text-muted-foreground leading-relaxed">
+                People’s plans change and plots they bought years ago are still there, unused. Buying from those owners is another way to find a resting place. We help you compare the spaces and get through the cemetery’s transfer paperwork.
               </p>
               <p className="mt-4 text-xs text-primary font-medium">Personal guidance · Every step handled · No concierge fee</p>
             </div>
@@ -697,7 +697,7 @@ const BuyProperty = () => {
               <span className="italic text-primary">A price that makes sense.</span>
             </h2>
             <p data-simon-review className="max-w-2xl mx-auto mt-5 text-base text-muted-foreground leading-relaxed">
-              “You have a buyer come, look at the plot, and say it’s an absolute perfect fit — but another family can come along and it just doesn’t work for them,” Simon James says. “People look at where the plot is positioned, how it’s being kept and looked after, and if it’s a place they feel some sort of bond with.”
+              People look at where the plot is positioned, how it’s being kept and looked after, and if it’s a place they feel some sort of bond with. One family can find an absolute perfect fit, while another family finds it just doesn’t work for them. It’s a deeply personal decision.
             </p>
           </div>
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 border-t border-foreground/20 pt-8 sm:pt-10">
@@ -708,15 +708,15 @@ const BuyProperty = () => {
             <div className="lg:col-span-7 divide-y divide-foreground/20">
               {[
                 { title: "The cemetery you want. Less to pay.", text: "Private resale means buying from an existing owner, rather than the cemetery’s own inventory. A comparable space can cost meaningfully less — we help you compare the location, property and full purchase costs before you decide." },
-                { title: "See the place. Make it personal.", text: "Tell us your budget, preferred cemetery and when you need a space. We’ll put together a relevant shortlist, usually within 24 hours, and can meet you at the cemetery to walk the sections before you commit." },
-                { title: "A clear path from choice to ownership.", text: "We coordinate the paperwork and transfer with the cemetery. On selected pre-need properties, financing can spread the cost over up to two years at 0% interest. Our buyer concierge is free, with no obligation to proceed." },
+                { title: "See the place. Make it personal.", text: "Some want to be near a tree, others want to be as far away as possible. Some want to be near a curb, some don’t. Some would like a slope with a view, others want it as flat as possible. There’s a great deal about relatives visiting and the ease of getting to the plot. We can walk the sections with you before you commit.", review: true },
+                { title: "A clear path from choice to ownership.", text: "Cemeteries want to be very precise, making sure the person selling has the full and complete authority and that any other co-owners give the required consent. We organize the paperwork and coordinate the transfer. On selected pre-need properties, financing is available for up to two years at 0% interest; our buyer concierge is free.", review: true },
               ].map((item, index) => (
                 <article key={item.title} className={index === 0 ? "pb-6 sm:pb-8" : "py-6 sm:py-8"}>
                   <div className="flex gap-4 sm:gap-6 items-baseline">
                     <span className="font-display italic text-xl text-primary shrink-0">{String(index + 1).padStart(2, "0")}</span>
                     <div>
                       <h3 className="font-display text-2xl sm:text-3xl text-foreground leading-tight">{item.title}</h3>
-                      <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">{item.text}</p>
+                      <p data-simon-review={item.review || undefined} className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">{item.text}</p>
                     </div>
                   </div>
                 </article>

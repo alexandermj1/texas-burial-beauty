@@ -17,11 +17,11 @@ import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 
 const benefits = [
   { num: "01", kicker: "Three listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499. One-time upfront listing fees. Your valuation is free." },
-  { num: "02", kicker: "Free valuation", title: "An honest market price.", desc: "We research recent sales in your cemetery and give you a fair, no-obligation estimate." },
-  { num: "03", kicker: "Done for you", title: "We handle every form.", desc: "Cemetery transfers, deeds, escrow, paperwork — every call, every signature, on us." },
+  { num: "02", kicker: "Free valuation", title: "An honest market price.", desc: "The deeds may still exist, the plots may still be there and unused. If you don’t want to use that property, we help you see what value you may be able to get from it.", review: true },
+  { num: "03", kicker: "Done for you", title: "We handle every form.", desc: "Whether you sell to a relative, to a third party or through a broker, there’s a lot of paperwork to get through. We organize it with the cemetery.", review: true },
   { num: "04", kicker: "You decide", title: "Nothing happens without you.", desc: "List with us and stay in control. We negotiate on your behalf. You approve every offer." },
   { num: "05", kicker: "Texas reach", title: "A real buyer network.", desc: "Thousands of qualified buyers across Dallas, Houston, Austin and San Antonio." },
-  { num: "06", kicker: "Best prices", title: "Comparable-driven pricing.", desc: "We benchmark every property against recent sales to make sure you don't leave money on the table." },
+  { num: "06", kicker: "Patient selling", title: "Finding the right family.", desc: "We’ve seen terrific plots take a long time to sell, and plots that surprisingly sell quickly. We urge patience: a month is possible, but a sale can take over a year. There’s no promised deadline.", review: true },
 ];
 
 const faqs = [
@@ -114,10 +114,10 @@ const SellProperty = () => {
             {/* Standfirst — drop cap intro paragraph, narrow left column */}
             <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
               <p data-simon-review className="text-base md:text-lg text-foreground/80 leading-relaxed font-light first-letter:font-display first-letter:text-6xl first-letter:font-medium first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none">
-                Often people come to me and they’ve just found that they are an owner, or part-owner, of a plot. They’re going through the records of a recently deceased relative, and suddenly there’s the deed. If they don’t want to use that property, they’re looking to see if they can in some way get some value from it.
+                Often people find that they are an owner, or part-owner, of a plot while going through the records of a recently deceased relative. Suddenly there’s the deed, and they realize there’s cemetery property and wonder what to do with it. If you don’t want to use that property, you may be looking to see if you can get some value from it. We help you work out the ownership, the cemetery’s requirements and your options for selling.
               </p>
               <div className="mt-6 flex items-baseline gap-3 text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/60">
-                <span data-simon-review>Simon James · Texas Cemetery Brokers</span>
+                <span data-simon-review>Texas Cemetery Brokers</span>
                 <span className="h-px flex-1 bg-foreground/20" />
               </div>
             </div>
@@ -125,10 +125,10 @@ const SellProperty = () => {
             {/* Pull quote — right column */}
             <aside className="hidden md:block col-span-6 lg:col-span-4 lg:col-start-8 border-l border-foreground/20 pl-6">
               <p data-simon-review className="font-display italic text-2xl text-foreground/85 leading-snug">
-                As a broker, clearly I’d love to help people find a third-party buyer, but I always advise: check friends and family first.
+                Check friends and family first — extended friends and extended family. You may find someone with a great need and make an arrangement that works for both of you.
               </p>
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-4">
-                <span data-simon-review>Simon James · From his commentary</span>
+                <span data-simon-review>Before you list</span>
               </p>
             </aside>
 
@@ -257,7 +257,7 @@ const SellProperty = () => {
                     <h3 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-tight mb-3">
                       {b.title}
                     </h3>
-                    <p className="text-foreground/70 leading-relaxed text-[15px]">{b.desc}</p>
+                    <p data-simon-review={b.review || undefined} className="text-foreground/70 leading-relaxed text-[15px]">{b.desc}</p>
                   </div>
                 </motion.article>
               ))}

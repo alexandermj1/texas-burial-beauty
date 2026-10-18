@@ -6,25 +6,25 @@ const steps = [
     icon: Search,
     step: "01",
     title: "Tell Us What You Need",
-    description: "Whether buying or selling, share your requirements and we'll get to work.",
+    description: "Start with the plot’s history and the thinking behind selling it, or the place and property your family needs.",
   },
   {
     icon: FileText,
     step: "02",
     title: "We Do the Legwork",
-    description: "We find matches, verify availability, and handle all cemetery coordination.",
+    description: "We check the cemetery’s transfer policy, its forms and who has the authority to sell, alongside the available matches.",
   },
   {
     icon: HandshakeIcon,
     step: "03",
     title: "Review & Agree",
-    description: "You review options and pricing — no pressure, no hidden fees.",
+    description: "Look at where the plot is positioned, how it’s being kept and whether it’s a place your family feels a bond with.",
   },
   {
     icon: CheckCircle,
     step: "04",
     title: "Close with Confidence",
-    description: "We manage the paperwork and transfer from start to finish, keeping you informed every step of the way.",
+    description: "There’s a lot of paperwork to get through. We organize the required signatures and coordinate the transfer with the cemetery.",
   },
 ];
 
@@ -44,7 +44,6 @@ const HowItWorksSection = () => {
             Four simple steps
           </h2>
           <p data-simon-review className="mx-auto mt-5 max-w-3xl leading-relaxed">For most people coming into this, it’s brand new. Unlike selling a car, cemetery plots are probably a once-in-a-lifetime experience. Most people just don’t know how the system works, and neither should they. That’s understandable.</p>
-          <p data-simon-review className="mt-3 text-sm">Simon James · Texas Cemetery Brokers</p>
         </motion.div>
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -62,7 +61,7 @@ const HowItWorksSection = () => {
               </div>
               <span className="text-xs font-medium text-primary tracking-wider uppercase">Step {s.step}</span>
               <h3 className="font-display text-base mb-2 mt-1 text-foreground">{s.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+              <p data-simon-review className="text-sm text-muted-foreground leading-relaxed">{s.description}</p>
             </motion.div>
           ))}
         </div>

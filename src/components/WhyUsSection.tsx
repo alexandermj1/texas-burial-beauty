@@ -15,12 +15,14 @@ const reasons = [
   {
     icon: FileCheck,
     title: "We Handle Everything",
-    description: "From valuation to paperwork to cemetery coordination — we manage it all.",
+    description: "Cemeteries are cautious about transfers. We help establish who can sell and organize the paperwork and required consent.",
+    review: true,
   },
   {
     icon: Heart,
     title: "Compassionate Service",
-    description: "We understand the personal nature of these decisions and treat every client with care.",
+    description: "A space can be a perfect fit for one family and not work for another. It’s a deeply personal decision, and it can take time.",
+    review: true,
   },
 ];
 
@@ -39,8 +41,7 @@ const WhyUsSection = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-6 leading-tight">
               The right partner for a <span className="italic text-gradient-earth">meaningful</span> decision
             </h2>
-            <p data-simon-review className="text-muted-foreground leading-relaxed">It’s a deeply personal decision. You have a buyer come, look at the plot, and say it’s an absolute perfect fit — but another family can come along and it just doesn’t work for them. People look at where the plot is positioned, how it’s being kept and looked after, and if it’s a place they feel some sort of bond with.</p>
-            <p data-simon-review className="mt-4 text-sm">Simon James · Texas Cemetery Brokers</p>
+            <p data-simon-review className="text-muted-foreground leading-relaxed">People look at the area, where the plot is positioned, how it’s being kept and looked after — if it looks good, and if it’s a place they feel some sort of bond with. One family can see an absolute perfect fit, while another family finds it just doesn’t work for them. We take the time to understand those differences.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -55,7 +56,7 @@ const WhyUsSection = () => {
               >
                 <reason.icon className="w-5 h-5 text-primary mb-3" />
                 <h3 className="font-display text-sm mb-1 text-foreground">{reason.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{reason.description}</p>
+                <p data-simon-review={reason.review || undefined} className="text-xs text-muted-foreground leading-relaxed">{reason.description}</p>
               </motion.div>
             ))}
           </div>
