@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [ ] Integrate Simon’s monologue into relevant public pages with minimal grammar edits, attributed anecdotes and red review passages; provide every edited page link without publishing.
+- [ ] Verify changed passages and layouts on desktop/mobile and preserve forms, calculators, fee tables and legal caveats.
 - [x] Explain Sharon: submitted 00:33:40 UTC, eligible 00:53:40, disabled 00:57:31 before next scheduled 01:00 check; no draft or email sent, left disabled.
 - [x] Remove contact preference from both buyer forms, retain phone/email inputs and existing validation; complete wizard checked on desktop/mobile with intercepted submission and verified payload/thank-you; no inquiry or email created, build clean.
 - [x] Add per-buyer automatic AI reply switch; deployed automatic suppression at selection/draft/final send, six tests pass, signed-in switch saves off across reload and restores on; no email sent, page builds cleanly.
