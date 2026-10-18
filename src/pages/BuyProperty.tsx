@@ -696,8 +696,8 @@ const BuyProperty = () => {
               A place that feels right.<br />
               <span className="italic text-primary">A price that makes sense.</span>
             </h2>
-            <p className="max-w-2xl mx-auto mt-5 text-base text-muted-foreground leading-relaxed">
-              Burial plots, cremation niches, crypts and family estates across Dallas–Fort Worth, Houston, Austin, San Antonio and beyond. Considered choices, without navigating the resale process alone.
+            <p data-simon-review className="max-w-2xl mx-auto mt-5 text-base text-muted-foreground leading-relaxed">
+              “You have a buyer come, look at the plot, and say it’s an absolute perfect fit — but another family can come along and it just doesn’t work for them,” Simon James says. “People look at where the plot is positioned, how it’s being kept and looked after, and if it’s a place they feel some sort of bond with.”
             </p>
           </div>
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 border-t border-foreground/20 pt-8 sm:pt-10">
