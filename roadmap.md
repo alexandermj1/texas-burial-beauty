@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [x] Explain Sharon: submitted 00:33:40 UTC, eligible 00:53:40, disabled 00:57:31 before next scheduled 01:00 check; no draft or email sent, left disabled.
+- [x] Remove contact preference from both buyer forms, retain phone/email inputs and existing validation; complete wizard checked on desktop/mobile with intercepted submission and verified payload/thank-you; no inquiry or email created, build clean.
 - [x] Add per-buyer automatic AI reply switch; deployed automatic suppression at selection/draft/final send, six tests pass, signed-in switch saves off across reload and restores on; no email sent, page builds cleanly.
 - [x] Integrate Alexander’s transfer-guide copy with light grammar edits, update the introduction and remove endowment care from shared tables; eight directory tests pass, desktop/390px/320px checks pass with no page errors; not published.
 - [x] Add recorded-fee-only tables to Houston (12), Dallas–Fort Worth (15), San Antonio (2) and Austin (4); test region scope, search, pagination and 390px/320px layouts.
