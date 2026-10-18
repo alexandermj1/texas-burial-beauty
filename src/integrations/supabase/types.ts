@@ -985,6 +985,7 @@ export type Database = {
           bayer_entry_id: string | null
           bluenotary_session_url: string | null
           budget: string | null
+          buyer_ai_auto_reply_disabled: boolean
           buyer_fees: Json
           cemetery: string | null
           cemetery_city: string | null
@@ -1112,6 +1113,7 @@ export type Database = {
           bayer_entry_id?: string | null
           bluenotary_session_url?: string | null
           budget?: string | null
+          buyer_ai_auto_reply_disabled?: boolean
           buyer_fees?: Json
           cemetery?: string | null
           cemetery_city?: string | null
@@ -1239,6 +1241,7 @@ export type Database = {
           bayer_entry_id?: string | null
           bluenotary_session_url?: string | null
           budget?: string | null
+          buyer_ai_auto_reply_disabled?: boolean
           buyer_fees?: Json
           cemetery?: string | null
           cemetery_city?: string | null
