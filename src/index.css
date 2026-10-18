@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Temporary owner review: remove this treatment after editorial approval. */
+:root { --editorial-review: 0 72% 40%; }
+[data-simon-review], [data-simon-review] * {
+  color: hsl(var(--editorial-review)) !important;
+}
+[data-simon-review]::first-letter { color: hsl(var(--editorial-review)) !important; }
+
 /* A centred, high-contrast editorial treatment, isolated from other guides. */
 .worth-article {
   --worth-deep: 145 30% 23%;

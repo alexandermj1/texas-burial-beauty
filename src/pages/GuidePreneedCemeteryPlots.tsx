@@ -307,9 +307,10 @@ const GuidePreneedCemeteryPlots = () => (
         <section id="why-ahead" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 02 · The case for planning</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">Why families buy <span className="italic text-primary">before they need to</span></h2>
-          <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
-            Nobody enjoys the conversation. But the families who have it early are, without exception, in a better position than the ones who do not — financially and otherwise.
+          <p data-simon-review className="text-foreground/80 leading-relaxed mb-6 text-lg">
+            “People buy plots thinking they’ll be in one location, and 10, 20 years later — life evolves in such an odd way, it’s so hard to predict for all of us — they’re in a different state,” Simon James says. “Maybe relatives and children tell their parents they won’t be able to visit, and ask them to pick a closer location.”
           </p>
+          <p data-simon-review className="mb-6 text-lg leading-relaxed">There’s also been a bit of an evolution toward cremation. Many people bought plots, or groups of plots, really for caskets, and what they want to do has changed. Planning ahead is also a chance to talk about those wishes, rather than assume everyone still wants the same thing.</p>
           <p className="text-foreground/80 leading-relaxed mb-6 text-lg">
             Purchasing ahead of time means you can choose a property that works for your budget and your personal preferences. It gives you the freedom to explore all your options thoroughly, and it saves your loved ones from having to make rushed decisions in their time of grief. It also lets you select a final resting place that suits your wishes exactly — be it under a shady tree at Sparkman-Hillcrest in Dallas or beside a serene lake at Bluebonnet Hills in Colleyville.
           </p>
