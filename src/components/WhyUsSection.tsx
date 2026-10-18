@@ -39,11 +39,8 @@ const WhyUsSection = () => {
             <h2 className="font-display text-3xl md:text-4xl text-foreground mb-6 leading-tight">
               The right partner for a <span className="italic text-gradient-earth">meaningful</span> decision
             </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Whether planning ahead or managing an unexpected situation, choosing
-              cemetery property is deeply personal. Texas Cemetery Brokers is here to make the process
-              as smooth and respectful as possible.
-            </p>
+            <p data-simon-review className="text-muted-foreground leading-relaxed">It’s a deeply personal decision. You have a buyer come, look at the plot, and say it’s an absolute perfect fit — but another family can come along and it just doesn’t work for them. People look at where the plot is positioned, how it’s being kept and looked after, and if it’s a place they feel some sort of bond with.</p>
+            <p data-simon-review className="mt-4 text-sm">Simon James · Texas Cemetery Brokers</p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

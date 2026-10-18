@@ -113,22 +113,22 @@ const SellProperty = () => {
 
             {/* Standfirst — drop cap intro paragraph, narrow left column */}
             <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
-              <p className="text-base md:text-lg text-foreground/80 leading-relaxed font-light first-letter:font-display first-letter:text-6xl first-letter:font-medium first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none">
-                Most owners try to sell on their own — and lose months chasing buyers, paperwork, and cemetery red tape. We take all of that off your plate, find a serious buyer, and close for you. Free valuation. Listing packages from $299. You stay in charge.
+              <p data-simon-review className="text-base md:text-lg text-foreground/80 leading-relaxed font-light first-letter:font-display first-letter:text-6xl first-letter:font-medium first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none">
+                Often people come to me and they’ve just found that they are an owner, or part-owner, of a plot. They’re going through the records of a recently deceased relative, and suddenly there’s the deed. If they don’t want to use that property, they’re looking to see if they can in some way get some value from it.
               </p>
               <div className="mt-6 flex items-baseline gap-3 text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/60">
-                <span>By Texas Cemetery Brokers</span>
+                <span data-simon-review>Simon James · Texas Cemetery Brokers</span>
                 <span className="h-px flex-1 bg-foreground/20" />
               </div>
             </div>
 
             {/* Pull quote — right column */}
             <aside className="hidden md:block col-span-6 lg:col-span-4 lg:col-start-8 border-l border-foreground/20 pl-6">
-              <p className="font-display italic text-2xl text-foreground/85 leading-snug">
-                &ldquo;They handled everything — deeds, the cemetery, the buyer. I just signed.&rdquo;
+              <p data-simon-review className="font-display italic text-2xl text-foreground/85 leading-snug">
+                As a broker, clearly I’d love to help people find a third-party buyer, but I always advise: check friends and family first.
               </p>
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-4">
-                David &amp; Anne R. · Fort Worth
+                <span data-simon-review>Simon James · From his commentary</span>
               </p>
             </aside>
 

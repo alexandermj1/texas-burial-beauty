@@ -43,6 +43,8 @@ const HowItWorksSection = () => {
           <h2 className="font-display text-3xl md:text-4xl text-foreground">
             Four simple steps
           </h2>
+          <p data-simon-review className="mx-auto mt-5 max-w-3xl leading-relaxed">For most people coming into this, it’s brand new. Unlike selling a car, cemetery plots are probably a once-in-a-lifetime experience. Most people just don’t know how the system works, and neither should they. That’s understandable.</p>
+          <p data-simon-review className="mt-3 text-sm">Simon James · Texas Cemetery Brokers</p>
         </motion.div>
 
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

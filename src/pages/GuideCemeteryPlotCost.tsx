@@ -195,7 +195,7 @@ const GuideCemeteryPlotCost = () => (
       </Section>
 
       <Section id="extras" icon={Receipt} eyebrow="The rest of the bill" title="What the cemetery charges on top of the space">
-        <p>Families are often surprised that the space itself is only part of the total. These sit alongside it:</p>
+        <p data-simon-review>“Another factor is just the overall cost of funerals. It’s expensive, and many people are saying they just want a much cheaper solution,” Simon James observes. The space is only part of the bill, so check these charges alongside it:</p>
         <div className="not-prose grid grid-cols-1 gap-4 mt-8">
           {extras.map((e) => (
             <div key={e.t} className="p-6 rounded-xl border border-border bg-card">
@@ -208,6 +208,8 @@ const GuideCemeteryPlotCost = () => (
       </Section>
 
       <figure className="my-8"><img src={RESTLAND_STRIP.src} alt={RESTLAND_STRIP.alt} loading="lazy" className="w-full aspect-[2/1] md:aspect-[3/1] object-cover rounded-xl" /><figcaption className="text-xs text-muted-foreground mt-3">{RESTLAND_STRIP.caption}</figcaption></figure>
+
+      <p data-simon-review className="mb-10 text-base leading-relaxed">Simon describes perpetual care funds as “almost like a university keeps its endowment,” with earnings used to maintain the cemetery’s overall upkeep. Sometimes the care contribution is part of the purchase price; sometimes it’s an extra line item. Confirm the cemetery’s care arrangements and any contribution on your purchase or resale transfer; the applicable requirements vary.</p>
 
       <Section id="type" icon={Landmark} eyebrow="By property type" title="Plots, niches, crypts and estates">
         <ul>

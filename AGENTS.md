@@ -6,9 +6,9 @@
 - Public plot value calculator: estimates come only from the plot-value-estimator edge function, which reads private section prices and quote retail figures server-side and returns derived ranges/scores only — why: visitors must never see our underlying price data.
 - Public estimator directory includes the entire active cemetery registry; typo-tolerant section matching stays server-side and rejects contradictory qualifiers — why: coverage must not reveal which cemeteries have prices, or make similar section names falsely precise.
 - Calculator motion is rendered locally with semantic brand tokens and reduced-motion support; result bars use returned estimate ratios, while introductory curves are labelled illustrative — why: engaging visuals must not imply fabricated price forecasts or require video playback.
-- Embed the shared calculator in the cost, selling, transfer and plot-worth guides, with related-guide links in the shared calculator; keep the retired standalone URL redirected to the cost guide and excluded from sitemap/route metadata — why: a single estimator funnels visitors into maintained editorial content without a duplicate tool page.
+- Embed the shared calculator and related links in cost, selling, transfer and worth guides; redirect its retired URL to cost and exclude it from sitemap/metadata — why: one estimator, no duplicate page.
 - Secondary articles use compact calculators; both sizes stay single-column — why: mobile readability.
-- Keep plot-worth editorial photography, local cemetery links and team context in a guide-specific supporting module, reusing existing cemetery photo data; distinguish published team statements from personal quotations — why: the calculator remains shared while article authority stays traceable and honest.
+- Keep plot-worth photos, local links and team context in its supporting module using existing cemetery photos; distinguish team statements from personal quotes — why: shared calculator, traceable authority.
 
 - New listing agreement fee templates are versioned in contract fill data; signing refreshes preserve that version and historical quotes retain their original terms — why: a fee update must not rewrite a customer’s contractual history.
 
@@ -21,3 +21,4 @@
 
 - Homepage shopfronts use get_public_shopfront_plots: preserve Featured priority and label additional paid signed inventory separately; sanitize named lawns and round verified savings down server-side using quoteFigures' separate-space buyer basis, never return currency or plot identifiers, and pause rotation on interaction — why: honest paid placement and competitor-safe inventory.
 - Toggle shopfronts via homepageSections.featuredShopfronts; keep code/feed — why: hiding must preserve design.
+- Mark review prose with data-simon-review and one global semantic color — why: remove highlighting without changing approved prose.

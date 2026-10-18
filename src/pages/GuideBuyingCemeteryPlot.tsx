@@ -306,7 +306,8 @@ const GuideBuyingCemeteryPlot = () => (
 
         <Section id="in-person" eyebrow="No photos, no pressure" title="See the plot in person before you decide">
           <p>A final resting place is deeply personal, and most families want to stand on the ground before they commit. We don't expect you to choose from a photo. We <strong>meet you at the cemetery and walk the grounds with you</strong>, showing the exact location, explaining how sections and gardens differ, and answering every question on the spot.</p>
-          <p>It's not unusual for us to show a single plot several times — to different families, on different days — before the right family decides it's the place for them. That patience is the point: you should feel certain, not rushed. A marketplace listing or a private seller simply can't offer this.</p>
+          <p data-simon-review>As Simon James puts it: “Some want to be near a tree, others want to be as far away as possible. Some want to be near a curb, some don’t. Some would like a slope with a view, others want to be as flat as possible. There’s a great deal about relatives visiting and the ease of getting to the plot.”</p>
+          <p data-simon-review>People look at the area, where the plot is positioned, how it’s being kept and looked after — if it looks good, and if it’s a place they feel some sort of bond with. So it’s a deeply personal decision, and it can take some time.</p>
         </Section>
 
         <Section id="timing" eyebrow="At-need or pre-need" title="Buying now for a loss, or planning ahead">
@@ -344,7 +345,8 @@ const GuideBuyingCemeteryPlot = () => (
 
 
         <Section id="what-you-buy" eyebrow="The right of sepulture" title="What you're actually buying">
-          <p>When you "buy a cemetery plot" in Texas, you aren't buying the land itself. You're buying the <strong>exclusive right of sepulture</strong> — the legal right to bury someone in a specific space — while the cemetery keeps and maintains the land. That's why every transfer runs through the cemetery and why correct paperwork matters so much.</p>
+          <p data-simon-review>Most people think cemetery property is real estate and can be thought of and dealt with just like real estate. That’s not surprising — we use the same language. We say it’s property. But you don’t get to own the land and exercise choice over how that land is presented. What you actually have as an asset is the right to have your remains interred in that plot — sometimes two interments, or even more, where the cemetery permits it. That’s essentially what the asset is, as Simon James explains.</p>
+          <p data-simon-review>Generally there’s some degree of freedom over markers, but not always. The larger memorial parks moved toward flat markers to give the memorial park more of the look of a park. Ask about the particular section’s rules before choosing a space, especially if an upright tombstone matters to your family.</p>
           <p>A few things to confirm on any purchase:</p>
           <ul className="space-y-3">
             <li><strong>What's included</strong> — the space(s), and whether a vault, marker or opening-and-closing is part of the deal.</li>
