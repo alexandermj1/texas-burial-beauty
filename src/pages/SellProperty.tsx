@@ -253,8 +253,8 @@ const SellProperty = () => {
                     {b.num}
                   </div>
                   <div>
-                    <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-2">{b.kicker}</p>
-                    <h3 className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-tight mb-3">
+                    <p data-simon-review={b.review || undefined} className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-2">{b.kicker}</p>
+                    <h3 data-simon-review={b.review || undefined} className="font-display text-2xl md:text-3xl text-foreground tracking-tight leading-tight mb-3">
                       {b.title}
                     </h3>
                     <p data-simon-review={b.review || undefined} className="text-foreground/70 leading-relaxed text-[15px]">{b.desc}</p>
