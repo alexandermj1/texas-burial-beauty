@@ -31,12 +31,6 @@ const BUDGETS = [
   { id: "flexible", label: "Flexible / Not Sure" },
 ];
 
-const CONTACT_PREFS = [
-  { id: "phone", label: "Call" },
-  { id: "email", label: "Email" },
-  { id: "either", label: "Either" },
-];
-
 interface Props {
   cemeteryName: string;
   region: string;
@@ -54,7 +48,6 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
     propertyType: "plot",
     timeline: "soon",
     budget: "",
-    contactPref: "either",
     quantity: "1",
     name: "",
     phone: "",
@@ -73,14 +66,12 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
     const typeLabel = TYPES.find((t) => t.id === form.propertyType)?.label ?? form.propertyType;
     const timelineLabel = TIMELINES.find((t) => t.id === form.timeline)?.label ?? form.timeline;
     const budgetLabel = BUDGETS.find((b) => b.id === form.budget)?.label ?? null;
-    const prefLabel = CONTACT_PREFS.find((c) => c.id === form.contactPref)?.label ?? "Either";
     const details = [
       `Cemetery: ${cemeteryName}`,
       `Property type: ${typeLabel}`,
       `Timeline: ${timelineLabel}`,
       `Budget: ${budgetLabel ?? "Not given"}`,
       `Spaces wanted: ${form.quantity || "1"}`,
-      `Preferred contact: ${prefLabel}`,
       form.note.trim() ? `\nMessage from buyer:\n${form.note.trim()}` : null,
     ]
       .filter(Boolean)
@@ -215,7 +206,6 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
 
           {[
             { key: "budget", legend: "Budget", opts: BUDGETS },
-            { key: "contactPref", legend: "Best way to reach you", opts: CONTACT_PREFS },
           ].map((g) => (
             <fieldset key={g.key}>
               <legend className={`${eyebrow} mb-3`}>{g.legend}</legend>
@@ -252,15 +242,17 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
               required
             />
             <input
-              aria-label="Phone"
+              aria-label="Phone number"
+              autoComplete="tel"
               type="tel"
-              placeholder="Phone"
+              placeholder="Phone number"
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
               className={inputCls}
             />
             <input
               aria-label="Email"
+              autoComplete="email"
               type="email"
               placeholder="Email"
               value={form.email}

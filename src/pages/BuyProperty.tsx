@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Navigation, Mail, MessageSquare, Loader2, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Navigation, Loader2, Search } from "lucide-react";
 import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
@@ -80,7 +80,6 @@ const BuyProperty = () => {
     name: "",
     phone: "",
     email: "",
-    contactPref: "either" as "phone" | "email" | "either",
     note: "",
   });
 
@@ -217,7 +216,7 @@ const BuyProperty = () => {
     2: "This helps us prioritize what to show you.",
     3: "Choose a comfortable range — we’ll find options to match.",
     4: "Find your area or use your location.",
-    5: "Choose how you'd prefer we contact you.",
+    5: "Your phone number and email.",
   };
 
   const canSubmit = selections.name.trim() && (selections.phone.trim() || selections.email.trim());
@@ -227,7 +226,6 @@ const BuyProperty = () => {
     const typeLabel = propertyTypes.find(t => t.id === selections.propertyType)?.label || selections.propertyType;
     const timelineLabel = timelines.find(t => t.id === selections.timeline)?.label || selections.timeline;
     const budgetLabel = budgets.find(b => b.id === selections.budget)?.label || selections.budget;
-    const prefLabel = selections.contactPref === "phone" ? "Call" : selections.contactPref === "email" ? "Email" : "Either";
     const details = [
       `Property type: ${typeLabel}`,
       `Timeline: ${timelineLabel}`,
@@ -235,7 +233,6 @@ const BuyProperty = () => {
       `Plots wanted: ${selections.quantity || "1"}`,
       `Region: ${selections.region || "—"}`,
       selections.cemetery ? `Cemetery: ${selections.cemetery}` : null,
-      `Preferred contact: ${prefLabel}`,
       selections.note.trim() ? `\nMessage from buyer:\n${selections.note.trim()}` : null,
     ].filter(Boolean).join("\n");
 
@@ -631,6 +628,9 @@ const BuyProperty = () => {
                 >
                   <input
                     autoFocus
+                    aria-label="Full name"
+                    autoComplete="name"
+                    required
                     type="text"
                     value={selections.name}
                     onChange={e => update("name", e.target.value)}
@@ -640,6 +640,8 @@ const BuyProperty = () => {
                   <div className="grid sm:grid-cols-2 gap-3">
                     <input
                       type="tel"
+                      aria-label="Phone number"
+                      autoComplete="tel"
                       value={selections.phone}
                       onChange={e => update("phone", e.target.value)}
                       placeholder="Phone number"
@@ -647,39 +649,13 @@ const BuyProperty = () => {
                     />
                     <input
                       type="email"
+                      aria-label="Email"
+                      autoComplete="email"
                       value={selections.email}
                       onChange={e => update("email", e.target.value)}
                       placeholder="Email"
                       className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
                     />
-                  </div>
-
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-1.5">How would you prefer we reach out?</p>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {[
-                        { id: "phone", label: "Call", icon: Phone },
-                        { id: "email", label: "Email", icon: Mail },
-                        { id: "either", label: "Either", icon: MessageSquare },
-                      ].map(o => {
-                        const Icon = o.icon;
-                        const active = selections.contactPref === o.id;
-                        return (
-                          <button
-                            key={o.id}
-                            type="button"
-                            onClick={() => setSelections(p => ({ ...p, contactPref: o.id as any }))}
-                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all ${
-                              active
-                                ? "border-primary bg-primary/5 text-foreground"
-                                : "border-border bg-card text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            <Icon className="w-3.5 h-3.5" /> {o.label}
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
 
                   <div>
@@ -697,13 +673,13 @@ const BuyProperty = () => {
                   <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
 
 
-                  <button
+                  <Button
                     type="submit"
                     disabled={!canSubmit || submitting}
                     className="w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-soft"
                   >
                     {submitting ? "Submitting..." : "Submit Request"}
-                  </button>
+                  </Button>
                 </form>
               </motion.div>
             )}
