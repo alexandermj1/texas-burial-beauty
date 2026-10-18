@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Replace generic page copy with Simon’s source sentences in ordinary company/third-person voice; reduce quote framing, visibly revise homepage, retain red review marks and verify all affected pages without publishing.
 - [x] Integrate Simon’s monologue into homepage (also shared /home2), /sell, /buy and five guides; preserve voice, attribute anecdotes, mark changed passages red and provide review links; not published.
 - [x] Verify all ten affected URLs at 1280px and 390px, red passages and selling chapter links, no overflow or page errors; visually inspect passages; 13 existing fee/directory/SEO tests pass and build clean. Forms, calculator logic and fee tables unchanged.
 - [ ] Remove temporary red highlighting after the owner reviews and requests it — waiting for owner approval.
