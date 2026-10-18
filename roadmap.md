@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Current request
-- [ ] Add a per-buyer automatic AI reply switch and verify saved state and automatic send suppression without sending an email.
+- [x] Add per-buyer automatic AI reply switch; deployed automatic suppression at selection/draft/final send, six tests pass, signed-in switch saves off across reload and restores on; no email sent, page builds cleanly.
 - [x] Integrate Alexander’s transfer-guide copy with light grammar edits, update the introduction and remove endowment care from shared tables; eight directory tests pass, desktop/390px/320px checks pass with no page errors; not published.
 - [x] Add recorded-fee-only tables to Houston (12), Dallas–Fort Worth (15), San Antonio (2) and Austin (4); test region scope, search, pagination and 390px/320px layouts.
 - [x] Refine transfer guide throughout with Vogue editorial layout, separate unobscured illustrations, revised title/SEO, fee-saving and appointment advice; 11 tests pass, desktop/mobile browser checks pass, not published.
