@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [ ] Explain Sharon Timmons’ automatic reply status without sending her an email.
+- [ ] Replace buyer contact preference with phone and email fields; verify the form.
 - [x] Add per-buyer automatic AI reply switch; deployed automatic suppression at selection/draft/final send, six tests pass, signed-in switch saves off across reload and restores on; no email sent, page builds cleanly.
 - [x] Integrate Alexander’s transfer-guide copy with light grammar edits, update the introduction and remove endowment care from shared tables; eight directory tests pass, desktop/390px/320px checks pass with no page errors; not published.
 - [x] Add recorded-fee-only tables to Houston (12), Dallas–Fort Worth (15), San Antonio (2) and Austin (4); test region scope, search, pagination and 390px/320px layouts.
