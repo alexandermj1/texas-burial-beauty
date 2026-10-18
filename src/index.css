@@ -3,12 +3,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Temporary owner review: remove this treatment after editorial approval. */
+/* Temporary owner review treatment — currently OFF (text renders in normal
+   colors). The data-simon-review markers stay in the markup so the red
+   highlight can be restored for a second review pass by un-commenting below.
 :root { --editorial-review: 0 72% 40%; }
 [data-simon-review], [data-simon-review] * {
   color: hsl(var(--editorial-review)) !important;
 }
 [data-simon-review]::first-letter { color: hsl(var(--editorial-review)) !important; }
+*/
 
 /* A centred, high-contrast editorial treatment, isolated from other guides. */
 .worth-article {
