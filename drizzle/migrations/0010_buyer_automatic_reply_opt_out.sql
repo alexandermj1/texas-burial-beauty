@@ -1,0 +1,2 @@
+ALTER TABLE public.contact_submissions ADD COLUMN IF NOT EXISTS buyer_ai_auto_reply_disabled boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.contact_submissions.buyer_ai_auto_reply_disabled IS 'Staff-controlled opt-out from automatic buyer AI drafting and sending; manual staff review remains available.';

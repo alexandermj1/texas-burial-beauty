@@ -5,6 +5,7 @@ import { z } from "npm:zod@3";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.ts";
 import { quoteFigures, normalizeBuyerFees } from "./quoteFigures.ts";
 import { automaticReplyTiming, BUYER_REPLY_MIN_DELAY_MS } from "./replyTiming.ts";
+import { buyerReplyAllowed } from "./autoReplyPreference.ts";
 import { buyerDocumentReadiness, countBuyerDocuments } from "./documentReadiness.ts";
 
 const MODEL = "openai/gpt-6-astra";
@@ -14,6 +15,7 @@ const BUYER_SOURCES = new Set(["buy_property_wizard", "buy_inquiry", "cemetery_p
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("auto"), submission_id: z.string().uuid() }),
   z.object({ action: z.literal("run"), submission_id: z.string().uuid() }),
+  z.object({ action: z.literal("set_auto_reply"), submission_id: z.string().uuid(), enabled: z.boolean() }),
   z.object({ action: z.literal("resume") }),
   z.object({ action: z.literal("sweep") }),
   z.object({ action: z.literal("exclude"), draft_id: z.string().uuid(), listing_id: z.string().uuid() }),
@@ -276,6 +278,7 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
   if (state?.status === "paused") throw new Error(state.pause_reason || "Buyer AI is paused; restore access before resuming.");
   const { data: buyer } = await db.from("contact_submissions").select("*").eq("id", id).maybeSingle();
   if (!buyer || !isBuyer(buyer)) return { status: "skipped", reason: "Not a buyer inquiry" };
+  if (!buyerReplyAllowed(buyer.buyer_ai_auto_reply_disabled, !force)) return { status: "skipped", reason: "Automatic AI replies are off for this buyer" };
   if (buyer.deleted_at || buyer.archived_at || buyer.closed_at || buyer.ai_paused_at || !buyer.email) return { status: "skipped", reason: "Inquiry is closed, paused or has no email" };
   const { data: replies } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", id).is("deleted_at", null).order("received_at", { ascending: false }).limit(8);
   // Check the file first, like the seller AI: any earlier email from us or staff note means they have been contacted.
@@ -330,7 +333,7 @@ async function sweep(db: any, url: string, service: string, apiKey?: string) {
   const done: any[] = [];
   try {
     const due = new Date(Date.now() - BUYER_REPLY_MIN_DELAY_MS).toISOString();
-    const { data: cands } = await db.from("contact_submissions").select("id,email,customer_kind,source").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("ai_paused_at", null).not("email", "is", null).lte("created_at", due).order("created_at", { ascending: false }).limit(1000);
+    const { data: cands } = await db.from("contact_submissions").select("id,email,customer_kind,source").eq("buyer_ai_auto_reply_disabled", false).is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("ai_paused_at", null).not("email", "is", null).lte("created_at", due).order("created_at", { ascending: false }).limit(1000);
     // First round of outreach only: any buyer (or email address) the AI has already looked at is never re-read.
     const buyers = (cands ?? []).filter(isBuyer);
     const { data: had } = await db.from("buyer_ai_drafts").select("submission_id").limit(5000);
@@ -360,6 +363,7 @@ async function sendDraft(db: any, url: string, auth: string, d: any, subject: st
   const fail = (error: string, status: number) => ({ error, status });
     const { data: s } = await db.from("contact_submissions").select("*").eq("id", d.submission_id).maybeSingle();
     if (!s?.email) return fail("Buyer email missing" , 400);
+    if (!buyerReplyAllowed(s.buyer_ai_auto_reply_disabled, automatic)) return fail("Automatic AI replies are off for this buyer", 409);
     if (!isBuyer(s) || s.deleted_at || s.archived_at || s.closed_at || s.ai_paused_at) return fail("Buyer record is closed or paused" , 409);
     // Final shared guard before inventory work, claiming or Gmail.
     if (automatic && !automaticReplyTiming(s.created_at).due) return fail("Automatic replies must wait at least 20 minutes after the buyer inquiry arrived.", 409);
@@ -375,6 +379,11 @@ async function sendDraft(db: any, url: string, auth: string, d: any, subject: st
       try { live = (await inventory(db, { ...s, cemetery: cem, property_type: type }, d.excluded_listing_ids ?? [])).items; } catch { /* pricing needs staff */ }
       const liveKeys = new Set(live.map(key));
       if (snap.filter((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type]) === g).some((x: any) => !liveKeys.has(key(x)))) return fail("Inventory changed. Draft again before approving.", 409);
+    }
+    // Re-check after slow inventory work in case staff took over mid-run.
+    if (automatic) {
+      const { data: latest, error } = await db.from("contact_submissions").select("buyer_ai_auto_reply_disabled").eq("id", s.id).maybeSingle();
+      if (error || !buyerReplyAllowed(latest?.buyer_ai_auto_reply_disabled, true)) return fail("Automatic AI replies are off or the preference could not be verified", 409);
     }
     const { data: sending } = await db.from("buyer_ai_drafts").update({ status: "sending" }).eq("id", d.id).eq("status", "proposed").select("id").maybeSingle();
     if (!sending) return fail("Reply already being sent" , 409);
@@ -410,8 +419,9 @@ Deno.serve(async (req) => {
       if (!apiKey) return json({ error: "AI is not configured" }, 500);
       // Immediate form notifications defer without creating a draft, so the sweep's
       // first-round 'already drafted' filter does not strand this inquiry.
-      const { data: inquiry, error: inquiryError } = await db.from("contact_submissions").select("created_at").eq("id", b.submission_id).maybeSingle();
+      const { data: inquiry, error: inquiryError } = await db.from("contact_submissions").select("created_at,buyer_ai_auto_reply_disabled").eq("id", b.submission_id).maybeSingle();
       if (inquiryError) throw new Error(inquiryError.message);
+      if (!buyerReplyAllowed(inquiry?.buyer_ai_auto_reply_disabled, true)) return json({ status: "skipped", reason: "Automatic AI replies are off for this buyer" });
       const timing = automaticReplyTiming(inquiry?.created_at);
       if (!timing.due) return json({ status: "deferred", reason: "Automatic replies wait at least 20 minutes after inquiry creation; the scheduled sweep will process this inquiry.", eligible_at: timing.eligibleAt });
       const run = crypto.randomUUID(), job = `buyer-ai-${b.submission_id}`;
@@ -430,6 +440,14 @@ Deno.serve(async (req) => {
     if (b.action === "sweep") return json(await sweep(db, url, service, apiKey));
     const user = await staff(db, req);
     if (!user) return json({ error: "Admin or staff only" }, 403);
+    if (b.action === "set_auto_reply") {
+      const { data: buyer, error: readError } = await db.from("contact_submissions").select("id,customer_kind,source").eq("id", b.submission_id).is("deleted_at", null).maybeSingle();
+      if (readError) throw new Error(readError.message);
+      if (!buyer || !isBuyer(buyer)) return json({ error: "Buyer inquiry not found" }, 404);
+      const { error } = await db.from("contact_submissions").update({ buyer_ai_auto_reply_disabled: !b.enabled }).eq("id", buyer.id);
+      if (error) throw new Error(error.message);
+      return json({ ok: true, enabled: b.enabled });
+    }
     if (b.action === "resume") { await db.from("automation_job_state").update({ status: "active", pause_reason: null }).eq("job_name", "buyer-ai-drafts"); return json({ ok: true }); }
     if (b.action === "run") { if (!apiKey) return json({ error: "AI is not configured" }, 500); return json(await draft(db, apiKey, b.submission_id, true)); }
     const { data: d } = await db.from("buyer_ai_drafts").select("*").eq("id", b.draft_id).is("deleted_at", null).maybeSingle();
