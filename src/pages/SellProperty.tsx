@@ -125,7 +125,7 @@ const SellProperty = () => {
             {/* Pull quote — right column */}
             <aside className="hidden md:block col-span-6 lg:col-span-4 lg:col-start-8 border-l border-foreground/20 pl-6">
               <p data-simon-review className="font-display italic text-2xl text-foreground/85 leading-snug">
-                Check friends and family first — extended friends and extended family. You may find someone with a great need and make an arrangement that works for both of you.
+                You have to put up with scam artists and people who aren’t going to behave honorably. There’s a large amount of money involved — be very, very cautious. It’s very difficult to verify people on your own.
               </p>
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-4">
                 <span data-simon-review>Before you list</span>
