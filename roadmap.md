@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Replace the sell page pull quote with a short “why sell with us” line; quote and label verified rendered on desktop, build clean; not published.
 - [x] Replace generic page copy with Simon’s source sentences in ordinary company/third-person voice; reduce quote framing, visibly revise homepage opening/about/process, retain red review marks; all ten URLs checked at desktop/390px, no overflow/page errors, 13 regression tests pass, build clean; not published.
 - [x] Integrate Simon’s monologue into homepage (also shared /home2), /sell, /buy and five guides; preserve voice, attribute anecdotes, mark changed passages red and provide review links; not published.
 - [x] Verify all ten affected URLs at 1280px and 390px, red passages and selling chapter links, no overflow or page errors; visually inspect passages; 13 existing fee/directory/SEO tests pass and build clean. Forms, calculator logic and fee tables unchanged.

@@ -125,10 +125,10 @@ const SellProperty = () => {
             {/* Pull quote — right column */}
             <aside className="hidden md:block col-span-6 lg:col-span-4 lg:col-start-8 border-l border-foreground/20 pl-6">
               <p data-simon-review className="font-display italic text-2xl text-foreground/85 leading-snug">
-                You have to put up with scam artists and people who aren’t going to behave honorably. There’s a large amount of money involved — be very, very cautious. It’s very difficult to verify people on your own.
+                Most buyers don’t yet know a resale plot exists. We find the family who does — and have the paperwork ready when they do.
               </p>
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-4">
-                <span data-simon-review>Before you list</span>
+                <span data-simon-review>Why sell with us</span>
               </p>
             </aside>
 
