@@ -335,7 +335,11 @@ async function fetchCardDetails(paymentIntentId: string | null, env: StripeEnv):
 }
 
 // Internal alert to the owner whenever money lands.
-const OWNER_ALERT_EMAILS = ["alexandermaclarenjames@gmail.com"];
+const OWNER_ALERT_EMAILS = [
+  "alexandermaclarenjames@gmail.com",
+  "simonjamesphd@gmail.com",
+  "emmamaclaren@gmail.com",
+];
 
 const KIND_LABEL: Record<string, string> = {
   listing_fee: "Listing fee",
