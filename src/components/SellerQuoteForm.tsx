@@ -1,3 +1,4 @@
+import { reportLeadConversion } from "@/lib/adsConversions";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Upload, Lock, X, FileText, User, MapPin, FileSignature, Paperclip } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -226,6 +227,7 @@ const SellerQuoteForm = ({
     setForm({ name: "", email: "", phone: "", cemetery: "", cemeteryIsCustom: false, propertyType: "", propertyTypeOther: "", spaces: "", section: "", lotNumber: "", details: "", deedOwnerNames: "", deedOwnersStatus: "", relationshipToOwner: "", purchaseInfo: "" });
     setFiles([]);
     setLoading(false);
+    reportLeadConversion("seller", intakeId);
     navigate("/thank-you");
   };
 

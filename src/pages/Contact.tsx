@@ -1,3 +1,4 @@
+import { reportLeadConversion } from "@/lib/adsConversions";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, ArrowRight, Check, Building2, DollarSign, Calendar, Search, MessageSquare, Send } from "lucide-react";
 import { useState } from "react";
@@ -124,6 +125,7 @@ const GeneralInquiryForm = () => {
     toast({ title: "Message sent", description: "We'll be in touch within 24 hours." });
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
+    reportLeadConversion("buyer", submissionId);
     navigate("/thank-you");
   };
 
@@ -241,6 +243,7 @@ const BuyInquiryForm = () => {
     toast({ title: "Request submitted", description: "We'll be in touch within 24 hours with options that match your needs." });
     setForm({ name: "", email: "", phone: "", propertyType: "", budget: "", region: "", cemetery: "", timeline: "", message: "" });
     setLoading(false);
+    reportLeadConversion("buyer", submissionId);
     navigate("/thank-you");
   };
 

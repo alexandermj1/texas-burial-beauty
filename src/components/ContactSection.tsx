@@ -1,3 +1,4 @@
+import { reportLeadConversion } from "@/lib/adsConversions";
 import { motion } from "framer-motion";
 import { Phone, Mail, ArrowRight, Send } from "lucide-react";
 import { useState } from "react";
@@ -41,6 +42,7 @@ const ContactSection = () => {
     if (emailError) console.warn("inquiry email failed", emailError);
     setForm({ name: "", email: "", phone: "", message: "" });
     setLoading(false);
+    reportLeadConversion("buyer", submissionId);
     navigate("/thank-you");
   };
 
