@@ -1,3 +1,4 @@
+import { reportLeadConversion } from "@/lib/adsConversions";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Phone } from "lucide-react";
@@ -111,6 +112,7 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
     });
     if (emailError) console.warn("inquiry email failed", emailError);
     toast({ title: "Request sent", description: "We'll be in touch within one business day." });
+    reportLeadConversion("buyer", submissionId);
     navigate("/thank-you");
   };
 

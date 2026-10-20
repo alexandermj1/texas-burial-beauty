@@ -1,3 +1,4 @@
+import { reportLeadConversion } from "@/lib/adsConversions";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -70,6 +71,7 @@ const PreneedInquiryForm = () => {
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
     if (emailError) console.warn("inquiry email failed", emailError);
     toast({ title: "Request sent", description: "We'll come back to you within 24 hours with verified options." });
+    reportLeadConversion("buyer", submissionId);
     navigate("/thank-you");
   };
 

@@ -1,3 +1,4 @@
+import { reportLeadConversion } from "@/lib/adsConversions";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Phone, CheckCircle, CreditCard, Navigation, Loader2, Search } from "lucide-react";
@@ -263,6 +264,7 @@ const BuyProperty = () => {
     const { error: emailError } = await supabase.functions.invoke("inquiry-notification-email", { body: { submission_id: submissionId } });
     if (emailError) console.warn("inquiry email failed", emailError);
     toast({ title: "Request submitted!", description: "We'll be in touch within 24 hours. You can also call (214) 230-4740." });
+    reportLeadConversion("buyer", submissionId);
     navigate("/thank-you/buyer");
   };
 
