@@ -95,11 +95,6 @@ const SellProperty = () => {
           transition={{ duration: 1.2, delay: 0.4 }}
           className="hidden md:block absolute right-[6%] top-32 w-24 lg:w-28 pointer-events-none select-none drop-shadow-md"
         />
-        <motion.img src={pinkBranch.url} alt="" aria-hidden
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 0.5, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.5 }}
-          className="hidden md:block absolute left-[4%] bottom-20 w-28 lg:w-36 pointer-events-none select-none -rotate-6"
-        />
 
         <div className="relative container mx-auto px-6">
           {/* --- BROKEN EDITORIAL GRID --- */}
@@ -178,6 +173,7 @@ const SellProperty = () => {
                 <span className="h-px w-10 bg-foreground/50" />
                 <ArrowRight className="w-5 h-5" />
               </motion.div>
+              <ListingPropertyCycle />
               <p className="font-display italic text-xl md:text-2xl text-foreground/80 leading-snug mt-7 max-w-[26ch]">
                 Your free valuation begins with a single field <span className="lg:hidden">below</span><span className="hidden lg:inline">to the right</span>.
               </p>
@@ -185,10 +181,9 @@ const SellProperty = () => {
                 One question at a time — no overwhelming forms. Reply in your inbox within 24 hours.
               </p>
 
-              <ListingPropertyCycle />
               </div>
 
-              <div className="col-span-12 lg:hidden flex items-center justify-between gap-4">
+              <div className="col-span-12 lg:hidden flex flex-col items-start gap-3">
                 <h3 className="font-display text-3xl text-foreground">Start <span className="italic text-primary">here.</span></h3>
                 <ListingPropertyCycle />
               </div>
