@@ -4,8 +4,10 @@
 @tailwind utilities;
 
 /* Botanical listing stationery: a quiet irregular frame, never an image box. */
-.listing-stationery { box-shadow: var(--shadow-soft); }
-.listing-stationery::before { content: ''; position: absolute; inset: 11px; border: 1px solid hsl(var(--primary) / .42); border-radius: 2px 5px 3px 6px; pointer-events: none; }
+.listing-stationery { --stationery-ink: var(--primary); border: 1px solid hsl(var(--stationery-ink) / .2); box-shadow: var(--shadow-soft); }
+.listing-stationery::before { content: ''; position: absolute; inset: 7px; border: 1px solid hsl(var(--stationery-ink) / .32); border-radius: 2px 5px 3px 6px; pointer-events: none; }
+.listing-stationery-priority { --stationery-ink: var(--accent); }
+.listing-stationery-price { border-block: 1px solid hsl(var(--stationery-ink) / .25); background: hsl(var(--stationery-ink) / .035); }
 .listing-stationery-flourish { display: flex; align-items: center; justify-content: center; gap: 12px; color: hsl(var(--primary) / .65); font-size: 15px; }
 .listing-stationery-flourish span { width: 45px; height: 1px; background: hsl(var(--primary) / .3); }
 
