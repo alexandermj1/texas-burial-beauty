@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Make the mobile sell page purposeful: clear service introduction, selling steps and valuation entry, with existing detail retained and desktop unchanged; verify phone layout and form navigation.
 - [x] Move the listing packages below the property list and broker comparison on phones only (desktop order unchanged) and keep the October offer line on one centered line; 390px order read back as property list -> broker -> packages, desktop unchanged, build clean, four fee/promotion tests pass; not published.
 
 

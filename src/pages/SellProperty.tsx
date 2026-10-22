@@ -9,6 +9,7 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import ListingFeePromo from "@/components/ListingFeePromo";
 import SellerBrokerValue from "@/components/SellerBrokerValue";
+import { Button } from "@/components/ui/button";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
@@ -17,6 +18,8 @@ import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import valuationImg from "@/assets/sell/valuation-t.png";
 import keysImg from "@/assets/sell/keys-closing-t.png";
 import paymentImg from "@/assets/sell/payment-envelope-t.png";
+
+const ownershipIntro = "Often people find that they are an owner, or part-owner, of a plot while going through the records of a recently deceased relative. Suddenly there’s the deed, and they realize there’s cemetery property and wonder what to do with it. If you don’t want to use that property, you may be looking to see if you can get some value from it. We help you work out the ownership, the cemetery’s requirements and your options for selling.";
 
 const benefits = [
   { num: "01", kicker: "Three listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499. One-time upfront listing fees. Your valuation is free." },
@@ -77,7 +80,7 @@ const SellProperty = () => {
           form embedded as the focal interactive element.
           No mirrored text blocks. Layered, asymmetric.
          ==================================================== */}
-      <section className="relative pt-24 pb-20 md:pt-28 md:pb-28 overflow-hidden bg-[hsl(var(--sand-light))]">
+      <section className="relative pt-24 pb-12 md:pt-28 md:pb-28 overflow-hidden bg-[hsl(var(--sand-light))]">
         {/* Subtle botanicals far from text */}
         <motion.img src={bananaLeaf.url} alt="" aria-hidden
           initial={{ opacity: 0, x: -40, rotate: -20 }} animate={{ opacity: 0.1, x: 0, rotate: -14 }}
@@ -103,22 +106,27 @@ const SellProperty = () => {
 
         <div className="relative container mx-auto px-6">
           {/* --- BROKEN EDITORIAL GRID --- */}
-          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-x-6 gap-y-10">
+          <div className="max-w-7xl mx-auto grid grid-cols-12 gap-x-6 gap-y-7 md:gap-y-10">
             {/* Centered headline — "right" sits visually between the two columns below */}
             <div className="col-span-12 text-left lg:text-center">
-              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-5">A guide for Texas families</p>
-              <h1 className="font-display text-foreground leading-[0.92] tracking-tight text-[clamp(3rem,9vw,8.5rem)]">
+              <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-5"><span className="md:hidden">Texas Cemetery Brokers</span><span className="hidden md:inline">A guide for Texas families</span></p>
+              <h1 className="font-display text-foreground leading-[1.02] md:leading-[0.92] text-5xl md:text-[clamp(3rem,9vw,8.5rem)]">
                 <span className="block">Sell your plot{" "}</span>
                 <span className="block">
                   the <span className="italic font-medium text-primary">right</span> way.
                 </span>
               </h1>
+              <div className="mt-5 md:hidden">
+                <p data-simon-review className="text-base leading-relaxed text-foreground/80">We help you value and sell your Texas cemetery property. We find buyers, organize the paperwork and coordinate the sale with the cemetery. You approve every offer.</p>
+                <Button asChild size="lg" className="mt-6 min-h-12 rounded-full"><a href="#quote-form">Get my free valuation <ArrowRight /></a></Button>
+                <p className="mt-3 text-xs text-muted-foreground">No obligation. Your valuation is free.</p>
+              </div>
             </div>
 
             {/* Standfirst — drop cap intro paragraph, narrow left column */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
+            <div className="hidden md:block col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
               <p data-simon-review className="text-base md:text-lg text-foreground/80 leading-relaxed font-light first-letter:font-display first-letter:text-6xl first-letter:font-medium first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:leading-none">
-                Often people find that they are an owner, or part-owner, of a plot while going through the records of a recently deceased relative. Suddenly there’s the deed, and they realize there’s cemetery property and wonder what to do with it. If you don’t want to use that property, you may be looking to see if you can get some value from it. We help you work out the ownership, the cemetery’s requirements and your options for selling.
+                {ownershipIntro}
               </p>
               <div className="mt-6 flex items-baseline gap-3 text-[10px] tracking-[0.25em] uppercase font-bold text-foreground/60">
                 <span data-simon-review>Texas Cemetery Brokers</span>
@@ -141,7 +149,7 @@ const SellProperty = () => {
             </aside>
 
             {/* Stat strip — runs full width across the grid */}
-            <div className="col-span-12 grid grid-cols-3 lg:grid-cols-4 gap-px bg-foreground/15 border-y border-foreground/15 mt-2">
+            <div className="col-span-12 hidden md:grid grid-cols-3 lg:grid-cols-4 gap-px bg-foreground/15 border-y border-foreground/15 mt-2">
               {[
                 { v: "$299", l: "Listing fees from" },
                 { v: "24h", l: "Response time" },
@@ -154,6 +162,20 @@ const SellProperty = () => {
                 </div>
               ))}
             </div>
+
+            <section aria-labelledby="mobile-selling-steps" className="col-span-12 border-t border-foreground/20 pt-7 md:hidden">
+              <div className="flex items-center justify-between gap-5">
+                <h2 id="mobile-selling-steps" className="font-display text-3xl leading-tight">How selling<br /><em className="text-primary">with us works.</em></h2>
+                <img src={valuationImg} alt="" aria-hidden width={1024} height={1024} className="h-24 w-24 shrink-0 object-contain" />
+              </div>
+              <ol className="mt-4 divide-y divide-foreground/15">
+                {[
+                  { title: "Start with a free valuation.", text: "Tell us about your property. We help you understand its value and your options." },
+                  { title: "Choose a package. We find buyers.", text: "We market your property and negotiate on your behalf. You decide whether to accept an offer." },
+                  { title: "We coordinate the transfer.", text: "We organize the paperwork with the cemetery. You receive your agreed proceeds at closing." },
+                ].map((step, index) => <li key={step.title} className="grid grid-cols-[1.5rem_1fr] gap-3 py-4"><span className="font-display text-xl italic text-primary">{index + 1}</span><div><h3 className="text-base font-medium leading-snug">{step.title}</h3><p className="mt-1 text-sm leading-relaxed text-foreground/70">{step.text}</p></div></li>)}
+              </ol>
+            </section>
 
             {/* --- THE EMBEDDED FORM --- magazine page within the page */}
             <div className="col-span-12 grid grid-cols-12 gap-x-6 gap-y-8 mt-6">
@@ -188,26 +210,35 @@ const SellProperty = () => {
               </div>
 
               {/* The form, embedded directly on the page — no card, no in-your-face panel */}
-              <div className="col-span-12 lg:col-span-9 lg:border-l lg:border-foreground/20 lg:pl-10">
+              <div className="col-span-12 lg:col-span-9 border-t border-foreground/20 pt-7 md:border-t-0 md:pt-0 lg:border-l lg:border-foreground/20 lg:pl-10">
+                <div className="mb-7 md:hidden">
+                  <p className="mb-2 text-xs font-semibold text-accent">Your next step</p>
+                  <h2 className="font-display text-3xl">Your free valuation.</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/70">Tell us what you own. We’ll reply with your valuation and listing options within 24 hours.</p>
+                </div>
                 <SellerQuoteForm editorial />
               </div>
             </div>
+            <details className="col-span-12 border-y border-foreground/15 py-4 md:hidden">
+              <summary className="cursor-pointer font-display text-xl text-foreground">Inherited a plot or unsure about ownership?</summary>
+              <p data-simon-review className="mt-4 text-sm leading-relaxed text-foreground/75">{ownershipIntro}</p>
+            </details>
           </div>
         </div>
       </section>
 
 
-      {/* On mobile the packages read best after the property list and broker value; desktop keeps the original order */}
+      {/* Mobile: explain our work before showing the property sheet and package choices. */}
       <div className="flex flex-col">
         <div className="order-3 lg:order-1">
           <ListingFeePromo compact />
         </div>
 
-        <div className="order-1 lg:order-2">
+        <div className="order-2 lg:order-2">
           <MortuarySheetShowcase />
         </div>
 
-        <div className="order-2 lg:order-3">
+        <div className="order-1 lg:order-3">
           <SellerBrokerValue />
         </div>
       </div>
@@ -232,7 +263,7 @@ const SellProperty = () => {
       {/* ============================================
           WHY SELLERS CHOOSE US — editorial index, matches palette
          ============================================ */}
-      <section className="relative py-24 md:py-32 bg-[hsl(var(--warm-white))] overflow-hidden">
+      <section className="relative py-12 md:py-32 bg-[hsl(var(--warm-white))] overflow-hidden">
         <motion.img src={plumeriaCluster.url} alt="" aria-hidden
           initial={{ opacity: 0 }} whileInView={{ opacity: 0.18 }} viewport={{ once: true }} transition={{ duration: 1 }}
           className="hidden md:block absolute -right-20 top-10 w-64 pointer-events-none select-none rotate-12"
@@ -240,14 +271,14 @@ const SellProperty = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-7xl mx-auto">
             {/* Section masthead */}
-            <div className="border-b border-foreground/15 pb-4 mb-16 flex items-end justify-between flex-wrap gap-4">
+            <div className="border-b border-foreground/15 pb-4 mb-6 md:mb-16 flex items-end justify-between flex-wrap gap-4">
               <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3">The Index</p>
+                <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3"><span className="md:hidden">What’s included</span><span className="hidden md:inline">The Index</span></p>
                 <h2 className="font-display text-4xl md:text-6xl text-foreground tracking-tight leading-[1.02] max-w-2xl">
                   Why sellers <span className="italic text-primary">choose us.</span>
                 </h2>
               </div>
-              <p className="font-display italic text-foreground/60 max-w-sm text-base leading-relaxed">
+              <p className="hidden md:block font-display italic text-foreground/60 max-w-sm text-base leading-relaxed">
                 Six reasons owners hand us the deed and breathe out for the first time in months.
               </p>
             </div>
@@ -261,9 +292,9 @@ const SellProperty = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                  className="group grid grid-cols-[auto,1fr] gap-x-6 py-8 border-t border-foreground/15 first:border-t-0 md:[&:nth-child(2)]:border-t-0"
+                  className="group grid grid-cols-[auto,1fr] gap-x-4 md:gap-x-6 py-5 md:py-8 border-t border-foreground/15 first:border-t-0 md:[&:nth-child(2)]:border-t-0"
                 >
-                  <div className="font-display italic text-5xl md:text-6xl text-primary/80 leading-none group-hover:text-primary transition-colors">
+                  <div className="font-display italic text-3xl md:text-6xl text-primary/80 leading-none group-hover:text-primary transition-colors">
                     {b.num}
                   </div>
                   <div>
