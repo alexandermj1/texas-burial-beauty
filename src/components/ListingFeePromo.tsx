@@ -146,30 +146,33 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 } rounded-lg border border-foreground/15 p-6 md:p-8`}
               >
                 {t.featured && (
-                  <span className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-[10px] tracking-[0.25em] uppercase font-bold px-3 py-1.5 shadow-soft">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-[10px] tracking-[0.25em] uppercase font-bold px-3 py-1.5 shadow-soft">
                     Most chosen
                   </span>
                 )}
 
-                <img
-                  src={t.img}
-                  alt=""
-                  aria-hidden
-                  loading="lazy"
-                  width={1024}
-                  height={1024}
-                  className="pointer-events-none select-none absolute -top-5 right-3 w-16 md:w-20 opacity-95"
-                />
-
-                {/* Number + name */}
-                <div className="flex items-baseline gap-4 mb-6">
-                  <span className="font-display italic text-4xl text-primary/80 leading-none">
-                    {t.num}
-                  </span>
-                  <span className="h-px flex-1 bg-foreground/20" />
-                  <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent">
+                {/* Illustrated bookplate header */}
+                <div className="mb-7 mt-2 text-center">
+                  <div className="relative inline-block">
+                    <div aria-hidden className="absolute inset-0 -m-5 rounded-full bg-primary/[0.08] blur-2xl" />
+                    <img
+                      src={t.img}
+                      alt=""
+                      aria-hidden
+                      loading="lazy"
+                      width={1024}
+                      height={1024}
+                      className="pointer-events-none select-none relative mx-auto w-24 md:w-28"
+                    />
+                  </div>
+                  <p className="mt-4 text-[10px] tracking-[0.35em] uppercase font-bold text-accent">
                     {t.name}
-                  </span>
+                  </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <span className="h-px flex-1 bg-foreground/20" />
+                    <span className="font-display italic text-lg text-primary/70 leading-none">{t.num}</span>
+                    <span className="h-px flex-1 bg-foreground/20" />
+                  </div>
                 </div>
 
                 {/* Price block */}
