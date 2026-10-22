@@ -23,7 +23,7 @@ export default function SellerBrokerValue() {
     transition: { duration: reducedMotion ? 0 : 0.7 },
   };
   return (
-    <section id="broker-value" aria-labelledby="broker-value-title" className="relative overflow-hidden bg-sand-light text-foreground">
+    <section id="broker-value" aria-labelledby="broker-value-title" className="relative flex flex-col overflow-hidden bg-sand-light text-foreground">
       <div className="relative container px-6 py-16 md:py-24">
         <img src={bananaLeaf.url} alt="" aria-hidden className="pointer-events-none absolute -right-48 top-0 hidden w-[32rem] -rotate-12 opacity-10 md:block" />
         <div className="relative mx-auto max-w-7xl">
@@ -42,7 +42,7 @@ export default function SellerBrokerValue() {
         </div>
       </div>
 
-      <div className="bg-primary text-primary-foreground">
+      <div className="order-3 md:order-none bg-primary text-primary-foreground">
         <div className="container px-6 py-12 md:py-16">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-12 lg:gap-16">
             <motion.div {...reveal} className="lg:col-span-5">
@@ -72,14 +72,14 @@ export default function SellerBrokerValue() {
         </div>
       </div>
 
-      <div className="container px-6 py-16 md:py-24">
+      <div className="order-2 md:order-none container px-6 py-10 md:py-24">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-            <figure className="lg:col-span-5">
+            <figure className="order-2 md:order-none lg:col-span-5">
               <img src={walkthrough.url} alt="A Texas Cemetery Brokers team member visiting cemetery grounds" loading="lazy" className="aspect-[4/5] w-full rounded-lg object-cover object-[70%_center]" />
               <figcaption className="mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/60"><span className="h-px w-10 bg-primary" />On the ground. In your corner.</figcaption>
             </figure>
-            <div className="lg:col-span-7">
+            <div className="order-1 md:order-none lg:col-span-7">
               <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-accent">Beyond the listing</p>
               <h3 className="font-display text-4xl leading-tight md:text-5xl">You have the plot.<br /><em className="text-primary">We bring the people.</em></h3>
               <ol className="mt-7 divide-y divide-foreground/15">
