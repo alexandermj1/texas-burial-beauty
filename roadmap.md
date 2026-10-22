@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Integrate existing buyer property-type watercolors into listing section as a polished four-type editorial display; sell checked at 1381/390px and home at 1280px, images loaded, no errors or overflow, four fee/promotion tests pass; package terms unchanged, not published.
 - [x] Refine package artwork and carry botanical stationery through benefit lists, price blocks and policy footers; selling page checked at 1381px/390px and homepage at 1280px, no errors/overflow, four fee/promotion tests pass; fees and terms unchanged, not published.
 - [x] Offer three listing-card designs, apply the chosen botanical stationery treatment, and replace unrelated artwork with online listing, counselor outreach and digital advertising illustrations; desktop/390px checks and four fee/promotion tests pass; not published.
 - [x] Create Susie’s username-only staff login, copy Cici’s admin/staff roles and AI restrictions; verified actual username sign-in, restricted view and unsent Susie signature; two tests pass, build clean, credentials provided privately; publish required for username login on the public site.
