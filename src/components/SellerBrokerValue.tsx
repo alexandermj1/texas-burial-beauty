@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import walkthrough from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import hibiscus from "@/assets/flowers/hibiscus-coral.png.asset.json";
+import contractImg from "@/assets/sell/signed-contract-t.png";
 
 const services = [
   { title: "We walk the grounds.", text: "We show your plot to prospective buyers, meet them at the cemetery and answer their questions. No viewings for you to arrange." },
@@ -98,6 +99,7 @@ export default function SellerBrokerValue() {
                 <p className="font-display text-8xl italic leading-none text-primary md:text-9xl">13</p>
                 <h3 className="mt-3 font-display text-3xl md:text-4xl">documents on average.<br /><em className="text-primary">One team on your side.</em></h3>
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-foreground/75 sm:text-base">A sale can involve deeds, ownership records, powers of attorney and affidavits. Your file may need fewer or more, depending on the owners, inheritance history and cemetery rules.</p>
+                <img src={contractImg} alt="" aria-hidden loading="lazy" width={1024} height={1024} className="pointer-events-none select-none mt-8 w-40 md:w-52" />
               </motion.div>
               <div className="lg:col-span-7 lg:pr-24">
                 <ol className="divide-y divide-foreground/15 border-t border-foreground/15">
