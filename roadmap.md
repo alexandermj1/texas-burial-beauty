@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Offer three listing-card designs, apply the chosen botanical stationery treatment, and replace unrelated artwork with online listing, counselor outreach and digital advertising illustrations; desktop/390px checks and four fee/promotion tests pass; not published.
 - [x] Create Susie’s username-only staff login, copy Cici’s admin/staff roles and AI restrictions; verified actual username sign-in, restricted view and unsent Susie signature; two tests pass, build clean, credentials provided privately; publish required for username login on the public site.
 - [x] Hide the homepage Featured shopfronts via the homepageSections.featuredShopfronts toggle; component file and render line untouched, homepage verified with no shopfront cards and no layout gap, build clean; not published.
 - [x] Replace the sell page pull quote with a short “why sell with us” line; quote and label verified rendered on desktop, build clean; not published.
