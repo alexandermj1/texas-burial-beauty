@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Current request
-- [x] Remove the buyer property-type artwork and cycling strip from the sell page and restore the form opener as it was (including the pink branch flower); desktop/390px checks show the heading, copy and form with no property illustrations and no page errors; build clean, not published.
+- [x] Move the listing packages below the property list and broker comparison on phones only (desktop order unchanged) and keep the October offer line on one centered line; 390px order read back as property list -> broker -> packages, desktop unchanged, build clean, four fee/promotion tests pass; not published.
+
 
 - [x] Enlarge the “Start here” cycling property artwork and labels and remove the overlapping flower; desktop/390px screenshots show clear labels and no overflow, build clean; not published.
 - [x] Replace large property-type row with a compact cycling illustration beside “Start here”; 1381px/390px checks confirm changing type, removed row and no overflow; build clean, not published.
