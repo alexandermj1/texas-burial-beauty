@@ -197,14 +197,20 @@ const SellProperty = () => {
       </section>
 
 
-      {/* Listing packages */}
-      <ListingFeePromo compact />
+      {/* On mobile the packages read best after the property list and broker value; desktop keeps the original order */}
+      <div className="flex flex-col">
+        <div className="order-3 lg:order-1">
+          <ListingFeePromo compact />
+        </div>
 
-      {/* The mortuary Available Property List — rendered on the page */}
-      <MortuarySheetShowcase />
+        <div className="order-1 lg:order-2">
+          <MortuarySheetShowcase />
+        </div>
 
-      {/* Broker value follows the available-property list */}
-      <SellerBrokerValue />
+        <div className="order-2 lg:order-3">
+          <SellerBrokerValue />
+        </div>
+      </div>
 
       {/* Seller Journey Video */}
 
