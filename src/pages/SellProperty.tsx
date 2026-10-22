@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import ListingFeePromo from "@/components/ListingFeePromo";
+import ListingPropertyCycle from "@/components/ListingPropertyCycle";
 import SellerBrokerValue from "@/components/SellerBrokerValue";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
@@ -184,8 +185,13 @@ const SellProperty = () => {
                 One question at a time — no overwhelming forms. Reply in your inbox within 24 hours.
               </p>
 
+              <ListingPropertyCycle />
               </div>
 
+              <div className="col-span-12 lg:hidden flex items-center justify-between gap-4">
+                <h3 className="font-display text-3xl text-foreground">Start <span className="italic text-primary">here.</span></h3>
+                <ListingPropertyCycle />
+              </div>
               {/* The form, embedded directly on the page — no card, no in-your-face panel */}
               <div className="col-span-12 lg:col-span-9 lg:border-l lg:border-foreground/20 lg:pl-10">
                 <SellerQuoteForm editorial />
