@@ -14,13 +14,9 @@ import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import plumeriaCluster from "@/assets/flowers/plumeria-cluster.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
-import WatercolorPlates from "@/components/WatercolorPlates";
-import valuationImg from "@/assets/sell/valuation.png";
-import keysImg from "@/assets/sell/keys-closing.png";
-import letterImg from "@/assets/sell/letter-response.png";
-import contractImg from "@/assets/sell/signed-contract.png";
-import gateImg from "@/assets/sell/garden-gate.png";
-import paymentImg from "@/assets/sell/payment-envelope.png";
+import valuationImg from "@/assets/sell/valuation-t.png";
+import keysImg from "@/assets/sell/keys-closing-t.png";
+import paymentImg from "@/assets/sell/payment-envelope-t.png";
 
 const benefits = [
   { num: "01", kicker: "Three listing options", title: "Listing packages from $299.", desc: "Starter $299, Pro $399, Featured $499. One-time upfront listing fees. Your valuation is free." },
@@ -282,19 +278,6 @@ const SellProperty = () => {
 
 
 
-      {/* Watercolor plates — the sale journey, illustrated */}
-      <WatercolorPlates
-        eyebrow="The Plates"
-        title={<>The journey of a sale, <span className="italic text-primary">in four movements.</span></>}
-        tone="sand"
-        items={[
-          { src: valuationImg, caption: "The valuation — an honest look at what your property is worth.", note: "Free, always" },
-          { src: letterImg, caption: "The conversation — a reply in your inbox within 24 hours.", note: "No pressure" },
-          { src: contractImg, caption: "The paperwork — every form handled with the cemetery.", note: "Done for you" },
-          { src: keysImg, caption: "The closing — you approve the offer, and are paid in full.", note: "You decide" },
-        ]}
-      />
-
       {/* FAQs — editorial accordion */}
       <FaqSection faqs={faqs} />
 
@@ -302,9 +285,9 @@ const SellProperty = () => {
       <section className="py-20 bg-gradient-sage">
         <div className="container mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-            <motion.img src={gateImg} alt="" aria-hidden loading="lazy" width={1024} height={1024}
+            <motion.img src={keysImg} alt="" aria-hidden loading="lazy" width={1024} height={1024}
               initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-              className="mx-auto mb-8 w-36 md:w-48 pointer-events-none select-none"
+              className="mx-auto mb-8 w-32 md:w-40 pointer-events-none select-none"
             />
             <h2 className="font-display text-3xl md:text-5xl text-foreground mb-4">Ready to sell your property?</h2>
             <p className="text-foreground/70 mb-8 text-lg font-light max-w-lg mx-auto">Get a free, no-obligation valuation today. We respond within 24 hours — and there's never any pressure.</p>
