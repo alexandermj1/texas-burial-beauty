@@ -6,18 +6,6 @@ import { Link } from "react-router-dom";
 import starterImg from "@/assets/sell/starter-benefits-t.png";
 import proImg from "@/assets/sell/pro-benefits-t.png";
 import featuredImg from "@/assets/sell/featured-benefits-t.png";
-import burialPlotImg from "@/assets/property-types/single-plot.png";
-import nicheImg from "@/assets/property-types/cremation-niche.png";
-import mausoleumImg from "@/assets/property-types/mausoleum.png";
-import estateImg from "@/assets/property-types/family-estate.png";
-
-const listedPropertyTypes = [
-  { name: "Burial plots", detail: "Single & companion spaces", image: burialPlotImg },
-  { name: "Cremation niches", detail: "Columbarium spaces", image: nicheImg },
-  { name: "Crypts & mausoleums", detail: "Above-ground spaces", image: mausoleumImg },
-  { name: "Family estates", detail: "Multi-space properties", image: estateImg },
-];
-
 interface Tier {
   num: string;
   name: string;
@@ -144,29 +132,6 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             )}
           </motion.div>
 
-
-          <div aria-labelledby="listed-property-types" className="mb-12 border-y border-primary/20 py-8 md:py-10">
-            <div className="flex items-center justify-center gap-4 mb-6 md:mb-8">
-              <span aria-hidden className="h-px w-8 bg-primary/30" />
-              <h3 id="listed-property-types" className="font-display text-2xl md:text-3xl text-center text-foreground">We list every type of cemetery property.</h3>
-              <span aria-hidden className="h-px w-8 bg-primary/30" />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-8">
-              {listedPropertyTypes.map((type, index) => (
-                <figure key={type.name} className="min-w-0 text-center">
-                  <div className="h-32 md:h-40 flex items-center justify-center">
-                    <img src={type.image} alt="" aria-hidden loading="lazy" width={768} height={768} className="h-full w-full max-w-56 object-contain pointer-events-none select-none" />
-                  </div>
-                  <figcaption className="mt-2">
-                    <span aria-hidden className="block font-display italic text-xs text-primary/60 mb-1">0{index + 1}</span>
-                    <p className="font-display text-lg md:text-xl text-foreground leading-snug">{type.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{type.detail}</p>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-            <p className="mt-7 text-center font-display italic text-sm text-primary">The property is yours. The right listing package is your choice.</p>
-          </div>
 
           {/* Tiers */}
           <div className="grid md:grid-cols-3 gap-5">

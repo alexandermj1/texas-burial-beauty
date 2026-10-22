@@ -21,5 +21,6 @@
 
 - Homepage shopfronts use get_public_shopfront_plots: preserve Featured priority and label additional paid signed inventory separately; sanitize named lawns and round verified savings down server-side using quoteFigures' separate-space buyer basis, never return currency or plot identifiers, and pause rotation on interaction — why: honest paid placement and competitor-safe inventory.
 - Toggle shopfronts via homepageSections.featuredShopfronts; keep code/feed — why: hiding must preserve design.
+- Keep seller property-type cycling in ListingPropertyCycle beside the form opener, reusing existing buyer artwork with reduced-motion support — why: show coverage without a separate space-consuming section.
 - Mark review prose with data-simon-review and one global semantic color — why: remove highlighting without changing approved prose.
 - Staff username credentials map deterministically to non-deliverable auth aliases; owner-validated provisioning copies existing staff roles and confirms only the provisioned account — why: mailbox-free login without public email lookup or relaxed signup settings.
