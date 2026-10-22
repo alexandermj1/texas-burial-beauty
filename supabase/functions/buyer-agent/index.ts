@@ -10,7 +10,7 @@ import { buyerDocumentReadiness, countBuyerDocuments } from "./documentReadiness
 
 const MODEL = "openai/gpt-6-astra";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
-const HIDDEN = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f"]);
+const HIDDEN = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f", "fcb3b678-3ac9-4207-83fe-86fb7952ae41"]);
 const BUYER_SOURCES = new Set(["buy_property_wizard", "buy_inquiry", "cemetery_page_buyer", "preneed_guide_form", "buyer"]);
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("auto"), submission_id: z.string().uuid() }),

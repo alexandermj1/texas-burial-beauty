@@ -36,6 +36,7 @@ import { MessageSquare } from "lucide-react";
 
 import ChangePasswordDialog from "@/components/ChangePasswordDialog";
 import { softDelete } from "@/lib/softDelete";
+import { Button } from "@/components/ui/button";
 
 interface AdminListing {
   id: string;
@@ -440,11 +441,13 @@ const Admin = () => {
             </div>
             <form onSubmit={handleEmailLogin} className="space-y-3">
               <input
-                type="email"
+                type="text"
+                autoComplete="username"
+                aria-label="Email or username"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="Email"
+                placeholder="Email or username"
                 className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               <input
@@ -455,13 +458,13 @@ const Admin = () => {
                 placeholder="Password"
                 className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
-              <button
+              <Button
                 type="submit"
                 disabled={loginLoading}
                 className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-full text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {loginLoading ? "Signing in..." : "Sign in with email"}
-              </button>
+                {loginLoading ? "Signing in..." : "Sign in"}
+              </Button>
             </form>
             {user && !hasAccess && (
               <p className="text-destructive text-xs mt-4 text-center">This account does not have admin access.</p>
