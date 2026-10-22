@@ -110,7 +110,7 @@ const SellProperty = () => {
             {/* Centered headline — "right" sits visually between the two columns below */}
             <div className="col-span-12 text-left lg:text-center">
               <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-5"><span className="md:hidden">Texas Cemetery Brokers</span><span className="hidden md:inline">A guide for Texas families</span></p>
-              <h1 className="font-display text-foreground leading-[1.02] md:leading-[0.92] text-5xl md:text-[clamp(3rem,9vw,8.5rem)]">
+              <h1 className="font-display text-foreground leading-[1.02] md:leading-[0.92] text-4xl min-[375px]:text-5xl md:text-[clamp(3rem,9vw,8.5rem)]">
                 <span className="block">Sell your plot{" "}</span>
                 <span className="block">
                   the <span className="italic font-medium text-primary">right</span> way.
@@ -210,7 +210,7 @@ const SellProperty = () => {
               </div>
 
               {/* The form, embedded directly on the page — no card, no in-your-face panel */}
-              <div className="col-span-12 lg:col-span-9 border-t border-foreground/20 pt-7 md:border-t-0 md:pt-0 lg:border-l lg:border-foreground/20 lg:pl-10">
+              <div className="col-span-12 lg:col-span-9 border-t border-foreground/20 pt-7 md:border-t-0 md:pt-0 lg:border-l lg:border-foreground/20 lg:pl-10 [&_#quote-form]:scroll-mt-24">
                 <div className="mb-7 md:hidden">
                   <p className="mb-2 text-xs font-semibold text-accent">Your next step</p>
                   <h2 className="font-display text-3xl">Your free valuation.</h2>
