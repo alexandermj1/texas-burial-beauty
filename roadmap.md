@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current request
+- [x] Remove the buyer property-type artwork and cycling strip from the sell page and restore the form opener as it was (including the pink branch flower); desktop/390px checks show the heading, copy and form with no property illustrations and no page errors; build clean, not published.
+
 - [x] Enlarge the “Start here” cycling property artwork and labels and remove the overlapping flower; desktop/390px screenshots show clear labels and no overflow, build clean; not published.
 - [x] Replace large property-type row with a compact cycling illustration beside “Start here”; 1381px/390px checks confirm changing type, removed row and no overflow; build clean, not published.
 - [x] Integrate existing buyer property-type watercolors into listing section as a polished four-type editorial display; sell checked at 1381/390px and home at 1280px, images loaded, no errors or overflow, four fee/promotion tests pass; package terms unchanged, not published.
