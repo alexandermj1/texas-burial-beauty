@@ -674,6 +674,12 @@ const BuyProperty = () => {
 
                   <p className="text-[11px] text-muted-foreground">Phone or email — at least one required. We never share your info.</p>
 
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    We'll email you first. If we need to talk it through, we'll call you from{" "}
+                    <a href="tel:+13108049586" className="text-primary hover:underline">(310) 804-9586</a>.
+                  </p>
+
+
 
                   <Button
                     type="submit"

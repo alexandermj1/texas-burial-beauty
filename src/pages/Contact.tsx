@@ -363,6 +363,11 @@ const BuyInquiryForm = () => {
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </button>
         <p className="text-[11px] text-muted-foreground/70">Free service. No obligation. We respond within 24 hours.</p>
+        <p className="text-[11px] text-muted-foreground/70 leading-relaxed max-w-md text-center">
+          We'll email you first. If we need to talk it through, we'll call you from{" "}
+          <a href="tel:+13108049586" className="text-primary hover:underline">(310) 804-9586</a>.
+        </p>
+
       </div>
     </motion.form>
   );
