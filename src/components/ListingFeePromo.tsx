@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import starterImg from "@/assets/sell/letter-response-t.png";
-import proImg from "@/assets/sell/valuation-t.png";
-import featuredImg from "@/assets/sell/garden-gate-t.png";
+import starterImg from "@/assets/sell/starter-listing-t.png";
+import proImg from "@/assets/sell/pro-outreach-t.png";
+import featuredImg from "@/assets/sell/featured-advertising-t.png";
 
 interface Tier {
   num: string;
@@ -139,22 +139,17 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.55, delay: i * 0.1 }}
-                className={`relative flex flex-col ${
-                  t.featured
-                    ? "bg-[hsl(var(--sand-light))]"
-                    : "bg-[hsl(var(--warm-white))]"
-                } rounded-lg border border-foreground/15 p-6 md:p-8`}
+                className="listing-stationery relative flex flex-col bg-background rounded-sm p-7 md:p-8"
               >
                 {t.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-[10px] tracking-[0.25em] uppercase font-bold px-3 py-1.5 shadow-soft">
+                  <span className="absolute top-5 right-6 font-display italic text-sm text-primary z-10">
                     Most chosen
                   </span>
                 )}
 
-                {/* Illustrated bookplate header */}
-                <div className="mb-7 mt-2 text-center">
-                  <div className="relative inline-block">
-                    <div aria-hidden className="absolute inset-0 -m-5 rounded-full bg-primary/[0.08] blur-2xl" />
+                {/* Illustrations depict each package's actual marketing service. */}
+                <div className="mb-6 text-center">
+                  <div className="relative h-48 md:h-52 -mx-3 mb-3">
                     <img
                       src={t.img}
                       alt=""
@@ -162,36 +157,31 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                       loading="lazy"
                       width={1024}
                       height={1024}
-                      className="pointer-events-none select-none relative mx-auto w-24 md:w-28"
+                      className="pointer-events-none select-none w-full h-full object-contain"
                     />
                   </div>
-                  <p className="mt-4 text-[10px] tracking-[0.35em] uppercase font-bold text-accent">
+                  <h3 className="font-display text-4xl text-foreground leading-tight">
                     {t.name}
-                  </p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <span className="h-px flex-1 bg-foreground/20" />
-                    <span className="font-display italic text-lg text-primary/70 leading-none">{t.num}</span>
-                    <span className="h-px flex-1 bg-foreground/20" />
-                  </div>
+                  </h3>
                 </div>
 
                 {/* Price block */}
-                <div className="mb-5">
+                <div className="mb-6 text-center border-b border-primary/25 pb-6">
                   {offerActive && <p className="mb-3 text-muted-foreground text-sm">Regularly <span className="line-through">{t.regular}</span> <span className="ml-2 font-semibold text-primary">Save $200</span></p>}
-                  <div className="flex items-end gap-3">
-                    <span className="font-display italic text-primary text-5xl md:text-6xl leading-[0.9] tracking-tight">
+                  <div className="flex items-end justify-center gap-3">
+                    <span className="font-display italic text-primary text-5xl leading-none">
                       {offerActive ? t.now : t.regular}
                     </span>
                   </div>
-                  <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-foreground/55 mt-3">
+                  <p className="text-xs text-muted-foreground mt-3">
                     One-time upfront fee
                   </p>
                 </div>
 
                 {/* Tagline */}
-                <h3 className="font-display text-2xl md:text-[1.65rem] text-foreground tracking-tight leading-snug mb-4">
+                <p className="font-display text-xl text-foreground leading-snug mb-3">
                   {t.tagline}
-                </h3>
+                </p>
 
                 {/* Description */}
                 <p className="text-foreground/70 leading-relaxed text-[15px] flex-1">
@@ -199,7 +189,8 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 </p>
 
                 {/* Cancel policy */}
-                <div className="mt-6 pt-5 border-t border-foreground/15">
+                <div className="mt-6 pt-5 text-center">
+                  <div aria-hidden className="listing-stationery-flourish mb-4"><span />✦<span /></div>
                   <p className="font-display italic text-[13px] text-foreground/65 leading-relaxed">
                     {t.cancel}
                   </p>

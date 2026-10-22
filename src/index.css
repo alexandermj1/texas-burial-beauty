@@ -3,6 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Botanical listing stationery: a quiet irregular frame, never an image box. */
+.listing-stationery { box-shadow: var(--shadow-soft); }
+.listing-stationery::before { content: ''; position: absolute; inset: 11px; border: 1px solid hsl(var(--primary) / .42); border-radius: 2px 5px 3px 6px; pointer-events: none; }
+.listing-stationery-flourish { display: flex; align-items: center; justify-content: center; gap: 12px; color: hsl(var(--primary) / .65); font-size: 15px; }
+.listing-stationery-flourish span { width: 45px; height: 1px; background: hsl(var(--primary) / .3); }
+
 /* Temporary owner review treatment — currently OFF (text renders in normal
    colors). The data-simon-review markers stay in the markup so the red
    highlight can be restored for a second review pass by un-commenting below.
