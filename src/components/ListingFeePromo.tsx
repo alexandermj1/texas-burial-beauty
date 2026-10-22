@@ -118,7 +118,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             </p>
             {offerActive && (
               <div className="mt-7 flex flex-col items-center gap-4">
-                <p className="text-primary font-semibold text-base flex items-center gap-2"><Clock className="h-4 w-4" /> October offer · Save $200 on every package</p>
+                <p className="text-primary font-semibold text-sm sm:text-base flex items-center justify-center gap-2 text-center"><Clock className="h-4 w-4 shrink-0" /> October offer · Save $200 on every package</p>
                 <div role="timer" aria-label="Time remaining in October offer" className="flex justify-center gap-3 sm:gap-5 tabular-nums">
                   {offerCountdown(now).map((value, index) => (
                     <div key={index} className="min-w-14 sm:min-w-16 text-center">
