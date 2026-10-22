@@ -27,6 +27,11 @@ import { guides as guideEntries } from "@/pages/Guides";
 import GuidesCarousel from "@/components/GuidesCarousel";
 import hibiscusFlower from "@/assets/flowers/hibiscus-red.png.asset.json";
 import monsteraLeaf from "@/assets/flowers/monstera.png.asset.json";
+import WatercolorPlates from "@/components/WatercolorPlates";
+import gardenPathImg from "@/assets/home/garden-path.png";
+import flowerVaseImg from "@/assets/home/flower-vase.png";
+import homeGateImg from "@/assets/sell/garden-gate.png";
+import homeKeysImg from "@/assets/sell/keys-closing.png";
 
 const HOME_FAQ_JSONLD = {
   "@context": "https://schema.org",
@@ -142,6 +147,19 @@ const Index = () => {
 
 
       <WhyUsSection />
+
+      <WatercolorPlates
+        eyebrow="From Our Notebook"
+        title={<>Texas cemetery property, <span className="italic text-primary">illustrated.</span></>}
+        tone="white"
+        items={[
+          { src: gardenPathImg, caption: "The search — every cemetery in Texas, one trusted partner." },
+          { src: flowerVaseImg, caption: "The visit — plots, niches, crypts and family estates." },
+          { src: homeGateImg, caption: "The decision — below-market property, honestly presented." },
+          { src: homeKeysImg, caption: "The handover — paperwork handled, from first call to closing." },
+        ]}
+      />
+
       <GuidesCarousel />
       <TestimonialsSection />
 
