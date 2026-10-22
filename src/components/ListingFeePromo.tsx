@@ -1,11 +1,11 @@
 // Editorial listing packages with current upfront fees and unchanged benefits.
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock, Leaf, Check } from "lucide-react";
 import { Link } from "react-router-dom";
-import starterImg from "@/assets/sell/starter-listing-t.png";
-import proImg from "@/assets/sell/pro-outreach-t.png";
-import featuredImg from "@/assets/sell/featured-advertising-t.png";
+import starterImg from "@/assets/sell/starter-benefits-t.png";
+import proImg from "@/assets/sell/pro-benefits-t.png";
+import featuredImg from "@/assets/sell/featured-benefits-t.png";
 
 interface Tier {
   num: string;
@@ -15,6 +15,7 @@ interface Tier {
   regular: string;
   tagline: string;
   desc: string;
+  benefits: string[];
   cancel: string;
   featured?: boolean;
 }
@@ -28,6 +29,7 @@ const tiers: Tier[] = [
     regular: "$499",
     tagline: "A straightforward start.",
     desc: "Your property is listed with a one-time upfront fee. Ideal for owners who want to test the market before committing.",
+    benefits: ["Your cemetery property listed", "A straightforward way to test the market"],
     cancel: "Early cancellation fee applies if withdrawn within 36 months.",
   },
   {
@@ -38,6 +40,7 @@ const tiers: Tier[] = [
     regular: "$599",
     tagline: "Actively marketed to Texas buyers.",
     desc: "One-time upfront fee. Actively marketed to Texas buyers and sent directly to local mortuaries and family counselors.",
+    benefits: ["Active marketing to Texas buyers", "Direct outreach to local mortuaries", "Shared with family counselors"],
     cancel: "Cancel anytime at no charge.",
     featured: true,
   },
@@ -49,6 +52,7 @@ const tiers: Tier[] = [
     regular: "$699",
     tagline: "Maximum visibility for your listing.",
     desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors.",
+    benefits: ["Targeted Google & Meta advertising", "Top placement on our priority list", "Priority list sent to mortuaries & counselors"],
     cancel: "Cancel anytime at no charge.",
   },
 ];
@@ -139,7 +143,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.55, delay: i * 0.1 }}
-                className="listing-stationery relative flex flex-col bg-background rounded-sm p-7 md:p-8"
+                className={`listing-stationery relative flex flex-col bg-background rounded-sm p-7 md:p-8 ${t.name === "Featured" ? "listing-stationery-priority" : ""}`}
               >
                 {t.featured && (
                   <span className="absolute top-5 right-6 font-display italic text-sm text-primary z-10">
@@ -148,8 +152,8 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 )}
 
                 {/* Illustrations depict each package's actual marketing service. */}
-                <div className="mb-6 text-center">
-                  <div className="relative h-48 md:h-52 -mx-3 mb-3">
+                <div className="mb-5 text-center">
+                  <div className="relative h-48 md:h-52 mx-auto max-w-64 mt-3 mb-5">
                     <img
                       src={t.img}
                       alt=""
@@ -166,7 +170,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 </div>
 
                 {/* Price block */}
-                <div className="mb-6 text-center border-b border-primary/25 pb-6">
+                <div className="listing-stationery-price mb-6 text-center py-5">
                   {offerActive && <p className="mb-3 text-muted-foreground text-sm">Regularly <span className="line-through">{t.regular}</span> <span className="ml-2 font-semibold text-primary">Save $200</span></p>}
                   <div className="flex items-end justify-center gap-3">
                     <span className="font-display italic text-primary text-5xl leading-none">
@@ -179,18 +183,18 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                 </div>
 
                 {/* Tagline */}
-                <p className="font-display text-xl text-foreground leading-snug mb-3">
+                <p className="font-display text-xl text-foreground leading-snug mb-4 text-center">
                   {t.tagline}
                 </p>
 
                 {/* Description */}
-                <p className="text-foreground/70 leading-relaxed text-[15px] flex-1">
-                  {t.desc}
-                </p>
+                <ul className="flex-1 space-y-3 text-sm text-foreground/75 leading-relaxed">
+                  {t.benefits.map(benefit => <li key={benefit} className="flex gap-3 items-start"><Check aria-hidden className="w-3.5 h-3.5 mt-1 shrink-0 text-primary/70" /><span>{benefit}</span></li>)}
+                </ul>
 
                 {/* Cancel policy */}
                 <div className="mt-6 pt-5 text-center">
-                  <div aria-hidden className="listing-stationery-flourish mb-4"><span />✦<span /></div>
+                  <div aria-hidden className="listing-stationery-flourish mb-4"><span /><Leaf className="h-5 w-5" strokeWidth={1} /><span /></div>
                   <p className="font-display italic text-[13px] text-foreground/65 leading-relaxed">
                     {t.cancel}
                   </p>
