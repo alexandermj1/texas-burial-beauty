@@ -44,7 +44,7 @@ const isSeller = (s: Sub) => {
   return s.source === "seller_quote" || (s.source === "contact" && !!s.quote_sent_at) || kind.includes("seller");
 };
 
-const AI_HIDDEN_USER_IDS = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f"]);
+const AI_HIDDEN_USER_IDS = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f", "fcb3b678-3ac9-4207-83fe-86fb7952ae41"]);
 
 async function staffUser(db: SupabaseClient, req: Request) {
   const auth = req.headers.get("authorization") ?? "";

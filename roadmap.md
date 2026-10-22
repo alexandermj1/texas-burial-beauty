@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Create Susie’s username-only staff login, copy Cici’s admin/staff roles and AI restrictions; verified actual username sign-in, restricted view and unsent Susie signature; two tests pass, build clean, credentials provided privately; publish required for username login on the public site.
 - [x] Hide the homepage Featured shopfronts via the homepageSections.featuredShopfronts toggle; component file and render line untouched, homepage verified with no shopfront cards and no layout gap, build clean; not published.
 - [x] Replace the sell page pull quote with a short “why sell with us” line; quote and label verified rendered on desktop, build clean; not published.
 - [x] Replace generic page copy with Simon’s source sentences in ordinary company/third-person voice; reduce quote framing, visibly revise homepage opening/about/process, retain red review marks; all ten URLs checked at desktop/390px, no overflow/page errors, 13 regression tests pass, build clean; not published.
