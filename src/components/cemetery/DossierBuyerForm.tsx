@@ -283,6 +283,11 @@ const DossierBuyerForm = ({ cemeteryName, region }: Props) => {
           <p className="text-xs text-[hsl(var(--parchment)/0.5)]">
             No obligation. We never share your details with the cemetery or anyone else.
           </p>
+          <p className="text-xs text-[hsl(var(--parchment)/0.5)] leading-relaxed">
+            We'll email you first. If we need to talk it through, we'll call you from{" "}
+            <a href="tel:+13108049586" className="text-[hsl(var(--gold))] hover:underline">(310) 804-9586</a>.
+          </p>
+
         </form>
       </div>
     </div>
