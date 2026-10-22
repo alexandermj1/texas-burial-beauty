@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Current request
-- [ ] Enlarge the “Start here” cycling property artwork and labels, remove the overlapping flower, and verify desktop/phone presentation.
+- [x] Enlarge the “Start here” cycling property artwork and labels and remove the overlapping flower; desktop/390px screenshots show clear labels and no overflow, build clean; not published.
 - [x] Replace large property-type row with a compact cycling illustration beside “Start here”; 1381px/390px checks confirm changing type, removed row and no overflow; build clean, not published.
 - [x] Integrate existing buyer property-type watercolors into listing section as a polished four-type editorial display; sell checked at 1381/390px and home at 1280px, images loaded, no errors or overflow, four fee/promotion tests pass; package terms unchanged, not published.
 - [x] Refine package artwork and carry botanical stationery through benefit lists, price blocks and policy footers; selling page checked at 1381px/390px and homepage at 1280px, no errors/overflow, four fee/promotion tests pass; fees and terms unchanged, not published.
