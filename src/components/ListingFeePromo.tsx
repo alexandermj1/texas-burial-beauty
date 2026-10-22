@@ -3,10 +3,14 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import starterImg from "@/assets/sell/letter-response-t.png";
+import proImg from "@/assets/sell/valuation-t.png";
+import featuredImg from "@/assets/sell/garden-gate-t.png";
 
 interface Tier {
   num: string;
   name: string;
+  img: string;
   now: string;
   regular: string;
   tagline: string;
@@ -19,6 +23,7 @@ const tiers: Tier[] = [
   {
     num: "01",
     name: "Starter",
+    img: starterImg,
     now: "$299",
     regular: "$499",
     tagline: "A straightforward start.",
@@ -28,6 +33,7 @@ const tiers: Tier[] = [
   {
     num: "02",
     name: "Pro",
+    img: proImg,
     now: "$399",
     regular: "$599",
     tagline: "Actively marketed to Texas buyers.",
@@ -38,6 +44,7 @@ const tiers: Tier[] = [
   {
     num: "03",
     name: "Featured",
+    img: featuredImg,
     now: "$499",
     regular: "$699",
     tagline: "Maximum visibility for your listing.",
@@ -143,6 +150,16 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                     Most chosen
                   </span>
                 )}
+
+                <img
+                  src={t.img}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  width={1024}
+                  height={1024}
+                  className="pointer-events-none select-none absolute -top-5 right-3 w-16 md:w-20 opacity-95"
+                />
 
                 {/* Number + name */}
                 <div className="flex items-baseline gap-4 mb-6">

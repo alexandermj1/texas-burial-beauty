@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Handshake, ShieldCheck, TrendingDown, MapPin } from "lucide-react";
 import bayerLogo from "@/assets/partners/bayer-cemetery-brokers-logo-transparent.png";
+import flowerVaseImg from "@/assets/home/flower-vase-t.png";
+import gardenPathImg from "@/assets/home/garden-path-t.png";
 
 /**
  * SEO-geared editorial section for the home page. Plain-language description
@@ -150,6 +152,15 @@ const AboutSeoSection = () => {
             className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur p-7 sm:p-8 shadow-soft"
             aria-label="Texas regions we serve"
           >
+            <img
+              src={flowerVaseImg}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              width={1024}
+              height={1024}
+              className="pointer-events-none select-none w-24 sm:w-28 mx-auto -mt-2 mb-4"
+            />
             <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-5 flex items-center gap-2">
               <MapPin className="w-3 h-3 text-primary" /> Where we work
             </p>
@@ -192,6 +203,15 @@ const AboutSeoSection = () => {
           <div className="relative rounded-3xl border border-border/60 bg-card/85 backdrop-blur overflow-hidden shadow-soft">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.05] via-transparent to-secondary/[0.08] pointer-events-none" aria-hidden="true" />
             <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-primary/[0.05] blur-3xl pointer-events-none" aria-hidden="true" />
+            <img
+              src={gardenPathImg}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              width={1024}
+              height={1024}
+              className="pointer-events-none select-none absolute -bottom-10 -right-6 w-48 sm:w-64 opacity-40"
+            />
 
             <div className="relative grid sm:grid-cols-[auto_1fr_auto] items-center gap-8 sm:gap-10 p-8 sm:p-10">
               {/* Logo — no white circle box, transparent PNG sits cleanly on the card */}
