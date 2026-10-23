@@ -26,14 +26,12 @@ export function reportLeadConversion(kind: LeadKind, submissionId: string) {
   } catch (e) {
     console.warn("ads conversion failed", e);
   }
-  // OpenAI pixel: report the same completed form as a lead conversion so
-  // ChatGPT-referred visitors can be measured. The submission id dedupes
-  // resubmits/reloads the same way transaction_id does for Google.
+  // OpenAI pixel: report the completed form as a lead_created conversion so
+  // ChatGPT-referred visitors can be measured. The SDK validates event props
+  // strictly and drops anything beyond the documented shape, so keep this to
+  // exactly { type: "customer_action" }.
   try {
-    window.oaiq?.("track", "lead", {
-      lead_type: kind,
-      transaction_id: submissionId,
-    });
+    window.oaiq?.("measure", "lead_created", { type: "customer_action" });
   } catch (e) {
     console.warn("openai pixel conversion failed", e);
   }
