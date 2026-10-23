@@ -100,14 +100,11 @@ const areaOf = (b: any) => String(`${b.details ?? ""}\n${b.message ?? ""}`.match
 async function matches(db: any, buyer: any, exclude: string[] = []) {
   if (canon(buyer.cemetery)) {
     const own = await inventory(db, buyer, exclude);
-    if (own.items.length) return { ...own, area: null as string | null };
-    // Nothing at their cemetery: offer the waitlist plus nearby cemeteries we serve.
-    // Start close and widen: same city first, then the rest of the region, then
-    // statewide — always ordered by real distance from their cemetery when we
-    // have coordinates, so nothing close is missed.
+    // Look at nearby cemeteries we serve too: as the main options when nothing is at
+    // their cemetery, or as a couple of extra choices (within ~25 miles) when there is.
     const { data: all } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude").is("deleted_at", null).limit(2000);
     const me = (all ?? []).find((c: any) => canon(c.name) === canon(buyer.cemetery));
-    if (!me) return { ...own, area: null };
+    if (!me) return { ...own, area: null as string | null };
     const miles = (a: any) => {
       if (me.latitude == null || me.longitude == null || a.latitude == null || a.longitude == null) return 9999;
       const rad = Math.PI / 180, dLat = (a.latitude - me.latitude) * rad, dLng = (a.longitude - me.longitude) * rad;
@@ -115,14 +112,17 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
       return 3959 * 2 * Math.asin(Math.sqrt(h));
     };
     const rank = (c: any) => (me.city && c.city === me.city ? 0 : me.region && c.region === me.region ? 1 : 2);
-    const near = (all ?? []).filter((c: any) => canon(c.name) !== canon(me.name))
-      .sort((a: any, b: any) => rank(a) - rank(b) || miles(a) - miles(b) || a.name.localeCompare(b.name));
+    const hasOwn = own.items.length > 0;
+    const near = (all ?? []).filter((c: any) => canon(c.name) !== canon(me.name) && (!hasOwn || miles(c) <= 25))
+      .sort((a: any, b: any) => (hasOwn ? 0 : rank(a) - rank(b)) || miles(a) - miles(b) || a.name.localeCompare(b.name));
     const alt: any[] = [];
-    for (const c of near) {
-      if (alt.length >= 4) break;
+    const cap = hasOwn ? 2 : 4;
+    for (const c of near.slice(0, hasOwn ? 15 : near.length)) {
+      if (alt.length >= cap) break;
       const away = Math.round(miles(c));
-      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); alt.push(...r.items.slice(0, 2).map((x: any) => ({ ...x, cemetery: c.name, nearby_alternative: true, miles_away: away }))); } catch { /* needs staff pricing */ }
+      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); alt.push(...r.items.slice(0, hasOwn ? 1 : 2).map((x: any) => ({ ...x, cemetery: c.name, ...(hasOwn ? { also_nearby: true } : { nearby_alternative: true }), miles_away: away }))); } catch { /* needs staff pricing */ }
     }
+    if (hasOwn) return { ...own, items: [...own.items, ...alt.slice(0, cap)], area: null as string | null };
     const kept = alt.slice(0, 4);
     return { kind: own.kind, items: kept, area: null, nearest_miles_away: kept.length ? Math.min(...kept.map((x: any) => x.miles_away ?? 9999)) : null };
   }
