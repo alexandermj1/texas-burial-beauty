@@ -115,18 +115,26 @@ const mastheadRise = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
 };
 
-/** Kraft discount tag, drawn in SVG so it stays crisp at any size. */
+/** Editorial offer plate: an ivory tag with a fine terracotta double keyline, drawn in SVG so it stays crisp. */
 const DiscountTag = () => (
-  <span className="flex items-center justify-center gap-3 sm:gap-4" aria-hidden="true">
-    <span className="h-px w-10 sm:w-20 bg-gradient-to-r from-transparent to-accent/50" />
-    <svg viewBox="0 0 190 54" className="preneed-tag w-32 sm:w-40 shrink-0" role="img" aria-label="Up to 50% off cemetery retail">
-      <path d="M31 3h151a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H31L6 27Z" fill="hsl(var(--accent))" />
-      <path d="M34 8h144a3 3 0 0 1 3 3v32a3 3 0 0 1-3 3H34L14 27Z" fill="none" stroke="hsl(var(--accent-foreground) / .5)" strokeWidth="1" />
-      <circle cx="22" cy="27" r="5" fill="hsl(var(--background))" />
-      <text x="108" y="23" textAnchor="middle" className="font-display" fontSize="12" letterSpacing="3" fill="hsl(var(--accent-foreground))" opacity=".9">UP TO</text>
-      <text x="108" y="42" textAnchor="middle" className="font-display" fontSize="20" letterSpacing="1.2" fill="hsl(var(--accent-foreground))">50% OFF</text>
+  <span className="flex items-center justify-center gap-3 sm:gap-5" aria-hidden="true">
+    <span className="flex w-10 items-center gap-2 sm:w-24">
+      <svg viewBox="0 0 12 12" className="h-1.5 w-1.5 shrink-0 fill-accent/60"><path d="M6 0l1.5 4.5L12 6 7.5 7.5 6 12 4.5 7.5 0 6l4.5-1.5z" /></svg>
+      <span className="h-px flex-1 bg-gradient-to-r from-accent/45 to-transparent" />
+    </span>
+    <svg viewBox="0 0 224 76" className="preneed-tag w-40 shrink-0 drop-shadow-md sm:w-56" role="img" aria-label="Up to 50% off cemetery retail">
+      <path d="M45 33C40 18 30 9 15 2" fill="none" stroke="hsl(var(--foreground) / .32)" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M45 33C42 17 33 8 21 1" fill="none" stroke="hsl(var(--foreground) / .16)" strokeWidth="1.1" strokeLinecap="round" />
+      <rect x="26" y="6" width="192" height="64" rx="2.5" fill="hsl(var(--background))" stroke="hsl(var(--accent) / .55)" strokeWidth="1.1" />
+      <rect x="31" y="11" width="182" height="54" rx="1" fill="none" stroke="hsl(var(--accent) / .26)" strokeWidth="0.8" />
+      <circle cx="45" cy="38" r="5.5" fill="hsl(var(--background))" stroke="hsl(var(--accent) / .55)" strokeWidth="1.1" />
+      <text x="131" y="31" textAnchor="middle" className="font-sans font-medium" fontSize="8.5" letterSpacing="4.5" fill="hsl(var(--accent) / .8)">UP TO</text>
+      <text x="131" y="57" textAnchor="middle" className="font-display" fontSize="27" letterSpacing="0.5" fill="hsl(var(--accent))">50% OFF</text>
     </svg>
-    <span className="h-px w-10 sm:w-20 bg-gradient-to-l from-transparent to-accent/50" />
+    <span className="flex w-10 items-center gap-2 sm:w-24">
+      <span className="h-px flex-1 bg-gradient-to-l from-accent/45 to-transparent" />
+      <svg viewBox="0 0 12 12" className="h-1.5 w-1.5 shrink-0 fill-accent/60"><path d="M6 0l1.5 4.5L12 6 7.5 7.5 6 12 4.5 7.5 0 6l4.5-1.5z" /></svg>
+    </span>
   </span>
 );
 
@@ -166,12 +174,19 @@ const GuidePreneedCemeteryPlots = () => {
               </motion.p>
 
               <motion.h1 id="preneed-title" variants={mastheadRise} className="font-display leading-[0.92] text-foreground">
-                <span className="block text-xl sm:text-2xl lg:text-3xl italic text-accent">
-                  <span className="relative inline-block px-1">
+                <span className="block text-2xl italic tracking-[0.03em] text-accent sm:text-3xl lg:text-4xl">
+                  <span className="relative inline-block px-1 pb-2.5">
                     Discounted
-                    <motion.svg viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true" className="absolute -bottom-1.5 left-0 h-3 w-full text-accent/55">
-                      <motion.path d="M4 10C58 3 150 2 256 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }} />
-                    </motion.svg>
+                    <motion.span
+                      aria-hidden="true"
+                      className="absolute bottom-0 left-1 right-1 flex origin-left flex-col gap-[3px]"
+                      initial={reduceMotion ? false : { scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
+                    >
+                      <span className="h-px w-full bg-accent/55" />
+                      <span className="h-px w-3/5 bg-accent/30" />
+                    </motion.span>
                   </span>
                 </span>
                 <span className="mt-1 block text-[clamp(2.6rem,calc(5.2vw_-_6px),4.7rem)]">Preneed Cemetery<span className="hidden lg:inline"> Plots</span></span>
