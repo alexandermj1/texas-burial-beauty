@@ -1,3 +1,4 @@
+import { requiresPhysicalOriginal, physicalOriginalLogged } from "../../../supabase/functions/_shared/originalDocumentReceipt";
 import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -765,7 +766,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // emailed, and a returned file must never be hidden by either.
       let best: RequiredState = override ?? rowState;
       if (rankOf(fromContract) > rankOf(best)) best = fromContract as RequiredState;
-      if (held && rankOf("received") > rankOf(best)) best = "received";
+      if (requiresPhysicalOriginal(r, answers) && !physicalOriginalLogged(r)) best = "needed";
+      else if (held && rankOf("received") > rankOf(best)) best = "received";
       // Everything on a request that has gone out is obviously "sent" — the
       // only thing a broker needs to see is whether it has come back. So the
       // drafted/sent stages collapse into the same plain "Needed" chip.
@@ -777,12 +779,13 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     // Items with a returned file but no checklist row yet (or a row that
     // hasn't been re-read) still read as received.
     for (const key of attachedKeys) {
-      if (rankOf(m[key]) < rankOf("received") && m[key] !== "not_needed") m[key] = "received";
+      const [code, person] = key.split("::");
+      if (!requiresPhysicalOriginal({ doc_code: code, person_name: person }, answers) && rankOf(m[key]) < rankOf("received") && m[key] !== "not_needed") m[key] = "received";
     }
 
     return m;
 
-  }, [rows, contractStates, attachedKeys]);
+  }, [rows, contractStates, attachedKeys, answers]);
 
 
   // `summarise` keys states by the raw requirement key (`code::Person Name`)
@@ -1355,6 +1358,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Set a requirement's state, creating its checklist row on the fly if needed. */
   const setRowState = async (r: Requirement, value: RequiredState) => {
     const status = ["received", "notarized", "complete"].includes(value) ? "received" : "pending";
+    if (status === "received" && requiresPhysicalOriginal({ doc_code: r.code, person_name: r.personName }, answers) && !window.confirm("Confirm the physical original has arrived and is in our hands. A photo, scan, or seller saying it is in the post does not count.")) return;
     const patch = { manual_override: value, required_state: value, status };
     const local = rowFor(r);
     if (local) {
@@ -2402,8 +2406,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const detached = { ...(answers.unlinkedFiles ?? {}) };
     detached[key] = (detached[key] ?? []).filter((p) => p !== path);
     await persistAnswers({ ...answers, linkedFiles: next, unlinkedFiles: detached } as OwnershipAnswers);
-    await setRowState(r, "received");
-    toast.success("Linked — this item now counts as received");
+    if (!requiresPhysicalOriginal({ doc_code: r.code, person_name: r.personName }, answers)) await setRowState(r, "received");
+    toast.success(mailFor(r) ? "Copy linked — original still required by post" : "Linked — this item now counts as received");
   };
 
   /** Take a wrongly attached file back off an item (the little ×). */
@@ -2427,7 +2431,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   useEffect(() => {
     if (loading || !requirements.length || !files.length) return;
     const satisfied = requirements.filter((r) => {
-      if (["LA", "D21", "REVIEW", "NOTE"].includes(r.code)) return false;
+      if (["LA", "D21", "REVIEW", "NOTE"].includes(r.code) || requiresPhysicalOriginal({ doc_code: r.code, person_name: r.personName }, answers)) return false;
       const row = rowFor(r);
       const state = stateByKey[reqDbKey(r)];
       return !row?.manual_override && !["received", "notarized", "complete"].includes(state ?? "")
@@ -2455,6 +2459,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const attached = filesFor(r);
     const isOpen = !!expanded[key];
     const supplied = ["received", "notarized", "complete"].includes(s);
+    const copyOnly = attached.length > 0 && !supplied && requiresPhysicalOriginal({ doc_code: r.code, person_name: r.personName }, answers);
     const brokerForm = brokerFormFor(r);
     const isWarning = r.code === "REVIEW" || r.code === "NOTE";
     const formInputRef = useRef<HTMLInputElement>(null);
@@ -2483,6 +2488,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
                   <CheckCircle2 className="w-2.5 h-2.5" />On file
                 </span>
               )}
+              {copyOnly && <span className="text-xs text-muted-foreground">Copy on file · original still needed by post</span>}
               {attached.length > 0 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 inline-flex items-center gap-0.5">
                   <Paperclip className="w-2.5 h-2.5" />{attached.length}
