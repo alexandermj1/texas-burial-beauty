@@ -757,12 +757,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       }
     };
     recompute();
-    // Debounce realtime bursts — the inbox sync writes many rows at once and
-    // each one used to trigger a full refetch, which is what made the tags lag.
+    // Throttle realtime changes: at most one full email re-read per minute.
+    // Every email row change (inbox sync, summaries) used to re-read the whole
+    // mailbox within seconds, which overloaded the database.
     let t: ReturnType<typeof setTimeout> | null = null;
     const schedule = () => {
-      if (t) clearTimeout(t);
-      t = setTimeout(() => { t = null; recompute(); }, 2500);
+      if (t) return;
+      t = setTimeout(() => { t = null; recompute(); }, 60000);
     };
     const ch = supabase.channel("email_messages_awaiting")
       .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, schedule)
