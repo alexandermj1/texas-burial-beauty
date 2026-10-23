@@ -608,7 +608,7 @@
   filter: blur(5px);
 }
 .preneed-plate:hover { transform: translateY(-6px); }
-.preneed-tag { transform: rotate(-2.5deg); }
+.preneed-tag { transform: rotate(-1.2deg); }
 @media (prefers-reduced-motion: reduce) {
   .preneed-plate { transition: none; }
   .preneed-plate:hover { transform: none; }
