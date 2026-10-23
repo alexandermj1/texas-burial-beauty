@@ -115,27 +115,21 @@ const mastheadRise = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
 };
 
-/** Editorial offer plate: an ivory tag with a fine terracotta double keyline, drawn in SVG so it stays crisp. */
+/** Editorial offer line: a magazine-style oversized numeral with stacked small caps, no label or tag. */
 const DiscountTag = () => (
-  <span className="flex items-center justify-center gap-3 sm:gap-5" aria-hidden="true">
-    <span className="flex w-10 items-center gap-2 sm:w-24">
-      <svg viewBox="0 0 12 12" className="h-1.5 w-1.5 shrink-0 fill-accent/60"><path d="M6 0l1.5 4.5L12 6 7.5 7.5 6 12 4.5 7.5 0 6l4.5-1.5z" /></svg>
-      <span className="h-px flex-1 bg-gradient-to-r from-accent/45 to-transparent" />
+  <p className="flex items-center gap-4 sm:gap-6 border-y border-foreground/15 py-3 sm:py-4" aria-label="Up to 50% off cemetery retail">
+    <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180 hidden sm:block">Save</span>
+    <span className="flex items-baseline font-display italic leading-none text-accent">
+      <span className="text-[10px] sm:text-xs not-italic font-sans uppercase tracking-[0.25em] text-muted-foreground mr-2 self-start mt-2">up to</span>
+      <span className="text-6xl sm:text-7xl lg:text-8xl tracking-tight">50</span>
+      <span className="text-3xl sm:text-4xl lg:text-5xl ml-0.5">%</span>
     </span>
-    <svg viewBox="0 0 224 76" className="preneed-tag w-40 shrink-0 drop-shadow-md sm:w-56" role="img" aria-label="Up to 50% off cemetery retail">
-      <path d="M45 33C40 18 30 9 15 2" fill="none" stroke="hsl(var(--foreground) / .32)" strokeWidth="1.1" strokeLinecap="round" />
-      <path d="M45 33C42 17 33 8 21 1" fill="none" stroke="hsl(var(--foreground) / .16)" strokeWidth="1.1" strokeLinecap="round" />
-      <rect x="26" y="6" width="192" height="64" rx="2.5" fill="hsl(var(--background))" stroke="hsl(var(--accent) / .55)" strokeWidth="1.1" />
-      <rect x="31" y="11" width="182" height="54" rx="1" fill="none" stroke="hsl(var(--accent) / .26)" strokeWidth="0.8" />
-      <circle cx="45" cy="38" r="5.5" fill="hsl(var(--background))" stroke="hsl(var(--accent) / .55)" strokeWidth="1.1" />
-      <text x="131" y="31" textAnchor="middle" className="font-sans font-medium" fontSize="8.5" letterSpacing="4.5" fill="hsl(var(--accent) / .8)">UP TO</text>
-      <text x="131" y="57" textAnchor="middle" className="font-display" fontSize="27" letterSpacing="0.5" fill="hsl(var(--accent))">50% OFF</text>
-    </svg>
-    <span className="flex w-10 items-center gap-2 sm:w-24">
-      <span className="h-px flex-1 bg-gradient-to-l from-accent/45 to-transparent" />
-      <svg viewBox="0 0 12 12" className="h-1.5 w-1.5 shrink-0 fill-accent/60"><path d="M6 0l1.5 4.5L12 6 7.5 7.5 6 12 4.5 7.5 0 6l4.5-1.5z" /></svg>
+    <span className="h-12 sm:h-16 w-px bg-accent/40" aria-hidden="true" />
+    <span className="flex flex-col gap-1">
+      <span className="font-display text-xl sm:text-2xl lg:text-3xl italic leading-tight text-foreground">off cemetery retail</span>
+      <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.22em] text-muted-foreground">Verified by-owner spaces · shown in person</span>
     </span>
-  </span>
+  </p>
 );
 
 const GuidePreneedCemeteryPlots = () => {
