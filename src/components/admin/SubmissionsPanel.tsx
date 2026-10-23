@@ -3,6 +3,7 @@ import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useS
 import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore, Info, Pencil, MapPin, Save } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
+import { mergeEmailRows, needsFullRescan, type LightEmailRow } from "@/lib/emailRowCache";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
@@ -564,6 +565,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // the submission is awaiting our reply.
   // Stable key so this only re-runs when something it actually depends on changes
   // (not on every submissions array identity change).
+  const emailCacheRef = useRef<{ rows: LightEmailRow[]; fullAt: number | null; pending: Partial<LightEmailRow>[]; removed: string[] }>({ rows: [], fullAt: null, pending: [], removed: [] });
   const awaitingKey = useMemo(() => submissions
     .filter(s => subRegion(s) === "texas")
     .map(s => [s.id, (s.email || "").toLowerCase(), (s as any).quote_sent_at, (s as any).quote_response,
@@ -605,21 +607,46 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       // NOTE: the API caps a single request at 1000 rows, so we page through
       // explicitly. Without this, older threads fell outside the window and were
       // wrongly treated as "no emails at all" → false "Needs reply".
-      const PAGE = 1000;
-      const MAX_ROWS = 10000;
-      const rows: any[] = [];
-      for (let from = 0; from < MAX_ROWS; from += PAGE) {
-        const { data: page } = await supabase
-          .from("email_messages" as any)
-          .select("id, matched_submission_id, from_email, to_email, received_at")
-          .order("received_at", { ascending: false })
-          .range(from, from + PAGE - 1);
-        if (cancelled) return;
-        if (!page || page.length === 0) break;
-        rows.push(...(page as any[]));
-        if (page.length < PAGE) break;
+      // Cached between runs: full re-read only every 15 minutes; in between,
+      // changed emails arrive through realtime and are merged into the cache.
+      const cache = emailCacheRef.current;
+      let data: any[];
+      if (needsFullRescan(cache.fullAt, Date.now())) {
+        const PAGE = 1000;
+        const MAX_ROWS = 10000;
+        const rows: any[] = [];
+        for (let from = 0; from < MAX_ROWS; from += PAGE) {
+          const { data: page, error } = await supabase
+            .from("email_messages" as any)
+            .select("id, matched_submission_id, from_email, to_email, received_at")
+            .order("received_at", { ascending: false })
+            .range(from, from + PAGE - 1);
+          if (cancelled) return;
+          if (error) return; // keep current tags; retry on next change
+          if (!page || page.length === 0) break;
+          rows.push(...(page as any[]));
+          if (page.length < PAGE) break;
+        }
+        cache.rows = rows as LightEmailRow[];
+        cache.fullAt = Date.now();
+        cache.pending = []; cache.removed = [];
+      } else {
+        // Cheap check: only emails newer than the newest one we already hold.
+        const newest = cache.rows[0]?.received_at;
+        if (newest) {
+          const { data: fresh, error } = await supabase
+            .from("email_messages" as any)
+            .select("id, matched_submission_id, from_email, to_email, received_at")
+            .gte("received_at", newest)
+            .order("received_at", { ascending: false })
+            .limit(1000);
+          if (cancelled) return;
+          if (!error && fresh) cache.pending.push(...(fresh as any[]));
+        }
+        cache.rows = mergeEmailRows(cache.rows, cache.pending, cache.removed);
+        cache.pending = []; cache.removed = [];
       }
-      const data = rows;
+      data = cache.rows;
 
       if (cancelled || data.length === 0) return;
 
@@ -761,14 +788,20 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // Every email row change (inbox sync, summaries) used to re-read the whole
     // mailbox within seconds, which overloaded the database.
     let t: ReturnType<typeof setTimeout> | null = null;
-    const schedule = () => {
+    const schedule = (payload: any) => {
+      const cache = emailCacheRef.current;
+      if (payload?.eventType === "DELETE") { if (payload.old?.id) cache.removed.push(payload.old.id); }
+      else if (payload?.new?.id) cache.pending.push(payload.new);
+      else cache.fullAt = null; // unknown change shape: force a full re-read
       if (t) return;
-      t = setTimeout(() => { t = null; recompute(); }, 60000);
+      t = setTimeout(() => { t = null; recompute(); }, 5000);
     };
+    // Light check for new emails once a minute (full re-read every 15 min).
+    const poll = setInterval(() => { if (document.visibilityState === "visible") recompute(); }, 60000);
     const ch = supabase.channel("email_messages_awaiting")
       .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, schedule)
       .subscribe();
-    return () => { cancelled = true; if (t) clearTimeout(t); ch.unsubscribe(); supabase.removeChannel(ch); };
+    return () => { cancelled = true; clearInterval(poll); if (t) clearTimeout(t); ch.unsubscribe(); supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingKey]);
 
