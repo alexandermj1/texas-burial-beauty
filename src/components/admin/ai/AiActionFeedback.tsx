@@ -33,12 +33,12 @@ export default function AiActionFeedback({ actionId, completed, call }: { action
       <span className="font-medium text-foreground">{e.kind === "outcome" ? "Outcome review" : e.kind === "comment" ? "Comment" : e.kind}</span>
       {e.correct !== null && <> · {e.correct ? "Correct" : "Not correct"} · {e.went_live ? "Confirmed live" : "Not live / not applied"}</>}
       {e.comment && <p className="whitespace-pre-wrap text-foreground">{e.comment}</p>}
-      <span>{e.author_name} · {new Date(e.created_at).toLocaleString()}</span>
+      <div>{e.author_name} · {new Date(e.created_at).toLocaleString()}</div>
     </div>)}
     <Textarea aria-label="Action comment" value={comment} maxLength={2000} onChange={e => setComment(e.target.value)} rows={2} placeholder={completed ? "What worked or needs correcting?" : "Comment on this suggestion"} />
     {completed && <div className="grid gap-2 sm:grid-cols-2">
-      <Select value={correct} onValueChange={setCorrect}><SelectTrigger aria-label="Was the action correct?"><SelectValue placeholder="Was it correct?" /></SelectTrigger><SelectContent><SelectItem value="yes">Yes — correct</SelectItem><SelectItem value="no">No — needs correction</SelectItem></SelectContent></Select>
-      <Select value={live} onValueChange={setLive}><SelectTrigger aria-label="Did the change go live?"><SelectValue placeholder="Did it actually go live?" /></SelectTrigger><SelectContent><SelectItem value="yes">Yes — checked and live</SelectItem><SelectItem value="no">No — not applied correctly</SelectItem></SelectContent></Select>
+      <Select disabled={busy} value={correct} onValueChange={setCorrect}><SelectTrigger aria-label="Was the action correct?"><SelectValue placeholder="Was it correct?" /></SelectTrigger><SelectContent><SelectItem value="yes">Yes — correct</SelectItem><SelectItem value="no">No — needs correction</SelectItem></SelectContent></Select>
+      <Select disabled={busy} value={live} onValueChange={setLive}><SelectTrigger aria-label="Did the change go live?"><SelectValue placeholder="Did it actually go live?" /></SelectTrigger><SelectContent><SelectItem value="yes">Yes — checked and live</SelectItem><SelectItem value="no">No — not applied correctly</SelectItem></SelectContent></Select>
     </div>}
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" disabled={busy || !comment.trim()} onClick={() => save("comment")}>Save comment</Button>

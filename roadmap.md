@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Current request
-- [ ] Add individual seller AI decision reasons/comments and saved post-execution correctness/live-update feedback; preserve sibling proposals and verify persistence.
+- [x] Add individual seller AI comments/decision reasons and append-only post-execution correctness/live-update feedback; preserve siblings on AI replies and declines while genuine new context still invalidates them. Verified saved comment/outcome after reload on Kristen’s completed email; nine safeguards pass; no new customer email sent.
 - [x] Correct Kristen Reed’s descriptive fields and link deed/death-certificate copies; require record changes before the same review’s email and physical-original receipt before checklist completion. Verified signed-in record/checklist and six safeguards; no duplicate email sent.
 - [x] Make the mobile sell page purposeful: service introduction → three selling steps → free valuation → broker services → property sheet → fees; retain ownership prose in an expandable section, show services before comparison statistics. 390px/320px form next/back and ownership expansion verified, desktop preserved, no overflow or page errors, four fee tests pass; not published.
 - [x] Move the listing packages below the property list and broker comparison on phones only (desktop order unchanged) and keep the October offer line on one centered line; 390px order read back as property list -> broker -> packages, desktop unchanged, build clean, four fee/promotion tests pass; not published.
