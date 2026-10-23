@@ -36,7 +36,7 @@ export default function SellerBrokerValue() {
             <h2 id="broker-value-title" className="font-display text-5xl leading-[0.98] md:text-7xl lg:col-span-8 lg:text-8xl">A better sale.<br /><em className="font-normal text-primary">A lighter load.</em></h2>
             <div className="lg:col-span-4 lg:pb-2">
               <p className="text-base font-light leading-relaxed text-foreground/75 md:text-lg">The price is only part of the story. Bringing the buyer, the paperwork and the cemetery together is where a broker makes the difference.</p>
-              <Button asChild variant="link" className="mt-4 h-auto whitespace-normal px-0 text-left"><Link to="/what-is-my-cemetery-plot-worth-texas">Explore your plot’s estimated value <ArrowUpRight className="shrink-0" /></Link></Button>
+              <Button asChild variant="link" className="mt-4 hidden h-auto whitespace-normal px-0 text-left md:inline-flex"><Link to="/what-is-my-cemetery-plot-worth-texas">Explore your plot’s estimated value <ArrowUpRight className="shrink-0" /></Link></Button>
             </div>
           </motion.header>
         </div>
