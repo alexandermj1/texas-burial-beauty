@@ -1,3 +1,4 @@
+import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
 // Seller Agent — reviews one seller's whole record against the TCB Seller
 // Playbook and proposes the next step (reply, internal note, or hand to a
 // human). Phase 1 runs in shadow/approval mode: nothing is sent to a customer
@@ -208,6 +209,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
  - Quotes: apart from resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, a different garden/lawn (different area) or a different cemetery, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
+D1 deed photos/scans are copies only: the original must physically arrive before listing paperwork is complete. A seller saying mailed is not receipt. For all original-required items attach the copy without setting received; physical receipt is logged by staff separately. Apply record/checklist updates before the reply that reports them done.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
 // Ownership / document questions — the AI answers these itself from the same
@@ -900,6 +902,9 @@ Deno.serve(async (req) => {
     let error: string | null = null;
 
     if (act.action_type === "reply_email") {
+      const { data: siblings, error: siblingError } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
+      if (siblingError) return json({ error: siblingError.message }, 500);
+      if (pendingRecordChanges(siblings ?? [], act)) return json({ error: "Approve the record and document updates from this review before sending its reply." }, 409);
       if (!act.email_body || !sub.email) return json({ error: "Email body or recipient missing" }, 400);
       const res = await fetch(`${url}/functions/v1/gmail-action`, {
         method: "POST",
@@ -955,18 +960,20 @@ Deno.serve(async (req) => {
             : `Changed the ${FIELD_LABEL[k] ?? k} from ${before[k]} to ${v}.`).join(" "));
         } else if (act.action_type === "update_document_items") {
           const items = (act.payload?.items ?? []) as { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[];
-          const { data: rows } = await db.from("submission_documents").select("id,label,person_name,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).in("id", items.map((i) => i.id));
+          const { data: rows } = await db.from("submission_documents").select("id,doc_code,label,person_name,needs_notary,manual_override,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).in("id", items.map((i) => i.id));
           const done: string[] = [];
           for (const it of items) {
             const row = (rows ?? []).find((x) => x.id === it.id);
             if (!row) continue;
             const patch: Record<string, unknown> = {};
             if (it.state) {
+              if (["received", "notarized"].includes(it.state) && requiresPhysicalOriginal(row, sub.ownership_answers ?? {}) && !physicalOriginalLogged(row)) throw new Error(`A scan or mailing confirmation cannot mark ${row.label} received. Attach the copy without changing its state; staff must log arrival of the physical original separately.`);
               patch.manual_override = it.state; patch.required_state = it.state;
               patch.status = ["received", "notarized"].includes(it.state) ? "received" : "pending";
               if (patch.status === "received") patch.received_at = now;
             }
             const added: string[] = [];
+            if (it.attach_file_ids.length && !sub.customer_profile_id) throw new Error("Cannot attach files without a linked customer profile.");
             if (it.attach_file_ids.length && sub.customer_profile_id) {
               const { data: files } = await db.from("customer_files").select("id,file_name,file_path,mime_type").eq("customer_profile_id", sub.customer_profile_id).in("id", it.attach_file_ids).is("deleted_at", null);
               const paths = [...(row.file_urls ?? [])];

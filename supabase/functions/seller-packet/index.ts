@@ -1,3 +1,4 @@
+import { requiresPhysicalOriginal, physicalOriginalLogged, documentSatisfied } from "../_shared/originalDocumentReceipt.ts";
 // Public, token-free (submission-uuid keyed) document packet for sellers.
 // Powers /documents?s=<submission id>: one branded page that lists every
 // document we still need, explains what each one is, and accepts uploads
@@ -337,7 +338,7 @@ Deno.serve(async (req) => {
 
       const { data: docRow } = await supabase
         .from("submission_documents")
-        .select("label, doc_code, person_name")
+        .select("label, doc_code, person_name, manual_override")
         .eq("id", docId)
         .is("deleted_at", null)
         .eq("submission_id", submissionId)
@@ -357,7 +358,7 @@ Deno.serve(async (req) => {
 
       const { error } = await supabase
         .from("submission_documents")
-        .update({ file_url: path, file_urls: allPaths, status: "received", required_state: "received" })
+        .update({ file_url: path, file_urls: allPaths, ...(docRow && requiresPhysicalOriginal(docRow, sub.ownership_answers ?? {}) && !physicalOriginalLogged(docRow) ? { status: "pending", required_state: "needed" } : { status: "received", required_state: "received" }) })
         .eq("id", docId)
         .eq("submission_id", submissionId);
       if (error) throw error;
@@ -403,12 +404,11 @@ Deno.serve(async (req) => {
       // Is anything still outstanding? If not, the listing's paperwork is complete.
       const { data: remaining } = await supabase
         .from("submission_documents")
-        .select("id, status, manual_override, required_state")
+        .select("id, doc_code, person_name, status, manual_override, required_state")
         .eq("submission_id", submissionId)
         .is("deleted_at", null);
       const outstanding = (remaining ?? []).filter((d: Record<string, string | null>) => {
-        const state = d.manual_override ?? d.required_state;
-        return d.status !== "received" && state !== "received" && state !== "not_required" && state !== "waived";
+        return !documentSatisfied(d, sub.ownership_answers ?? {});
       });
       const allDone = (remaining ?? []).length > 0 && outstanding.length === 0;
       if (allDone) {
