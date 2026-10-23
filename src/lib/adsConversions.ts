@@ -26,13 +26,14 @@ export function reportLeadConversion(kind: LeadKind, submissionId: string) {
   } catch (e) {
     console.warn("ads conversion failed", e);
   }
-  // OpenAI pixel: report the same completed form as a lead conversion so
-  // ChatGPT-referred visitors can be measured. The submission id dedupes
-  // resubmits/reloads the same way transaction_id does for Google.
+  // OpenAI pixel: report the same completed form as a lead_created
+  // conversion so ChatGPT-referred visitors can be measured. The submission
+  // id dedupes resubmits/reloads the same way transaction_id does for Google.
   try {
-    window.oaiq?.("track", "lead", {
+    window.oaiq?.("measure", "lead_created", {
+      type: "customer_action",
+      id: submissionId,
       lead_type: kind,
-      transaction_id: submissionId,
     });
   } catch (e) {
     console.warn("openai pixel conversion failed", e);
