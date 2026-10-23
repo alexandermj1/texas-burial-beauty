@@ -1,8 +1,11 @@
-// Google Ads conversion reporting for completed website forms.
+// Google Ads + OpenAI pixel conversion reporting for completed website forms.
 // Fired only after a submission is saved successfully; the submission id is
 // passed as transaction_id so a resubmit/reload never double-counts.
 declare global {
-  interface Window { gtag?: (...args: unknown[]) => void }
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+    oaiq?: ((...args: unknown[]) => void) & { q?: unknown[] };
+  }
 }
 
 export const ADS_CONVERSIONS = {
