@@ -277,6 +277,7 @@ const SellProperty = () => {
                 <h2 className="font-display text-4xl md:text-6xl text-foreground tracking-tight leading-[1.02] max-w-2xl">
                   Why sellers <span className="italic text-primary">choose us.</span>
                 </h2>
+                <p data-simon-review className="mt-4 text-[15px] leading-relaxed text-foreground/75 md:hidden">We handle everything — the documents, the paperwork and the calls. We work with the cemetery and with mortuaries to get you the highest amount we can for your property. Every listing stays live until the property sells. Once you are listed, you can have peace of mind that we are working to sell your plot, and we will reach back out to you when it has sold.</p>
               </div>
               <p className="hidden md:block font-display italic text-foreground/60 max-w-sm text-base leading-relaxed">
                 Six reasons owners hand us the deed and breathe out for the first time in months.
