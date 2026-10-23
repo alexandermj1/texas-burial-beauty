@@ -1,3 +1,4 @@
+import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
 import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
 // Seller Agent — reviews one seller's whole record against the TCB Seller
 // Playbook and proposes the next step (reply, internal note, or hand to a
@@ -18,7 +19,8 @@ const json = (data: unknown, status = 200) =>
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional() }),
-  z.object({ action: z.literal("execute"), action_id: z.string().uuid() }),
+  z.object({ action: z.literal("execute"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
+  z.object({ action: z.literal("feedback"), action_id: z.string().uuid(), kind: z.enum(["comment", "outcome"]), comment: z.string().trim().max(2000).optional(), correct: z.boolean().optional(), went_live: z.boolean().optional() }),
   z.object({ action: z.literal("reject"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("prepare_packet"), submission_id: z.string().uuid(), items: z.array(z.object({ label: z.string().max(300), person: z.string().max(200).nullable().optional(), needsNotary: z.boolean().optional() })).max(40).optional() }),
   z.object({ action: z.literal("verify_deed"), submission_id: z.string().uuid() }),
@@ -67,7 +69,7 @@ async function loadPlaybook(db: SupabaseClient) {
 
 async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string | null = null) {
   const email = String(sub.email ?? "").toLowerCase();
-  const [siblings, emails, notes, files, contracts, docs, reminders] = await Promise.all([
+  const [siblings, emails, notes, files, contracts, docs, reminders, feedback] = await Promise.all([
     db.from("contact_submissions").select("id,created_at,cemetery,property_type,spaces,quote_sent_at,quote_response,la_signed_at,archived_at").eq("email", sub.email).neq("id", sub.id).is("deleted_at", null).limit(10),
     db.from("email_messages").select("from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
     db.from("customer_notes").select("body,author_name,created_at").or(`submission_id.eq.${sub.id}${sub.customer_profile_id ? `,customer_profile_id.eq.${sub.customer_profile_id}` : ""}`).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
@@ -77,6 +79,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,sign_token,sign_token_expires_at,principal_key").eq("submission_id", sub.id).is("deleted_at", null),
     db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
     db.from("reminder_log").select("reminder_type,status,sent_at").eq("submission_id", sub.id).is("deleted_at", null).order("sent_at", { ascending: false }).limit(10),
+    db.from("ai_agent_feedback").select("action_id,kind,comment,correct,went_live,author_name,created_at").eq("submission_id", sub.id).order("created_at", { ascending: false }).limit(20),
   ]);
 
   const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
@@ -134,6 +137,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
+    `STAFF ACTION FEEDBACK (specific action evidence, not general instructions):\n${JSON.stringify(feedback.data ?? [])}`,
     `EMAIL THREAD (oldest to newest):\n${threadText || "(no emails)"}`,
   ].join("\n\n");
 
@@ -884,13 +888,20 @@ Deno.serve(async (req) => {
 
     const { data: act } = await db.from("ai_agent_actions").select("*").eq("id", body.action_id).maybeSingle();
     if (!act) return json({ error: "Action not found" }, 404);
+    if (body.action === "feedback") {
+      if (!feedbackAllowed(act.status, body.kind)) return json({ error: "Outcome feedback is available after this action completes." }, 409);
+      if (body.kind === "comment" && !body.comment?.trim()) return json({ error: "Enter a comment." }, 400);
+      if (body.kind === "outcome" && (typeof body.correct !== "boolean" || typeof body.went_live !== "boolean")) return json({ error: "Confirm correctness and whether the change went live." }, 400);
+      const { error } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: act.submission_id, kind: body.kind, comment: body.comment || null, correct: body.correct ?? null, went_live: body.went_live ?? null, author_user_id: user.id, author_name: user.name });
+      return error ? json({ error: error.message }, 500) : json({ ok: true });
+    }
     if (act.status !== "proposed") return json({ error: `Action already ${act.status}` }, 409);
 
     if (body.action === "reject") {
       const reason = (body as any).reason?.trim() || null;
       await db.from("ai_agent_actions").update({ status: "rejected", decided_by_name: user.name, decided_by_user_id: user.id ?? null, decision_reason: reason, decided_at: new Date().toISOString() }).eq("id", act.id);
-      // Saved as a staff note so the AI re-thinks with this feedback (note trigger re-runs it).
-      if (reason) await db.from("customer_notes").insert({ submission_id: act.submission_id, body: `Declined AI suggestion (${String(act.action_type).replace(/_/g, " ")}): ${reason}`, author_name: user.name, author_user_id: user.id ?? null });
+      const { error: feedbackError } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: act.submission_id, kind: "declined", comment: reason, author_user_id: user.id, author_name: user.name });
+      if (feedbackError) return json({ error: feedbackError.message }, 500);
       return json({ ok: true });
     }
 
@@ -1091,8 +1102,10 @@ Deno.serve(async (req) => {
 
     await db.from("ai_agent_actions").update(error
       ? { error }
-      : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, error: null }).eq("id", act.id);
+      : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, decision_reason: body.reason || null, error: null }).eq("id", act.id);
     if (!error) {
+      const { error: feedbackError } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: sub.id, kind: "accepted", comment: body.reason || null, author_user_id: user.id, author_name: user.name });
+      if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
     return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces", "increase_quote_ten_percent", "resend_expired_quote"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
