@@ -204,7 +204,7 @@ const Admin = () => {
       if (!cancelled && data) setSubmissions(data as any);
     };
 
-    const interval = setInterval(refreshSubmissions, 15000);
+    const interval = setInterval(refreshSubmissions, 60000);
     const onFocus = () => { refreshSubmissions(); };
     window.addEventListener("focus", onFocus);
     const channel = supabase
