@@ -566,3 +566,50 @@
 .plot-shop-count span { font-size: 16px; }
 .plot-shop-section { font-size: 12px; font-weight: 500; }
 @media (max-width: 767px) { .plot-shop-name { font-size: 25px; } .plot-shop-count { font-size: 32px; } .plot-shop-section { font-size: 11px; } }
+
+/* ---------------------------------------------------------------------------
+   Preneed guide masthead — Vogue-style editorial opening.
+   A watercolour wash sits behind the type, the property illustrations rest in
+   soft pools of pigment, and the discount tag hangs on a hairline rule.
+   --------------------------------------------------------------------------- */
+.preneed-masthead { position: relative; isolation: isolate; }
+.preneed-masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(56% 44% at 6% 2%, hsl(var(--sage-light) / .95) 0%, hsl(var(--sage-light) / 0) 62%),
+    radial-gradient(46% 40% at 96% 8%, hsl(var(--terracotta-light) / .9) 0%, hsl(var(--terracotta-light) / 0) 60%),
+    radial-gradient(78% 54% at 50% 100%, hsl(var(--sand-light) / .95) 0%, hsl(var(--sand-light) / 0) 74%);
+}
+.preneed-masthead::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .22;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.45'/%3E%3C/svg%3E");
+}
+.preneed-plate { position: relative; transition: transform 420ms cubic-bezier(.22,1,.36,1); }
+.preneed-plate::after {
+  content: '';
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 10%;
+  height: 30%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, hsl(var(--sage) / .18) 0%, hsl(var(--sage) / 0) 72%);
+  filter: blur(5px);
+}
+.preneed-plate:hover { transform: translateY(-6px); }
+.preneed-tag { transform: rotate(-2.5deg); }
+@media (prefers-reduced-motion: reduce) {
+  .preneed-plate { transition: none; }
+  .preneed-plate:hover { transform: none; }
+}
