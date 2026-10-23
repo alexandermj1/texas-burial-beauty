@@ -2,6 +2,10 @@ import { motion } from "framer-motion";
 import { ArrowRight, ArrowLeft, Mail, Plus, CheckCircle2, MapPin, ShieldCheck, FileSearch, BadgeCheck, Footprints } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import singlePlot from "@/assets/property-types/single-plot.png";
+import companionPlot from "@/assets/property-types/companion-plot.png";
+import cremationNiche from "@/assets/property-types/cremation-niche.png";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
@@ -110,116 +114,79 @@ const GuidePreneedCemeteryPlots = () => (
     />
     <Navbar forceScrolled />
 
-    {/* HERO */}
-    <section className="relative pt-28 pb-24 overflow-hidden bg-[hsl(38_35%_95%)]">
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(40_45%_92%)] via-[hsl(38_35%_95%)] to-[hsl(145_25%_88%)]" />
-      <div className="absolute top-0 left-0 w-[44rem] h-[44rem] rounded-full bg-[hsl(16_50%_70%)]/22 blur-3xl -translate-y-1/3 -translate-x-1/4 pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 w-[34rem] h-[34rem] rounded-full bg-[hsl(145_25%_55%)]/22 blur-3xl pointer-events-none" />
-      <div
-        className="absolute inset-0 opacity-[0.35] pointer-events-none"
-        style={{ backgroundImage: "radial-gradient(hsl(28 20% 50% / 0.35) 1px, transparent 1px)", backgroundSize: "22px 22px" }}
-      />
-      {(() => {
-        const FLOWERS = import.meta.glob("@/assets/flowers/*.asset.json", { eager: true, import: "default" }) as Record<string, { url: string }>;
-        const byName = (n: string) => Object.entries(FLOWERS).find(([k]) => k.includes(n))?.[1]?.url;
-        const scatter = [
-          { top: "5%", right: "-4%", w: 220, rot: 14, op: 0.55, src: byName("palm-fan-clean") },
-          { top: "9%", left: "-3%", w: 240, rot: -18, op: 0.55, src: byName("banana-leaf-clean") },
-          { bottom: "15%", left: "4%", w: 170, rot: 10, op: 0.6, src: byName("hibiscus-coral") },
-          { bottom: "18%", right: "3%", w: 200, rot: -12, op: 0.55, src: byName("pink-branch") },
-        ];
-        return scatter.map((s, i) => s.src ? (
-          <img loading="lazy" decoding="async"
-            key={i}
-            src={s.src}
-            alt=""
-            aria-hidden
-            className="absolute pointer-events-none select-none hidden md:block"
-            style={{ top: s.top, bottom: s.bottom, left: s.left, right: s.right, width: s.w, opacity: s.op, transform: `rotate(${s.rot}deg)` }}
-          />
-        ) : null);
-      })()}
-      <svg className="absolute bottom-0 left-0 right-0 w-full pointer-events-none z-[1]" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
-        <path d="M0 40 Q360 80 720 40 T1440 40 L1440 80 L0 80 Z" className="fill-background" />
-      </svg>
+    {/* Editorial preneed masthead — original buyer property illustrations. */}
+    <section aria-labelledby="preneed-title" className="relative overflow-hidden bg-background pt-24 sm:pt-28 pb-8">
+      <div className="mx-auto max-w-screen-2xl px-5 sm:px-10 lg:px-16">
+        <div className="flex items-center justify-between gap-4 border-b border-foreground/20 pb-4 text-[10px] sm:text-xs uppercase text-muted-foreground">
+          <Link to="/guides" className="inline-flex items-center gap-2 hover:text-primary transition-colors"><ArrowLeft className="h-3.5 w-3.5" /> All Guides</Link>
+          <span>The Preneed Edition · 2026</span>
+        </div>
 
-      <div className="relative container mx-auto px-6 max-w-5xl">
-        <Link to="/guides" className="inline-flex items-center gap-1.5 text-xs tracking-[0.18em] uppercase text-foreground/60 hover:text-foreground mb-10 transition-colors">
-          <ArrowLeft className="w-3.5 h-3.5" /> All Guides
-        </Link>
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-2 mb-7 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <p className="text-accent text-[11px] tracking-[0.24em] uppercase font-semibold">The Preneed Edition</p>
-          </div>
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[5.25rem] text-foreground leading-[0.98] mb-7 tracking-tight">
-            Preneed Cemetery Plots in <span className="italic text-primary">Texas</span>
+        <div className="pt-7 sm:pt-10 text-center">
+          <p className="mb-4 text-xs uppercase text-primary">Texas Cemetery Brokers · Planning ahead</p>
+          <h1 id="preneed-title" className="mx-auto max-w-5xl font-display text-4xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none text-foreground">
+            Preneed Cemetery Plots<br /><span className="italic text-primary">in Texas.</span>
           </h1>
-          <p className="text-lg md:text-xl text-foreground/75 leading-relaxed mb-8 max-w-2xl font-light">
+
+          <div className="mx-auto mt-4 grid max-w-4xl grid-cols-3 items-end gap-2 sm:gap-8" aria-label="Burial property illustrations">
+            {[
+              { src: singlePlot, label: "Burial plots", alt: "Watercolour burial headstone with small white flowers" },
+              { src: companionPlot, label: "Companion spaces", alt: "Watercolour companion burial space for two" },
+              { src: cremationNiche, label: "Cremation niches", alt: "Watercolour memorial niches for cremation" },
+            ].map((property) => (
+              <figure key={property.label} className="m-0 min-w-0">
+                <img src={property.src} alt={property.alt} fetchPriority="high" className="mx-auto h-28 sm:h-40 lg:h-48 w-full object-contain" />
+                <figcaption className="mt-1 text-[10px] sm:text-xs text-muted-foreground">{property.label}</figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <p className="mx-auto mt-6 max-w-3xl text-base sm:text-lg text-foreground/75 leading-relaxed">
             Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-9 max-w-3xl">
+          <div className="mx-auto mt-7 grid max-w-4xl grid-cols-2 sm:grid-cols-4 border-y border-foreground/20 py-5 gap-y-6">
             {[
               { k: "Up to 50%", v: "below cemetery retail" },
               { k: "0%", v: "interest for up to 24 months" },
               { k: "Sold-out", v: "sections we can still source" },
               { k: "100%", v: "of the paperwork done by us" },
-            ].map((s, i) => (
-              <motion.div
-                key={s.k}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.25 + i * 0.09 }}
-                className="rounded-2xl bg-background/70 backdrop-blur border border-border/60 px-4 py-3.5"
-              >
-                <p className="font-display text-2xl text-primary leading-none mb-1.5">{s.k}</p>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-foreground/60 leading-snug">{s.v}</p>
-              </motion.div>
+            ].map((stat) => (
+              <div key={stat.k} className="px-3 even:border-l even:border-border sm:[&:not(:first-child)]:border-l">
+                <p className="font-display text-3xl sm:text-4xl italic text-primary leading-none">{stat.k}</p>
+                <p className="mx-auto mt-2 max-w-40 text-[11px] text-muted-foreground leading-snug">{stat.v}</p>
+              </div>
             ))}
           </div>
-
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs tracking-wide text-foreground/60 mb-9">
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Texas Cemetery Brokers</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> Updated 2026</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 8 min read</span>
-            <span className="inline-flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-primary" /> 12 chapters</span>
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button asChild size="lg" className="w-full sm:w-auto"><Link to="/buy">See Discounted Spaces <ArrowRight /></Link></Button>
+            <Button asChild variant="link" size="lg"><a href="#discounts">See The Discounts <ArrowRight /></a></Button>
           </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</p>
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
-            <Link to="/buy" className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent text-accent-foreground rounded-2xl font-medium text-[15px] shadow-[0_10px_28px_-8px_hsl(var(--accent)/0.55)] hover:-translate-y-0.5 transition-all">
-              <Plus className="w-4 h-4" /> See Discounted Spaces
-            </Link>
-            <a href="#discounts" className="inline-flex items-center gap-2 px-7 py-3.5 bg-background/80 backdrop-blur border border-border rounded-2xl font-medium text-[15px] text-foreground hover:bg-muted/50 transition-all">
-              See The Discounts <ArrowRight className="w-4 h-4" />
-            </a>
+        <nav aria-label="In this guide" className="mt-8 border-t border-foreground/20 pt-5">
+          <p className="mb-3 text-[10px] uppercase text-muted-foreground">In this guide</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-3">
+            {[
+              { href: "#what-is-preneed", t: "What preneed means" },
+              { href: "#why-ahead", t: "Why buy ahead" },
+              { href: "#by-owner", t: "By owner vs cemetery" },
+              { href: "#discounts", t: "The discounts" },
+              { href: "#financing", t: "0% financing" },
+              { href: "#sold-out", t: "Sold-out sections" },
+              { href: "#cost", t: "What it costs" },
+              { href: "#enquire", t: "Get options" },
+              { href: "#how", t: "How it works with us" },
+              { href: "#myths", t: "Myths" },
+              { href: "#cities", t: "Coverage" },
+              { href: "#cemeteries", t: "Popular cemeteries" },
+              { href: "#faq", t: "FAQ" },
+            ].map((chapter) => (
+              <a key={chapter.href} href={chapter.href} className="text-xs text-foreground/75 underline-offset-4 hover:underline hover:text-primary transition-colors">{chapter.t}</a>
+            ))}
           </div>
-
-          <div className="pt-6 border-t border-border/50">
-            <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-foreground/50 mb-3">In this guide</p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { href: "#what-is-preneed", t: "What preneed means" },
-                { href: "#why-ahead", t: "Why buy ahead" },
-                { href: "#by-owner", t: "By owner vs cemetery" },
-                { href: "#discounts", t: "The discounts" },
-                { href: "#financing", t: "0% financing" },
-                { href: "#sold-out", t: "Sold-out sections" },
-                { href: "#cost", t: "What it costs" },
-                { href: "#enquire", t: "Get options" },
-                { href: "#how", t: "How it works with us" },
-                { href: "#myths", t: "Myths" },
-                { href: "#cities", t: "Coverage" },
-                { href: "#cemeteries", t: "Popular cemeteries" },
-                { href: "#faq", t: "FAQ" },
-              ].map((c) => (
-                <a key={c.href} href={c.href} className="text-xs px-3 py-1.5 rounded-full bg-card border border-border/60 text-foreground/75 hover:border-primary/40 hover:text-primary transition-colors">
-                  {c.t}
-                </a>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+        </nav>
       </div>
     </section>
 
