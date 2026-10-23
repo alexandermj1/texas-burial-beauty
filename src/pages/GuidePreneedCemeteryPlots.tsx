@@ -143,9 +143,9 @@ const GuidePreneedCemeteryPlots = () => {
     <Navbar forceScrolled />
 
     {/* Editorial preneed masthead — Vogue-style, over a watercolour wash. */}
-    <section aria-labelledby="preneed-title" className="preneed-masthead relative overflow-hidden bg-background pt-24 sm:pt-28 pb-10">
-      <div className="mx-auto max-w-screen-2xl px-5 sm:px-10 lg:px-16">
-        <div className="flex items-center justify-between gap-4 border-b border-foreground/20 pb-4 text-[10px] sm:text-xs uppercase text-muted-foreground">
+    <section aria-labelledby="preneed-title" className="preneed-masthead relative overflow-hidden bg-background pt-24 sm:pt-28 pb-8">
+      <div className="mx-auto max-w-screen-2xl px-6 sm:px-8 lg:px-10">
+        <div className="flex items-center justify-between gap-4 border-b border-foreground/20 pb-3 text-[10px] sm:text-xs uppercase text-muted-foreground">
           <Link to="/guides" className="inline-flex items-center gap-2 hover:text-primary transition-colors"><ArrowLeft className="h-3.5 w-3.5" /> All Guides</Link>
           <span className="hidden sm:flex items-center gap-3 text-accent/70">
             <span className="h-px w-8 bg-foreground/15" />
@@ -155,49 +155,68 @@ const GuidePreneedCemeteryPlots = () => {
           <span>The Preneed Edition · 2026</span>
         </div>
 
-        <motion.div variants={mastheadStagger} initial={reduceMotion ? false : "hidden"} animate="show" className="pt-7 sm:pt-10 text-center">
-          <motion.p variants={mastheadRise} className="mb-5 flex items-center justify-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-primary">
-            <span className="hidden sm:block h-px w-8 bg-primary/30" />
-            Texas Cemetery Brokers · Planning ahead
-            <span className="hidden sm:block h-px w-8 bg-primary/30" />
-          </motion.p>
+        <motion.div variants={mastheadStagger} initial={reduceMotion ? false : "hidden"} animate="show" className="pt-6 sm:pt-8">
+          <div className="grid grid-cols-12 gap-x-8 gap-y-8 lg:gap-x-12">
+            {/* Headline column — left aligned, fills the width the article uses below */}
+            <div className="col-span-12 lg:col-span-7">
+              <motion.p variants={mastheadRise} className="mb-4 flex items-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-primary">
+                <span className="h-px w-8 bg-primary/30" />
+                Texas Cemetery Brokers · Planning ahead
+              </motion.p>
 
-          <motion.h1 id="preneed-title" variants={mastheadRise} className="mx-auto max-w-5xl font-display leading-none text-foreground">
-            <span className="block text-2xl sm:text-4xl lg:text-5xl italic text-accent">
-              <span className="relative inline-block px-1">
-                Discounted
-                <motion.svg viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true" className="absolute -bottom-1.5 left-0 h-3 w-full text-accent/55">
-                  <motion.path d="M4 10C58 3 150 2 256 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }} />
-                </motion.svg>
-              </span>
-            </span>
-            <span className="mt-2 block text-4xl sm:text-6xl lg:text-7xl xl:text-8xl">Preneed Cemetery Plots</span>
-            <span className="block text-4xl sm:text-6xl lg:text-7xl xl:text-8xl italic text-primary">in Texas.</span>
-          </motion.h1>
+              <motion.h1 id="preneed-title" variants={mastheadRise} className="font-display leading-[0.92] text-foreground">
+                <span className="block text-xl sm:text-2xl lg:text-3xl italic text-accent">
+                  <span className="relative inline-block px-1">
+                    Discounted
+                    <motion.svg viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true" className="absolute -bottom-1.5 left-0 h-3 w-full text-accent/55">
+                      <motion.path d="M4 10C58 3 150 2 256 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }} />
+                    </motion.svg>
+                  </span>
+                </span>
+                <span className="mt-1 block text-5xl sm:text-6xl lg:text-[4rem] xl:text-[4.6rem]">Preneed Cemetery Plots</span>
+                <span className="block text-5xl sm:text-6xl lg:text-[4rem] xl:text-[4.6rem] italic text-primary">in Texas.</span>
+              </motion.h1>
 
-          <motion.div variants={mastheadRise} className="mt-7">
-            <DiscountTag />
-          </motion.div>
+              <motion.div variants={mastheadRise} className="mt-5">
+                <DiscountTag />
+              </motion.div>
 
-          <motion.div variants={mastheadRise} className="mx-auto mt-7 grid max-w-4xl grid-cols-2 items-end gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-x-8" aria-label="Burial property illustrations">
-            {[
-              { src: singlePlot, label: "Burial plots", alt: "Watercolour burial headstone with small white flowers" },
-              { src: companionPlot, label: "Companion spaces", alt: "Watercolour companion burial space for two" },
-              { src: mausoleumPlot, label: "Mausoleum crypts", alt: "Watercolour mausoleum crypts with arched openings" },
-              { src: cremationNiche, label: "Cremation niches", alt: "Watercolour memorial niches for cremation" },
-            ].map((property) => (
-              <figure key={property.label} className="preneed-plate m-0 min-w-0">
-                <img src={property.src} alt={property.alt} fetchPriority="high" className="mx-auto h-28 sm:h-40 lg:h-48 w-full object-contain" />
-                <figcaption className="mt-1 text-[10px] sm:text-xs text-muted-foreground">{property.label}</figcaption>
-              </figure>
-            ))}
-          </motion.div>
+              <motion.p variants={mastheadRise} className="mt-5 max-w-2xl text-base sm:text-lg text-foreground/75 leading-relaxed">
+                Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
+              </motion.p>
 
-          <motion.p variants={mastheadRise} className="mx-auto mt-7 max-w-3xl text-base sm:text-lg text-foreground/75 leading-relaxed">
-            Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
-          </motion.p>
+              <motion.div variants={mastheadRise} className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <Button asChild size="lg" className="w-full sm:w-auto"><Link to="/buy">See Discounted Spaces <ArrowRight /></Link></Button>
+                <Button asChild variant="link" size="lg"><a href="#discounts">See The Discounts <ArrowRight /></a></Button>
+              </motion.div>
+              <motion.p variants={mastheadRise} className="mt-2 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</motion.p>
+            </div>
 
-          <motion.div variants={mastheadRise} className="mx-auto mt-7 grid max-w-4xl grid-cols-2 border-y border-foreground/20 py-5 gap-y-6 sm:grid-cols-4">
+            {/* Grounds photograph — the space the old centred layout left empty */}
+            <motion.figure variants={mastheadRise} className="col-span-12 m-0 flex min-w-0 flex-col gap-4 lg:col-span-5">
+              <div className="relative min-h-[18rem] flex-1 overflow-hidden rounded-2xl border border-border/60 shadow-soft">
+                <img src={memorialPark.url} alt="Sunlit memorial park grounds on rolling green lawns, with flat grave markers set into the turf and trees framing the view" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-[center_30%]" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent px-4 pb-3 pt-12 text-[10px] uppercase tracking-[0.22em] text-white/90">
+                  Every space is shown in person before you commit
+                </figcaption>
+              </div>
+              <div className="grid grid-cols-4 gap-2 sm:gap-3" aria-label="Burial property illustrations">
+                {[
+                  { src: singlePlot, label: "Burial plots", alt: "Watercolour burial headstone with small white flowers" },
+                  { src: companionPlot, label: "Companion spaces", alt: "Watercolour companion burial space for two" },
+                  { src: mausoleumPlot, label: "Mausoleum crypts", alt: "Watercolour mausoleum crypts with arched openings" },
+                  { src: cremationNiche, label: "Cremation niches", alt: "Watercolour memorial niches for cremation" },
+                ].map((property) => (
+                  <figure key={property.label} className="preneed-plate m-0 min-w-0">
+                    <img src={property.src} alt={property.alt} loading="lazy" className="mx-auto h-14 w-full object-contain sm:h-20" />
+                    <figcaption className="mt-1 text-center text-[9px] leading-snug text-muted-foreground sm:text-[11px]">{property.label}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </motion.figure>
+          </div>
+
+          <motion.div variants={mastheadRise} className="mt-8 grid grid-cols-2 gap-y-4 border-y border-foreground/20 py-4 sm:grid-cols-4">
             {[
               { k: "Up to 50%", v: "below cemetery retail" },
               { k: "0%", v: "interest for up to 24 months" },
@@ -205,20 +224,14 @@ const GuidePreneedCemeteryPlots = () => {
               { k: "100%", v: "of the paperwork done by us" },
             ].map((stat) => (
               <div key={stat.k} className="px-3 even:border-l even:border-border sm:[&:not(:first-child)]:border-l">
-                <p className="font-display text-3xl sm:text-4xl italic text-primary leading-none">{stat.k}</p>
-                <p className="mx-auto mt-2 max-w-40 text-[11px] text-muted-foreground leading-snug">{stat.v}</p>
+                <p className="font-display text-3xl italic leading-none text-primary sm:text-4xl">{stat.k}</p>
+                <p className="mx-auto mt-2 max-w-40 text-[11px] leading-snug text-muted-foreground">{stat.v}</p>
               </div>
             ))}
           </motion.div>
-
-          <motion.div variants={mastheadRise} className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild size="lg" className="w-full sm:w-auto"><Link to="/buy">See Discounted Spaces <ArrowRight /></Link></Button>
-            <Button asChild variant="link" size="lg"><a href="#discounts">See The Discounts <ArrowRight /></a></Button>
-          </motion.div>
-          <motion.p variants={mastheadRise} className="mt-3 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</motion.p>
         </motion.div>
 
-        <nav aria-label="In this guide" className="mt-8 border-t border-foreground/20 pt-5">
+        <nav aria-label="In this guide" className="mt-5">
           <p className="mb-3 text-[10px] uppercase text-muted-foreground">In this guide</p>
           <div className="flex flex-wrap gap-x-5 gap-y-3">
             {[
@@ -236,7 +249,7 @@ const GuidePreneedCemeteryPlots = () => {
               { href: "#cemeteries", t: "Popular cemeteries" },
               { href: "#faq", t: "FAQ" },
             ].map((chapter) => (
-              <a key={chapter.href} href={chapter.href} className="text-xs text-foreground/75 underline-offset-4 hover:underline hover:text-primary transition-colors">{chapter.t}</a>
+              <a key={chapter.href} href={chapter.href} className="text-xs text-foreground/75 underline-offset-4 hover:text-primary hover:underline transition-colors">{chapter.t}</a>
             ))}
           </div>
         </nav>
