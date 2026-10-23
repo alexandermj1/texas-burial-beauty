@@ -631,6 +631,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         cache.fullAt = Date.now();
         cache.pending = []; cache.removed = [];
       } else {
+        // Cheap check: only emails newer than the newest one we already hold.
+        const newest = cache.rows[0]?.received_at;
+        if (newest) {
+          const { data: fresh, error } = await supabase
+            .from("email_messages" as any)
+            .select("id, matched_submission_id, from_email, to_email, received_at")
+            .gte("received_at", newest)
+            .order("received_at", { ascending: false })
+            .limit(1000);
+          if (cancelled) return;
+          if (!error && fresh) cache.pending.push(...(fresh as any[]));
+        }
         cache.rows = mergeEmailRows(cache.rows, cache.pending, cache.removed);
         cache.pending = []; cache.removed = [];
       }
@@ -784,10 +796,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (t) return;
       t = setTimeout(() => { t = null; recompute(); }, 5000);
     };
+    // Light check for new emails once a minute (full re-read every 15 min).
+    const poll = setInterval(() => { if (document.visibilityState === "visible") recompute(); }, 60000);
     const ch = supabase.channel("email_messages_awaiting")
       .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, schedule)
       .subscribe();
-    return () => { cancelled = true; if (t) clearTimeout(t); ch.unsubscribe(); supabase.removeChannel(ch); };
+    return () => { cancelled = true; clearInterval(poll); if (t) clearTimeout(t); ch.unsubscribe(); supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingKey]);
 
