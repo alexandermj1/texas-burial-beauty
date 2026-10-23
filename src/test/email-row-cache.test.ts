@@ -14,9 +14,8 @@ describe("email row cache", () => {
     expect(out[0].matched_submission_id).toBe("s9");
     expect(out[0].from_email).toBe("a@x.com");
   });
-  it("drops deleted or soft-deleted emails", () => {
+  it("drops deleted emails", () => {
     expect(mergeEmailRows([row("1", "2026-10-01"), row("2", "2026-10-02")], [], ["1"]).map((r) => r.id)).toEqual(["2"]);
-    expect(mergeEmailRows([row("1", "2026-10-01")], [{ id: "1", deleted_at: "2026-10-23" }])).toEqual([]);
   });
   it("matches a full re-read after merging changes", () => {
     const full = [row("3", "2026-10-22", { matched_submission_id: "s1" }), row("2", "2026-10-10"), row("1", "2026-10-01")];

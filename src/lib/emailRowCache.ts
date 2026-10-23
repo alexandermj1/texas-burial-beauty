@@ -8,7 +8,6 @@ export type LightEmailRow = {
   from_email: string | null;
   to_email: string | null;
   received_at: string | null;
-  deleted_at?: string | null;
 };
 
 export const FULL_EMAIL_RESCAN_MS = 15 * 60 * 1000;
@@ -19,8 +18,7 @@ export function mergeEmailRows(cached: LightEmailRow[], incoming: Partial<LightE
   for (const r of incoming) {
     if (!r?.id) continue;
     const merged = { ...(byId.get(r.id) ?? {}), ...pickLight(r) } as LightEmailRow;
-    if (merged.deleted_at) byId.delete(r.id);
-    else byId.set(r.id, merged);
+    byId.set(r.id, merged);
   }
   for (const id of removedIds) byId.delete(id);
   return [...byId.values()].sort((a, b) => String(b.received_at ?? "").localeCompare(String(a.received_at ?? "")));
@@ -28,7 +26,7 @@ export function mergeEmailRows(cached: LightEmailRow[], incoming: Partial<LightE
 
 function pickLight(r: Partial<LightEmailRow>): Partial<LightEmailRow> {
   const out: Partial<LightEmailRow> = { id: r.id };
-  for (const k of ["matched_submission_id", "from_email", "to_email", "received_at", "deleted_at"] as const) {
+  for (const k of ["matched_submission_id", "from_email", "to_email", "received_at"] as const) {
     if (k in r) (out as any)[k] = r[k];
   }
   return out;
