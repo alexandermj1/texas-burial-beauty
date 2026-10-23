@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Diagnose and correct Kristen Reed’s approved AI record/document/relationship updates; distinguish deed photos from mailed originals and require physical original receipt before paperwork completion; verify persisted results without sending another email.
 - [x] Make the mobile sell page purposeful: service introduction → three selling steps → free valuation → broker services → property sheet → fees; retain ownership prose in an expandable section, show services before comparison statistics. 390px/320px form next/back and ownership expansion verified, desktop preserved, no overflow or page errors, four fee tests pass; not published.
 - [x] Move the listing packages below the property list and broker comparison on phones only (desktop order unchanged) and keep the October offer line on one centered line; 390px order read back as property list -> broker -> packages, desktop unchanged, build clean, four fee/promotion tests pass; not published.
 
