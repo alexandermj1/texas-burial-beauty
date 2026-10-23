@@ -120,7 +120,7 @@ const DiscountTag = () => (
   <p className="flex items-center gap-4 sm:gap-6 border-y border-foreground/15 py-3 sm:py-4" aria-label="Up to 50% off cemetery retail">
     <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180 hidden sm:block">Save</span>
     <span className="flex items-baseline font-display italic leading-none text-accent">
-      <span className="text-[10px] sm:text-xs not-italic font-sans uppercase tracking-[0.25em] text-muted-foreground mr-2 self-start mt-2">up to</span>
+      <span className="text-[10px] sm:text-xs not-italic font-sans uppercase tracking-[0.25em] text-muted-foreground mr-2 self-start mt-2 whitespace-nowrap">up to</span>
       <span className="text-6xl sm:text-7xl lg:text-8xl tracking-tight">50</span>
       <span className="text-3xl sm:text-4xl lg:text-5xl ml-0.5">%</span>
     </span>
