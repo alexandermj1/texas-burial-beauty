@@ -632,7 +632,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         cache.pending = []; cache.removed = [];
       } else {
         // Cheap check: only emails newer than the newest one we already hold.
-        const newest = cache.rows[0]?.received_at;
+        // Look back 30 minutes before the newest held email: inbox sync can
+        // add a message a few minutes after its sent time, so a strict
+        // "newer than newest" check could miss it until the full re-read.
+        const newestAt = cache.rows[0]?.received_at;
+        const newest = newestAt ? new Date(new Date(newestAt).getTime() - 30 * 60 * 1000).toISOString() : null;
         if (newest) {
           const { data: fresh, error } = await supabase
             .from("email_messages" as any)
