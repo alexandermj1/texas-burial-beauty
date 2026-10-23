@@ -7,6 +7,7 @@ import singlePlot from "@/assets/property-types/single-plot.png";
 import companionPlot from "@/assets/property-types/companion-plot.png";
 import mausoleumPlot from "@/assets/property-types/mausoleum.png";
 import cremationNiche from "@/assets/property-types/cremation-niche.png";
+import memorialPark from "@/assets/guides/preneed-memorial-park.jpg.asset.json";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
