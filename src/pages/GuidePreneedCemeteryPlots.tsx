@@ -181,20 +181,10 @@ const GuidePreneedCemeteryPlots = () => {
               <motion.div variants={mastheadRise} className="mt-5">
                 <DiscountTag />
               </motion.div>
-
-              <motion.p variants={mastheadRise} className="mt-5 max-w-2xl text-base sm:text-lg text-foreground/75 leading-relaxed">
-                Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
-              </motion.p>
-
-              <motion.div variants={mastheadRise} className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <Button asChild size="lg" className="w-full sm:w-auto"><Link to="/buy">See Discounted Spaces <ArrowRight /></Link></Button>
-                <Button asChild variant="link" size="lg"><a href="#discounts">See The Discounts <ArrowRight /></a></Button>
-              </motion.div>
-              <motion.p variants={mastheadRise} className="mt-2 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</motion.p>
             </div>
 
             {/* Grounds photograph — the space the old centred layout left empty */}
-            <motion.figure variants={mastheadRise} className="col-span-12 m-0 flex min-w-0 flex-col gap-4 lg:col-span-5">
+            <motion.figure variants={mastheadRise} className="col-span-12 m-0 flex min-w-0 flex-col gap-4 lg:col-span-5 lg:row-span-2">
               <div className="relative min-h-[18rem] flex-1 overflow-hidden rounded-2xl border border-border/60 shadow-soft">
                 <img src={memorialPark.url} alt="Sunlit memorial park grounds on rolling green lawns, with flat grave markers set into the turf and trees framing the view" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover object-[center_30%]" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent px-4 pb-3 pt-12 text-[10px] uppercase tracking-[0.22em] text-white/90">
@@ -215,6 +205,19 @@ const GuidePreneedCemeteryPlots = () => {
                 ))}
               </div>
             </motion.figure>
+
+            {/* Standfirst and calls to action — directly under the headline on desktop, under the photo on phones */}
+            <div className="col-span-12 lg:col-span-7">
+              <motion.p variants={mastheadRise} className="max-w-2xl text-base sm:text-lg text-foreground/75 leading-relaxed">
+                Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
+              </motion.p>
+
+              <motion.div variants={mastheadRise} className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <Button asChild size="lg" className="w-full sm:w-auto"><Link to="/buy">See Discounted Spaces <ArrowRight /></Link></Button>
+                <Button asChild variant="link" size="lg"><a href="#discounts">See The Discounts <ArrowRight /></a></Button>
+              </motion.div>
+              <motion.p variants={mastheadRise} className="mt-2 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</motion.p>
+            </div>
           </div>
 
           <motion.div variants={mastheadRise} className="mt-8 grid grid-cols-2 gap-y-4 border-y border-foreground/20 py-4 sm:grid-cols-4">
