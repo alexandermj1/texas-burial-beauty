@@ -174,8 +174,8 @@ const GuidePreneedCemeteryPlots = () => {
                     </motion.svg>
                   </span>
                 </span>
-                <span className="mt-1 block text-5xl sm:text-6xl lg:text-[4rem] xl:text-[4.6rem]">Preneed Cemetery Plots</span>
-                <span className="block text-5xl sm:text-6xl lg:text-[4rem] xl:text-[4.6rem] italic text-primary">in Texas.</span>
+                <span className="mt-1 block text-balance text-[clamp(2.6rem,calc(5.2vw_-_6px),4.7rem)]">Preneed Cemetery Plots</span>
+                <span className="block text-balance text-[clamp(2.6rem,calc(5.2vw_-_6px),4.7rem)] italic text-primary">in Texas.</span>
               </motion.h1>
 
               <motion.div variants={mastheadRise} className="mt-5">
