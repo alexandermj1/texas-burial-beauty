@@ -248,6 +248,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_agent_feedback: {
+        Row: {
+          action_id: string
+          author_name: string
+          author_user_id: string
+          comment: string | null
+          correct: boolean | null
+          created_at: string
+          id: string
+          kind: string
+          submission_id: string
+          went_live: boolean | null
+        }
+        Insert: {
+          action_id: string
+          author_name: string
+          author_user_id: string
+          comment?: string | null
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          kind: string
+          submission_id: string
+          went_live?: boolean | null
+        }
+        Update: {
+          action_id?: string
+          author_name?: string
+          author_user_id?: string
+          comment?: string | null
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          kind?: string
+          submission_id?: string
+          went_live?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_feedback_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agent_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_agent_runs: {
         Row: {
           confidence: number | null
