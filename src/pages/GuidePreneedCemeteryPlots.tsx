@@ -1,10 +1,11 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowLeft, Mail, Plus, CheckCircle2, MapPin, ShieldCheck, FileSearch, BadgeCheck, Footprints } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import singlePlot from "@/assets/property-types/single-plot.png";
 import companionPlot from "@/assets/property-types/companion-plot.png";
+import mausoleumPlot from "@/assets/property-types/mausoleum.png";
 import cremationNiche from "@/assets/property-types/cremation-niche.png";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
@@ -103,10 +104,37 @@ const verification = [
   { Icon: ShieldCheck, t: "Co-owners & ROFR cleared", d: "Written consent from every co-owner, and any right-of-first-refusal resolved, before the space is offered." },
 ];
 
-const GuidePreneedCemeteryPlots = () => (
+const mastheadStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
+};
+
+const mastheadRise = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
+};
+
+/** Kraft discount tag, drawn in SVG so it stays crisp at any size. */
+const DiscountTag = () => (
+  <span className="flex items-center justify-center gap-3 sm:gap-4" aria-hidden="true">
+    <span className="h-px w-10 sm:w-20 bg-gradient-to-r from-transparent to-accent/50" />
+    <svg viewBox="0 0 190 54" className="preneed-tag w-32 sm:w-40 shrink-0" role="img" aria-label="Up to 50% off cemetery retail">
+      <path d="M31 3h151a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H31L6 27Z" fill="hsl(var(--accent))" />
+      <path d="M34 8h144a3 3 0 0 1 3 3v32a3 3 0 0 1-3 3H34L14 27Z" fill="none" stroke="hsl(var(--accent-foreground) / .5)" strokeWidth="1" />
+      <circle cx="22" cy="27" r="5" fill="hsl(var(--background))" />
+      <text x="108" y="23" textAnchor="middle" className="font-display" fontSize="12" letterSpacing="3" fill="hsl(var(--accent-foreground))" opacity=".9">UP TO</text>
+      <text x="108" y="42" textAnchor="middle" className="font-display" fontSize="20" letterSpacing="1.2" fill="hsl(var(--accent-foreground))">50% OFF</text>
+    </svg>
+    <span className="h-px w-10 sm:w-20 bg-gradient-to-l from-transparent to-accent/50" />
+  </span>
+);
+
+const GuidePreneedCemeteryPlots = () => {
+  const reduceMotion = useReducedMotion();
+  return (
   <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
     <Seo
-      title="Preneed Cemetery Plots in Texas | Buy Before You Need To"
+      title="Discounted Preneed Cemetery Plots in Texas | Up to 50% Off Retail"
       description="Cheap preneed cemetery plots in Texas — verified by-owner spaces at up to 50% off cemetery retail, sold-out sections sourced, in-person showings and 0% interest for 24 months."
       path="/preneed-cemetery-plots-texas"
       type="article"
@@ -114,38 +142,62 @@ const GuidePreneedCemeteryPlots = () => (
     />
     <Navbar forceScrolled />
 
-    {/* Editorial preneed masthead — original buyer property illustrations. */}
-    <section aria-labelledby="preneed-title" className="relative overflow-hidden bg-background pt-24 sm:pt-28 pb-8">
+    {/* Editorial preneed masthead — Vogue-style, over a watercolour wash. */}
+    <section aria-labelledby="preneed-title" className="preneed-masthead relative overflow-hidden bg-background pt-24 sm:pt-28 pb-10">
       <div className="mx-auto max-w-screen-2xl px-5 sm:px-10 lg:px-16">
         <div className="flex items-center justify-between gap-4 border-b border-foreground/20 pb-4 text-[10px] sm:text-xs uppercase text-muted-foreground">
           <Link to="/guides" className="inline-flex items-center gap-2 hover:text-primary transition-colors"><ArrowLeft className="h-3.5 w-3.5" /> All Guides</Link>
+          <span className="hidden sm:flex items-center gap-3 text-accent/70">
+            <span className="h-px w-8 bg-foreground/15" />
+            <svg viewBox="0 0 12 12" className="h-2 w-2 fill-current" aria-hidden="true"><path d="M6 0l1.5 4.5L12 6 7.5 7.5 6 12 4.5 7.5 0 6l4.5-1.5z" /></svg>
+            <span className="h-px w-8 bg-foreground/15" />
+          </span>
           <span>The Preneed Edition · 2026</span>
         </div>
 
-        <div className="pt-7 sm:pt-10 text-center">
-          <p className="mb-4 text-xs uppercase text-primary">Texas Cemetery Brokers · Planning ahead</p>
-          <h1 id="preneed-title" className="mx-auto max-w-5xl font-display text-4xl sm:text-6xl lg:text-7xl xl:text-8xl leading-none text-foreground">
-            Preneed Cemetery Plots<br /><span className="italic text-primary">in Texas.</span>
-          </h1>
+        <motion.div variants={mastheadStagger} initial={reduceMotion ? false : "hidden"} animate="show" className="pt-7 sm:pt-10 text-center">
+          <motion.p variants={mastheadRise} className="mb-5 flex items-center justify-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-primary">
+            <span className="hidden sm:block h-px w-8 bg-primary/30" />
+            Texas Cemetery Brokers · Planning ahead
+            <span className="hidden sm:block h-px w-8 bg-primary/30" />
+          </motion.p>
 
-          <div className="mx-auto mt-4 grid max-w-4xl grid-cols-3 items-end gap-2 sm:gap-8" aria-label="Burial property illustrations">
+          <motion.h1 id="preneed-title" variants={mastheadRise} className="mx-auto max-w-5xl font-display leading-none text-foreground">
+            <span className="block text-2xl sm:text-4xl lg:text-5xl italic text-accent">
+              <span className="relative inline-block px-1">
+                Discounted
+                <motion.svg viewBox="0 0 260 14" preserveAspectRatio="none" aria-hidden="true" className="absolute -bottom-1.5 left-0 h-3 w-full text-accent/55">
+                  <motion.path d="M4 10C58 3 150 2 256 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" initial={reduceMotion ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9, delay: 0.5, ease: "easeOut" }} />
+                </motion.svg>
+              </span>
+            </span>
+            <span className="mt-2 block text-4xl sm:text-6xl lg:text-7xl xl:text-8xl">Preneed Cemetery Plots</span>
+            <span className="block text-4xl sm:text-6xl lg:text-7xl xl:text-8xl italic text-primary">in Texas.</span>
+          </motion.h1>
+
+          <motion.div variants={mastheadRise} className="mt-7">
+            <DiscountTag />
+          </motion.div>
+
+          <motion.div variants={mastheadRise} className="mx-auto mt-7 grid max-w-4xl grid-cols-2 items-end gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-x-8" aria-label="Burial property illustrations">
             {[
               { src: singlePlot, label: "Burial plots", alt: "Watercolour burial headstone with small white flowers" },
               { src: companionPlot, label: "Companion spaces", alt: "Watercolour companion burial space for two" },
+              { src: mausoleumPlot, label: "Mausoleum crypts", alt: "Watercolour mausoleum crypts with arched openings" },
               { src: cremationNiche, label: "Cremation niches", alt: "Watercolour memorial niches for cremation" },
             ].map((property) => (
-              <figure key={property.label} className="m-0 min-w-0">
+              <figure key={property.label} className="preneed-plate m-0 min-w-0">
                 <img src={property.src} alt={property.alt} fetchPriority="high" className="mx-auto h-28 sm:h-40 lg:h-48 w-full object-contain" />
                 <figcaption className="mt-1 text-[10px] sm:text-xs text-muted-foreground">{property.label}</figcaption>
               </figure>
             ))}
-          </div>
+          </motion.div>
 
-          <p className="mx-auto mt-6 max-w-3xl text-base sm:text-lg text-foreground/75 leading-relaxed">
+          <motion.p variants={mastheadRise} className="mx-auto mt-7 max-w-3xl text-base sm:text-lg text-foreground/75 leading-relaxed">
             Buy the space before it is needed — at a discount. Verified by-owner plots at up to <strong className="text-foreground font-medium">50% below cemetery retail</strong>, access to sections the cemetery has sold out, someone from our team walking the grounds with you in person, all the paperwork completed by us, and 0% interest financing for up to two years where we can offer it.
-          </p>
+          </motion.p>
 
-          <div className="mx-auto mt-7 grid max-w-4xl grid-cols-2 sm:grid-cols-4 border-y border-foreground/20 py-5 gap-y-6">
+          <motion.div variants={mastheadRise} className="mx-auto mt-7 grid max-w-4xl grid-cols-2 border-y border-foreground/20 py-5 gap-y-6 sm:grid-cols-4">
             {[
               { k: "Up to 50%", v: "below cemetery retail" },
               { k: "0%", v: "interest for up to 24 months" },
@@ -157,13 +209,14 @@ const GuidePreneedCemeteryPlots = () => (
                 <p className="mx-auto mt-2 max-w-40 text-[11px] text-muted-foreground leading-snug">{stat.v}</p>
               </div>
             ))}
-          </div>
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          </motion.div>
+
+          <motion.div variants={mastheadRise} className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button asChild size="lg" className="w-full sm:w-auto"><Link to="/buy">See Discounted Spaces <ArrowRight /></Link></Button>
             <Button asChild variant="link" size="lg"><a href="#discounts">See The Discounts <ArrowRight /></a></Button>
-          </div>
-          <p className="mt-3 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</p>
-        </div>
+          </motion.div>
+          <motion.p variants={mastheadRise} className="mt-3 text-[11px] text-muted-foreground">Updated 2026 · 8 min read</motion.p>
+        </motion.div>
 
         <nav aria-label="In this guide" className="mt-8 border-t border-foreground/20 pt-5">
           <p className="mb-3 text-[10px] uppercase text-muted-foreground">In this guide</p>
@@ -685,6 +738,7 @@ const GuidePreneedCemeteryPlots = () => (
 
     <Footer />
   </div>
-);
+  );
+};
 
 export default GuidePreneedCemeteryPlots;
