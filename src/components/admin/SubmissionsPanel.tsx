@@ -776,9 +776,13 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     // Every email row change (inbox sync, summaries) used to re-read the whole
     // mailbox within seconds, which overloaded the database.
     let t: ReturnType<typeof setTimeout> | null = null;
-    const schedule = () => {
+    const schedule = (payload: any) => {
+      const cache = emailCacheRef.current;
+      if (payload?.eventType === "DELETE") { if (payload.old?.id) cache.removed.push(payload.old.id); }
+      else if (payload?.new?.id) cache.pending.push(payload.new);
+      else cache.fullAt = null; // unknown change shape: force a full re-read
       if (t) return;
-      t = setTimeout(() => { t = null; recompute(); }, 60000);
+      t = setTimeout(() => { t = null; recompute(); }, 5000);
     };
     const ch = supabase.channel("email_messages_awaiting")
       .on("postgres_changes", { event: "*", schema: "public", table: "email_messages" }, schedule)
