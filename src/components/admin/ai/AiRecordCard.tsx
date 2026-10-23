@@ -140,16 +140,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           </button>
           {showHistory && (
             <ul className="mt-2 space-y-1.5">
-              {history.map((a) => {
-                const m = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
-                return (
-                  <li key={a.id} className="text-xs flex items-start gap-2 rounded-lg bg-card/70 border border-border/60 px-2.5 py-1.5">
-                    <m.Icon className="w-3.5 h-3.5 mt-0.5 text-indigo-600 shrink-0" />
-                    <span className="flex-1 min-w-0"><span className="font-medium text-foreground">{m.label}</span> — {a.status === "executed" ? "accepted" : a.status === "rejected" ? "declined" : a.status}{a.decided_by_name ? ` by ${a.decided_by_name}` : ""}{a.decision_reason ? ` · "${a.decision_reason}"` : ""}{a.email_subject ? ` · "${a.email_subject}"` : ""}</span>
-                    <span className="text-muted-foreground shrink-0">{new Date(a.created_at).toLocaleDateString()}</span>
-                  </li>
-                );
-              })}
+              {history.map(a => <li key={a.id}><AiActionCard action={a} compact onChanged={() => { load(); onRefresh?.(); }} /></li>)}
             </ul>
           )}
         </div>

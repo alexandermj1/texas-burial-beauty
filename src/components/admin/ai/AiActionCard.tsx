@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import AiVisuals, { type AiVisual } from "./AiVisuals";
+import AiActionFeedback from "./AiActionFeedback";
 import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, Users, DollarSign, FileText, PencilLine } from "lucide-react";
 
 export type AiAction = {
@@ -108,6 +109,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const [busy, setBusy] = useState(false);
   const [subject, setSubject] = useState(a.email_subject ?? "");
   const [body, setBody] = useState(a.email_body ?? "");
+  const [decisionReason, setDecisionReason] = useState("");
   const meta = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
   const pending = a.status === "proposed";
 
@@ -117,7 +119,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
        if (["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
-      const r = await callSellerAgent({ action: "execute", action_id: a.id });
+      const r = await callSellerAgent({ action: "execute", action_id: a.id, reason: decisionReason.trim() });
       if (r?.open) {
         if (onOpen) onOpen(r.open, a);
         else { onOpenSubmission?.(a.submission_id); toast({ title: "Opening the record", description: r.open === "quote" ? "Use Send quote on the record to review and send." : "Open Family tree & documents to review and send." }); }
@@ -174,11 +176,14 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {["increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval fills in the quote generator with the revised price and opens it. Check the fields and send the quote as normal; the text above then goes out as a separate follow-up email.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
-        <div className="flex gap-2">
+        <div className="space-y-2">
+          <Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder="Why accept or decline? (optional)" />
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={approve} disabled={busy} className="bg-indigo-600 hover:bg-indigo-700 text-primary-foreground">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />{meta.approve}</>}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setDeclining((v) => !v)} disabled={busy}><X className="w-4 h-4 mr-1" />Decline</Button>
+          <Button size="sm" variant="outline" onClick={() => { setWhy(decisionReason); setDeclining((v) => !v); }} disabled={busy}><X className="w-4 h-4 mr-1" />Decline</Button>
+        </div>
         </div>
       )}
       {pending && declining && (
@@ -188,6 +193,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         </div>
       )}
       {!pending && a.decision_reason && <p className="text-xs text-muted-foreground">Reason: {a.decision_reason}</p>}
+      <AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} />
     </div>
   );
 }
