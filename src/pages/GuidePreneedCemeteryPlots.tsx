@@ -8,6 +8,10 @@ import companionPlot from "@/assets/property-types/companion-plot.png";
 import mausoleumPlot from "@/assets/property-types/mausoleum.png";
 import cremationNiche from "@/assets/property-types/cremation-niche.png";
 import memorialPark from "@/assets/guides/preneed-memorial-park.jpg.asset.json";
+import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
+import houstonPhoto from "@/assets/houston-skyline.png.asset.json";
+import austinPhoto from "@/assets/austin-skyline.webp.asset.json";
+import sanAntonioPhoto from "@/assets/san-antonio-riverwalk.webp.asset.json";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
@@ -104,6 +108,46 @@ const verification = [
   { Icon: FileSearch, t: "Deed & certificate verified", d: "We review the original purchase paperwork and confirm the recorded owner matches the seller." },
   { Icon: BadgeCheck, t: "Cemetery records confirmed", d: "We contact the cemetery office to confirm the space is on file, unused, and clear to transfer." },
   { Icon: ShieldCheck, t: "Co-owners & ROFR cleared", d: "Written consent from every co-owner, and any right-of-first-refusal resolved, before the space is offered." },
+];
+
+/** Metro cards for the coverage chapter — same skyline photography as the city pages. */
+const metros: { city: string; slug: string; src: string; alt: string; landmark: string; position: string; blurb: string }[] = [
+  {
+    city: "Dallas–Fort Worth",
+    slug: "dallas",
+    src: dallasPhoto.url,
+    alt: "Downtown Dallas skyline at dusk with Reunion Tower and the Margaret Hunt Hill Bridge reflected in the Trinity River",
+    landmark: "Reunion Tower · Trinity River",
+    position: "62% center",
+    blurb: "The largest resale market in Texas — Restland, Sparkman-Hillcrest, Laurel Land and the mid-cities parks.",
+  },
+  {
+    city: "Houston",
+    slug: "houston",
+    src: houstonPhoto.url,
+    alt: "Downtown Houston skyline at night above Buffalo Bayou",
+    landmark: "Buffalo Bayou · Downtown",
+    position: "50% center",
+    blurb: "Forest Park, Memorial Oaks, Earthman and Brookside — some of the highest retail pricing in the state, and the deepest discounts.",
+  },
+  {
+    city: "Austin",
+    slug: "austin",
+    src: austinPhoto.url,
+    alt: "Downtown Austin skyline reflected in Lady Bird Lake at dusk",
+    landmark: "Lady Bird Lake · Downtown",
+    position: "50% center",
+    blurb: "The tightest market in Texas — Austin Memorial Park and Oakwood have effectively no new inventory, so resale is the way in.",
+  },
+  {
+    city: "San Antonio",
+    slug: "san-antonio",
+    src: sanAntonioPhoto.url,
+    alt: "The San Antonio River Walk with its arched stone bridges and riverside cypress trees",
+    landmark: "The River Walk · Downtown",
+    position: "50% center",
+    blurb: "Mission, Sunset and San Jose hold generations of family sections — much of what is available comes from owners, not the counter.",
+  },
 ];
 
 const mastheadStagger = {
@@ -632,8 +676,31 @@ const GuidePreneedCemeteryPlots = () => {
           <Eyebrow>Chapter 07 · Coverage</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">We help buyers <span className="italic text-primary">across Texas</span></h2>
           <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
-            We place families in plots, crypts and niches statewide:
+            We place families in plots, crypts and niches statewide. The four metros below are where most of our preneed buyers end up — each has its own guide with the parks, the price ranges and the transfer fees we hold on file.
           </p>
+
+          {/* Metro cards — the same skyline photography as the city pages */}
+          <div className="grid sm:grid-cols-2 gap-4 md:gap-5 mb-10 not-prose">
+            {metros.map((m) => (
+              <Link key={m.slug} to={`/cemetery-plots-for-sale-${m.slug}`} className="group relative block overflow-hidden rounded-3xl border border-border/60 shadow-soft">
+                <figure className="m-0">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img loading="lazy" decoding="async" src={m.src} alt={m.alt} style={{ objectPosition: m.position }} className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                    <figcaption className="absolute inset-x-0 bottom-0 p-5">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/70 mb-1.5">{m.landmark}</p>
+                      <p className="font-display text-2xl md:text-3xl text-white leading-tight mb-1.5">{m.city}</p>
+                      <p className="text-sm text-white/80 leading-snug max-w-md">{m.blurb}</p>
+                      <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/90">
+                        {m.city} guide <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                      </p>
+                    </figcaption>
+                  </div>
+                </figure>
+              </Link>
+            ))}
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-3 mb-8">
             {cities.map((c) => (
               <div key={c.city} className="flex gap-4 items-start p-5 rounded-2xl bg-card border border-border/60">
