@@ -8,6 +8,10 @@ import companionPlot from "@/assets/property-types/companion-plot.png";
 import mausoleumPlot from "@/assets/property-types/mausoleum.png";
 import cremationNiche from "@/assets/property-types/cremation-niche.png";
 import memorialPark from "@/assets/guides/preneed-memorial-park.jpg.asset.json";
+import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
+import houstonPhoto from "@/assets/houston-skyline.png.asset.json";
+import austinPhoto from "@/assets/austin-skyline.webp.asset.json";
+import sanAntonioPhoto from "@/assets/san-antonio-riverwalk.webp.asset.json";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
@@ -104,6 +108,46 @@ const verification = [
   { Icon: FileSearch, t: "Deed & certificate verified", d: "We review the original purchase paperwork and confirm the recorded owner matches the seller." },
   { Icon: BadgeCheck, t: "Cemetery records confirmed", d: "We contact the cemetery office to confirm the space is on file, unused, and clear to transfer." },
   { Icon: ShieldCheck, t: "Co-owners & ROFR cleared", d: "Written consent from every co-owner, and any right-of-first-refusal resolved, before the space is offered." },
+];
+
+/** Metro cards for the coverage chapter — same skyline photography as the city pages. */
+const metros: { city: string; slug: string; src: string; alt: string; landmark: string; position: string; blurb: string }[] = [
+  {
+    city: "Dallas–Fort Worth",
+    slug: "dallas",
+    src: dallasPhoto.url,
+    alt: "Downtown Dallas skyline at dusk with Reunion Tower and the Margaret Hunt Hill Bridge reflected in the Trinity River",
+    landmark: "Reunion Tower · Trinity River",
+    position: "62% center",
+    blurb: "The largest resale market in Texas — Restland, Sparkman-Hillcrest, Laurel Land and the mid-cities parks.",
+  },
+  {
+    city: "Houston",
+    slug: "houston",
+    src: houstonPhoto.url,
+    alt: "Downtown Houston skyline at night above Buffalo Bayou",
+    landmark: "Buffalo Bayou · Downtown",
+    position: "50% center",
+    blurb: "Forest Park, Memorial Oaks, Earthman and Brookside — some of the highest retail pricing in the state, and the deepest discounts.",
+  },
+  {
+    city: "Austin",
+    slug: "austin",
+    src: austinPhoto.url,
+    alt: "Downtown Austin skyline reflected in Lady Bird Lake at dusk",
+    landmark: "Lady Bird Lake · Downtown",
+    position: "50% center",
+    blurb: "The tightest market in Texas — Austin Memorial Park and Oakwood have effectively no new inventory, so resale is the way in.",
+  },
+  {
+    city: "San Antonio",
+    slug: "san-antonio",
+    src: sanAntonioPhoto.url,
+    alt: "The San Antonio River Walk with its arched stone bridges and riverside cypress trees",
+    landmark: "The River Walk · Downtown",
+    position: "50% center",
+    blurb: "Mission, Sunset and San Jose hold generations of family sections — much of what is available comes from owners, not the counter.",
+  },
 ];
 
 const mastheadStagger = {
