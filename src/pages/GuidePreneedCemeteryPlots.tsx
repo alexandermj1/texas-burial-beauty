@@ -676,8 +676,31 @@ const GuidePreneedCemeteryPlots = () => {
           <Eyebrow>Chapter 07 · Coverage</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">We help buyers <span className="italic text-primary">across Texas</span></h2>
           <p className="text-foreground/80 leading-relaxed mb-8 text-lg">
-            We place families in plots, crypts and niches statewide:
+            We place families in plots, crypts and niches statewide. The four metros below are where most of our preneed buyers end up — each has its own guide with the parks, the price ranges and the transfer fees we hold on file.
           </p>
+
+          {/* Metro cards — the same skyline photography as the city pages */}
+          <div className="grid sm:grid-cols-2 gap-4 md:gap-5 mb-10 not-prose">
+            {metros.map((m) => (
+              <Link key={m.slug} to={`/cemetery-plots-for-sale-${m.slug}`} className="group relative block overflow-hidden rounded-3xl border border-border/60 shadow-soft">
+                <figure className="m-0">
+                  <div className="relative aspect-[16/10] overflow-hidden">
+                    <img loading="lazy" decoding="async" src={m.src} alt={m.alt} style={{ objectPosition: m.position }} className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                    <figcaption className="absolute inset-x-0 bottom-0 p-5">
+                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/70 mb-1.5">{m.landmark}</p>
+                      <p className="font-display text-2xl md:text-3xl text-white leading-tight mb-1.5">{m.city}</p>
+                      <p className="text-sm text-white/80 leading-snug max-w-md">{m.blurb}</p>
+                      <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-white/90">
+                        {m.city} guide <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                      </p>
+                    </figcaption>
+                  </div>
+                </figure>
+              </Link>
+            ))}
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-3 mb-8">
             {cities.map((c) => (
               <div key={c.city} className="flex gap-4 items-start p-5 rounded-2xl bg-card border border-border/60">
