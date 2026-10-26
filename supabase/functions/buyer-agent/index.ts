@@ -7,6 +7,7 @@ import { quoteFigures, normalizeBuyerFees } from "./quoteFigures.ts";
 import { automaticReplyTiming, BUYER_REPLY_MIN_DELAY_MS } from "./replyTiming.ts";
 import { buyerReplyAllowed } from "./autoReplyPreference.ts";
 import { buyerDocumentReadiness, countBuyerDocuments } from "./documentReadiness.ts";
+import { requestedSpaces } from "./requestedSpaces.ts";
 
 const MODEL = "openai/gpt-6-astra";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
