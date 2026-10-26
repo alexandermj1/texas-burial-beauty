@@ -23,7 +23,7 @@ import teamWalkthroughAsset from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asse
 const TEAM_WALKTHROUGH = teamWalkthroughAsset.url;
 import { DiscountTable, FinancingGraphic, PriceAppreciationChart } from "@/components/guides/PreneedSavingsGraphics";
 import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
-import BuyerWizard from "@/components/BuyerWizard";
+import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
 import { EMAIL, jsonLd, reasons, priceFactors, myths, faqs, resources } from "./guide-preneed-data";
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -395,13 +395,7 @@ const GuidePreneedCemeteryPlots = () => {
         </section>
 
         {/* Buyer wizard — the same five-step form as the /buy page, embedded mid-guide */}
-        <div className="not-prose my-16 rounded-[2rem] border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-accent/5 px-5 sm:px-8 pt-8 pb-6 shadow-soft">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-accent font-semibold mb-2 text-center">Free buyer concierge</p>
-          <p className="text-center text-foreground/70 text-sm sm:text-base max-w-xl mx-auto mb-6">
-            Tell us what you're looking for and we'll come back within 24 hours with verified spaces — including sections the cemetery has sold out.
-          </p>
-          <BuyerWizard variant="embedded" source="preneed_guide_wizard" inquiryChannel="texas_preneed_guide" />
-        </div>
+        <GuideBuyerForm source="preneed_guide_wizard" inquiryChannel="texas_preneed_guide" />
 
         {/* Chapter 02 */}
         <section id="why-ahead" className="scroll-mt-24 mt-20">
