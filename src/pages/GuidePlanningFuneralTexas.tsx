@@ -18,6 +18,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import GuidesCarousel from "@/components/GuidesCarousel";
+import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
 import { ALL_TEXAS_REGIONS } from "@/data/metroRegions";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
@@ -767,6 +768,8 @@ const GuidePlanningFuneralTexas = () => {
                   while you’re calm.
                 </p>
               </Section>
+
+              <GuideBuyerForm source="funeral_planning_guide_wizard" inquiryChannel="texas_funeral_planning_guide" />
 
               <Cta
                 heading="Need a burial plot?"

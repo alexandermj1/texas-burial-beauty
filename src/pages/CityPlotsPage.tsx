@@ -7,6 +7,7 @@ import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
 import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
+import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
@@ -314,6 +315,8 @@ const CityPlotsPage = () => {
 
 
 
+
+        <GuideBuyerForm key={data.slug} source={`${data.slug}_metro_wizard`} inquiryChannel={`texas_${data.slug.replace(/-/g, "_")}_metro`} />
 
         {/* Pricing */}
         {data.slug === "dallas" && <FeaturedDallasCemeteries />}

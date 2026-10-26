@@ -7,6 +7,7 @@ import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import PreneedBlock from "@/components/PreneedBlock";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
+import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
 import { RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
 import { MotionConfig } from "framer-motion";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
@@ -193,6 +194,8 @@ const GuideCemeteryPlotCost = () => (
           cemetery helps no one. Tell us the cemetery and section and we'll give you the current range in writing.
         </p>
       </Section>
+
+      <GuideBuyerForm source="cost_guide_wizard" inquiryChannel="texas_cost_guide" />
 
       <Section id="extras" icon={Receipt} eyebrow="The rest of the bill" title="What the cemetery charges on top of the space">
         <p data-simon-review>Another factor is just the overall cost of funerals. It’s expensive, and many people want a much cheaper solution. The space is only part of the bill, so check these charges alongside it:</p>

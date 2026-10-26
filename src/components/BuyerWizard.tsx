@@ -250,6 +250,7 @@ const BuyerWizard = ({
       id: submissionId,
       source,
       inquiry_channel: inquiryChannel,
+      customer_kind: "buyer",
       state: "TX",
       name: selections.name.trim(),
       email: selections.email.trim() || null,
