@@ -1,5 +1,5 @@
 // How many spaces a buyer asked for: the form field first, then their written notes.
-// Companion / husband-and-wife requests mean two side-by-side spaces.
+// Companion (two stacked burials) and husband-and-wife requests count as two spaces; two side-by-side spaces are the equal alternative.
 const WORDS: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, pair: 2, couple: 2 };
 const UNIT = "(?:plots?|spaces?|graves?|niches?|crypts?|burial plots?|lots?)";
 
