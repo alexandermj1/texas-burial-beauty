@@ -3474,7 +3474,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 : steps;
               const anyActive = visibleSteps.some(s => s.active);
               return (
-                <div className="flex items-center justify-between w-full flex-nowrap gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex items-center justify-between w-full flex-wrap gap-y-0.5 gap-0">
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
