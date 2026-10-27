@@ -3478,14 +3478,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
-                        <div key={st.key} className="flex items-center flex-1 min-w-0">
+                        <div key={st.key} className="flex items-center flex-1 min-w-max">
                           {i > 0 && (
                             <ChevronRight className="w-3 h-3 text-border shrink-0" />
                           )}
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-lg transition-all duration-200 ${
+                            className={`group relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
