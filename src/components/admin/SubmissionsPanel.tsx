@@ -3474,18 +3474,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 : steps;
               const anyActive = visibleSteps.some(s => s.active);
               return (
-                <div className="flex items-center justify-between w-full flex-nowrap gap-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex items-center justify-between w-full flex-wrap gap-y-0.5 gap-0">
                     {visibleSteps.map((st, i) => {
                       const Icon = st.icon;
                       return (
-                        <div key={st.key} className="flex items-center flex-1 min-w-0">
+                        <div key={st.key} className="flex items-center flex-1 min-w-max">
                           {i > 0 && (
                             <ChevronRight className="w-3 h-3 text-border shrink-0" />
                           )}
                           <button
                             onClick={st.toggle}
                             title={st.active ? `Showing only ${st.label} — click to clear` : `Show only ${st.label} (${st.count})`}
-                            className={`group relative flex flex-1 min-w-max flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-lg transition-all duration-200 ${
+                            className={`group relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1 px-1.5 rounded-lg transition-all duration-200 ${
                               st.active
                                 ? `${st.tone.soft} ring-1 ${st.tone.ring}`
                                 : "hover:bg-muted/50"
@@ -3550,18 +3550,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           const today = todayRows.length;
           return (
             <div
-              className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
+              className="shrink-0 inline-flex flex-col justify-center gap-0.5 px-3 py-1.5 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground"
               title="Everyone in this view — sellers, buyers and general forms, with duplicates counted once / new today, broken down by buyer and seller"
             >
-              <div className="flex items-center gap-1.5 pr-3" title="Everyone in this view with duplicates counted once">
-                <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
-                <span className="font-semibold text-foreground">{total}</span>
-                <span className="text-muted-foreground/70 text-[10px]">· {pipelineUniverse.filter(isSeller).length} seller · {pipelineUniverse.filter(isBuyer).length} buyer</span>
+              <div className="flex items-center gap-1.5 whitespace-nowrap" title="Everyone in this view with duplicates counted once">
+                <span className="text-[10px] uppercase tracking-wider font-medium w-9 shrink-0">Total</span>
+                <span className="font-semibold text-foreground tabular-nums">{total}</span>
+                <span className="text-muted-foreground/70 text-[10px] tabular-nums">{pipelineUniverse.filter(isSeller).length} seller · {pipelineUniverse.filter(isBuyer).length} buyer</span>
               </div>
-              <div className="flex items-center gap-1.5 pl-3" title="New submissions today, broken down by buyer and seller">
-                <span className="text-[10px] uppercase tracking-wider font-medium">Today</span>
-                <span className="font-semibold text-primary">{today}</span>
-                <span className="text-muted-foreground/70 text-[10px]">· {todayRows.filter(isSeller).length} seller · {todayRows.filter(isBuyer).length} buyer</span>
+              <div className="flex items-center gap-1.5 whitespace-nowrap" title="New submissions today, broken down by buyer and seller">
+                <span className="text-[10px] uppercase tracking-wider font-medium w-9 shrink-0">Today</span>
+                <span className="font-semibold text-primary tabular-nums">{today}</span>
+                <span className="text-muted-foreground/70 text-[10px] tabular-nums">{todayRows.filter(isSeller).length} seller · {todayRows.filter(isBuyer).length} buyer</span>
               </div>
             </div>
           );
