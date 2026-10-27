@@ -3541,22 +3541,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           // seller or buyer and flows through its pipeline from there.
           const total = pipelineUniverse.length;
           const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
-          const today = pipelineUniverse.filter(s => {
-            const d = (s as any).created_at ? new Date((s as any).created_at) : null;
+          const isBuyer = (s: any) => resolveKind(s.customer_kind, s.source) === "buyer";
+          const isSeller = (s: any) => resolveKind(s.customer_kind, s.source) === "seller";
+          const todayRows = pipelineUniverse.filter(s => {
+            const d = s.created_at ? new Date(s.created_at) : null;
             return d && d >= startOfToday;
-          }).length;
+          });
+          const today = todayRows.length;
           return (
             <div
               className="shrink-0 inline-flex items-center h-9 px-3 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground divide-x divide-border/60"
-              title="Everyone in this view — sellers, buyers and general forms, with duplicates counted once / new today"
+              title="Everyone in this view — sellers, buyers and general forms, with duplicates counted once / new today, broken down by buyer and seller"
             >
-              <div className="flex items-center gap-1.5 pr-3">
+              <div className="flex items-center gap-1.5 pr-3" title="Everyone in this view with duplicates counted once">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Total</span>
                 <span className="font-semibold text-foreground">{total}</span>
+                <span className="text-muted-foreground/70 text-[10px]">· {pipelineUniverse.filter(isSeller).length} seller · {pipelineUniverse.filter(isBuyer).length} buyer</span>
               </div>
-              <div className="flex items-center gap-1.5 pl-3">
+              <div className="flex items-center gap-1.5 pl-3" title="New submissions today, broken down by buyer and seller">
                 <span className="text-[10px] uppercase tracking-wider font-medium">Today</span>
                 <span className="font-semibold text-primary">{today}</span>
+                <span className="text-muted-foreground/70 text-[10px]">· {todayRows.filter(isSeller).length} seller · {todayRows.filter(isBuyer).length} buyer</span>
               </div>
             </div>
           );
