@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Correct missing attachment labels and verify against saved customer files, submission uploads and email attachments without changing paperwork completion rules.
 - [x] Add the preneed-style buyer form to all four metro pages and buying, cost and funeral-planning articles using one shared frame; eight five-step intercepted submissions and phone layouts pass, 12 tests pass, buyer classification explicit, build clean; no real enquiries/emails sent, not published.
 - [x] Produce ChatGPT ad thumbnails: burial-plot artwork with the discount tag tied to the stone itself (per the uploaded reference), on coloured backgrounds and flower-field settings; deliver in chat only. Three verified: twine loops over the stone (bluebonnet needed a redo), wording "UP TO 50% OFF" correct, no duplicate tags.
 - [x] Add individual seller AI comments/decision reasons and append-only post-execution correctness/live-update feedback; preserve siblings on AI replies and declines while genuine new context still invalidates them. Verified saved comment/outcome after reload on Kristen’s completed email; nine safeguards pass; no new customer email sent.
