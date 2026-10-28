@@ -28,4 +28,5 @@
 - Mark review prose with data-simon-review and one global semantic color — why: remove highlighting without changing approved prose.
 - Staff username credentials map deterministically to non-deliverable auth aliases; owner-validated provisioning copies existing staff roles and confirms only the provisioned account — why: mailbox-free login without public email lookup or relaxed signup settings.
 - The submissions 'needs reply' scan caches light email rows (emailRowCache): full re-read at most every 15 min, a newer-than-newest check each minute, submissions list refresh every 60s — why: whole-mailbox rescans overloaded the database.
+- Submission attachment labels use submissionAttachments across direct uploads, profile files and document files, with paginated metadata and shared refreshes; attachment presence never changes physical-original receipt or completion — why: API limits and missing email links must not hide existing files.
 - Guides and metro pages embed BuyerWizard through GuideBuyerForm with page-specific source/channel tags — why: one consistent editorial frame and submission flow without duplicating form logic.
