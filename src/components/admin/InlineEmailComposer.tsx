@@ -1116,6 +1116,15 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        <button
+          type="button"
+          onClick={insertMortuarySheet}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+          title="Insert the Available Property List we send to mortuaries (a repeat click replaces the existing block)"
+        >
+          <FileText className="w-3 h-3" />
+          Include mortuary sheet
+        </button>
         <input
           ref={fileInputRef}
           type="file"
