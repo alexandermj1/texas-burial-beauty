@@ -6,7 +6,8 @@
 // (bold, italic, underline, bulleted/numbered lists, links) — sent as
 // multipart/alternative so recipients see formatting in Gmail.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard, Sparkles, Save, Paperclip } from "lucide-react";
+import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, CreditCard, Sparkles, Save, Paperclip, FileText } from "lucide-react";
+
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,7 @@ import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
 import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
 import { familyTreeSubject } from "@/lib/buildFamilyTreeBlock";
+import { buildMortuarySheetEmailBlock } from "@/lib/buildListingOptionsBlock";
 import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
@@ -461,6 +463,19 @@ const InlineEmailComposer = ({
     setListingBlockInserted(true);
     setSubject(quoteSubjectFor(sellerContext?.cemetery));
     return next;
+  };
+
+  /** Insert (or replace) the mortuary Available Property List block. */
+  const insertMortuarySheet = () => {
+    const current = editorRef.current?.getHtml() ?? html;
+    const holder = document.createElement("div");
+    holder.innerHTML = current;
+    holder.querySelectorAll('[data-mortuary-sheet="1"]').forEach((n) => n.remove());
+    editorRef.current?.setHtml(holder.innerHTML);
+    editorRef.current?.insertHtmlBeforeSignature(buildMortuarySheetEmailBlock());
+    const next = editorRef.current?.getHtml() ?? html;
+    setHtml(next);
+    setBodyTouched(true);
   };
 
   // `htmlOverride` lets a panel insert a block and send it in the same click
@@ -1101,6 +1116,15 @@ const InlineEmailComposer = ({
             Attach plot cards
           </button>
         )}
+        <button
+          type="button"
+          onClick={insertMortuarySheet}
+          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+          title="Insert the Available Property List we send to mortuaries (a repeat click replaces the existing block)"
+        >
+          <FileText className="w-3 h-3" />
+          Include mortuary sheet
+        </button>
         <input
           ref={fileInputRef}
           type="file"

@@ -60,6 +60,29 @@ export const SAMPLE_SHEET_URL =
 export const SAMPLE_SHEET_WEB_URL =
   "https://www.texascemeterybrokers.com/sample-listing-sheet.html";
 
+/**
+ * Small, email-safe branded block that links to the Available Property List
+ * (the sheet we circulate to mortuaries). Inserted by the "Include mortuary
+ * sheet" button in the email composer. Marked with data-mortuary-sheet="1"
+ * so repeat clicks replace the block instead of stacking copies.
+ */
+export function buildMortuarySheetEmailBlock(): string {
+  return `
+<div data-mortuary-sheet="1" style="margin:18px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border:1px solid ${BRAND_BORDER};border-radius:12px;">
+  <tr><td style="padding:20px 24px;">
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 8px;font-weight:700;">Available Property List</p>
+    <p style="font-family:${SANS};font-size:14.5px;line-height:1.7;color:${BRAND_INK};margin:0 0 12px;">Here is our Available Property List — the verified, deed-clear property sheet we circulate to funeral homes, mortuaries and family counselors across Texas. Featured placements open the list with photography and an expanded description; every other property appears in the standard schedule.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px;"><tr><td style="border-radius:8px;background:${BRAND_PRIMARY};">
+      <a href="${SAMPLE_SHEET_URL}" target="_blank" style="display:inline-block;padding:11px 20px;font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.06em;color:${BRAND_PRIMARY_FG};text-decoration:none;">Open the Available Property List</a>
+    </td></tr></table>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:0;">You can also <a href="${SAMPLE_SHEET_WEB_URL}" target="_blank" style="color:${BRAND_PRIMARY};">view it in your browser</a>. To reserve a property for a family, simply reply to this email.</p>
+  </td></tr>
+</table>
+</div>
+<p><br></p>`.trim();
+}
+
 export async function buildListingOptionsBlock(opts: {
   seller: SellerForBlock;
   /** Authorized minimum sale price per space (gross, before 15% commission). */
