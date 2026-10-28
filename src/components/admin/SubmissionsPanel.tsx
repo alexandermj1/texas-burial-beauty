@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore, Info, Pencil, MapPin, Save } from "lucide-react";
 import { lookupCemeteryContactMatch } from "@/lib/cemeteryContactLookup";
 import { mergeEmailRows, needsFullRescan, type LightEmailRow } from "@/lib/emailRowCache";
+import { buildAttachmentIndex, readAttachmentPages } from "@/lib/submissionAttachments";
 import SendQuoteDialog from "./SendQuoteDialog";
 import SendBuyerQuoteDialog from "./SendBuyerQuoteDialog";
 import SendBuyerPlotCardsDialog from "./SendBuyerPlotCardsDialog";
@@ -117,6 +118,8 @@ export interface Submission {
   quote_response?: string | null;
   quote_responded_at?: string | null;
   customer_kind?: string | null;
+  customer_profile_id?: string | null;
+  seller_attachments?: unknown;
   docusign_status?: string | null;
   docusign_sent_at?: string | null;
   docusign_signed_at?: string | null;
@@ -371,8 +374,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [cemeteryCanon, setCemeteryCanon] = useState<string | null>(null);
   
   const [cemeteryLabel, setCemeteryLabel] = useState<string | null>(null);
-  // Texas-only: set of customer email addresses (lower-case) that have at least one uploaded file.
+  // Attachment presence is separate from paperwork completion and physical receipt.
   const [docsEmails, setDocsEmails] = useState<Set<string>>(new Set());
+  const [docsIds, setDocsIds] = useState<Set<string>>(new Set());
   const [docsFilter, setDocsFilter] = useState<DocsFilter>("all");
   const [awaitingQuoteFilter, setAwaitingQuoteFilter] = useState<boolean>(false);
   const [quotedFilter, setQuotedFilter] = useState<boolean>(false);
@@ -810,117 +814,81 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   }, [awaitingKey]);
 
 
-  // Texas-only: build a set of customer emails that have uploaded files (customer_files
-  // joined through customer_profiles by primary/alt email). Used to group the list by
-  // "documents received" vs "awaiting documents".
-  const texasEmailsKey = useMemo(() => submissions
-    .filter(s => subRegion(s) === "texas")
-    .map(s => (s.email || "").trim().toLowerCase())
-    .filter(Boolean).sort().join("|"), [submissions]);
+  // One paginated metadata lookup for every attachment source. Stable identity avoids
+  // rereading all documents every time the parent refreshes its submissions list.
+  const attachmentKey = useMemo(() => JSON.stringify(submissions.map(s => [
+    s.id, s.email, s.customer_profile_id, s.seller_attachments,
+  ])), [submissions]);
 
   useEffect(() => {
-    const texasEmails = texasEmailsKey ? texasEmailsKey.split("|") : [];
-    if (texasEmails.length === 0) { setDocsEmails(new Set()); return; }
-    const texasEmailSet = new Set(texasEmails);
-
     let cancelled = false;
+    let loading = false;
+    let rerun = false;
     const load = async () => {
-      // Get customer profiles whose primary_email matches any texas submission email.
-      const { data: profiles } = await supabase
-        .from("customer_profiles" as any)
-        .select("id, primary_email, alt_emails");
-      if (cancelled || !profiles) return;
-      const profileIds: string[] = [];
-      const idToEmails = new Map<string, string[]>();
-      for (const p of profiles as any[]) {
-        const emails: string[] = [];
-        if (p.primary_email) emails.push(String(p.primary_email).toLowerCase());
-        if (Array.isArray(p.alt_emails)) emails.push(...p.alt_emails.map((e: string) => String(e).toLowerCase()));
-        if (emails.some(e => texasEmailSet.has(e))) {
-          profileIds.push(p.id);
-          idToEmails.set(p.id, emails);
-        }
+      if (loading) { rerun = true; return; }
+      loading = true;
+      try {
+        const [profiles, files, documents] = await Promise.all([
+          readAttachmentPages<any>((from, to) => supabase.from("customer_profiles" as any)
+            .select("id, primary_email, alt_emails").is("deleted_at", null)
+            .order("id").range(from, to)),
+          readAttachmentPages<any>((from, to) => supabase.from("customer_files" as any)
+            .select("id, customer_profile_id").is("deleted_at", null)
+            .order("id").range(from, to)),
+          readAttachmentPages<any>((from, to) => supabase.from("submission_documents" as any)
+            .select("id, submission_id, doc_code, status, file_url, file_urls")
+            .is("deleted_at", null).order("id").range(from, to)),
+        ]);
+        if (cancelled) return;
+        const index = buildAttachmentIndex(submissions, profiles, files, documents);
+        setDocsEmails(index.emails);
+        setDocsIds(index.ids);
+        // Preserve the existing returned-paperwork stage rule; this does not
+        // mark physical originals received or complete the document checklist.
+        const returnedIds = new Set(documents.filter(r => r.doc_code !== "D1" && r.doc_code !== "LA" && (
+          r.status === "received" || !!r.file_url || (Array.isArray(r.file_urls) && r.file_urls.length > 0)
+        )).map(r => r.submission_id));
+        setReturnedDocsEmails(new Set(submissions.filter(s => returnedIds.has(s.id))
+          .map(s => (s.email || "").trim().toLowerCase()).filter(Boolean)));
+      } catch {
+        // Keep the last successful labels on failure; retry on the next check.
+      } finally {
+        loading = false;
+        if (rerun && !cancelled) { rerun = false; void load(); }
       }
-      if (profileIds.length === 0) { setDocsEmails(new Set()); return; }
-      const { data: files } = await supabase
-        .from("customer_files" as any)
-        .select("customer_profile_id").is("deleted_at", null)
-        .in("customer_profile_id", profileIds);
-      if (cancelled || !files) return;
-      const withFiles = new Set<string>();
-      for (const f of files as any[]) {
-        const ems = idToEmails.get(f.customer_profile_id) || [];
-        ems.forEach(e => withFiles.add(e));
-      }
-      setDocsEmails(withFiles);
     };
-    load();
-    let ft: ReturnType<typeof setTimeout> | null = null;
+    void load();
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const scheduleLoad = () => {
-      if (ft) clearTimeout(ft);
-      ft = setTimeout(() => { ft = null; load(); }, 2500);
+      if (timer) return;
+      timer = setTimeout(() => { timer = null; void load(); }, 2500);
     };
-    const ch = supabase.channel("customer_files_for_texas")
+    // Realtime normally updates within seconds; a light metadata-only safety
+    // check also catches missed events without scanning email bodies or storage.
+    const poll = setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 3 * 60 * 1000);
+    const onVisible = () => { if (document.visibilityState === "visible") scheduleLoad(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const ch = supabase.channel("submission_attachment_presence")
       .on("postgres_changes", { event: "*", schema: "public", table: "customer_files" }, scheduleLoad)
-      .subscribe();
-    return () => { cancelled = true; if (ft) clearTimeout(ft); ch.unsubscribe(); supabase.removeChannel(ch); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [texasEmailsKey]);
-
-  // Texas-only: which submissions have had at least one requested document sent
-  // back. A document counts as returned when it is marked received (status or
-  // received_at) OR a file has been attached to it. Keyed by lower-case email so
-  // it survives email-merged duplicates. Drives the "Docs returned" stage.
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      const { data } = await supabase
-        .from("submission_documents" as any)
-        .select("submission_id, doc_code, status, received_at, file_url, file_urls")
-        .is("deleted_at", null);
-      if (cancelled || !data) return;
-      const ids = new Set<string>();
-      for (const r of data as any[]) {
-        // The plot deed and the listing agreement are always on file BEFORE we
-        // send the request, so they never mean "the seller sent paperwork back".
-        if (r.doc_code === "D1" || r.doc_code === "LA") continue;
-        // Only real paperwork counts: a file on file, or a row an admin has
-        // explicitly marked received. A bare `received_at` timestamp with no
-        // document behind it is leftover bookkeeping, not a returned document.
-        const returned =
-          r.status === "received" ||
-          !!r.file_url ||
-          (Array.isArray(r.file_urls) && r.file_urls.length > 0);
-
-        if (returned && r.submission_id) ids.add(r.submission_id);
-      }
-
-      const emails = new Set<string>();
-      for (const s of submissions) {
-        const e = (s.email || "").trim().toLowerCase();
-        if (e && ids.has(s.id)) emails.add(e);
-      }
-      setReturnedDocsEmails(emails);
-    };
-
-    load();
-    let ft: ReturnType<typeof setTimeout> | null = null;
-    const scheduleLoad = () => {
-      if (ft) clearTimeout(ft);
-      ft = setTimeout(() => { ft = null; load(); }, 2500);
-    };
-    const ch = supabase.channel("submission_documents_returned")
+      .on("postgres_changes", { event: "*", schema: "public", table: "customer_profiles" }, scheduleLoad)
       .on("postgres_changes", { event: "*", schema: "public", table: "submission_documents" }, scheduleLoad)
       .subscribe();
-    return () => { cancelled = true; if (ft) clearTimeout(ft); ch.unsubscribe(); supabase.removeChannel(ch); };
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      ch.unsubscribe(); supabase.removeChannel(ch);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submissions]);
-
-
+  }, [attachmentKey]);
 
   const hasDocs = (s: Submission) => {
     const e = (s.email || "").trim().toLowerCase();
-    return !!e && docsEmails.has(e);
+    const direct = buildAttachmentIndex([s], [], [], []).ids.has(s.id);
+    return direct || docsIds.has(s.id) || (!!e && docsEmails.has(e));
   };
 
   // ---- Single authoritative pipeline stage (1..9) ----
@@ -958,7 +926,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
     return best;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submissions, docsEmails]);
+  }, [submissions, docsEmails, docsIds, returnedDocsEmails]);
 
   // The submission that defines the group's stage (itself when un-merged).
   const stageSource = (s: Submission): Submission => {
@@ -1229,7 +1197,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       return [...withAi, ...deduped.filter(x => !aiPending.has(aiKey(x)))];
     }
     return deduped;
-  }, [aiFirst, aiPending, submissions, archivedView, hideBuyers, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [aiFirst, aiPending, submissions, archivedView, hideBuyers, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, docsIds, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
