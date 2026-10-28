@@ -19,6 +19,7 @@ import ListingOptionsInlinePanel from "./ListingOptionsInlinePanel";
 import ListingAgreementInlinePanel from "./ListingAgreementInlinePanel";
 import FamilyTreeInlinePanel from "./FamilyTreeInlinePanel";
 import { familyTreeSubject } from "@/lib/buildFamilyTreeBlock";
+import { buildMortuarySheetEmailBlock } from "@/lib/buildListingOptionsBlock";
 import AttachPaymentButtonDialog from "./AttachPaymentButtonDialog";
 
 import type { EmailTemplate } from "@/lib/emailTemplates";
@@ -462,6 +463,19 @@ const InlineEmailComposer = ({
     setListingBlockInserted(true);
     setSubject(quoteSubjectFor(sellerContext?.cemetery));
     return next;
+  };
+
+  /** Insert (or replace) the mortuary Available Property List block. */
+  const insertMortuarySheet = () => {
+    const current = editorRef.current?.getHtml() ?? html;
+    const holder = document.createElement("div");
+    holder.innerHTML = current;
+    holder.querySelectorAll('[data-mortuary-sheet="1"]').forEach((n) => n.remove());
+    editorRef.current?.setHtml(holder.innerHTML);
+    editorRef.current?.insertHtmlBeforeSignature(buildMortuarySheetEmailBlock());
+    const next = editorRef.current?.getHtml() ?? html;
+    setHtml(next);
+    setBodyTouched(true);
   };
 
   // `htmlOverride` lets a panel insert a block and send it in the same click
