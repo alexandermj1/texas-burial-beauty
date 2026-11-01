@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Correct buyer AI free-text cemetery matching; verify Bluebonnet and typo/ambiguity safeguards without changing or resending the existing email.
 - [x] Correct missing attachment labels across direct uploads, profile files and document files; paginate metadata beyond 1,000 rows, refresh on file/profile/document changes with three-minute fallback, preserve labels on failures and original-receipt rules. Sixteen tests pass; signed-in check reads all 1,435 files and verifies Simon’s previously missed Deed.jpeg now has the Attachments label; preview clean, not published.
 - [x] Add the preneed-style buyer form to all four metro pages and buying, cost and funeral-planning articles using one shared frame; eight five-step intercepted submissions and phone layouts pass, 12 tests pass, buyer classification explicit, build clean; no real enquiries/emails sent, not published.
 - [x] Produce ChatGPT ad thumbnails: burial-plot artwork with the discount tag tied to the stone itself (per the uploaded reference), on coloured backgrounds and flower-field settings; deliver in chat only. Three verified: twine loops over the stone (bluebonnet needed a redo), wording "UP TO 50% OFF" correct, no duplicate tags.
