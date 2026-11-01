@@ -8,6 +8,7 @@ import { automaticReplyTiming, BUYER_REPLY_MIN_DELAY_MS } from "./replyTiming.ts
 import { buyerReplyAllowed } from "./autoReplyPreference.ts";
 import { buyerDocumentReadiness, countBuyerDocuments } from "./documentReadiness.ts";
 import { requestedSpaces } from "./requestedSpaces.ts";
+import { resolveBuyerCemetery } from "./cemeteryMatching.ts";
 
 const MODEL = "openai/gpt-6-astra";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
@@ -52,17 +53,28 @@ async function staff(db: any, req: Request) {
   return role ? { id: data.user.id, name: data.user.email ?? "Staff" } : null;
 }
 
-async function inventory(db: any, buyer: any, exclude: string[] = []) {
-  const wantCem = canon(buyer.cemetery), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
+async function inventory(db: any, buyer: any, exclude: string[] = [], directory?: any[]) {
+  if (!directory) {
+    const { data, error } = await db.from("texas_cemeteries").select("name,city,region,transfer_fee").is("deleted_at", null).limit(2000);
+    if (error) throw new Error(error.message);
+    directory = data ?? [];
+  }
+  const resolved = resolveBuyerCemetery(buyer.cemetery, directory, buyer.cemetery_city);
+  if (canon(buyer.cemetery) && !resolved) throw new Error("Cemetery name is unrecognised or ambiguous. Staff must confirm it before a no-inventory reply can be drafted.");
+  const wantCem = canon(resolved?.name), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (!wantCem) return { kind, items: [] as any[] };
-  const { data, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_requested_at,documents_completed_at,reserved_until,customer_kind,source")
-    .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
-    .or("la_signed_at.not.is.null,quote_response.eq.accepted").limit(1000);
-  if (inventoryError) throw new Error(inventoryError.message);
+  const data: any[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data: page, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_requested_at,documents_completed_at,reserved_until,customer_kind,source")
+      .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
+      .or("la_signed_at.not.is.null,quote_response.eq.accepted").order("id").range(offset, offset + 999);
+    if (inventoryError) throw new Error(inventoryError.message);
+    data.push(...(page ?? []));
+    if ((page ?? []).length < 1000) break;
+  }
   // Same transfer fee the buyer workspace uses: the cemetery directory's fee first, the record's own fee as fallback.
-  const { data: dir } = await db.from("texas_cemeteries").select("name,transfer_fee").not("transfer_fee", "is", null).limit(2000);
-  const dirFee = (dir ?? []).find((c: any) => canon(c.name) === wantCem)?.transfer_fee ?? null;
-  const rows = (data ?? []).filter((s: any) => !exclude.includes(s.id) && !isBuyer(s) && canon(s.cemetery) === wantCem && (!s.reserved_until || new Date(s.reserved_until) < new Date()) && (kind === "any" || category(s.property_type) === kind));
+  const dirFee = resolved?.transfer_fee ?? null;
+  const rows = (data ?? []).filter((s: any) => !exclude.includes(s.id) && !isBuyer(s) && canon(resolveBuyerCemetery(s.cemetery, directory ?? [], s.cemetery_city)?.name) === wantCem && (!s.reserved_until || new Date(s.reserved_until) < new Date()) && (kind === "any" || category(s.property_type) === kind));
   if (!rows.length) return { kind, items: [] };
   const ids = rows.map((r: any) => r.id);
   const { data: docs, error: docsError } = await db.from("submission_documents").select("submission_id,status,doc_code,document_type").in("submission_id", ids).is("deleted_at", null);
@@ -100,11 +112,14 @@ async function inventory(db: any, buyer: any, exclude: string[] = []) {
 const areaOf = (b: any) => String(`${b.details ?? ""}\n${b.message ?? ""}`.match(/(?:region|city|area|location)\s*:\s*([^\n]+)/i)?.[1] ?? b.cemetery_city ?? "").replace(/^greater\s+/i, "").replace(/[,.]?\s*(tx|texas)\b.*$/i, "").trim();
 async function matches(db: any, buyer: any, exclude: string[] = []) {
   if (canon(buyer.cemetery)) {
-    const own = await inventory(db, buyer, exclude);
+    const { data: all, error } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude,transfer_fee").is("deleted_at", null).limit(2000);
+    if (error) throw new Error(error.message);
+    const me = resolveBuyerCemetery(buyer.cemetery, all ?? [], buyer.cemetery_city || areaOf(buyer));
+    if (!me) throw new Error("Cemetery name is unrecognised or ambiguous. Staff must confirm it before a no-inventory reply can be drafted.");
+    buyer.cemetery = me.name; // In-memory only: retain the buyer's original submission and sent email.
+    const own = await inventory(db, buyer, exclude, all ?? []);
     // Look at nearby cemeteries we serve too: as the main options when nothing is at
     // their cemetery, or as a couple of extra choices (within ~25 miles) when there is.
-    const { data: all } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude").is("deleted_at", null).limit(2000);
-    const me = (all ?? []).find((c: any) => canon(c.name) === canon(buyer.cemetery));
     if (!me) return { ...own, area: null as string | null };
     const miles = (a: any) => {
       if (me.latitude == null || me.longitude == null || a.latitude == null || a.longitude == null) return 9999;
@@ -121,7 +136,7 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
     for (const c of near.slice(0, hasOwn ? 15 : near.length)) {
       if (alt.length >= cap) break;
       const away = Math.round(miles(c));
-      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); alt.push(...r.items.slice(0, hasOwn ? 1 : 2).map((x: any) => ({ ...x, cemetery: c.name, ...(hasOwn ? { also_nearby: true } : { nearby_alternative: true }), miles_away: away }))); } catch { /* needs staff pricing */ }
+      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude, all ?? []); alt.push(...r.items.slice(0, hasOwn ? 1 : 2).map((x: any) => ({ ...x, cemetery: c.name, ...(hasOwn ? { also_nearby: true } : { nearby_alternative: true }), miles_away: away }))); } catch { /* needs staff pricing */ }
     }
     if (hasOwn) return { ...own, items: [...own.items, ...alt.slice(0, cap)], area: null as string | null };
     const kept = alt.slice(0, 4);
@@ -151,9 +166,10 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
 // when the first options don't suit the buyer. Returns only safe, supplied fields.
 async function searchTool(db: any, buyer: any, exclude: string[], args: any) {
   const type = args.property_type && args.property_type !== "any" ? args.property_type : buyer.property_type;
-  const { data: all } = await db.from("texas_cemeteries").select("name,city,region,county,latitude,longitude").is("deleted_at", null).limit(2000);
+  const { data: all, error } = await db.from("texas_cemeteries").select("name,city,region,county,latitude,longitude,transfer_fee").is("deleted_at", null).limit(2000);
+  if (error) throw new Error(error.message);
   const cems = all ?? [];
-  const find = (n: string) => cems.find((c: any) => canon(c.name) === canon(n)) ?? cems.find((c: any) => canon(c.name).includes(canon(n)) || canon(n).includes(canon(c.name)));
+  const find = (n: string) => resolveBuyerCemetery(n, cems, buyer.cemetery_city || areaOf(buyer));
   const dist = (a: any, b: any) => {
     if (!a || !b || a.latitude == null || b.latitude == null || a.longitude == null || b.longitude == null) return null;
     const r = Math.PI / 180, dLat = (b.latitude - a.latitude) * r, dLng = (b.longitude - a.longitude) * r;
@@ -176,7 +192,7 @@ async function searchTool(db: any, buyer: any, exclude: string[], args: any) {
   for (const c of targets) {
     if (items.length >= 25) break;
     try {
-      const r = await inventory(db, { ...buyer, cemetery: c.name, property_type: type }, exclude);
+      const r = await inventory(db, { ...buyer, cemetery: c.name, property_type: type }, exclude, cems);
       for (const x of r.items) items.push({ ...x, cemetery: c.name, city: c.city, miles_away: origin ? c._d : undefined });
     } catch { /* pricing needs staff */ }
   }
@@ -305,6 +321,7 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
       return { status: "held" };
     }
     const found = new Map<string, any>();
+    for (const item of items) found.set(item.listing_id, item);
     const r = await model(apiKey, buyer, items, kind, old?.status === "rejected" ? old.decision_reason : null, await sharedContext(db, buyer), await recordContext(db, items), lastContact, area, { nearest_miles_away, area_widened }, { db, exclude: old?.excluded_listing_ids ?? [], found });
     const chosen = (r.chosen_listing_ids ?? []).map((lid: string) => found.get(lid)).filter(Boolean);
     if (!r.should_send) {
@@ -373,6 +390,13 @@ async function sendDraft(db: any, url: string, auth: string, d: any, subject: st
     if (already?.length) return fail("We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." , 409);
     // Every option the email offers must still be available at the same figures.
     const snap = (d.inventory_snapshot as any[]) ?? [];
+    // A zero-option draft must not automatically make a no-stock claim while own-cemetery stock exists.
+    if (automatic && !snap.length && canon(s.cemetery)) {
+      try {
+        const current = await matches(db, { ...s }, d.excluded_listing_ids ?? []);
+        if (current.items.some((x: any) => !x.nearby_alternative && !x.also_nearby)) return fail("Matching spaces exist at the requested cemetery. Staff must review this zero-option reply before sending.", 409);
+      } catch (e) { return fail(String((e as Error).message), 409); }
+    }
     const key = (x: any) => JSON.stringify([x.listing_id, x.spaces, x.our_total, x.retail_total, x.transfer_fee, x.readiness]);
     for (const g of [...new Set(snap.map((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type])))]) {
       const [cem, type] = JSON.parse(g);
