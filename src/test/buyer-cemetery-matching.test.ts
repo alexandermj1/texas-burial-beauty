@@ -23,4 +23,9 @@ describe("buyer cemetery identity", () => {
   it("does not treat a genuinely unknown cemetery as Bluebonnet", () => {
     expect(resolveBuyerCemetery("New Meadow Cemetery", directory)).toBeNull();
   });
+  it("requires a city for identical names in different cities", () => {
+    const sameNames = [{ name: "Oak Hill Cemetery", city: "Austin" }, { name: "Oak Hill Cemetery", city: "Dallas" }];
+    expect(resolveBuyerCemetery("Oak Hill Cemetery", sameNames)).toBeNull();
+    expect(resolveBuyerCemetery("Oak Hill Cemetery", sameNames, "Dallas")?.city).toBe("Dallas");
+  });
 });

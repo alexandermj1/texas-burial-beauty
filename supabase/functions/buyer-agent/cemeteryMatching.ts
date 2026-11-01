@@ -20,11 +20,12 @@ export function resolveBuyerCemetery<T extends CemeteryEntry>(raw: unknown, dire
   const exact = directory.filter(c => cemeteryNameKey(c.name) === key);
   const unique = (rows: T[]) => {
     const names = new Set(rows.map(c => cemeteryNameKey(c.name)));
-    if (names.size === 1) return rows[0] ?? null;
+    const cities = new Set(rows.map(c => cemeteryNameKey(c.city)).filter(Boolean));
+    if (names.size === 1 && cities.size <= 1) return rows[0] ?? null;
     const place = cemeteryNameKey(location);
     if (!place) return null;
     const local = rows.filter(c => [c.city, c.region].some(v => v && cemeteryNameKey(v) === place));
-    return new Set(local.map(c => cemeteryNameKey(c.name))).size === 1 ? local[0] ?? null : null;
+    return new Set(local.map(c => cemeteryNameKey(c.name))).size === 1 && new Set(local.map(c => cemeteryNameKey(c.city)).filter(Boolean)).size <= 1 ? local[0] ?? null : null;
   };
   if (exact.length) return unique(exact);
   const words = key.split(" ");

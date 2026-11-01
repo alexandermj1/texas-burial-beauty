@@ -63,10 +63,15 @@ async function inventory(db: any, buyer: any, exclude: string[] = [], directory?
   if (canon(buyer.cemetery) && !resolved) throw new Error("Cemetery name is unrecognised or ambiguous. Staff must confirm it before a no-inventory reply can be drafted.");
   const wantCem = canon(resolved?.name), kind = (category(buyer.property_type) !== "any" ? category(buyer.property_type) : category(buyer.message));
   if (!wantCem) return { kind, items: [] as any[] };
-  const { data, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_requested_at,documents_completed_at,reserved_until,customer_kind,source")
-    .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
-    .or("la_signed_at.not.is.null,quote_response.eq.accepted").limit(1000);
-  if (inventoryError) throw new Error(inventoryError.message);
+  const data: any[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const { data: page, error: inventoryError } = await db.from("contact_submissions").select("id,name,created_at,cemetery,cemetery_city,property_type,section,lawn,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,la_signed_at,quote_response,documents_requested_at,documents_completed_at,reserved_until,customer_kind,source")
+      .is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null)
+      .or("la_signed_at.not.is.null,quote_response.eq.accepted").order("id").range(offset, offset + 999);
+    if (inventoryError) throw new Error(inventoryError.message);
+    data.push(...(page ?? []));
+    if ((page ?? []).length < 1000) break;
+  }
   // Same transfer fee the buyer workspace uses: the cemetery directory's fee first, the record's own fee as fallback.
   const dirFee = resolved?.transfer_fee ?? null;
   const rows = (data ?? []).filter((s: any) => !exclude.includes(s.id) && !isBuyer(s) && canon(resolveBuyerCemetery(s.cemetery, directory ?? [], s.cemetery_city)?.name) === wantCem && (!s.reserved_until || new Date(s.reserved_until) < new Date()) && (kind === "any" || category(s.property_type) === kind));
@@ -316,6 +321,7 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
       return { status: "held" };
     }
     const found = new Map<string, any>();
+    for (const item of items) found.set(item.listing_id, item);
     const r = await model(apiKey, buyer, items, kind, old?.status === "rejected" ? old.decision_reason : null, await sharedContext(db, buyer), await recordContext(db, items), lastContact, area, { nearest_miles_away, area_widened }, { db, exclude: old?.excluded_listing_ids ?? [], found });
     const chosen = (r.chosen_listing_ids ?? []).map((lid: string) => found.get(lid)).filter(Boolean);
     if (!r.should_send) {
@@ -384,6 +390,13 @@ async function sendDraft(db: any, url: string, auth: string, d: any, subject: st
     if (already?.length) return fail("We have already emailed this address since this draft was made (they may have another inquiry on file). Not sent, to avoid a duplicate." , 409);
     // Every option the email offers must still be available at the same figures.
     const snap = (d.inventory_snapshot as any[]) ?? [];
+    // A zero-option draft must not automatically make a no-stock claim while own-cemetery stock exists.
+    if (automatic && !snap.length && canon(s.cemetery)) {
+      try {
+        const current = await matches(db, { ...s }, d.excluded_listing_ids ?? []);
+        if (current.items.some((x: any) => !x.nearby_alternative && !x.also_nearby)) return fail("Matching spaces exist at the requested cemetery. Staff must review this zero-option reply before sending.", 409);
+      } catch (e) { return fail(String((e as Error).message), 409); }
+    }
     const key = (x: any) => JSON.stringify([x.listing_id, x.spaces, x.our_total, x.retail_total, x.transfer_fee, x.readiness]);
     for (const g of [...new Set(snap.map((x: any) => JSON.stringify([x.cemetery ?? s.cemetery, x.type])))]) {
       const [cem, type] = JSON.parse(g);
