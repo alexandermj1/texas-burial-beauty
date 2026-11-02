@@ -12,6 +12,7 @@ import { Send, X, Loader2, SpellCheck, Undo2, LayoutGrid, Maximize2, Minimize2, 
 import { supabase } from "@/integrations/supabase/client";
 import { paCall, purchaseAgreementEmailBlock, normalizeFields as normalizePaFields, chargeTotals as paTotals } from "@/lib/purchaseAgreement";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { useAdminDisplayName } from "@/hooks/useAdminDisplayName";
 import { cleanDisplayName } from "@/lib/displayName";
 import RichTextEditor, { type RichTextEditorHandle } from "./RichTextEditor";
@@ -474,14 +475,14 @@ const InlineEmailComposer = ({
       const { data } = await supabase.from("purchase_agreements").select("id,status,fields,payment_url,sign_token")
         .eq("buyer_submission_id", buyerId).is("deleted_at", null).neq("status", "void").order("created_at", { ascending: false }).limit(1);
       const pa: any = data?.[0];
-      if (!pa) { toast.error("No purchase agreement yet — match this buyer to a seller at the bottom of their record first."); return; }
+      if (!pa) { sonnerToast.error("No purchase agreement yet — match this buyer to a seller at the bottom of their record first."); return; }
       const f = normalizePaFields(pa.fields);
       let block: string;
       if (pa.status === "countersigned" && pa.payment_url) block = purchaseAgreementEmailBlock({ url: pa.payment_url, cemetery: f.property.cemetery, total: paTotals(f.charges).totalDue, kind: "pay" });
       else if (["draft", "sent", "viewed"].includes(pa.status)) {
         const r = await paCall<{ sign_url: string }>({ action: "link", id: pa.id, to: f.purchaser.email || to });
         block = purchaseAgreementEmailBlock({ url: r.sign_url, cemetery: f.property.cemetery, total: paTotals(f.charges).totalDue, kind: "sign" });
-      } else { toast.error(pa.status === "paid" ? "This buyer has already paid." : "The buyer has signed — countersign it on their record to send the payment link."); return; }
+      } else { sonnerToast.error(pa.status === "paid" ? "This buyer has already paid." : "The buyer has signed — countersign it on their record to send the payment link."); return; }
       const holder = document.createElement("div");
       holder.innerHTML = editorRef.current?.getHtml() ?? html;
       holder.querySelectorAll('[data-purchase-agreement="1"]').forEach((n) => n.remove());
@@ -489,8 +490,8 @@ const InlineEmailComposer = ({
       editorRef.current?.insertHtmlBeforeSignature(block);
       setHtml(editorRef.current?.getHtml() ?? html);
       setBodyTouched(true);
-      toast.success("Purchase agreement added to the email");
-    } catch (e) { toast.error((e as Error).message); }
+      sonnerToast.success("Purchase agreement added to the email");
+    } catch (e) { sonnerToast.error((e as Error).message); }
   };
 
   /** Insert (or replace) the mortuary Available Property List block. */
