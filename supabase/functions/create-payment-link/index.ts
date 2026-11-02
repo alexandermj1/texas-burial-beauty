@@ -21,6 +21,8 @@ const BodySchema = z.object({
   recipientName: z.string().max(200).optional().default(""),
   listingTier: z.enum(["starter", "pro", "custom_plus", "set_your_price"]).optional(),
   environment: z.enum(["sandbox", "live"]).optional(),
+  purchaseAgreementId: z.string().uuid().optional(),
+  buyerSubmissionId: z.string().uuid().optional(),
 });
 
 /** Pull the bare email out of a mailbox like `"Name" <a@b.com>`. */
@@ -66,7 +68,7 @@ Deno.serve(async (req) => {
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const { submissionId, kind, amountCents, description, recipientEmail, recipientName, listingTier } = parsed.data;
+    const { submissionId, kind, amountCents, description, recipientEmail, recipientName, listingTier, purchaseAgreementId, buyerSubmissionId } = parsed.data;
     const env: StripeEnv = parsed.data.environment ?? "sandbox";
 
     // Starter ($0) listing — no Stripe session needed. Create a PENDING
@@ -149,6 +151,8 @@ Deno.serve(async (req) => {
         recipient_email: recipientEmail,
         recipient_name: recipientName,
         ...(listingTier && { listing_tier: listingTier }),
+        ...(purchaseAgreementId && { purchase_agreement_id: purchaseAgreementId }),
+        ...(buyerSubmissionId && { buyer_submission_id: buyerSubmissionId }),
       };
       const paymentLink = await stripe.paymentLinks.create({
         line_items: [{ price: price.id, quantity: 1 }],
@@ -187,7 +191,7 @@ Deno.serve(async (req) => {
         checkout_url: session.url,
         environment: env,
         created_by_user_id: user.id,
-        metadata: { product_name: productName, ...(listingTier && { listing_tier: listingTier }) },
+        metadata: { product_name: productName, ...(listingTier && { listing_tier: listingTier }), ...(purchaseAgreementId && { purchase_agreement_id: purchaseAgreementId, buyer_submission_id: buyerSubmissionId }) },
       })
       .select()
       .single();

@@ -53,6 +53,7 @@ import { Button } from "@/components/ui/button";
 
 const EmailThread = lazy(() => import("./EmailThread"));
 const OwnershipPaperworkPanel = lazy(() => import("./OwnershipPaperworkPanel"));
+const PurchaseAgreementPanel = lazy(() => import("./PurchaseAgreementPanel"));
 
 // Canonicalized set of known Texas cemetery names (registry lives in src/data/cemeteries.ts).
 // Submissions staff have explicitly un-merged: they always show as their own row
@@ -3172,6 +3173,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {/* Contracts live inside the paperwork panel above — no separate section. */}
 
 
+
+                {/* Buyer match + purchase agreement (sellers at Docs out or later, and every buyer). */}
+                <Suspense fallback={null}><PurchaseAgreementPanel key={selected.id} submission={selected as any} kind={kind} /></Suspense>
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
                 {kind !== "buyer" && sellerWorkspaceTab === "files" && ((selected as any).customer_profile_id ? (
