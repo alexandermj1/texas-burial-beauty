@@ -2523,6 +2523,105 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_agreements: {
+        Row: {
+          buyer_signature: Json | null
+          buyer_signed_at: string | null
+          buyer_submission_id: string
+          countersignature: Json | null
+          countersigned_at: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          document_hash: string | null
+          events: Json
+          fields: Json
+          id: string
+          paid_at: string | null
+          payment_transaction_id: string | null
+          payment_url: string | null
+          seller_submission_id: string
+          sent_at: string | null
+          sign_token: string | null
+          signed_pdf_path: string | null
+          status: string
+          terms_version: string
+          updated_at: string
+          viewed_at: string | null
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          buyer_signature?: Json | null
+          buyer_signed_at?: string | null
+          buyer_submission_id: string
+          countersignature?: Json | null
+          countersigned_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          document_hash?: string | null
+          events?: Json
+          fields?: Json
+          id?: string
+          paid_at?: string | null
+          payment_transaction_id?: string | null
+          payment_url?: string | null
+          seller_submission_id: string
+          sent_at?: string | null
+          sign_token?: string | null
+          signed_pdf_path?: string | null
+          status?: string
+          terms_version?: string
+          updated_at?: string
+          viewed_at?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          buyer_signature?: Json | null
+          buyer_signed_at?: string | null
+          buyer_submission_id?: string
+          countersignature?: Json | null
+          countersigned_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          document_hash?: string | null
+          events?: Json
+          fields?: Json
+          id?: string
+          paid_at?: string | null
+          payment_transaction_id?: string | null
+          payment_url?: string | null
+          seller_submission_id?: string
+          sent_at?: string | null
+          sign_token?: string | null
+          signed_pdf_path?: string | null
+          status?: string
+          terms_version?: string
+          updated_at?: string
+          viewed_at?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_agreements_buyer_submission_id_fkey"
+            columns: ["buyer_submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_agreements_seller_submission_id_fkey"
+            columns: ["seller_submission_id"]
+            isOneToOne: false
+            referencedRelation: "contact_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_estimates: {
         Row: {
           ai_cost_estimate_usd: number | null
