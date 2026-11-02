@@ -50,6 +50,7 @@ const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const SignContract = lazy(() => import("./pages/SignContract"));
+const SignPurchaseAgreement = lazy(() => import("./pages/SignPurchaseAgreement"));
 const SelectStarter = lazy(() => import("./pages/SelectStarter"));
 const SellerPortal = lazy(() => import("./pages/SellerPortal"));
 const SellerPortalMobileUpload = lazy(() => import("./pages/SellerPortalMobileUpload"));
@@ -129,6 +130,7 @@ const App = () => (
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/unsubscribe" element={<Unsubscribe />} />
                 <Route path="/sign/:token" element={<SignContract />} />
+                <Route path="/purchase-agreement/:token" element={<SignPurchaseAgreement />} />
                 <Route path="/buying-a-cemetery-plot-in-texas" element={<Navigate to="/cemetery-plots-for-sale-texas" replace />} />
                 {/* Redirects for old routes */}
                 <Route path="/listings" element={<Navigate to="/properties" replace />} />
