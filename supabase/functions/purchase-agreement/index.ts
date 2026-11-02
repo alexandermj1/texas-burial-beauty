@@ -105,44 +105,58 @@ async function sendEmail(opts: { to: string; subject: string; html: string; subm
   return out;
 }
 
-export function shell(inner: string, kind: string) {
-  return `<!doctype html><html><body data-tcb-email="${kind}" style="margin:0;padding:0;background:#f6f1ea;font-family:Georgia,'Times New Roman',serif;color:#2d2a26;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1ea;padding:28px 12px;"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border:1px solid #e6dccf;border-radius:12px;overflow:hidden;">
-<tr><td style="padding:24px 32px;text-align:center;border-bottom:3px solid #4b7359;">
-<div style="font-size:20px;letter-spacing:.14em;color:#4b7359;font-weight:600;">TEXAS CEMETERY BROKERS</div>
-<div style="font-size:11px;letter-spacing:.24em;color:#8a7766;margin-top:4px;text-transform:uppercase;">Purchase Agreement</div></td></tr>
-<tr><td style="padding:28px 32px;font-size:15px;line-height:1.65;">${inner}</td></tr>
-<tr><td style="padding:16px 32px;text-align:center;font-size:12px;color:#8a7766;border-top:1px solid #efe6da;">Texas Cemetery Brokers · Dallas, Texas · (214) 230-4740 · <a href="${SITE}" style="color:#4b7359;">texascemeterybrokers.com</a></td></tr>
+const LOGO = "https://texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
+const SANS = "Helvetica,Arial,sans-serif";
+export function shell(inner: string, kind: string, banner = "") {
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body data-tcb-email="${kind}" style="margin:0;padding:0;background:#f6f1ea;font-family:${SANS};color:#2e2620;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1ea;"><tr><td align="center" style="padding:28px 12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e6ddd0;border-radius:12px;overflow:hidden;">
+${banner}
+<tr><td align="center" style="padding:26px 24px 20px;border-bottom:3px solid #d07a55;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td valign="middle" style="padding-right:10px;"><img src="${LOGO}" width="34" height="34" alt="" style="display:block;border:0;"></td>
+<td valign="middle" style="font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#2e2620;white-space:nowrap;">Texas Cemetery Brokers</td></tr></table>
+<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5f55;padding-top:6px;">Licensed cemetery property brokers &middot; Texas</div></td></tr>
+<tr><td style="padding:30px 40px 12px;font-size:15px;line-height:24px;color:#2e2620;">${inner}</td></tr>
+<tr><td style="padding:20px 40px 24px;font-size:13px;line-height:20px;color:#2e2620;border-top:1px solid #efe6da;">Kind regards,<br><strong>Simon James</strong><br>Texas Cemetery Brokers</td></tr>
+<tr><td align="center" style="background:#2e2620;padding:16px 24px;font-size:12px;line-height:18px;color:#e6ddd0;">Texas Cemetery Brokers &middot; Dallas, Texas &middot; (214) 230-4740<br><a href="${SITE}" style="color:#f0b89c;text-decoration:none;">texascemeterybrokers.com</a> &middot; Secure electronic signature</td></tr>
 </table></td></tr></table></body></html>`;
 }
 const button = (href: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px auto;"><tr><td style="background:#4b7359;border-radius:8px;"><a href="${esc(href)}" style="display:inline-block;padding:13px 28px;color:#ffffff;text-decoration:none;font-size:16px;">${label}</a></td></tr></table>`;
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td style="background:#d07a55;border-radius:6px;"><a href="${esc(href)}" style="display:inline-block;padding:14px 30px;color:#ffffff;text-decoration:none;font-family:${SANS};font-size:15px;font-weight:bold;letter-spacing:.3px;">${label}</a></td></tr></table>`;
+export const sampleBanner = `<tr><td align="center" style="background:#2e2620;padding:9px 16px;font-family:${SANS};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#f0b89c;">Sample purchase agreement &middot; internal preview, not a real sale</td></tr>`;
 
 function summaryTable(f: AgreementFields) {
   const t = chargeTotals(f.charges);
-  const row = (k: string, v: string) => `<tr><td style="padding:6px 0;color:#6b5f55;font-size:13px;">${k}</td><td style="padding:6px 0;text-align:right;font-size:14px;">${esc(v)}</td></tr>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1ea;border-radius:8px;padding:12px 16px;margin:12px 0;">
+  const row = (k: string, v: string, last = false) => `<tr><td style="padding:10px 0;${last ? "" : "border-bottom:1px solid #e6ddd0;"}color:#6b5f55;font-size:13px;">${k}</td><td style="padding:10px 0;${last ? "" : "border-bottom:1px solid #e6ddd0;"}text-align:right;font-size:14px;color:#2e2620;${last ? "font-weight:bold;font-size:16px;" : ""}">${esc(v)}</td></tr>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1ea;border-left:4px solid #d07a55;margin:18px 0;"><tr><td style="padding:6px 18px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 ${row("Cemetery", [f.property.cemetery, f.property.city].filter(Boolean).join(", "))}
 ${row("Property", `${f.property.description || f.property.property_type}${f.property.spaces > 1 ? ` (${f.property.spaces} spaces)` : ""}`)}
-${row("Total amount due", money(t.totalDue))}</table>`;
+${row("Total amount due", money(t.totalDue), true)}</table></td></tr></table>`;
 }
 
-export function inviteEmailHtml(f: AgreementFields, signUrl: string, note?: string) {
+export function inviteEmailHtml(f: AgreementFields, signUrl: string, note?: string, sample = false) {
   const first = (f.purchaser.names || "").trim().split(/\s+/)[0] || "there";
-  return shell(`<p>Dear ${esc(first)},</p>
-<p>Thank you for choosing Texas Cemetery Brokers. Your purchase agreement for the cemetery property below is ready for you to review and sign online.</p>
-${note ? `<p>${esc(note).replace(/\n/g, "<br>")}</p>` : ""}
+  const step = (n: number, t: string) => `<tr><td valign="top" style="padding:0 12px 10px 0;"><div style="width:22px;height:22px;border-radius:11px;background:#2e2620;color:#ffffff;font-size:12px;line-height:22px;text-align:center;font-weight:bold;">${n}</div></td><td style="padding:1px 0 10px;font-size:14px;line-height:21px;color:#2e2620;">${t}</td></tr>`;
+  return shell(`<p style="margin:0 0 14px;">Dear ${esc(first)},</p>
+<p style="margin:0 0 14px;">Thank you for choosing Texas Cemetery Brokers. Your purchase agreement for the cemetery property below has been prepared and is ready for you to review and sign online.</p>
+${note ? `<p style="margin:0 0 14px;color:#6b5f55;font-style:italic;">${esc(note).replace(/\n/g, "<br>")}</p>` : ""}
 ${summaryTable(f)}
-${button(signUrl, "Review &amp; sign your purchase agreement")}
-<p style="font-size:13px;color:#6b5f55;">What happens next:</p>
-<ol style="font-size:13px;color:#6b5f55;padding-left:20px;margin-top:0;"><li>Review the agreement, add your details and the names for the deed.</li><li>Sign electronically — it takes about five minutes.</li><li>We countersign and email you the completed agreement with a secure card payment link.</li><li>Once payment clears, we file the transfer with the cemetery.</li></ol>
-<p style="font-size:13px;color:#6b5f55;">You may cancel within five calendar days of signing. If you have any questions, just reply to this email or call (214) 230-4740.</p>
-<p style="font-size:12px;color:#8a7766;word-break:break-all;">Link: ${esc(signUrl)}</p>`, "purchase_agreement");
+${button(signUrl, "Review &amp; sign your agreement")}
+<p style="margin:8px 0 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5f55;">What happens next</p>
+<table role="presentation" cellpadding="0" cellspacing="0">
+${step(1, "Review the agreement and add your details and the names for the deed.")}
+${step(2, "Sign electronically &mdash; it takes about five minutes.")}
+${step(3, "We countersign and email you the completed agreement with a secure card payment link.")}
+${step(4, "Once payment clears, we file the transfer with the cemetery and keep you updated.")}
+</table>
+<p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">You may cancel within five calendar days of signing. If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
+<p style="margin:0 0 6px;font-size:11px;line-height:16px;color:#8a7766;word-break:break-all;">If the button does not work, copy this link into your browser:<br>${esc(signUrl)}</p>`, "purchase_agreement", sample ? sampleBanner : "");
 }
 
 // ---------------- PDF ----------------
-const SAGE = rgb(0.294, 0.451, 0.349), INK = rgb(0.17, 0.16, 0.15), MUTED = rgb(0.45, 0.41, 0.37);
+const SAGE = rgb(0.816, 0.478, 0.333), INK = rgb(0.17, 0.16, 0.15), MUTED = rgb(0.45, 0.41, 0.37);
 function wrap(text: string, font: PDFFont, size: number, width: number) {
   const out: string[] = [];
   for (const para of text.split("\n")) {
@@ -348,10 +362,10 @@ Deno.serve(async (req) => {
       let ev = event(action === "send" ? "emailed" : "link_issued", { by: user.name, to });
       if (action === "send") {
         const sample = body.sample === true;
-        const html = inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined);
+        const html = inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined, sample);
         await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement sent for signature.",
           subject: `${sample ? "SAMPLE PURCHASE AGREEMENT — " : ""}Your purchase agreement — ${f.property.cemetery} — ready to sign`,
-          html: sample ? html.replace(/<body([^>]*)>/i, `<body$1><div style="background:#b4532a;color:#fff;font:bold 14px Arial,sans-serif;text-align:center;padding:10px;">SAMPLE PURCHASE AGREEMENT — internal test, not a real sale</div>`) : html });
+          html });
         if (sample) ev = { ...ev, sample: true };
       }
       const { data } = await db.from("purchase_agreements").update({
