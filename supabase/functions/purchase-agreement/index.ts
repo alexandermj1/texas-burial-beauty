@@ -347,9 +347,12 @@ Deno.serve(async (req) => {
       const to = z.string().email().parse(body.to || f.purchaser.email);
       let ev = event(action === "send" ? "emailed" : "link_issued", { by: user.name, to });
       if (action === "send") {
+        const sample = body.sample === true;
+        const html = inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined);
         await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement sent for signature.",
-          subject: `Your purchase agreement — ${f.property.cemetery} — ready to sign`,
-          html: inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined) });
+          subject: `${sample ? "SAMPLE PURCHASE AGREEMENT — " : ""}Your purchase agreement — ${f.property.cemetery} — ready to sign`,
+          html: sample ? html.replace(/<body([^>]*)>/i, `<body$1><div style="background:#b4532a;color:#fff;font:bold 14px Arial,sans-serif;text-align:center;padding:10px;">SAMPLE PURCHASE AGREEMENT — internal test, not a real sale</div>`) : html });
+        if (sample) ev = { ...ev, sample: true };
       }
       const { data } = await db.from("purchase_agreements").update({
         sign_token: token, sent_at: pa.sent_at ?? nowIso(), status: pa.status === "draft" ? "sent" : pa.status, events: [...pa.events, ev],
