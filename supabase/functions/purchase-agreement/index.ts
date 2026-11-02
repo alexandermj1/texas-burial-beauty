@@ -4,7 +4,7 @@
 // with an audit certificate and issues the card payment link. The payments
 // webhook marks the agreement paid. Public actions are token-scoped and never
 // reveal the seller's identity.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "npm:pdf-lib@1.17.1";
