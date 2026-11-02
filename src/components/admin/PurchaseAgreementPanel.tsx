@@ -18,7 +18,7 @@ import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import {
   STATUS_LABEL, chargeTotals, defaultFields, inviteEmailPreviewNote, money, normalizeFields, paCall, sellerReadyForBuyer,
   type AgreementFields, type PaStatus,
-} from "@/lib/purchaseAgreementAdmin";
+} from "@/lib/purchaseAgreement";
 
 type Agreement = {
   id: string; status: PaStatus; fields: AgreementFields; seller_submission_id: string; buyer_submission_id: string;

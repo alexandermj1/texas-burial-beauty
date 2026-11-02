@@ -74,3 +74,6 @@ export async function paCall<T = any>(body: Record<string, unknown>): Promise<T>
 }
 
 export const money = (v: number) => (Number(v) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+
+export const inviteEmailPreviewNote =
+  "The buyer gets a branded email from info@texascemeterybrokers.com with a summary, a private signing link and what happens next. It's logged on their email thread.";
