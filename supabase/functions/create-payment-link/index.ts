@@ -104,12 +104,14 @@ Deno.serve(async (req) => {
       .eq("id", submissionId)
       .maybeSingle();
 
-    const productName =
-      kind === "plot_sale" && submission?.cemetery
+    // Purchase agreements: the checkout must name exactly what the buyer signed for.
+    const productName = purchaseAgreementId
+      ? description
+      : kind === "plot_sale" && submission?.cemetery
         ? `Cemetery plot — ${submission.cemetery}${submission.section ? `, Section ${submission.section}` : ""}`
         : description;
 
-    const productDescription = [
+    const productDescription = purchaseAgreementId ? "Signed purchase agreement — total amount due" : [
       submission?.cemetery && `Cemetery: ${submission.cemetery}`,
       submission?.section && `Section: ${submission.section}`,
       submission?.property_type && `Type: ${submission.property_type}`,
