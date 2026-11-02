@@ -77,3 +77,19 @@ export const money = (v: number) => (Number(v) || 0).toLocaleString("en-US", { s
 
 export const inviteEmailPreviewNote =
   "The buyer gets a branded email from info@texascemeterybrokers.com with a summary, a private signing link and what happens next. It's logged on their email thread.";
+
+const escHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+/** Email-safe block for the composer: signing link, or payment link once countersigned. */
+export function purchaseAgreementEmailBlock(opts: { url: string; cemetery: string; total: number; kind: "sign" | "pay" }) {
+  const head = opts.kind === "sign" ? "Your purchase agreement" : "Complete your purchase";
+  const body = opts.kind === "sign"
+    ? `Your purchase agreement for <strong>${escHtml(opts.cemetery)}</strong> is ready to review and sign online. It takes about five minutes, and you'll receive a copy by email.`
+    : `Your purchase agreement for <strong>${escHtml(opts.cemetery)}</strong> is fully signed. The total amount due is <strong>${money(opts.total)}</strong>, payable securely by card.`;
+  const label = opts.kind === "sign" ? "Review &amp; sign your purchase agreement" : `Pay ${money(opts.total)} securely`;
+  return `<div data-purchase-agreement="1" style="margin:18px 0;padding:18px 20px;border:1px solid #e6dccf;border-left:4px solid #4b7359;border-radius:8px;background:#f6f1ea;font-family:Georgia,serif;">
+<div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#4b7359;margin-bottom:6px;">${head}</div>
+<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#2d2a26;">${body}</p>
+<a href="${escHtml(opts.url)}" style="display:inline-block;background:#4b7359;color:#ffffff;text-decoration:none;padding:11px 22px;border-radius:6px;font-size:15px;">${label}</a>
+</div>`;
+}

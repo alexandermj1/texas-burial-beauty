@@ -465,6 +465,33 @@ const InlineEmailComposer = ({
     return next;
   };
 
+  /** Insert (or replace) the buyer's purchase agreement signing / payment block. */
+  const insertPurchaseAgreement = async () => {
+    const buyerId = buyerContext?.id ?? submissionId;
+    if (!buyerId) return;
+    try {
+      const { data } = await supabase.from("purchase_agreements").select("id,status,fields,payment_url,sign_token")
+        .eq("buyer_submission_id", buyerId).is("deleted_at", null).neq("status", "void").order("created_at", { ascending: false }).limit(1);
+      const pa: any = data?.[0];
+      if (!pa) { toast.error("No purchase agreement yet — match this buyer to a seller at the bottom of their record first."); return; }
+      const f = normalizePaFields(pa.fields);
+      let block: string;
+      if (pa.status === "countersigned" && pa.payment_url) block = purchaseAgreementEmailBlock({ url: pa.payment_url, cemetery: f.property.cemetery, total: paTotals(f.charges).totalDue, kind: "pay" });
+      else if (["draft", "sent", "viewed"].includes(pa.status)) {
+        const r = await paCall<{ sign_url: string }>({ action: "link", id: pa.id, to: f.purchaser.email || to });
+        block = purchaseAgreementEmailBlock({ url: r.sign_url, cemetery: f.property.cemetery, total: paTotals(f.charges).totalDue, kind: "sign" });
+      } else { toast.error(pa.status === "paid" ? "This buyer has already paid." : "The buyer has signed — countersign it on their record to send the payment link."); return; }
+      const holder = document.createElement("div");
+      holder.innerHTML = editorRef.current?.getHtml() ?? html;
+      holder.querySelectorAll('[data-purchase-agreement="1"]').forEach((n) => n.remove());
+      editorRef.current?.setHtml(holder.innerHTML);
+      editorRef.current?.insertHtmlBeforeSignature(block);
+      setHtml(editorRef.current?.getHtml() ?? html);
+      setBodyTouched(true);
+      toast.success("Purchase agreement added to the email");
+    } catch (e) { toast.error((e as Error).message); }
+  };
+
   /** Insert (or replace) the mortuary Available Property List block. */
   const insertMortuarySheet = () => {
     const current = editorRef.current?.getHtml() ?? html;
@@ -1114,6 +1141,17 @@ const InlineEmailComposer = ({
           >
             <LayoutGrid className="w-3 h-3" />
             Attach plot cards
+          </button>
+        )}
+        {(buyerContext?.id || submissionId) && (
+          <button
+            type="button"
+            onClick={insertPurchaseAgreement}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted"
+            title="Insert this buyer's purchase agreement signing link (or payment link once countersigned)"
+          >
+            <FileSignature className="w-3 h-3" />
+            Attach purchase agreement
           </button>
         )}
         <button
