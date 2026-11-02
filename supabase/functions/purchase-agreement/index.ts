@@ -71,13 +71,30 @@ async function sendEmail(opts: { to: string; subject: string; html: string; subm
       `Content-Type: application/pdf; name="${opts.attachment.name}"`, "Content-Transfer-Encoding: base64",
       `Content-Disposition: attachment; filename="${opts.attachment.name}"`, "", b64, `--${mix}--`, "");
   } else lines.push(...altPart, "");
-  if (!lovableKey || !gmailKey) throw new Error("Email is not configured (Gmail connection missing)");
-  const res = await fetch("https://connector-gateway.lovable.dev/google_mail/gmail/v1/users/me/messages/send", {
-    method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": gmailKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ raw: b64url(lines.join("\r\n")) }),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Email could not be sent (${res.status}): ${text.slice(0, 300)}`);
+  if (!lovableKey) throw new Error("Email is not configured");
+  // Try each linked Gmail connection (one may need reconnecting), then Resend.
+  let text = ""; let sent = false; const failures: string[] = [];
+  for (const key of [gmailKey, Deno.env.get("GOOGLE_MAIL_API_KEY_1")].filter(Boolean) as string[]) {
+    const res = await fetch("https://connector-gateway.lovable.dev/google_mail/gmail/v1/users/me/messages/send", {
+      method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({ raw: b64url(lines.join("\r\n")) }),
+    });
+    text = await res.text();
+    if (res.ok) { sent = true; break; }
+    failures.push(`Gmail ${res.status}`);
+  }
+  if (!sent) {
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendKey) throw new Error(`Email could not be sent (${failures.join(", ")})`);
+    let att: unknown[] | undefined;
+    if (opts.attachment) { let bin = ""; opts.attachment.bytes.forEach((b) => (bin += String.fromCharCode(b))); att = [{ filename: opts.attachment.name, content: btoa(bin) }]; }
+    const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": resendKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: `Texas Cemetery Brokers <${MAILBOX}>`, reply_to: MAILBOX, to: [opts.to], bcc: [MAILBOX], subject: opts.subject, html: opts.html, ...(att ? { attachments: att } : {}) }),
+    });
+    text = "{}";
+    if (!res.ok) throw new Error(`Email could not be sent (${failures.join(", ")}; Resend ${res.status} ${(await res.text()).slice(0, 200)})`);
+  }
   let out: any = {}; try { out = JSON.parse(text); } catch { /* ignore */ }
   await db.from("email_messages").upsert({
     gmail_message_id: out.id || `pa-${crypto.randomUUID()}`, gmail_thread_id: out.threadId ?? null,
