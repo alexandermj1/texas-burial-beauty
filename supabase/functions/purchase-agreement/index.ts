@@ -58,7 +58,7 @@ function hdr(s: string) {
   const bytes = new TextEncoder().encode(s); let bin = ""; bytes.forEach((b) => (bin += String.fromCharCode(b)));
   return `=?UTF-8?B?${btoa(bin)}?=`;
 }
-async function sendEmail(opts: { to: string; subject: string; html: string; submissionId: string; snippet: string; attachment?: { name: string; bytes: Uint8Array } }) {
+async function sendEmail(opts: { to: string; subject: string; html: string; submissionId: string; snippet: string; attachment?: { name: string; bytes: Uint8Array; mime?: string } }) {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY"); const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY");
   const plain = opts.html.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const alt = `=_alt_${crypto.randomUUID().replace(/-/g, "")}`; const mix = `=_mix_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -68,7 +68,7 @@ async function sendEmail(opts: { to: string; subject: string; html: string; subm
     let bin = ""; opts.attachment.bytes.forEach((b) => (bin += String.fromCharCode(b)));
     const b64 = btoa(bin).replace(/.{76}/g, "$&\r\n");
     lines.push(`Content-Type: multipart/mixed; boundary="${mix}"`, "", `--${mix}`, ...altPart, `--${mix}`,
-      `Content-Type: application/pdf; name="${opts.attachment.name}"`, "Content-Transfer-Encoding: base64",
+      `Content-Type: ${opts.attachment.mime ?? "application/pdf"}; name="${opts.attachment.name}"`, "Content-Transfer-Encoding: base64",
       `Content-Disposition: attachment; filename="${opts.attachment.name}"`, "", b64, `--${mix}--`, "");
   } else lines.push(...altPart, "");
   if (!lovableKey) throw new Error("Email is not configured");
@@ -105,44 +105,53 @@ async function sendEmail(opts: { to: string; subject: string; html: string; subm
   return out;
 }
 
-const LOGO = "https://texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
 const SANS = "Helvetica,Arial,sans-serif";
 export function shell(inner: string, kind: string, banner = "") {
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body data-tcb-email="${kind}" style="margin:0;padding:0;background:#f6f1ea;font-family:${SANS};color:#2e2620;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1ea;"><tr><td align="center" style="padding:28px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e6ddd0;border-radius:12px;overflow:hidden;">
 ${banner}
-<tr><td align="center" style="padding:26px 24px 20px;border-bottom:3px solid #d07a55;">
+<tr><td align="center" style="padding:26px 24px 20px;border-bottom:1px solid #2e2620;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td valign="middle" style="padding-right:10px;"><img src="${LOGO}" width="34" height="34" alt="" style="display:block;border:0;"></td>
-<td valign="middle" style="font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#2e2620;white-space:nowrap;">Texas Cemetery Brokers</td></tr></table>
+<td valign="middle" style="font-family:Georgia,'Times New Roman',serif;font-size:24px;letter-spacing:.5px;color:#2e2620;white-space:nowrap;">Texas Cemetery Brokers</td></tr></table>
 <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5f55;padding-top:6px;">Licensed cemetery property brokers &middot; Texas</div></td></tr>
 <tr><td style="padding:30px 40px 12px;font-size:15px;line-height:24px;color:#2e2620;">${inner}</td></tr>
 <tr><td style="padding:20px 40px 24px;font-size:13px;line-height:20px;color:#2e2620;border-top:1px solid #efe6da;">Kind regards,<br><strong>Simon James</strong><br>Texas Cemetery Brokers</td></tr>
-<tr><td align="center" style="background:#2e2620;padding:16px 24px;font-size:12px;line-height:18px;color:#e6ddd0;">Texas Cemetery Brokers &middot; Dallas, Texas &middot; (214) 230-4740<br><a href="${SITE}" style="color:#f0b89c;text-decoration:none;">texascemeterybrokers.com</a> &middot; Secure electronic signature</td></tr>
+<tr><td align="center" style="background:#2e2620;padding:16px 24px;font-size:12px;line-height:18px;color:#e6ddd0;">Texas Cemetery Brokers &middot; Dallas, Texas &middot; (214) 230-4740<br><a href="${SITE}" style="color:#ffffff;text-decoration:underline;">texascemeterybrokers.com</a> &middot; Secure electronic signature</td></tr>
 </table></td></tr></table></body></html>`;
 }
 const button = (href: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td style="background:#d07a55;border-radius:6px;"><a href="${esc(href)}" style="display:inline-block;padding:14px 30px;color:#ffffff;text-decoration:none;font-family:${SANS};font-size:15px;font-weight:bold;letter-spacing:.3px;">${label}</a></td></tr></table>`;
-export const sampleBanner = `<tr><td align="center" style="background:#2e2620;padding:9px 16px;font-family:${SANS};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#f0b89c;">Sample purchase agreement &middot; internal preview, not a real sale</td></tr>`;
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td style="background:#2e2620;border-radius:4px;"><a href="${esc(href)}" style="display:inline-block;padding:14px 30px;color:#ffffff;text-decoration:none;font-family:${SANS};font-size:15px;font-weight:bold;letter-spacing:.3px;">${label}</a></td></tr></table>`;
+export const sampleBanner = `<tr><td align="center" style="background:#2e2620;padding:9px 16px;font-family:${SANS};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">Sample purchase agreement &middot; internal preview, not a real sale</td></tr>`;
 
 function summaryTable(f: AgreementFields) {
   const t = chargeTotals(f.charges);
   const row = (k: string, v: string, last = false) => `<tr><td style="padding:10px 0;${last ? "" : "border-bottom:1px solid #e6ddd0;"}color:#6b5f55;font-size:13px;">${k}</td><td style="padding:10px 0;${last ? "" : "border-bottom:1px solid #e6ddd0;"}text-align:right;font-size:14px;color:#2e2620;${last ? "font-weight:bold;font-size:16px;" : ""}">${esc(v)}</td></tr>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f1ea;border-left:4px solid #d07a55;margin:18px 0;"><tr><td style="padding:6px 18px;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f2;border:1px solid #e6ddd0;margin:18px 0;"><tr><td style="padding:6px 18px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 ${row("Cemetery", [f.property.cemetery, f.property.city].filter(Boolean).join(", "))}
 ${row("Property", `${f.property.description || f.property.property_type}${f.property.spaces > 1 ? ` (${f.property.spaces} spaces)` : ""}`)}
 ${row("Total amount due", money(t.totalDue), true)}</table></td></tr></table>`;
 }
 
-export function inviteEmailHtml(f: AgreementFields, signUrl: string, note?: string, sample = false) {
+function deedBlock(f: AgreementFields, url: string) {
+  const sp = f.property.spaces > 1 ? `${f.property.spaces} spaces` : "one space";
+  return `<p style="margin:22px 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5f55;">Copy of the deed for your review</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e6ddd0;"><tr><td style="padding:8px;background:#faf7f2;"><img src="${esc(url)}" width="502" alt="Copy of the cemetery deed (owner's name and address obscured)" style="display:block;width:100%;height:auto;border:0;"></td></tr>
+<tr><td style="padding:8px 12px;font-size:12px;line-height:18px;color:#6b5f55;">The current owner's name and address have been obscured to protect their privacy. A copy is also attached to this email.</td></tr></table>
+<p style="margin:16px 0 10px;font-size:14px;line-height:22px;">For your own protection, before signing please compare this deed carefully with the property described in your purchase agreement and confirm that the cemetery, section, lot and space number(s) correspond exactly.</p>
+<p style="margin:0 0 10px;font-size:14px;line-height:22px;">Please note that a deed may cover more spaces than are being sold to you. This agreement transfers only the property described in the agreement (${esc(sp)}: ${esc(f.property.description)}). Any other spaces listed on the deed are not included and remain with the current owner.</p>
+<p style="margin:0 0 6px;font-size:14px;line-height:22px;">If anything on the deed does not match your agreement, or you are unsure which space you are purchasing, please do not sign &mdash; reply to this email or call (214) 230-4740 and we will clarify it with you and the cemetery first.</p>`;
+}
+
+export function inviteEmailHtml(f: AgreementFields, signUrl: string, note?: string, sample = false, deedUrl?: string) {
   const first = (f.purchaser.names || "").trim().split(/\s+/)[0] || "there";
-  const step = (n: number, t: string) => `<tr><td valign="top" style="padding:0 12px 10px 0;"><div style="width:22px;height:22px;border-radius:11px;background:#2e2620;color:#ffffff;font-size:12px;line-height:22px;text-align:center;font-weight:bold;">${n}</div></td><td style="padding:1px 0 10px;font-size:14px;line-height:21px;color:#2e2620;">${t}</td></tr>`;
+  const step = (n: number, t: string) => `<tr><td valign="top" style="padding:0 12px 10px 0;"><div style="width:22px;height:22px;border-radius:11px;border:1px solid #2e2620;color:#2e2620;font-size:12px;line-height:20px;text-align:center;">${n}</div></td><td style="padding:1px 0 10px;font-size:14px;line-height:21px;color:#2e2620;">${t}</td></tr>`;
   return shell(`<p style="margin:0 0 14px;">Dear ${esc(first)},</p>
 <p style="margin:0 0 14px;">Thank you for choosing Texas Cemetery Brokers. Your purchase agreement for the cemetery property below has been prepared and is ready for you to review and sign online.</p>
 ${note ? `<p style="margin:0 0 14px;color:#6b5f55;font-style:italic;">${esc(note).replace(/\n/g, "<br>")}</p>` : ""}
 ${summaryTable(f)}
+${deedUrl ? deedBlock(f, deedUrl) : ""}
 ${button(signUrl, "Review &amp; sign your agreement")}
 <p style="margin:8px 0 12px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5f55;">What happens next</p>
 <table role="presentation" cellpadding="0" cellspacing="0">
@@ -156,7 +165,7 @@ ${step(4, "Once payment clears, we file the transfer with the cemetery and keep 
 }
 
 // ---------------- PDF ----------------
-const SAGE = rgb(0.816, 0.478, 0.333), INK = rgb(0.17, 0.16, 0.15), MUTED = rgb(0.45, 0.41, 0.37);
+const SAGE = rgb(0.18, 0.149, 0.125), INK = rgb(0.17, 0.16, 0.15), MUTED = rgb(0.45, 0.41, 0.37);
 function wrap(text: string, font: PDFFont, size: number, width: number) {
   const out: string[] = [];
   for (const para of text.split("\n")) {
@@ -362,10 +371,18 @@ Deno.serve(async (req) => {
       let ev = event(action === "send" ? "emailed" : "link_issued", { by: user.name, to });
       if (action === "send") {
         const sample = body.sample === true;
-        const html = inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined, sample);
+        let deedUrl: string | undefined; let deedBytes: Uint8Array | undefined;
+        if (typeof body.deed_image_path === "string" && body.deed_image_path) {
+          const path = z.string().max(300).regex(/^purchase-agreements\/[\w-]+\/[\w.-]+\.(jpe?g|png)$/).parse(body.deed_image_path);
+          const dl = await db.storage.from("contracts").download(path); if (dl.error) throw dl.error;
+          deedBytes = new Uint8Array(await dl.data.arrayBuffer());
+          deedUrl = (await db.storage.from("contracts").createSignedUrl(path, 60 * 60 * 24 * 60)).data?.signedUrl;
+          ev = { ...ev, deed_copy_shared: path };
+        }
+        const html = inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined, sample, deedUrl);
         await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement sent for signature.",
           subject: `${sample ? "SAMPLE PURCHASE AGREEMENT — " : ""}Your purchase agreement — ${f.property.cemetery} — ready to sign`,
-          html });
+          html, ...(deedBytes ? { attachment: { name: "Deed-copy-owner-details-redacted.jpg", bytes: deedBytes, mime: "image/jpeg" } } : {}) });
         if (sample) ev = { ...ev, sample: true };
       }
       const { data } = await db.from("purchase_agreements").update({
