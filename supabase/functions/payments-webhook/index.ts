@@ -232,6 +232,16 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
 }
 
 async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: string) {
+  const paId = tx.metadata?.purchase_agreement_id;
+  if (paId) {
+    const { data: pa } = await db().from("purchase_agreements").select("events").eq("id", paId).maybeSingle();
+    if (pa) {
+      await db().from("purchase_agreements").update({
+        status: "paid", paid_at: new Date().toISOString(),
+        events: [...((pa as any).events ?? []), { at: new Date().toISOString(), type: "paid", amount: tx.amount_cents / 100, card: cardLast4 ? `${cardBrand ?? "card"} ••${cardLast4}` : undefined }],
+      }).eq("id", paId);
+    }
+  }
   if (tx.submission_id) {
     await db().from("contact_submissions").update({
       sold_at: new Date().toISOString(),
