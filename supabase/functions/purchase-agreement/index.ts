@@ -394,7 +394,7 @@ Rules: list EVERY individual grave/space/crypt/niche the deed conveys as its own
 box_2d coordinates are 0-1000 relative to the image exactly as provided (before any rotation). Include boxes covering every place the owner/purchaser names and their address appear; do not include cemetery names or plot numbers.`;
       const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "google/gemini-2.5-pro", response_format: { type: "json_object" },
+        body: JSON.stringify({ model: "google/gemini-3.8-flash", response_format: { type: "json_object" },
           messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }] }] }),
       });
       if (ai.status === 429) return json({ error: "AI is busy — try again in a minute." }, 429);
