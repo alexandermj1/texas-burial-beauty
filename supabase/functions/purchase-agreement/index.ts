@@ -13,9 +13,22 @@ import {
   canonicalDocument, chargeTotals, normalizeFields, type AgreementFields,
 } from "./terms.ts";
 
+import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE = "https://www.texascemeterybrokers.com";
+
+// Deactivate a previously issued card payment link so it can no longer be paid.
+async function deactivatePaymentLink(db: any, url: string | null | undefined) {
+  if (!url) return;
+  try {
+    const { data: tx } = await db.from("payment_transactions").select("stripe_session_id,environment").eq("checkout_url", url).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const linkId = tx?.stripe_session_id as string | undefined;
+    if (!linkId?.startsWith("plink_")) return;
+    await createStripeClient((tx.environment === "sandbox" ? "sandbox" : "live") as StripeEnv).paymentLinks.update(linkId, { active: false });
+    await db.from("payment_transactions").update({ status: "cancelled" }).eq("stripe_session_id", linkId).eq("status", "pending");
+  } catch (e) { console.error("payment link deactivate failed", e); }
+}
 const MAILBOX = "info@texascemeterybrokers.com";
 const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -448,6 +461,7 @@ Deno.serve(async (req) => {
       });
       const pay = await payRes.json().catch(() => ({}));
       if (!payRes.ok || !pay.url) return json({ error: `Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}` }, 502);
+      if (pa.payment_url && pa.payment_url !== pay.url) await deactivatePaymentLink(db, pa.payment_url);
       let token = (pa.sign_token as string | null) ?? (pa.status === "draft" ? newToken() : null);
       const signUrl = token && pa.status !== "buyer_signed" ? `${SITE}/purchase-agreement/${token}` : null;
       const events = [...pa.events, event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: "live", to })];
@@ -489,6 +503,7 @@ Deno.serve(async (req) => {
     if (action === "void") {
       if (pa.status === "paid") return json({ error: "A paid agreement cannot be voided here — issue a refund instead." }, 409);
       const reason = z.string().trim().min(2).max(500).parse(body.reason);
+      await deactivatePaymentLink(db, pa.payment_url);
       await db.from("purchase_agreements").update({ status: "void", voided_at: nowIso(), void_reason: reason, events: [...pa.events, event("voided", { by: user.name, reason })] }).eq("id", id);
       return json({ ok: true });
     }
