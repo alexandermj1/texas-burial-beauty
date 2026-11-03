@@ -96,7 +96,7 @@ export default function DeedSpacesPanel({ agreementId, editable, onSpaces }: { a
       )}
       {scan && editable && (
         <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Original (only you see this). {drawMode ? "Drag over anything else that should be blurred." : ""}</p>
+          <p className="text-[11px] text-muted-foreground">Original (only you see this). Red boxes get blurred — click a box to remove it. {drawMode ? "Drag over anything else that should be blurred." : ""}</p>
           <div className="relative inline-block max-w-full">
             <img ref={imgRef} src={scan.image} alt="Original deed" className={`max-h-72 rounded border border-border ${drawMode ? "cursor-crosshair" : ""}`} draggable={false}
               onMouseDown={(e) => { if (drawMode) drag.current = pt(e); }}
@@ -106,7 +106,7 @@ export default function DeedSpacesPanel({ agreementId, editable, onSpaces }: { a
                 const nb = [...boxes, { what: "manual", box_2d: [Math.min(a.y, b.y), Math.min(a.x, b.x), Math.max(a.y, b.y), Math.max(a.x, b.x)] as [number, number, number, number] }];
                 setBoxes(nb); await rebuild(scan.image, nb, rotation);
               }} />
-            {boxes.map((b, i) => <div key={i} className="absolute border-2 border-destructive pointer-events-none" style={{ top: `${b.box_2d[0] / 10}%`, left: `${b.box_2d[1] / 10}%`, height: `${(b.box_2d[2] - b.box_2d[0]) / 10}%`, width: `${(b.box_2d[3] - b.box_2d[1]) / 10}%` }} />)}
+            {boxes.map((b, i) => <button type="button" key={i} title="Click to remove this blur" aria-label={`Remove blur ${i + 1}`} className="absolute border-2 border-destructive bg-destructive/10 hover:bg-destructive/30" onClick={async () => { if (drawMode) return; const nb = boxes.filter((_, k) => k !== i); setBoxes(nb); await rebuild(scan.image, nb, rotation); }} style={{ top: `${b.box_2d[0] / 10}%`, left: `${b.box_2d[1] / 10}%`, height: `${(b.box_2d[2] - b.box_2d[0]) / 10}%`, width: `${(b.box_2d[3] - b.box_2d[1]) / 10}%` }} />)}
           </div>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant={drawMode ? "default" : "outline"} onClick={() => setDrawMode((d) => !d)}><Eraser className="w-4 h-4 mr-1.5" />{drawMode ? "Done adding blur" : "Blur another area"}</Button>
