@@ -6,6 +6,7 @@ describe("purchase agreement rules", () => {
     expect(sellerReadyForBuyer({ documents_requested_at: null, documents_completed_at: null })).toBe(false);
     expect(sellerReadyForBuyer({ documents_requested_at: "2026-11-01" })).toBe(true);
     expect(sellerReadyForBuyer({ documents_requested_at: "2026-11-01", sold_at: "2026-11-02" })).toBe(false);
+    expect(sellerReadyForBuyer({ listing_live_at: "2026-11-01" })).toBe(true);
   });
   it("total due = deposit + balance + transfer fee + adjustments", () => {
     expect(chargeTotals({ deposit: 500, balance: 4500, transfer_fee: 395, adjustments: -100, adjustments_note: "" })).toEqual({ totalProperty: 5000, totalDue: 5295 });

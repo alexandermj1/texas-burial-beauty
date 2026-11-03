@@ -13,9 +13,22 @@ import {
   canonicalDocument, chargeTotals, normalizeFields, type AgreementFields,
 } from "./terms.ts";
 
+import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SITE = "https://www.texascemeterybrokers.com";
+
+// Deactivate a previously issued card payment link so it can no longer be paid.
+async function deactivatePaymentLink(db: any, url: string | null | undefined) {
+  if (!url) return;
+  try {
+    const { data: tx } = await db.from("payment_transactions").select("stripe_session_id,environment").eq("checkout_url", url).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const linkId = tx?.stripe_session_id as string | undefined;
+    if (!linkId?.startsWith("plink_")) return;
+    await createStripeClient((tx.environment === "sandbox" ? "sandbox" : "live") as StripeEnv).paymentLinks.update(linkId, { active: false });
+    await db.from("payment_transactions").update({ status: "cancelled" }).eq("stripe_session_id", linkId).eq("status", "pending");
+  } catch (e) { console.error("payment link deactivate failed", e); }
+}
 const MAILBOX = "info@texascemeterybrokers.com";
 const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -207,7 +220,7 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   heading("Interment Property Details");
   kv("Cemetery name", f.property.cemetery); kv("City", f.property.city); kv("Property description", f.property.description); kv("Number of spaces", String(f.property.spaces)); kv("Property type", f.property.property_type); kv("Additional commodities", f.property.commodities || "None");
   heading("Persons Property Will Be Deeded To");
-  kv("Deed holder #1", f.deed.same_as_purchaser ? `${f.purchaser.names} (same as Purchaser)` : f.deed.holder1);
+  kv("Deed holder #1", f.deed.same_as_purchaser ? `${f.deed.holder1 || f.purchaser.names}` : f.deed.holder1);
   kv("Deed holder #2 (optional)", f.deed.holder2 || "—");
   if (!f.deed.same_as_purchaser) { kv("Deed holder name(s)", f.deed.names); kv("Address", f.deed.address); kv("Telephone", f.deed.phone); kv("Email", f.deed.email); kv("Date of birth", f.deed.dob); kv("Marital status", f.deed.marital_status); }
   heading("Schedule of Charges");
@@ -299,7 +312,7 @@ Deno.serve(async (req) => {
       if (!["sent", "viewed"].includes(pa.status)) return json({ error: "This agreement has already been signed." }, 409);
       const S = z.object({
         purchaser: z.object(Object.fromEntries(BUYER_EDITABLE.purchaser.map((k) => [k, str(400)]))),
-        deed: z.object({ same_as_purchaser: z.boolean(), holder2: str(200), names: str(200), address: str(400), phone: str(60), email: str(200), dob: str(40), marital_status: str(40) }),
+        deed: z.object({ same_as_purchaser: z.boolean(), holder1: str(200).optional(), holder2: str(200), names: str(200), address: str(400), phone: str(60), email: str(200), dob: str(40), marital_status: str(40) }),
         typed_name: z.string().trim().min(2).max(200),
         signature: z.string().startsWith("data:image/png;base64,").max(400_000),
         initials: z.object({ rules: z.string().trim().min(1).max(6), verification: z.string().trim().min(1).max(6) }),
@@ -316,7 +329,7 @@ Deno.serve(async (req) => {
       // The buyer must be signing the exact text staff issued (plus their own entries).
       const issuedHash = await sha256(canonicalDocument(normalizeFields(pa.fields), pa.terms_version));
       if (issuedHash !== S.hash_seen) return json({ error: "This agreement was updated while you had it open. Please reload the page to review the latest version." }, 409);
-      if (!f.deed.same_as_purchaser) f.deed.holder1 = f.deed.names;
+      if (!f.deed.same_as_purchaser) f.deed.holder1 = f.deed.names; else if (!String(f.deed.holder1 ?? "").trim()) f.deed.holder1 = f.purchaser.names;
       const signedAt = nowIso(); const ip = clientIp(req); const ua = req.headers.get("user-agent")?.slice(0, 300) ?? "";
       const hash = await sha256(canonicalDocument(f, pa.terms_version) + `|${S.typed_name}|${signedAt}`);
       const buyer_signature = { typed_name: S.typed_name, image: S.signature, initials: S.initials, signed_at: signedAt, ip, user_agent: ua, esign_consent_at: signedAt, email: f.purchaser.email };
@@ -432,6 +445,39 @@ Deno.serve(async (req) => {
       return json({ ok: true, payment_url: pay.url });
     }
 
+    if (action === "send_payment_link") {
+      // Staff can issue a LIVE card payment link straight away (before signing/countersigning).
+      if (!["draft", "sent", "viewed", "buyer_signed"].includes(pa.status)) return json({ error: "A payment link can't be sent for an agreement in this state." }, 409);
+      const P = z.object({ to: z.string().trim().email().max(200).optional(), note: z.string().max(2000).optional() }).parse(body);
+      const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
+      const to = P.to || f.purchaser.email;
+      if (!to) return json({ error: "Add the buyer's email first." }, 400);
+      if (t.totalDue <= 0) return json({ error: "Set the price before sending a payment link." }, 400);
+      const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("Authorization") ?? "" },
+        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
+          description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: to,
+          recipientName: f.purchaser.names, environment: "live", purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
+      });
+      const pay = await payRes.json().catch(() => ({}));
+      if (!payRes.ok || !pay.url) return json({ error: `Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}` }, 502);
+      if (pa.payment_url && pa.payment_url !== pay.url) await deactivatePaymentLink(db, pa.payment_url);
+      let token = (pa.sign_token as string | null) ?? (pa.status === "draft" ? newToken() : null);
+      const signUrl = token && pa.status !== "buyer_signed" ? `${SITE}/purchase-agreement/${token}` : null;
+      const events = [...pa.events, event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: "live", to })];
+      const upd: Record<string, unknown> = { payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events };
+      if (pa.status === "draft" && token) { upd.sign_token = token; upd.status = "sent"; upd.sent_at = nowIso(); }
+      await db.from("purchase_agreements").update(upd).eq("id", id);
+      try {
+        await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Secure payment link for your cemetery property purchase.",
+          subject: `Payment link for your purchase — ${f.property.cemetery}`,
+          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p>${P.note ? `<p>${esc(P.note).replace(/\n/g, "<br>")}</p>` : ""}<p>Here is the secure card payment link for the property below.</p>${summaryTable(f)}${button(pay.url, `Pay ${money(t.totalDue)} securely`)}${signUrl ? `<p>Please also review and sign your purchase agreement online, if you have not already done so:</p>${button(signUrl, "Review and sign agreement")}` : ""}<p style="font-size:13px;color:#6b5f55;">Questions? Reply to this email or call (214) 230-4740.</p>`, "purchase_agreement") });
+      } catch (e) {
+        return json({ ok: true, warning: `Payment link created, but the email failed: ${(e as Error).message}`, payment_url: pay.url });
+      }
+      return json({ ok: true, payment_url: pay.url });
+    }
+
     if (action === "resend_executed") {
       if (!pa.signed_pdf_path || !pa.payment_url) return json({ error: "Not countersigned yet." }, 409);
       const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
@@ -457,6 +503,7 @@ Deno.serve(async (req) => {
     if (action === "void") {
       if (pa.status === "paid") return json({ error: "A paid agreement cannot be voided here — issue a refund instead." }, 409);
       const reason = z.string().trim().min(2).max(500).parse(body.reason);
+      await deactivatePaymentLink(db, pa.payment_url);
       await db.from("purchase_agreements").update({ status: "void", voided_at: nowIso(), void_reason: reason, events: [...pa.events, event("voided", { by: user.name, reason })] }).eq("id", id);
       return json({ ok: true });
     }

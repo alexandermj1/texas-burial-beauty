@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Copy, Download, FileSignature, Handshake, Loader2, Mail, PenLine, RefreshCw, Search, XCircle } from "lucide-react";
+import { Copy, CreditCard, Download, FileSignature, Handshake, Loader2, Mail, PenLine, RefreshCw, Search, XCircle } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import { resolveKind } from "./CustomerKindBadge";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
@@ -28,7 +28,7 @@ type Agreement = {
 };
 type Rec = Record<string, any>;
 
-const SELLER_COLS = "id,name,email,phone,cemetery,cemetery_city,section,lawn,plot_description,property_type,spaces,plot_count,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,documents_requested_at,documents_completed_at,sold_at,deleted_at,customer_kind,source,created_at,message";
+const SELLER_COLS = "id,name,email,phone,cemetery,cemetery_city,section,lawn,plot_description,property_type,spaces,plot_count,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,documents_requested_at,documents_completed_at,listing_number,listing_live_at,sold_at,deleted_at,customer_kind,source,created_at,message";
 const STATUS_TONE: Record<PaStatus, string> = {
   draft: "bg-muted text-foreground", sent: "bg-secondary text-secondary-foreground", viewed: "bg-secondary text-secondary-foreground",
   buyer_signed: "bg-accent text-accent-foreground", countersigned: "bg-primary/15 text-primary", paid: "bg-primary text-primary-foreground", void: "bg-muted text-muted-foreground line-through",
@@ -36,12 +36,12 @@ const STATUS_TONE: Record<PaStatus, string> = {
 const SITE = "https://www.texascemeterybrokers.com";
 const fmt = (d?: string | null) => (d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "");
 
-export default function PurchaseAgreementPanel({ submission, kind }: { submission: Rec; kind: "seller" | "buyer" | "contact" }) {
+export default function PurchaseAgreementPanel({ submission, kind, stageRecord }: { submission: Rec; kind: "seller" | "buyer" | "contact"; stageRecord?: Rec }) {
   const [list, setList] = useState<Agreement[] | null>(null);
   const [names, setNames] = useState<Record<string, Rec>>({});
   const [picker, setPicker] = useState(false);
   const isSeller = kind !== "buyer";
-  const ready = !isSeller || sellerReadyForBuyer(submission);
+  const ready = !isSeller || (sellerReadyForBuyer(submission) || (!!stageRecord && !submission.sold_at && sellerReadyForBuyer({ ...stageRecord, sold_at: submission.sold_at, deleted_at: submission.deleted_at } as any)));
 
   const load = useCallback(async () => {
     const col = isSeller ? "seller_submission_id" : "buyer_submission_id";
@@ -97,7 +97,7 @@ function MatchPicker({ isSeller, submission, onClose, onPick }: { isSeller: bool
   useEffect(() => {
     (async () => {
       let query = supabase.from("contact_submissions").select(SELLER_COLS).is("deleted_at", null).order("created_at", { ascending: false }).limit(1000);
-      if (!isSeller) query = query.or("documents_requested_at.not.is.null,documents_completed_at.not.is.null").is("sold_at", null);
+      if (!isSeller) query = query.or("documents_requested_at.not.is.null,documents_completed_at.not.is.null,listing_number.not.is.null,listing_live_at.not.is.null").is("sold_at", null);
       const { data } = await query;
       const want = isSeller ? "buyer" : "seller";
       setRows(((data ?? []) as Rec[]).filter((r) => r.id !== submission.id && resolveKind(r.customer_kind, r.source) === want && (want === "buyer" || sellerReadyForBuyer(r as any))));
@@ -230,6 +230,11 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
       <div className="flex flex-wrap gap-2">
         {editable && <Button size="sm" onClick={() => (dirty ? toast.error("Save your changes first.") : setSendOpen(true))}><Mail className="w-4 h-4 mr-1.5" />{a.status === "draft" ? "Send purchase agreement to buyer" : "Resend to buyer"}</Button>}
         {signUrl && editable && <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(signUrl); toast.success("Signing link copied"); }}><Copy className="w-4 h-4 mr-1.5" />Copy signing link</Button>}
+        {["draft", "sent", "viewed", "buyer_signed"].includes(a.status) && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => {
+          if (dirty) return toast.error("Save your changes first.");
+          if (!window.confirm(`Create a LIVE card payment link for ${money(t.totalDue)} and email it to ${f.purchaser.email || "the buyer"}?`)) return;
+          run("paylink", async () => { const r = await paCall<{ warning?: string }>({ action: "send_payment_link", id: a.id }); if (r.warning) toast.warning(r.warning); }, "Live payment link emailed to the buyer");
+        }}>{busy === "paylink" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <CreditCard className="w-4 h-4 mr-1.5" />}{a.payment_url ? "Send new payment link" : "Send payment link to buyer"}</Button>}
         {a.status === "buyer_signed" && <Button size="sm" onClick={() => setCsOpen(true)}><PenLine className="w-4 h-4 mr-1.5" />Countersign &amp; send payment link</Button>}
         {a.status === "countersigned" && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => run("resend", () => paCall({ action: "resend_executed", id: a.id }), "Payment link re-sent to the buyer")}><RefreshCw className="w-4 h-4 mr-1.5" />Resend payment link</Button>}
         <Button size="sm" variant="outline" disabled={!!busy} onClick={openPdf}>{busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Download className="w-4 h-4 mr-1.5" />}{a.signed_pdf_path ? "Executed PDF" : "Preview PDF"}</Button>

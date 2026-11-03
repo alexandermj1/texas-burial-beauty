@@ -17,8 +17,8 @@ export const STATUS_LABEL: Record<PaStatus, string> = {
 };
 
 /** Sellers can be matched to a buyer once their paperwork is out (Docs out or later). */
-export function sellerReadyForBuyer(s: { documents_requested_at?: string | null; documents_completed_at?: string | null; sold_at?: string | null; deleted_at?: string | null }) {
-  return !s.sold_at && !s.deleted_at && (!!s.documents_requested_at || !!s.documents_completed_at);
+export function sellerReadyForBuyer(s: { documents_requested_at?: string | null; documents_completed_at?: string | null; listing_number?: string | null; listing_live_at?: string | null; sold_at?: string | null; deleted_at?: string | null }) {
+  return !s.sold_at && !s.deleted_at && (!!s.documents_requested_at || !!s.documents_completed_at || !!s.listing_number || !!s.listing_live_at);
 }
 
 /** How many spaces a buyer wants: explicit number, else 1. */

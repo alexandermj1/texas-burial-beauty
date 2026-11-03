@@ -87,7 +87,7 @@ export default function SignPurchaseAgreement() {
         action: "sign", token, hash_seen: hash, typed_name: typed.trim(), signature: sig, initials,
         esign_consent: true, read_terms: true, cancellation_read: true,
         purchaser: { names: f.purchaser.names, email: f.purchaser.email, address: f.purchaser.address, phone: f.purchaser.phone, dob: f.purchaser.dob, marital_status: f.purchaser.marital_status },
-        deed: { same_as_purchaser: f.deed.same_as_purchaser, holder2: f.deed.holder2, names: f.deed.names, address: f.deed.address, phone: f.deed.phone, email: f.deed.email, dob: f.deed.dob, marital_status: f.deed.marital_status },
+        deed: { same_as_purchaser: f.deed.same_as_purchaser, holder1: f.deed.same_as_purchaser ? (f.deed.holder1 || f.purchaser.names) : f.deed.names, holder2: f.deed.holder2, names: f.deed.names, address: f.deed.address, phone: f.deed.phone, email: f.deed.email, dob: f.deed.dob, marital_status: f.deed.marital_status },
       });
       toast.success("Signed — thank you.");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -154,6 +154,7 @@ export default function SignPurchaseAgreement() {
           {signable ? (
             <div className="space-y-4">
               <label className="flex items-center gap-3 text-sm"><Checkbox checked={f.deed.same_as_purchaser} onCheckedChange={(c) => setD("same_as_purchaser", !!c)} />Deed holder #1 is the Purchaser ({f.purchaser.names})</label>
+              {f.deed.same_as_purchaser && <Field label="Deed holder #1 name (as it should appear on the deed)" value={f.deed.holder1 || f.purchaser.names} onChange={(v) => setD("holder1", v)} />}
               {!f.deed.same_as_purchaser && (
                 <div className="grid sm:grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4">
                   <Field label="Deed holder name(s) *" value={f.deed.names} onChange={(v) => setD("names", v)} className="sm:col-span-2" />
@@ -166,7 +167,7 @@ export default function SignPurchaseAgreement() {
               )}
               <Field label="(Optional) Deed holder #2 name" value={f.deed.holder2} onChange={(v) => setD("holder2", v)} />
             </div>
-          ) : (<><Row k="Deed holder #1" v={f.deed.same_as_purchaser ? f.purchaser.names : f.deed.names} /><Row k="Deed holder #2" v={f.deed.holder2} /></>)}
+          ) : (<><Row k="Deed holder #1" v={f.deed.same_as_purchaser ? (f.deed.holder1 || f.purchaser.names) : f.deed.names} /><Row k="Deed holder #2" v={f.deed.holder2} /></>)}
         </Section>
 
         <Section n="4" title="Schedule of charges">
