@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useId, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -240,7 +240,8 @@ function Banner({ icon: Icon, title, children }: { icon: any; title: string; chi
   return <div className="mb-8 rounded-xl border border-primary/30 bg-primary/10 p-5 flex gap-3"><Icon className="w-6 h-6 text-primary shrink-0" /><div><p className="font-serif text-lg text-foreground">{title}</p><div className="text-sm text-muted-foreground mt-1">{children}</div></div></div>;
 }
 function Field({ label, value, onChange, type = "text", className = "" }: { label: string; value: string; onChange: (v: string) => void; type?: string; className?: string }) {
-  return <div className={className}><Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label><Input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1" /></div>;
+  const id = useId();
+  return <div className={className}><Label htmlFor={id} className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label><Input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 bg-background" /></div>;
 }
 function Money({ k, v, strong }: { k: string; v: number; strong?: boolean }) {
   return <div className={`flex justify-between py-1.5 border-b border-border/40 ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}><span>{k}</span><span className="tabular-nums">{money(v)}</span></div>;
