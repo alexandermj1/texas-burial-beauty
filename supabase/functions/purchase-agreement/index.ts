@@ -337,13 +337,12 @@ Deno.serve(async (req) => {
       const { error } = await db.from("purchase_agreements").update({ fields: f, status: "buyer_signed", buyer_signed_at: signedAt, buyer_signature, document_hash: hash, events })
         .eq("id", pa.id).in("status", ["sent", "viewed"]);
       if (error) throw error;
-      await db.rpc("notify_staff", { _title: `${f.purchaser.names || "A buyer"} signed a purchase agreement`, _body: `${f.property.cemetery} — ready for your countersignature.`, _submission_id: pa.buyer_submission_id, _source_type: "purchase_agreement_signed" });
-      try {
-        if (f.purchaser.email) await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement signed — awaiting countersignature.",
-          subject: `We received your signed purchase agreement — ${f.property.cemetery}`,
-          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Thank you — we have received your signed purchase agreement.</p>${summaryTable(f)}<p>Our team will countersign it shortly. You will then receive the fully executed agreement as a PDF together with a secure card payment link.</p><p style="font-size:13px;color:#6b5f55;">Signed ${esc(new Date(signedAt).toUTCString())}. Document fingerprint (SHA-256): ${esc(hash)}</p>`, "purchase_agreement") });
-      } catch (e) { console.warn("buyer confirmation email failed", e); }
-      return json({ ok: true, status: "buyer_signed" });
+      // Broker countersigns automatically the moment the buyer signs; the executed PDF + live payment link go out at once.
+      const signedPa = { ...pa, fields: f, status: "buyer_signed", buyer_signed_at: signedAt, buyer_signature, document_hash: hash, events };
+      const sandbox = (pa.events ?? []).some((e: any) => e?.sample === true);
+      const r = await executeCountersign(signedPa, { name: "Simon James", image: undefined, userId: null, ip: "auto", by: "Automatic broker countersignature", environment: sandbox ? "sandbox" : "live", authHeader: `Bearer ${SERVICE_KEY}` });
+      await db.rpc("notify_staff", { _title: `${f.purchaser.names || "A buyer"} signed a purchase agreement`, _body: r.ok ? `${f.property.cemetery} — countersigned automatically; payment link sent.` : `${f.property.cemetery} — automatic countersign failed, please countersign manually: ${r.error}`, _submission_id: pa.buyer_submission_id, _source_type: "purchase_agreement_signed" });
+      return json({ ok: true, status: r.ok ? "countersigned" : "buyer_signed", payment_url: r.payment_url ?? null });
     }
 
     // ================= STAFF =================
