@@ -432,6 +432,39 @@ Deno.serve(async (req) => {
       return json({ ok: true, payment_url: pay.url });
     }
 
+    if (action === "send_payment_link") {
+      // Staff can issue a LIVE card payment link straight away (before signing/countersigning).
+      if (!["draft", "sent", "viewed", "buyer_signed"].includes(pa.status)) return json({ error: "A payment link can't be sent for an agreement in this state." }, 409);
+      const P = z.object({ to: z.string().trim().email().max(200).optional(), note: z.string().max(2000).optional() }).parse(body);
+      const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
+      const to = P.to || f.purchaser.email;
+      if (!to) return json({ error: "Add the buyer's email first." }, 400);
+      if (t.totalDue <= 0) return json({ error: "Set the price before sending a payment link." }, 400);
+      const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("Authorization") ?? "" },
+        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
+          description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: to,
+          recipientName: f.purchaser.names, environment: "live", purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
+      });
+      const pay = await payRes.json().catch(() => ({}));
+      if (!payRes.ok || !pay.url) return json({ error: `Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}` }, 502);
+      let token = pa.sign_token as string | null;
+      if (!token && pa.status === "draft") token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+      const signUrl = token && pa.status !== "buyer_signed" ? `${SITE_URL}/purchase-agreement/${token}` : null;
+      const events = [...pa.events, event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: "live", to })];
+      const upd: Record<string, unknown> = { payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events };
+      if (pa.status === "draft" && token) { upd.sign_token = token; upd.status = "sent"; upd.sent_at = nowIso(); }
+      await db.from("purchase_agreements").update(upd).eq("id", id);
+      try {
+        await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Secure payment link for your cemetery property purchase.",
+          subject: `Payment link for your purchase — ${f.property.cemetery}`,
+          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p>${P.note ? `<p>${esc(P.note).replace(/\n/g, "<br>")}</p>` : ""}<p>Here is the secure card payment link for the property below.</p>${summaryTable(f)}${button(pay.url, `Pay ${money(t.totalDue)} securely`)}${signUrl ? `<p>Please also review and sign your purchase agreement online, if you have not already done so:</p>${button(signUrl, "Review and sign agreement")}` : ""}<p style="font-size:13px;color:#6b5f55;">Questions? Reply to this email or call (214) 230-4740.</p>`, "purchase_agreement") });
+      } catch (e) {
+        return json({ ok: true, warning: `Payment link created, but the email failed: ${(e as Error).message}`, payment_url: pay.url });
+      }
+      return json({ ok: true, payment_url: pay.url });
+    }
+
     if (action === "resend_executed") {
       if (!pa.signed_pdf_path || !pa.payment_url) return json({ error: "Not countersigned yet." }, 409);
       const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
