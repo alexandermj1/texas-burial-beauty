@@ -505,42 +505,10 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
     if (action === "countersign") {
       if (pa.status !== "buyer_signed") return json({ error: "Only an agreement the buyer has signed can be countersigned." }, 409);
       const C = z.object({ signer_name: z.string().trim().min(2).max(200), signature: z.string().startsWith("data:image/png;base64,").max(400_000), environment: z.enum(["sandbox", "live"]) }).parse(body);
-      const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
-      const signedAt = nowIso();
-      const countersignature = { name: C.signer_name, image: C.signature, signed_at: signedAt, user_id: user.id, ip: clientIp(req) };
-      const events = [...pa.events, event("countersigned", { by: C.signer_name })];
-      const draft = { ...pa, countersignature, countersigned_at: signedAt, events };
-      const bytes = await buildPdf(draft);
-      const path = `purchase-agreements/${pa.id}/executed-${Date.now()}.pdf`;
-      const up = await db.storage.from("contracts").upload(path, bytes, { contentType: "application/pdf", upsert: false });
-      if (up.error) throw up.error;
-
-      // Card payment link for the Total Amount Due (same Stripe flow as other plot sales).
-      const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("Authorization") ?? "" },
-        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
-          description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: f.purchaser.email,
-          recipientName: f.purchaser.names, environment: C.environment, purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
-      });
-      const pay = await payRes.json().catch(() => ({}));
-      if (!payRes.ok || !pay.url) throw new Error(`Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}`);
-      events.push(event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: C.environment }));
-
-      await db.from("purchase_agreements").update({ countersignature, countersigned_at: signedAt, status: "countersigned", signed_pdf_path: path,
-        payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events }).eq("id", id);
-
-      try {
-        await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Executed purchase agreement and payment link sent.",
-          subject: `Your completed purchase agreement and payment link — ${f.property.cemetery}`,
-          attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement.pdf", bytes },
-          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Your purchase agreement has now been countersigned by Texas Cemetery Brokers. The fully executed copy is attached for your records.</p>${summaryTable(f)}<p>To complete your purchase, please pay the total amount due using the secure card payment link below.</p>${button(pay.url, `Pay ${money(t.totalDue)} securely`)}<p style="font-size:13px;color:#6b5f55;">Once your payment clears we will file the transfer with the cemetery and keep you updated. You may also pay by certified check or wire — just reply and we will send the details.</p>`, "purchase_agreement") });
-      } catch (e) {
-        console.error("executed copy email failed", e);
-        return json({ ok: true, warning: `Countersigned and payment link created, but the email failed: ${(e as Error).message}`, payment_url: pay.url });
-      }
-      return json({ ok: true, payment_url: pay.url });
+      const r = await executeCountersign(pa, { name: C.signer_name, image: C.signature, userId: user.id, ip: clientIp(req), by: C.signer_name, environment: C.environment, authHeader: req.headers.get("Authorization") ?? "" });
+      if (!r.ok) throw new Error(r.error);
+      return json({ ok: true, payment_url: r.payment_url, warning: r.warning });
     }
-
     if (action === "send_payment_link") {
       // Staff can issue a LIVE card payment link straight away (before signing/countersigning).
       if (!["draft", "sent", "viewed", "buyer_signed"].includes(pa.status)) return json({ error: "A payment link can't be sent for an agreement in this state." }, 409);
