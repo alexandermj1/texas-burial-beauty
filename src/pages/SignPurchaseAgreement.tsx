@@ -108,9 +108,10 @@ export default function SignPurchaseAgreement() {
         <p className="text-sm text-muted-foreground">{f.property.cemetery}{f.property.city ? ` · ${f.property.city}` : ""}</p>
       </header>
 
-      {view.status === "buyer_signed" && <Banner icon={CheckCircle2} title="Thank you — your agreement is signed">We've emailed you a confirmation. Our team will countersign shortly and send you the completed agreement with a secure payment link.</Banner>}
+      {view.status === "buyer_signed" && <Banner icon={CheckCircle2} title="Thank you — your agreement is signed">We are finalising your agreement now. Please refresh this page in a moment for your secure payment link.</Banner>}
       {view.status === "countersigned" && (
-        <Banner icon={CreditCard} title="Your agreement is complete — payment is the last step">
+        <Banner icon={CreditCard} title="Countersigned by the broker — payment is the last step">
+          <p>Your agreement has been countersigned by Texas Cemetery Brokers and a copy has been emailed to you.</p>
           <div className="flex flex-wrap gap-3 mt-3">
             {view.payment_url && <Button asChild><a href={view.payment_url}>Pay {money(totals.totalDue)} securely</a></Button>}
             <Button variant="outline" onClick={download}><Download className="w-4 h-4 mr-2" />Download executed copy</Button>
@@ -184,7 +185,7 @@ export default function SignPurchaseAgreement() {
               <span className="font-serif text-lg text-foreground">6. Total amount due</span>
               <span className="font-serif text-2xl text-primary">{money(totals.totalDue)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">Payable by secure card link after we countersign, or by certified check or wire.</p>
+            <p className="text-xs text-muted-foreground mt-3">Payable by secure card link straight after you sign, or by certified check or wire.</p>
           </div>
         </Section>
 
