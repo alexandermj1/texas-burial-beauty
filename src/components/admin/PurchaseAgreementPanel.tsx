@@ -230,6 +230,11 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
       <div className="flex flex-wrap gap-2">
         {editable && <Button size="sm" onClick={() => (dirty ? toast.error("Save your changes first.") : setSendOpen(true))}><Mail className="w-4 h-4 mr-1.5" />{a.status === "draft" ? "Send purchase agreement to buyer" : "Resend to buyer"}</Button>}
         {signUrl && editable && <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(signUrl); toast.success("Signing link copied"); }}><Copy className="w-4 h-4 mr-1.5" />Copy signing link</Button>}
+        {["draft", "sent", "viewed", "buyer_signed"].includes(a.status) && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => {
+          if (dirty) return toast.error("Save your changes first.");
+          if (!window.confirm(`Create a LIVE card payment link for ${money(t.totalDue)} and email it to ${f.purchaser.email || "the buyer"}?`)) return;
+          run("paylink", async () => { const r = await paCall<{ warning?: string }>({ action: "send_payment_link", id: a.id }); if (r.warning) toast.warning(r.warning); }, "Live payment link emailed to the buyer");
+        }}>{busy === "paylink" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <CreditCard className="w-4 h-4 mr-1.5" />}{a.payment_url ? "Send new payment link" : "Send payment link to buyer"}</Button>}
         {a.status === "buyer_signed" && <Button size="sm" onClick={() => setCsOpen(true)}><PenLine className="w-4 h-4 mr-1.5" />Countersign &amp; send payment link</Button>}
         {a.status === "countersigned" && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => run("resend", () => paCall({ action: "resend_executed", id: a.id }), "Payment link re-sent to the buyer")}><RefreshCw className="w-4 h-4 mr-1.5" />Resend payment link</Button>}
         <Button size="sm" variant="outline" disabled={!!busy} onClick={openPdf}>{busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Download className="w-4 h-4 mr-1.5" />}{a.signed_pdf_path ? "Executed PDF" : "Preview PDF"}</Button>
