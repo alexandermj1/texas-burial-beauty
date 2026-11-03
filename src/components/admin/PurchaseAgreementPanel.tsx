@@ -28,7 +28,7 @@ type Agreement = {
 };
 type Rec = Record<string, any>;
 
-const SELLER_COLS = "id,name,email,phone,cemetery,cemetery_city,section,lawn,plot_description,property_type,spaces,plot_count,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,documents_requested_at,documents_completed_at,sold_at,deleted_at,customer_kind,source,created_at,message";
+const SELLER_COLS = "id,name,email,phone,cemetery,cemetery_city,section,lawn,plot_description,property_type,spaces,plot_count,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,documents_requested_at,documents_completed_at,listing_number,listing_live_at,sold_at,deleted_at,customer_kind,source,created_at,message";
 const STATUS_TONE: Record<PaStatus, string> = {
   draft: "bg-muted text-foreground", sent: "bg-secondary text-secondary-foreground", viewed: "bg-secondary text-secondary-foreground",
   buyer_signed: "bg-accent text-accent-foreground", countersigned: "bg-primary/15 text-primary", paid: "bg-primary text-primary-foreground", void: "bg-muted text-muted-foreground line-through",
@@ -36,12 +36,12 @@ const STATUS_TONE: Record<PaStatus, string> = {
 const SITE = "https://www.texascemeterybrokers.com";
 const fmt = (d?: string | null) => (d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "");
 
-export default function PurchaseAgreementPanel({ submission, kind }: { submission: Rec; kind: "seller" | "buyer" | "contact" }) {
+export default function PurchaseAgreementPanel({ submission, kind, stageRecord }: { submission: Rec; kind: "seller" | "buyer" | "contact"; stageRecord?: Rec }) {
   const [list, setList] = useState<Agreement[] | null>(null);
   const [names, setNames] = useState<Record<string, Rec>>({});
   const [picker, setPicker] = useState(false);
   const isSeller = kind !== "buyer";
-  const ready = !isSeller || sellerReadyForBuyer(submission);
+  const ready = !isSeller || (sellerReadyForBuyer(submission) || (!!stageRecord && !submission.sold_at && sellerReadyForBuyer({ ...stageRecord, sold_at: submission.sold_at, deleted_at: submission.deleted_at } as any)));
 
   const load = useCallback(async () => {
     const col = isSeller ? "seller_submission_id" : "buyer_submission_id";
@@ -97,7 +97,7 @@ function MatchPicker({ isSeller, submission, onClose, onPick }: { isSeller: bool
   useEffect(() => {
     (async () => {
       let query = supabase.from("contact_submissions").select(SELLER_COLS).is("deleted_at", null).order("created_at", { ascending: false }).limit(1000);
-      if (!isSeller) query = query.or("documents_requested_at.not.is.null,documents_completed_at.not.is.null").is("sold_at", null);
+      if (!isSeller) query = query.or("documents_requested_at.not.is.null,documents_completed_at.not.is.null,listing_number.not.is.null,listing_live_at.not.is.null").is("sold_at", null);
       const { data } = await query;
       const want = isSeller ? "buyer" : "seller";
       setRows(((data ?? []) as Rec[]).filter((r) => r.id !== submission.id && resolveKind(r.customer_kind, r.source) === want && (want === "buyer" || sellerReadyForBuyer(r as any))));

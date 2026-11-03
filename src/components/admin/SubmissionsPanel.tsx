@@ -3175,7 +3175,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
                 {/* Buyer match + purchase agreement (sellers at Docs out or later, and every buyer). */}
-                <Suspense fallback={null}><PurchaseAgreementPanel key={selected.id} submission={selected as any} kind={kind} /></Suspense>
+                <Suspense fallback={null}><PurchaseAgreementPanel key={selected.id} submission={selected as any} kind={kind} stageRecord={stageSource(selected) as any} /></Suspense>
 
                 {/* Per-customer files (PoA, deeds, IDs, etc.) — at very bottom of detail view, below pipeline + actions. */}
                 {kind !== "buyer" && sellerWorkspaceTab === "files" && ((selected as any).customer_profile_id ? (
