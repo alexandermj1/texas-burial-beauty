@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Copy, Download, FileSignature, Handshake, Loader2, Mail, PenLine, RefreshCw, Search, XCircle } from "lucide-react";
+import { Copy, CreditCard, Download, FileSignature, Handshake, Loader2, Mail, PenLine, RefreshCw, Search, XCircle } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import { resolveKind } from "./CustomerKindBadge";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
