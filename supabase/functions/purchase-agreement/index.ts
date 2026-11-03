@@ -207,7 +207,7 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   heading("Interment Property Details");
   kv("Cemetery name", f.property.cemetery); kv("City", f.property.city); kv("Property description", f.property.description); kv("Number of spaces", String(f.property.spaces)); kv("Property type", f.property.property_type); kv("Additional commodities", f.property.commodities || "None");
   heading("Persons Property Will Be Deeded To");
-  kv("Deed holder #1", f.deed.same_as_purchaser ? `${f.purchaser.names} (same as Purchaser)` : f.deed.holder1);
+  kv("Deed holder #1", f.deed.same_as_purchaser ? `${f.deed.holder1 || f.purchaser.names}` : f.deed.holder1);
   kv("Deed holder #2 (optional)", f.deed.holder2 || "—");
   if (!f.deed.same_as_purchaser) { kv("Deed holder name(s)", f.deed.names); kv("Address", f.deed.address); kv("Telephone", f.deed.phone); kv("Email", f.deed.email); kv("Date of birth", f.deed.dob); kv("Marital status", f.deed.marital_status); }
   heading("Schedule of Charges");
@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
       if (!["sent", "viewed"].includes(pa.status)) return json({ error: "This agreement has already been signed." }, 409);
       const S = z.object({
         purchaser: z.object(Object.fromEntries(BUYER_EDITABLE.purchaser.map((k) => [k, str(400)]))),
-        deed: z.object({ same_as_purchaser: z.boolean(), holder2: str(200), names: str(200), address: str(400), phone: str(60), email: str(200), dob: str(40), marital_status: str(40) }),
+        deed: z.object({ same_as_purchaser: z.boolean(), holder1: str(200).optional(), holder2: str(200), names: str(200), address: str(400), phone: str(60), email: str(200), dob: str(40), marital_status: str(40) }),
         typed_name: z.string().trim().min(2).max(200),
         signature: z.string().startsWith("data:image/png;base64,").max(400_000),
         initials: z.object({ rules: z.string().trim().min(1).max(6), verification: z.string().trim().min(1).max(6) }),
@@ -316,7 +316,7 @@ Deno.serve(async (req) => {
       // The buyer must be signing the exact text staff issued (plus their own entries).
       const issuedHash = await sha256(canonicalDocument(normalizeFields(pa.fields), pa.terms_version));
       if (issuedHash !== S.hash_seen) return json({ error: "This agreement was updated while you had it open. Please reload the page to review the latest version." }, 409);
-      if (!f.deed.same_as_purchaser) f.deed.holder1 = f.deed.names;
+      if (!f.deed.same_as_purchaser) f.deed.holder1 = f.deed.names; else if (!String(f.deed.holder1 ?? "").trim()) f.deed.holder1 = f.purchaser.names;
       const signedAt = nowIso(); const ip = clientIp(req); const ua = req.headers.get("user-agent")?.slice(0, 300) ?? "";
       const hash = await sha256(canonicalDocument(f, pa.terms_version) + `|${S.typed_name}|${signedAt}`);
       const buyer_signature = { typed_name: S.typed_name, image: S.signature, initials: S.initials, signed_at: signedAt, ip, user_agent: ua, esign_consent_at: signedAt, email: f.purchaser.email };
@@ -448,9 +448,8 @@ Deno.serve(async (req) => {
       });
       const pay = await payRes.json().catch(() => ({}));
       if (!payRes.ok || !pay.url) return json({ error: `Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}` }, 502);
-      let token = pa.sign_token as string | null;
-      if (!token && pa.status === "draft") token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
-      const signUrl = token && pa.status !== "buyer_signed" ? `${SITE_URL}/purchase-agreement/${token}` : null;
+      let token = (pa.sign_token as string | null) ?? (pa.status === "draft" ? newToken() : null);
+      const signUrl = token && pa.status !== "buyer_signed" ? `${SITE}/purchase-agreement/${token}` : null;
       const events = [...pa.events, event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: "live", to })];
       const upd: Record<string, unknown> = { payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events };
       if (pa.status === "draft" && token) { upd.sign_token = token; upd.status = "sent"; upd.sent_at = nowIso(); }
