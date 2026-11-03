@@ -41,7 +41,9 @@ export default function PurchaseAgreementPanel({ submission, kind, stageRecord }
   const [names, setNames] = useState<Record<string, Rec>>({});
   const [picker, setPicker] = useState(false);
   const isSeller = kind !== "buyer";
-  const ready = !isSeller || (sellerReadyForBuyer(submission) || (!!stageRecord && !submission.sold_at && sellerReadyForBuyer({ ...stageRecord, sold_at: submission.sold_at, deleted_at: submission.deleted_at } as any)));
+  const docsOut = sellerReadyForBuyer(submission) || (!!stageRecord && !submission.sold_at && sellerReadyForBuyer({ ...stageRecord, sold_at: submission.sold_at, deleted_at: submission.deleted_at } as any));
+  // Any unsold seller can be matched; staff are warned when paperwork isn't out yet.
+  const ready = !isSeller || (!submission.sold_at && !submission.deleted_at);
 
   const load = useCallback(async () => {
     const col = isSeller ? "seller_submission_id" : "buyer_submission_id";
@@ -79,6 +81,7 @@ export default function PurchaseAgreementPanel({ submission, kind, stageRecord }
           </Button>
         )}
       </div>
+      {isSeller && ready && !docsOut && <p className="text-xs text-muted-foreground">Note: this seller's paperwork hasn't been sent yet (not at Docs out). You can still match a buyer, but check the deed and space details before sending.</p>}
       {list === null && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
       {list && !active.length && <p className="text-xs text-muted-foreground">{isSeller ? "No buyer matched yet." : "This buyer hasn't been matched to a property yet."}</p>}
       {active.map((a) => (
@@ -97,10 +100,10 @@ function MatchPicker({ isSeller, submission, onClose, onPick }: { isSeller: bool
   useEffect(() => {
     (async () => {
       let query = supabase.from("contact_submissions").select(SELLER_COLS).is("deleted_at", null).order("created_at", { ascending: false }).limit(1000);
-      if (!isSeller) query = query.or("documents_requested_at.not.is.null,documents_completed_at.not.is.null,listing_number.not.is.null,listing_live_at.not.is.null").is("sold_at", null);
+      if (!isSeller) query = query.is("sold_at", null);
       const { data } = await query;
       const want = isSeller ? "buyer" : "seller";
-      setRows(((data ?? []) as Rec[]).filter((r) => r.id !== submission.id && resolveKind(r.customer_kind, r.source) === want && (want === "buyer" || sellerReadyForBuyer(r as any))));
+      setRows(((data ?? []) as Rec[]).filter((r) => r.id !== submission.id && resolveKind(r.customer_kind, r.source) === want).sort((a, b) => Number(want === "seller" && sellerReadyForBuyer(b as any)) - Number(want === "seller" && sellerReadyForBuyer(a as any))));
     })();
   }, [isSeller, submission.id]);
   const cem = String(submission.cemetery ?? "").toLowerCase().split(/\s+/)[0] ?? "";
@@ -116,7 +119,7 @@ function MatchPicker({ isSeller, submission, onClose, onPick }: { isSeller: bool
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isSeller ? `Match a buyer to ${submission.name}'s property` : `Match ${submission.name} to a seller's property`}</DialogTitle>
-          <DialogDescription>{isSeller ? "Buyers at the same cemetery are listed first." : "Only sellers whose paperwork is out (Docs out or later) and not yet sold are listed. Same cemetery first."}</DialogDescription>
+          <DialogDescription>{isSeller ? "Buyers at the same cemetery are listed first." : "Unsold sellers are listed, same cemetery first. Sellers at Docs out or later are ready to sell."}</DialogDescription>
         </DialogHeader>
         <div className="relative"><Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" /><Input autoFocus className="pl-9" placeholder="Search name, email, phone or cemetery" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="max-h-[50vh] overflow-y-auto divide-y divide-border rounded-md border border-border">
@@ -203,14 +206,14 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
               <E label="Purchaser address (buyer can complete)" v={f.purchaser.address} on={(v) => set("purchaser", "address", v)} />
               <E label="Cemetery" v={f.property.cemetery} on={(v) => set("property", "cemetery", v)} />
               <E label="City" v={f.property.city} on={(v) => set("property", "city", v)} />
-              <div className="sm:col-span-2"><E label="Property description — legal (section, lot, space)" v={f.property.description} on={(v) => set("property", "description", v)} /></div>
+              <div className="sm:col-span-2"><E label="Section, lot & space number(s) — e.g. Joyful Mysteries, Lot 23, Grave 7" v={f.property.description} on={(v) => set("property", "description", v)} /></div>
               <E label="Number of spaces" type="number" v={String(f.property.spaces)} on={(v) => set("property", "spaces", Math.max(1, parseInt(v, 10) || 1))} />
               <E label="Property type" v={f.property.property_type} on={(v) => set("property", "property_type", v)} />
               <div className="sm:col-span-2"><E label="Additional commodities / services (optional)" v={f.property.commodities} on={(v) => set("property", "commodities", v)} /></div>
               <E label="1. Commitment deposit ($)" type="number" v={String(f.charges.deposit)} on={(v) => set("charges", "deposit", Number(v) || 0)} />
-              <E label="2. Balance of property price ($)" type="number" v={String(f.charges.balance)} on={(v) => set("charges", "balance", Number(v) || 0)} />
+              <E label="2. Balance of property price ($) — deposit + balance = plot price" type="number" v={String(f.charges.balance)} on={(v) => set("charges", "balance", Number(v) || 0)} />
               <E label="4. Cemetery transfer fee ($)" type="number" v={String(f.charges.transfer_fee)} on={(v) => set("charges", "transfer_fee", Number(v) || 0)} />
-              <E label="5. Adjustments ($, can be negative)" type="number" v={String(f.charges.adjustments)} on={(v) => set("charges", "adjustments", Number(v) || 0)} />
+              <E label="5. Other fees we're adding / discounts ($, negative for discount)" type="number" v={String(f.charges.adjustments)} on={(v) => set("charges", "adjustments", Number(v) || 0)} />
               <div className="sm:col-span-2"><E label="Adjustment note (shown to buyer)" v={f.charges.adjustments_note} on={(v) => set("charges", "adjustments_note", v)} /></div>
               <p className="sm:col-span-2 text-xs text-muted-foreground">3. Total property price {money(t.totalProperty)} · <strong className="text-foreground">6. Total amount due {money(t.totalDue)}</strong> — this is what the buyer's card payment link will charge.</p>
               <div className="sm:col-span-2 flex gap-2">
