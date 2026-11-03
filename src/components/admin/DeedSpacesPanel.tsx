@@ -52,10 +52,20 @@ export default function DeedSpacesPanel({ agreementId, editable, onSpaces }: { a
 
   useEffect(() => { paCall<{ url: string | null }>({ action: "deed_preview", id: agreementId }).then((r) => r.url && setPreview(r.url)).catch(() => {}); }, [agreementId]);
 
+  const cacheKey = `deed-scan:${agreementId}`;
+  // Show the space options straight away: reuse this session's reading, otherwise read the deed once.
+  useEffect(() => {
+    if (!editable) return;
+    try { const c = sessionStorage.getItem(cacheKey); if (c) { const r = JSON.parse(c) as Scan; setScan(r); setBoxes(r.redact ?? []); setRotation(r.rotation ?? 0); return; } } catch { /* ignore */ }
+    read();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agreementId, editable]);
+
   const read = async (fileId?: string) => {
     setBusy("scan");
     try {
       const r = await paCall<Scan>({ action: "deed_scan", id: agreementId, ...(fileId ? { file_id: fileId } : {}) });
+      try { sessionStorage.setItem(cacheKey, JSON.stringify(r)); } catch { /* too large to cache */ }
       setScan(r); setBoxes(r.redact ?? []); setRotation(r.rotation ?? 0); setPicked(new Set());
       await rebuild(r.image, r.redact ?? [], r.rotation ?? 0, false);
       if (!r.spaces.length) toast.warning("The AI could not find individual spaces on this deed — enter them by hand.");
@@ -122,7 +132,8 @@ export default function DeedSpacesPanel({ agreementId, editable, onSpaces }: { a
           <img src={preview} alt="Deed copy with owner details blurred" className="max-h-80 rounded border border-border" />
         </div>
       )}
-      {!scan && !preview && <p className="text-xs text-muted-foreground">Click "Read deed with AI" to list the spaces on the seller's deed and prepare a blurred copy.</p>}
+      {busy === "scan" && !scan && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Loader2 className="w-3 h-3 animate-spin" />Reading the deed to list its spaces…</p>}
+      {!scan && !preview && busy !== "scan" && <p className="text-xs text-muted-foreground">Click "Read deed with AI" to list the spaces on the seller's deed and prepare a blurred copy.</p>}
     </div>
   );
 }
