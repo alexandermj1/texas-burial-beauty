@@ -36,10 +36,6 @@ export function defaultFields(seller: any, buyer: any): AgreementFields {
   const available = Math.max(1, Number(seller.plot_count) || parseInt(String(seller.spaces ?? ""), 10) || 1);
   const want = wantSpaces(buyer);
   const spaces = want && want < available ? want : available;
-  const q = quoteFigures({
-    quoteAmount: seller.quote_amount, acceptedAmount: seller.accepted_quote_amount, transferFee: seller.transfer_fee_amount,
-    plotCount: spaces, buyerFees: normalizeBuyerFees(seller.buyer_fees),
-  });
   f.purchaser = { ...f.purchaser, names: buyer.name ?? "", email: buyer.email ?? "", phone: buyer.phone ?? "" };
   f.property = {
     cemetery: seller.cemetery ?? "", city: seller.cemetery_city ?? "",
@@ -47,14 +43,23 @@ export function defaultFields(seller: any, buyer: any): AgreementFields {
     spaces, property_type: seller.property_type ?? "", commodities: "",
   };
   f.deed.holder1 = buyer.name ?? "";
-  f.charges = {
+  f.charges = chargesForSpaces(seller, spaces);
+  return f;
+}
+
+/** Buyer schedule for a given number of the seller's spaces (same quoteFigures basis as quotes and the buyer AI). */
+export function chargesForSpaces(seller: any, spaces: number): AgreementFields["charges"] {
+  const q = quoteFigures({
+    quoteAmount: seller.quote_amount, acceptedAmount: seller.accepted_quote_amount, transferFee: seller.transfer_fee_amount,
+    plotCount: Math.max(1, spaces), buyerFees: normalizeBuyerFees(seller.buyer_fees),
+  });
+  return {
     deposit: 0,
     balance: q.hasQuote ? q.buyerPriceTotal - q.transferFee - q.buyerFeesTotal : 0,
     transfer_fee: q.transferFee,
     adjustments: q.buyerFeesTotal,
     adjustments_note: q.buyerFees.map((x) => x.label).join(", "),
   };
-  return f;
 }
 
 export async function documentFingerprint(fields: AgreementFields, version?: string) {

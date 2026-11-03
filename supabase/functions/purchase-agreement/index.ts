@@ -366,6 +366,62 @@ Deno.serve(async (req) => {
     const id = z.string().uuid().parse(body.id);
     const pa = await load(id);
 
+    // Read the seller's deed with AI: list every space on it and locate the owner
+    // name/address so staff can review a redacted copy before it goes to a buyer.
+    if (action === "deed_scan") {
+      const { data: sub } = await db.from("contact_submissions").select("id,customer_profile_id").eq("id", pa.seller_submission_id).maybeSingle();
+      let files: any[] = [];
+      if (sub?.customer_profile_id) {
+        const { data } = await db.from("customer_files").select("id,file_name,file_path,mime_type,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false });
+        files = (data ?? []).filter((f: any) => /^image\/(jpe?g|png|webp)$/i.test(f.mime_type ?? "") || /\.(jpe?g|png|webp)$/i.test(f.file_name ?? ""));
+      }
+      const score = (f: any) => (/(deed|certificate|sepulture|ownership|interment right|title)/i.test(`${f.document_type} ${f.extracted_summary} ${f.file_name}`) ? 1 : 0);
+      files.sort((a, b) => score(b) - score(a));
+      const chosen = typeof body.file_id === "string" ? files.find((f) => f.id === body.file_id) : files[0];
+      if (!chosen) return json({ error: "No deed photo found on this seller's files. Upload the deed image to their record first.", files: [] }, 404);
+      const dl = await db.storage.from("customer-files").download(chosen.file_path); if (dl.error) throw dl.error;
+      const bytes = new Uint8Array(await dl.data.arrayBuffer());
+      let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      const mime = /png$/i.test(chosen.file_name) ? "image/png" : /webp$/i.test(chosen.file_name) ? "image/webp" : "image/jpeg";
+      const b64 = btoa(bin);
+      const prompt = `You are reading a cemetery deed / certificate of ownership photo. Read it carefully and exactly.
+Return ONLY JSON:
+{"cemetery": string, "section": string, "rotation": 0|90|180|270 (clockwise degrees needed to make the text upright),
+ "spaces": [{"label": "Section X, Lot N, Grave/Space M" exactly as written on the deed, "section": string, "lot": string, "space": string}],
+ "redact": [{"what": "owner name"|"owner address"|"signature"|"other personal", "box_2d": [ymin, xmin, ymax, xmax]}],
+ "notes": string}
+Rules: list EVERY individual grave/space/crypt/niche the deed conveys as its own entry (e.g. "Lot 23, Graves 7 & 8" is two entries). Never invent spaces; if unclear say so in notes.
+box_2d coordinates are 0-1000 relative to the image exactly as provided (before any rotation). Include TIGHT boxes (one per line of text) covering only the owner/purchaser names and their home address. Boxes must NEVER overlap the section, lot, grave/space numbers, number of interments, price, dates or cemetery name — the buyer must be able to read those. Do not box cemetery officials' or notary signatures/names.`;
+      const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "google/gemini-3.8-flash", response_format: { type: "json_object" },
+          messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }] }] }),
+      });
+      if (ai.status === 429) return json({ error: "AI is busy — try again in a minute." }, 429);
+      if (ai.status === 402) return json({ error: "AI credits are used up — add credits in workspace settings." }, 402);
+      if (!ai.ok) throw new Error(`Deed reading failed (${ai.status})`);
+      const raw = (await ai.json())?.choices?.[0]?.message?.content ?? "{}";
+      let parsed: any = {}; try { parsed = JSON.parse(String(raw).replace(/^```json|```$/g, "").trim()); } catch { parsed = {}; }
+      return json({ file: { id: chosen.id, name: chosen.file_name }, files: files.map((f) => ({ id: f.id, name: f.file_name })), image: `data:${mime};base64,${b64}`,
+        cemetery: parsed.cemetery ?? "", section: parsed.section ?? "", rotation: [0, 90, 180, 270].includes(parsed.rotation) ? parsed.rotation : 0,
+        spaces: Array.isArray(parsed.spaces) ? parsed.spaces.slice(0, 40) : [], redact: Array.isArray(parsed.redact) ? parsed.redact.slice(0, 30) : [], notes: parsed.notes ?? "" });
+    }
+
+    // Store the staff-reviewed redacted deed; "send" attaches it automatically.
+    if (action === "save_deed") {
+      const img = z.string().startsWith("data:image/jpeg;base64,").max(8_000_000).parse(body.image);
+      const bytes = Uint8Array.from(atob(img.split(",")[1]), (c) => c.charCodeAt(0));
+      const path = `purchase-agreements/${pa.id}/deed-redacted.jpg`;
+      const up = await db.storage.from("contracts").upload(path, bytes, { contentType: "image/jpeg", upsert: true }); if (up.error) throw up.error;
+      await db.from("purchase_agreements").update({ events: [...pa.events, event("deed_redacted_saved", { by: user.name })] }).eq("id", pa.id);
+      return json({ ok: true, path });
+    }
+    if (action === "deed_preview") {
+      const path = `purchase-agreements/${pa.id}/deed-redacted.jpg`;
+      const { data } = await db.storage.from("contracts").createSignedUrl(path, 600);
+      return json({ url: data?.signedUrl ?? null });
+    }
+
     if (action === "update") {
       if (!["draft", "sent", "viewed"].includes(pa.status)) return json({ error: "The buyer has signed — void and re-issue to change terms." }, 409);
       const fields = FieldsSchema.parse(body.fields);
@@ -387,8 +443,11 @@ Deno.serve(async (req) => {
       if (action === "send") {
         const sample = body.sample === true;
         let deedUrl: string | undefined; let deedBytes: Uint8Array | undefined;
-        if (typeof body.deed_image_path === "string" && body.deed_image_path) {
-          const path = z.string().max(300).regex(/^purchase-agreements\/[\w-]+\/[\w.-]+\.(jpe?g|png)$/).parse(body.deed_image_path);
+        const savedDeed = `purchase-agreements/${pa.id}/deed-redacted.jpg`;
+        const deedPath = typeof body.deed_image_path === "string" && body.deed_image_path ? body.deed_image_path
+          : (body.include_deed !== false && (await db.storage.from("contracts").createSignedUrl(savedDeed, 60)).data?.signedUrl ? savedDeed : "");
+        if (deedPath) {
+          const path = z.string().max(300).regex(/^purchase-agreements\/[\w-]+\/[\w.-]+\.(jpe?g|png)$/).parse(deedPath);
           const dl = await db.storage.from("contracts").download(path); if (dl.error) throw dl.error;
           deedBytes = new Uint8Array(await dl.data.arrayBuffer());
           deedUrl = (await db.storage.from("contracts").createSignedUrl(path, 60 * 60 * 24 * 60)).data?.signedUrl;
