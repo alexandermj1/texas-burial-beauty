@@ -309,6 +309,8 @@ Deno.serve(async (req) => {
       const f = normalizeFields(pa.fields);
       Object.assign(f.purchaser, S.purchaser);
       Object.assign(f.deed, S.deed);
+      if (!f.purchaser.names.trim()) return json({ error: "Please enter your name." }, 400);
+      if (!/^\S+@\S+\.\S+$/.test(f.purchaser.email.trim())) return json({ error: "Please enter a valid email address." }, 400);
       if (!f.purchaser.address.trim()) return json({ error: "Please enter your address." }, 400);
       if (!f.deed.same_as_purchaser && !f.deed.names.trim()) return json({ error: "Please enter the name(s) to go on the deed." }, 400);
       // The buyer must be signing the exact text staff issued (plus their own entries).
