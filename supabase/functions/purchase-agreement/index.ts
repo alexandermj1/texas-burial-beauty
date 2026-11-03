@@ -160,7 +160,7 @@ ${step(2, "Sign electronically &mdash; it takes about five minutes.")}
 ${step(3, "We countersign and email you the completed agreement with a secure card payment link.")}
 ${step(4, "Once payment clears, we file the transfer with the cemetery and keep you updated.")}
 </table>
-<p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">You may cancel within five calendar days of signing. If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
+<p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
 <p style="margin:0 0 6px;font-size:11px;line-height:16px;color:#8a7766;word-break:break-all;">If the button does not work, copy this link into your browser:<br>${esc(signUrl)}</p>`, "purchase_agreement", sample ? sampleBanner : "");
 }
 
@@ -309,6 +309,8 @@ Deno.serve(async (req) => {
       const f = normalizeFields(pa.fields);
       Object.assign(f.purchaser, S.purchaser);
       Object.assign(f.deed, S.deed);
+      if (!f.purchaser.names.trim()) return json({ error: "Please enter your name." }, 400);
+      if (!/^\S+@\S+\.\S+$/.test(f.purchaser.email.trim())) return json({ error: "Please enter a valid email address." }, 400);
       if (!f.purchaser.address.trim()) return json({ error: "Please enter your address." }, 400);
       if (!f.deed.same_as_purchaser && !f.deed.names.trim()) return json({ error: "Please enter the name(s) to go on the deed." }, 400);
       // The buyer must be signing the exact text staff issued (plus their own entries).

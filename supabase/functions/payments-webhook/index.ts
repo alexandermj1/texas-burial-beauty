@@ -232,17 +232,21 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
 }
 
 async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: string) {
+  const isTest = tx.environment === "sandbox";
   const paId = tx.metadata?.purchase_agreement_id;
   if (paId) {
-    const { data: pa } = await db().from("purchase_agreements").select("events").eq("id", paId).maybeSingle();
+    const { data: pa } = await db().from("purchase_agreements").select("events,status").eq("id", paId).maybeSingle();
     if (pa) {
-      await db().from("purchase_agreements").update({
-        status: "paid", paid_at: new Date().toISOString(),
-        events: [...((pa as any).events ?? []), { at: new Date().toISOString(), type: "paid", amount: tx.amount_cents / 100, card: cardLast4 ? `${cardBrand ?? "card"} ••${cardLast4}` : undefined }],
-      }).eq("id", paId);
+      const ev = { at: new Date().toISOString(), type: "paid", amount: tx.amount_cents / 100, test: isTest || undefined, card: cardLast4 ? `${cardBrand ?? "card"} ••${cardLast4}` : undefined };
+      // Only a countersigned agreement moves to "paid"; an early payment is recorded
+      // but must not stop the buyer from signing.
+      const patch: Record<string, unknown> = { events: [...((pa as any).events ?? []), ev] };
+      if ((pa as any).status === "countersigned") { patch.status = "paid"; patch.paid_at = ev.at; }
+      await db().from("purchase_agreements").update(patch).eq("id", paId);
     }
   }
-  if (tx.submission_id) {
+  // Test (sandbox) payments never mark a real seller record as sold.
+  if (tx.submission_id && !isTest) {
     await db().from("contact_submissions").update({
       sold_at: new Date().toISOString(),
       sold_price: tx.amount_cents / 100,
