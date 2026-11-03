@@ -63,10 +63,12 @@ export default function SignPurchaseAgreement() {
   const signable = view.status === "sent" || view.status === "viewed";
   const missing: string[] = [];
   if (signable) {
+    if (!f.purchaser.names.trim()) missing.push("your name");
+    if (!/^\S+@\S+\.\S+$/.test(f.purchaser.email.trim())) missing.push("a valid email");
     if (!f.purchaser.address.trim()) missing.push("your address");
     if (!f.deed.same_as_purchaser && !f.deed.names.trim()) missing.push("deed holder name(s)");
     if (!initials.rules.trim() || !initials.verification.trim()) missing.push("both sets of initials");
-    if (!checks.terms || !checks.cancel || !checks.esign) missing.push("the three confirmations");
+    if (!checks.terms || !checks.cancel || !checks.esign) missing.push("both confirmations");
     if (typed.trim().length < 2) missing.push("your full legal name");
     if (!sig) missing.push("your signature");
   }
@@ -78,7 +80,7 @@ export default function SignPurchaseAgreement() {
       await paCall({
         action: "sign", token, hash_seen: hash, typed_name: typed.trim(), signature: sig, initials,
         esign_consent: true, read_terms: true, cancellation_read: true,
-        purchaser: { address: f.purchaser.address, phone: f.purchaser.phone, dob: f.purchaser.dob, marital_status: f.purchaser.marital_status },
+        purchaser: { names: f.purchaser.names, email: f.purchaser.email, address: f.purchaser.address, phone: f.purchaser.phone, dob: f.purchaser.dob, marital_status: f.purchaser.marital_status },
         deed: { same_as_purchaser: f.deed.same_as_purchaser, holder2: f.deed.holder2, names: f.deed.names, address: f.deed.address, phone: f.deed.phone, email: f.deed.email, dob: f.deed.dob, marital_status: f.deed.marital_status },
       });
       toast.success("Signed — thank you.");
@@ -119,10 +121,11 @@ export default function SignPurchaseAgreement() {
         <p className="text-sm text-muted-foreground leading-relaxed">The Undersigned, hereafter referred to as “Purchaser”, hereby agrees to purchase the following interment property, services and/or commodities. Fields marked <Lock className="inline w-3 h-3" /> were prepared by Texas Cemetery Brokers — if anything looks wrong, call (214) 230-4740 before signing.</p>
 
         <Section n="1" title="Purchaser details">
-          <Row k="Name(s) 🔒" v={f.purchaser.names} />
-          <Row k="Email 🔒" v={f.purchaser.email} />
+          {!signable && <><Row k="Name(s)" v={f.purchaser.names} /><Row k="Email" v={f.purchaser.email} /></>}
           {signable ? (
             <div className="grid sm:grid-cols-2 gap-4 mt-4">
+              <Field label="Full name(s) *" value={f.purchaser.names} onChange={(v) => setP("names", v)} />
+              <Field label="Email *" type="email" value={f.purchaser.email} onChange={(v) => setP("email", v)} />
               <Field label="Mailing address *" value={f.purchaser.address} onChange={(v) => setP("address", v)} className="sm:col-span-2" />
               <Field label="Telephone" value={f.purchaser.phone} onChange={(v) => setP("phone", v)} />
               <Field label="Date of birth" type="date" value={f.purchaser.dob} onChange={(v) => setP("dob", v)} />
@@ -176,11 +179,6 @@ export default function SignPurchaseAgreement() {
           </div>
         </Section>
 
-        <section className="rounded-xl border-2 border-primary/40 bg-card p-5 sm:p-7">
-          <h2 className="font-serif text-lg text-foreground mb-2">Your right to cancel</h2>
-          <p className="text-sm text-foreground leading-relaxed">{CANCELLATION_NOTICE}</p>
-        </section>
-
         <Section n="5" title="Acknowledgements">
           <div className="space-y-5">
             {ACKNOWLEDGEMENTS.map((a) => (
@@ -200,14 +198,14 @@ export default function SignPurchaseAgreement() {
             {TERMS.map((s) => (
               <div key={s.heading}><h3 className="font-serif text-base text-foreground mb-1">{s.heading}</h3>{s.body.map((p, i) => <p key={i} className="text-muted-foreground mb-2">{p}</p>)}</div>
             ))}
+            <div><h3 className="font-serif text-base text-foreground mb-1">Notice of cancellation</h3><p className="text-muted-foreground mb-2">{CANCELLATION_NOTICE}</p></div>
           </div>
         </Section>
 
         {signable && (
           <Section n="7" title="Sign">
             <div className="space-y-5">
-              <Confirm checked={checks.terms} onChange={(v) => setChecks((c) => ({ ...c, terms: v }))}>I have read and agree to this Purchase Agreement, including the Schedule of Charges and the Terms and Conditions.</Confirm>
-              <Confirm checked={checks.cancel} onChange={(v) => setChecks((c) => ({ ...c, cancel: v }))}>I have read the notice of my right to cancel within five calendar days.</Confirm>
+              <Confirm checked={checks.terms} onChange={(v) => setChecks((c) => ({ ...c, terms: v, cancel: v }))}>I have read and agree to this Purchase Agreement, including the Schedule of Charges and the Terms and Conditions.</Confirm>
               <Confirm checked={checks.esign} onChange={(v) => setChecks((c) => ({ ...c, esign: v }))}>{ESIGN_CONSENT}</Confirm>
               <Field label="Full legal name *" value={typed} onChange={setTyped} />
               <SignaturePad label="Your signature *" onChange={setSig} />

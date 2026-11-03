@@ -44,7 +44,7 @@ export function normalizeFields(raw: any): AgreementFields {
 
 /** Fields the buyer may complete on the signing page. Everything else is set by staff. */
 export const BUYER_EDITABLE = {
-  purchaser: ["address", "phone", "dob", "marital_status"] as const,
+  purchaser: ["names", "email", "address", "phone", "dob", "marital_status"] as const,
   deed: ["same_as_purchaser", "holder2", "names", "address", "phone", "email", "dob", "marital_status"] as const,
 };
 

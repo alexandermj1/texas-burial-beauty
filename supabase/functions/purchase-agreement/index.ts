@@ -160,7 +160,7 @@ ${step(2, "Sign electronically &mdash; it takes about five minutes.")}
 ${step(3, "We countersign and email you the completed agreement with a secure card payment link.")}
 ${step(4, "Once payment clears, we file the transfer with the cemetery and keep you updated.")}
 </table>
-<p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">You may cancel within five calendar days of signing. If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
+<p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
 <p style="margin:0 0 6px;font-size:11px;line-height:16px;color:#8a7766;word-break:break-all;">If the button does not work, copy this link into your browser:<br>${esc(signUrl)}</p>`, "purchase_agreement", sample ? sampleBanner : "");
 }
 
