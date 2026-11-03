@@ -47,15 +47,21 @@ export function defaultFields(seller: any, buyer: any): AgreementFields {
   return f;
 }
 
+/** Same rounding the buyer AI uses in buyer emails (buyer-agent roundDown). */
+export const buyerQuotedTotal = (n: number) => { const step = n >= 1000 ? 100 : 50; return Math.floor(n / step) * step; };
+
 /** Buyer schedule for a given number of the seller's spaces (same quoteFigures basis as quotes and the buyer AI). */
 export function chargesForSpaces(seller: any, spaces: number): AgreementFields["charges"] {
   const q = quoteFigures({
     quoteAmount: seller.quote_amount, acceptedAmount: seller.accepted_quote_amount, transferFee: seller.transfer_fee_amount,
     plotCount: Math.max(1, spaces), buyerFees: normalizeBuyerFees(seller.buyer_fees),
   });
+  // Match the buyer AI's emailed figure exactly: the total is rounded DOWN to $100
+  // (to $50 under $1,000), and the rounding comes off the sales-price line.
+  const total = q.hasQuote ? buyerQuotedTotal(q.buyerPriceTotal) : 0;
   return {
     deposit: 0,
-    balance: q.hasQuote ? q.buyerPriceTotal - q.transferFee - q.buyerFeesTotal : 0,
+    balance: q.hasQuote ? total - q.transferFee - q.buyerFeesTotal : 0,
     transfer_fee: q.transferFee,
     adjustments: q.buyerFeesTotal,
     adjustments_note: q.buyerFees.map((x) => x.label).join(", "),
