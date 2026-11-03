@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useId, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,17 @@ import {
 
 type View = { id: string; status: string; fields: AgreementFields; terms_version: string; buyer_signed_at: string | null; payment_url: string | null };
 
-const Row = ({ k, v }: { k: string; v?: string | number | null }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-1 py-2 border-b border-border/50 last:border-0">
+const Row = ({ k, v, locked }: { k: string; v?: string | number | null; locked?: boolean }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-1 py-2 border-b border-border/50 last:border-0 items-center">
     <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{k}</span>
-    <span className="text-sm text-foreground break-words">{v || "—"}</span>
+    <span className={locked ? "flex items-center justify-between gap-3 rounded-md bg-muted px-3 py-1.5 text-sm text-foreground break-words" : "text-sm text-foreground break-words"}>
+      <span>{v || "—"}</span>
+      {locked && <span className="inline-flex shrink-0 items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground" title="Set by Texas Cemetery Brokers — cannot be edited"><Lock className="w-3 h-3" />Locked</span>}
+    </span>
   </div>
+);
+const LockedNote = () => (
+  <p className="mb-3 flex items-center gap-2 text-xs text-muted-foreground"><Lock className="w-3.5 h-3.5" />These details are set by Texas Cemetery Brokers and cannot be edited. If anything is wrong, call (214) 230-4740 before signing.</p>
 );
 
 const Section = ({ n, title, children }: { n: string; title: string; children: React.ReactNode }) => (
@@ -118,7 +124,7 @@ export default function SignPurchaseAgreement() {
       )}
 
       <div className="space-y-6">
-        <p className="text-sm text-muted-foreground leading-relaxed">The Undersigned, hereafter referred to as “Purchaser”, hereby agrees to purchase the following interment property, services and/or commodities. Fields marked <Lock className="inline w-3 h-3" /> were prepared by Texas Cemetery Brokers — if anything looks wrong, call (214) 230-4740 before signing.</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">The Undersigned, hereafter referred to as “Purchaser”, hereby agrees to purchase the following interment property, services and/or commodities. Please fill in the white boxes with your details. Grey boxes marked <Lock className="inline w-3 h-3" /> Locked were prepared by Texas Cemetery Brokers and cannot be edited — if anything looks wrong, call (214) 230-4740 before signing.</p>
 
         <Section n="1" title="Purchaser details">
           {!signable && <><Row k="Name(s)" v={f.purchaser.names} /><Row k="Email" v={f.purchaser.email} /></>}
@@ -135,12 +141,13 @@ export default function SignPurchaseAgreement() {
         </Section>
 
         <Section n="2" title="Interment property">
-          <Row k="Cemetery 🔒" v={f.property.cemetery} />
-          <Row k="City 🔒" v={f.property.city} />
-          <Row k="Property description 🔒" v={f.property.description} />
-          <Row k="Number of spaces 🔒" v={f.property.spaces} />
-          <Row k="Property type 🔒" v={f.property.property_type} />
-          <Row k="Additional commodities 🔒" v={f.property.commodities || "None"} />
+          <LockedNote />
+          <Row k="Cemetery" v={f.property.cemetery} locked />
+          <Row k="City" v={f.property.city} locked />
+          <Row k="Property description" v={f.property.description} locked />
+          <Row k="Number of spaces" v={f.property.spaces} locked />
+          <Row k="Property type" v={f.property.property_type} locked />
+          <Row k="Additional commodities" v={f.property.commodities || "None"} locked />
         </Section>
 
         <Section n="3" title="Persons the property will be deeded to">
@@ -163,6 +170,7 @@ export default function SignPurchaseAgreement() {
         </Section>
 
         <Section n="4" title="Schedule of charges">
+          <LockedNote />
           <div className="text-sm">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1 mb-1">I. Sale price breakdown</p>
             <Money k="1. Commitment deposit" v={f.charges.deposit} />
@@ -232,7 +240,8 @@ function Banner({ icon: Icon, title, children }: { icon: any; title: string; chi
   return <div className="mb-8 rounded-xl border border-primary/30 bg-primary/10 p-5 flex gap-3"><Icon className="w-6 h-6 text-primary shrink-0" /><div><p className="font-serif text-lg text-foreground">{title}</p><div className="text-sm text-muted-foreground mt-1">{children}</div></div></div>;
 }
 function Field({ label, value, onChange, type = "text", className = "" }: { label: string; value: string; onChange: (v: string) => void; type?: string; className?: string }) {
-  return <div className={className}><Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label><Input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1" /></div>;
+  const id = useId();
+  return <div className={className}><Label htmlFor={id} className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label><Input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 bg-background" /></div>;
 }
 function Money({ k, v, strong }: { k: string; v: number; strong?: boolean }) {
   return <div className={`flex justify-between py-1.5 border-b border-border/40 ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}><span>{k}</span><span className="tabular-nums">{money(v)}</span></div>;
