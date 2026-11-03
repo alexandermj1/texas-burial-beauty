@@ -55,9 +55,16 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
     if (!token) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Internal server-to-server calls (e.g. automatic countersign after a buyer signs) use the service key.
+    let user: { id: string | null } | null = null;
+    if (token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      user = { id: null };
+    } else {
+      const { data: { user: u }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !u) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      user = u;
     }
 
     const rawBody = await req.json();

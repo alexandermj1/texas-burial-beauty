@@ -170,7 +170,7 @@ ${button(signUrl, "Review &amp; sign your agreement")}
 <table role="presentation" cellpadding="0" cellspacing="0">
 ${step(1, "Review the agreement and add your details and the names for the deed.")}
 ${step(2, "Sign electronically &mdash; it takes about five minutes.")}
-${step(3, "We countersign and email you the completed agreement with a secure card payment link.")}
+${step(3, "The moment you sign, the broker countersigns and we email you the completed agreement with a secure card payment link.")}
 ${step(4, "Once payment clears, we file the transfer with the cemetery and keep you updated.")}
 </table>
 <p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
@@ -283,6 +283,44 @@ async function load(id: string) {
   return data;
 }
 
+async function executeCountersign(pa: any, o: { name: string; image?: string; userId: string | null; ip: string; by: string; environment: "sandbox" | "live"; authHeader: string }): Promise<{ ok: boolean; payment_url?: string; warning?: string; error?: string }> {
+  try {
+    const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
+    const signedAt = nowIso();
+    const countersignature = { name: o.name, image: o.image, signed_at: signedAt, user_id: o.userId, ip: o.ip };
+    const events = [...pa.events, event("countersigned", { by: o.by })];
+    const bytes = await buildPdf({ ...pa, countersignature, countersigned_at: signedAt, events });
+    const path = `purchase-agreements/${pa.id}/executed-${Date.now()}.pdf`;
+    const up = await db.storage.from("contracts").upload(path, bytes, { contentType: "application/pdf", upsert: false });
+    if (up.error) throw up.error;
+    const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: o.authHeader },
+      body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
+        description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: f.purchaser.email,
+        recipientName: f.purchaser.names, environment: o.environment, purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
+    });
+    const pay = await payRes.json().catch(() => ({}));
+    if (!payRes.ok || !pay.url) throw new Error(`Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}`);
+    events.push(event("payment_link_issued", { by: o.by, amount: t.totalDue, environment: o.environment }));
+    if (pa.payment_url && pa.payment_url !== pay.url) await deactivatePaymentLink(db, pa.payment_url).catch(() => {});
+    await db.from("purchase_agreements").update({ countersignature, countersigned_at: signedAt, status: "countersigned", signed_pdf_path: path,
+      payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events }).eq("id", pa.id);
+    try {
+      await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Executed purchase agreement and payment link sent.",
+        subject: `Your completed purchase agreement and payment link — ${f.property.cemetery}`,
+        attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement.pdf", bytes },
+        html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Thank you for signing. Your purchase agreement has been countersigned by Texas Cemetery Brokers, and the fully executed copy is attached for your records.</p>${summaryTable(f)}<p>To complete your purchase, please pay the total amount due using the secure card payment link below.</p>${button(pay.url, `Pay ${money(t.totalDue)} securely`)}<p style="font-size:13px;color:#6b5f55;">Once your payment clears we will file the transfer with the cemetery and keep you updated. You may also pay by certified check or wire — just reply and we will send the details.</p>`, "purchase_agreement") });
+    } catch (e) {
+      console.error("executed copy email failed", e);
+      return { ok: true, payment_url: pay.url, warning: `Countersigned and payment link created, but the email failed: ${(e as Error).message}` };
+    }
+    return { ok: true, payment_url: pay.url };
+  } catch (e) {
+    console.error("countersign failed", e);
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -337,13 +375,12 @@ Deno.serve(async (req) => {
       const { error } = await db.from("purchase_agreements").update({ fields: f, status: "buyer_signed", buyer_signed_at: signedAt, buyer_signature, document_hash: hash, events })
         .eq("id", pa.id).in("status", ["sent", "viewed"]);
       if (error) throw error;
-      await db.rpc("notify_staff", { _title: `${f.purchaser.names || "A buyer"} signed a purchase agreement`, _body: `${f.property.cemetery} — ready for your countersignature.`, _submission_id: pa.buyer_submission_id, _source_type: "purchase_agreement_signed" });
-      try {
-        if (f.purchaser.email) await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement signed — awaiting countersignature.",
-          subject: `We received your signed purchase agreement — ${f.property.cemetery}`,
-          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Thank you — we have received your signed purchase agreement.</p>${summaryTable(f)}<p>Our team will countersign it shortly. You will then receive the fully executed agreement as a PDF together with a secure card payment link.</p><p style="font-size:13px;color:#6b5f55;">Signed ${esc(new Date(signedAt).toUTCString())}. Document fingerprint (SHA-256): ${esc(hash)}</p>`, "purchase_agreement") });
-      } catch (e) { console.warn("buyer confirmation email failed", e); }
-      return json({ ok: true, status: "buyer_signed" });
+      // Broker countersigns automatically the moment the buyer signs; the executed PDF + live payment link go out at once.
+      const signedPa = { ...pa, fields: f, status: "buyer_signed", buyer_signed_at: signedAt, buyer_signature, document_hash: hash, events };
+      const sandbox = (pa.events ?? []).some((e: any) => e?.sample === true);
+      const r = await executeCountersign(signedPa, { name: "Simon James", image: undefined, userId: null, ip: "auto", by: "Automatic broker countersignature", environment: sandbox ? "sandbox" : "live", authHeader: `Bearer ${SERVICE_KEY}` });
+      await db.rpc("notify_staff", { _title: `${f.purchaser.names || "A buyer"} signed a purchase agreement`, _body: r.ok ? `${f.property.cemetery} — countersigned automatically; payment link sent.` : `${f.property.cemetery} — automatic countersign failed, please countersign manually: ${r.error}`, _submission_id: pa.buyer_submission_id, _source_type: "purchase_agreement_signed" });
+      return json({ ok: true, status: r.ok ? "countersigned" : "buyer_signed", payment_url: r.payment_url ?? null });
     }
 
     // ================= STAFF =================
@@ -468,42 +505,10 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
     if (action === "countersign") {
       if (pa.status !== "buyer_signed") return json({ error: "Only an agreement the buyer has signed can be countersigned." }, 409);
       const C = z.object({ signer_name: z.string().trim().min(2).max(200), signature: z.string().startsWith("data:image/png;base64,").max(400_000), environment: z.enum(["sandbox", "live"]) }).parse(body);
-      const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
-      const signedAt = nowIso();
-      const countersignature = { name: C.signer_name, image: C.signature, signed_at: signedAt, user_id: user.id, ip: clientIp(req) };
-      const events = [...pa.events, event("countersigned", { by: C.signer_name })];
-      const draft = { ...pa, countersignature, countersigned_at: signedAt, events };
-      const bytes = await buildPdf(draft);
-      const path = `purchase-agreements/${pa.id}/executed-${Date.now()}.pdf`;
-      const up = await db.storage.from("contracts").upload(path, bytes, { contentType: "application/pdf", upsert: false });
-      if (up.error) throw up.error;
-
-      // Card payment link for the Total Amount Due (same Stripe flow as other plot sales).
-      const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("Authorization") ?? "" },
-        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
-          description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: f.purchaser.email,
-          recipientName: f.purchaser.names, environment: C.environment, purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
-      });
-      const pay = await payRes.json().catch(() => ({}));
-      if (!payRes.ok || !pay.url) throw new Error(`Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}`);
-      events.push(event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: C.environment }));
-
-      await db.from("purchase_agreements").update({ countersignature, countersigned_at: signedAt, status: "countersigned", signed_pdf_path: path,
-        payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events }).eq("id", id);
-
-      try {
-        await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Executed purchase agreement and payment link sent.",
-          subject: `Your completed purchase agreement and payment link — ${f.property.cemetery}`,
-          attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement.pdf", bytes },
-          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Your purchase agreement has now been countersigned by Texas Cemetery Brokers. The fully executed copy is attached for your records.</p>${summaryTable(f)}<p>To complete your purchase, please pay the total amount due using the secure card payment link below.</p>${button(pay.url, `Pay ${money(t.totalDue)} securely`)}<p style="font-size:13px;color:#6b5f55;">Once your payment clears we will file the transfer with the cemetery and keep you updated. You may also pay by certified check or wire — just reply and we will send the details.</p>`, "purchase_agreement") });
-      } catch (e) {
-        console.error("executed copy email failed", e);
-        return json({ ok: true, warning: `Countersigned and payment link created, but the email failed: ${(e as Error).message}`, payment_url: pay.url });
-      }
-      return json({ ok: true, payment_url: pay.url });
+      const r = await executeCountersign(pa, { name: C.signer_name, image: C.signature, userId: user.id, ip: clientIp(req), by: C.signer_name, environment: C.environment, authHeader: req.headers.get("Authorization") ?? "" });
+      if (!r.ok) throw new Error(r.error);
+      return json({ ok: true, payment_url: r.payment_url, warning: r.warning });
     }
-
     if (action === "send_payment_link") {
       // Staff can issue a LIVE card payment link straight away (before signing/countersigning).
       if (!["draft", "sent", "viewed", "buyer_signed"].includes(pa.status)) return json({ error: "A payment link can't be sent for an agreement in this state." }, 409);
