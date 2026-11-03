@@ -170,6 +170,7 @@ export default function SignPurchaseAgreement() {
         </Section>
 
         <Section n="4" title="Schedule of charges">
+          <LockedNote />
           <div className="text-sm">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1 mb-1">I. Sale price breakdown</p>
             <Money k="1. Commitment deposit" v={f.charges.deposit} />
