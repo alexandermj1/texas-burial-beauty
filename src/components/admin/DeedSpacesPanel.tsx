@@ -21,7 +21,7 @@ async function redact(src: string, boxes: Box[], rotation: number): Promise<stri
   const blurPx = Math.max(12, Math.round(Math.min(W, H) / 60));
   for (const b of boxes) {
     const [y0, x0, y1, x1] = b.box_2d;
-    const pad = 12; // generous margin around AI boxes
+    const pad = 5; // small margin so nearby plot numbers stay readable
     const x = Math.max(0, ((Math.min(x0, x1) - pad) / 1000) * W), y = Math.max(0, ((Math.min(y0, y1) - pad) / 1000) * H);
     const w = Math.min(W - x, ((Math.abs(x1 - x0) + 2 * pad) / 1000) * W), h = Math.min(H - y, ((Math.abs(y1 - y0) + 2 * pad) / 1000) * H);
     if (w <= 0 || h <= 0) continue;
