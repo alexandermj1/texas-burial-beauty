@@ -14,9 +14,10 @@ import { toast } from "sonner";
 import { Copy, CreditCard, Download, FileSignature, Handshake, Loader2, Mail, PenLine, RefreshCw, Search, XCircle } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import { resolveKind } from "./CustomerKindBadge";
+import DeedSpacesPanel from "./DeedSpacesPanel";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import {
-  STATUS_LABEL, chargeTotals, defaultFields, inviteEmailPreviewNote, money, normalizeFields, paCall, sellerReadyForBuyer,
+  STATUS_LABEL, chargeTotals, chargesForSpaces, defaultFields, inviteEmailPreviewNote, money, normalizeFields, paCall, sellerReadyForBuyer,
   type AgreementFields, type PaStatus,
 } from "@/lib/purchaseAgreement";
 
@@ -158,6 +159,13 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
   const [voidOpen, setVoidOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(a.status === "draft");
   useEffect(() => { setF(normalizeFields(a.fields)); setDirty(false); }, [a.fields]);
+  const [seller, setSeller] = useState<Rec | null>(null);
+  useEffect(() => { supabase.from("contact_submissions").select(SELLER_COLS).eq("id", a.seller_submission_id).maybeSingle().then(({ data }) => setSeller(data as Rec)); }, [a.seller_submission_id]);
+  const pickSpaces = (labels: string[]) => {
+    if (!labels.length) return;
+    setF((x) => ({ ...x, property: { ...x.property, description: labels.join("; "), spaces: labels.length }, charges: seller ? chargesForSpaces(seller, labels.length) : x.charges }));
+    setDirty(true); setEditOpen(true);
+  };
   const editable = ["draft", "sent", "viewed"].includes(a.status);
   const t = chargeTotals(f.charges);
   const idx = STEPS.findIndex((s) => s.key === a.status);
@@ -195,6 +203,8 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
         ))}
       </ol>
 
+      {["draft", "sent", "viewed", "buyer_signed"].includes(a.status) && <DeedSpacesPanel agreementId={a.id} editable={editable} onSpaces={pickSpaces} />}
+
       {editable && (
         <div className="rounded-lg bg-muted/40 p-3">
           <button type="button" className="text-xs font-medium text-foreground underline" onClick={() => setEditOpen((o) => !o)}>{editOpen ? "Hide" : "Edit"} agreement details (price, property, purchaser)</button>
@@ -207,7 +217,7 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
               <E label="Cemetery" v={f.property.cemetery} on={(v) => set("property", "cemetery", v)} />
               <E label="City" v={f.property.city} on={(v) => set("property", "city", v)} />
               <div className="sm:col-span-2"><E label="Section, lot & space number(s) — e.g. Joyful Mysteries, Lot 23, Grave 7" v={f.property.description} on={(v) => set("property", "description", v)} /></div>
-              <E label="Number of spaces" type="number" v={String(f.property.spaces)} on={(v) => set("property", "spaces", Math.max(1, parseInt(v, 10) || 1))} />
+              <E label="Number of spaces (price updates)" type="number" v={String(f.property.spaces)} on={(v) => { const n = Math.max(1, parseInt(v, 10) || 1); setF((x) => ({ ...x, property: { ...x.property, spaces: n }, charges: seller ? chargesForSpaces(seller, n) : x.charges })); setDirty(true); }} />
               <E label="Property type" v={f.property.property_type} on={(v) => set("property", "property_type", v)} />
               <div className="sm:col-span-2"><E label="Additional commodities / services (optional)" v={f.property.commodities} on={(v) => set("property", "commodities", v)} /></div>
               <E label="1. Commitment deposit ($)" type="number" v={String(f.charges.deposit)} on={(v) => set("charges", "deposit", Number(v) || 0)} />
