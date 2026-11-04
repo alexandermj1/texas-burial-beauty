@@ -159,9 +159,17 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
   const want = requestedSpaces(buyer.spaces, buyer.message);
   const score = (x: any) => (x.readiness === "available now" ? 0 : /2 weeks/.test(x.readiness) ? 1 : 2) * 10 + (want >= 1 && (x.spaces === want || x.partial_offer) ? 0 : 5);
   const perCem: any[][] = [];
-  for (const c of cems ?? []) {
+  // One light read of which cemeteries hold live stock, so we only price those.
+  const { data: dir } = await db.from("texas_cemeteries").select("name,city,region,transfer_fee").is("deleted_at", null).limit(2000);
+  const stocked = new Set<string>();
+  for (let offset = 0; ; offset += 1000) {
+    const { data: page } = await db.from("contact_submissions").select("cemetery,cemetery_city").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null).or("la_signed_at.not.is.null,quote_response.eq.accepted").order("id").range(offset, offset + 999);
+    for (const r of page ?? []) { const m = resolveBuyerCemetery(r.cemetery, dir ?? [], r.cemetery_city); if (m) stocked.add(m.name); }
+    if ((page ?? []).length < 1000) break;
+  }
+  for (const c of (cems ?? []).filter((c: any) => stocked.has(c.name))) {
     if (!areaWidened || perCem.length < 8) {
-      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); const best = [...r.items].sort((a: any, b: any) => score(a) - score(b) || (b.savings_percent ?? 0) - (a.savings_percent ?? 0)); if (best.length) perCem.push(best.map((x: any) => ({ ...x, cemetery: c.name }))); } catch { /* pricing needs staff; skip that cemetery */ }
+      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude, dir ?? []); const best = [...r.items].sort((a: any, b: any) => score(a) - score(b) || (b.savings_percent ?? 0) - (a.savings_percent ?? 0)); if (best.length) perCem.push(best.map((x: any) => ({ ...x, cemetery: c.name }))); } catch { /* pricing needs staff; skip that cemetery */ }
     }
   }
   perCem.sort((a, b) => score(a[0]) - score(b[0]));
