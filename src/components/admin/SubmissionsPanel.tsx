@@ -334,7 +334,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     setAiPending(m);
   }, []);
   const [aiFirst, setAiFirst] = useState(false);
-  useEffect(() => { loadAiPending(); const t = setInterval(loadAiPending, 60000); return () => clearInterval(t); }, [loadAiPending]);
+  useEffect(() => {
+    loadAiPending();
+    const t = setInterval(loadAiPending, 60000);
+    // Live: a suggestion made by any admin's review shows for everyone at once.
+    let debounce: ReturnType<typeof setTimeout> | undefined;
+    const ch = supabase.channel(`ai-actions-list-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ai_agent_actions" }, () => {
+        clearTimeout(debounce); debounce = setTimeout(loadAiPending, 400);
+      }).subscribe();
+    return () => { clearInterval(t); clearTimeout(debounce); supabase.removeChannel(ch); };
+  }, [loadAiPending]);
   const [cemeteriesOpen, setCemeteriesOpen] = useState(false);
   
   const isMobile = useIsMobile();

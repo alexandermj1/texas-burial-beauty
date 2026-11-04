@@ -42,6 +42,18 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
   useEffect(() => { setPaused(!!pausedAt); load(); }, [submissionId, pausedAt, load]);
 
+  // Live: when anyone triggers a review, every admin viewing this record sees the suggestions immediately.
+  useEffect(() => {
+    let debounce: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => { clearTimeout(debounce); debounce = setTimeout(load, 300); };
+    const filter = `submission_id=eq.${submissionId}`;
+    const ch = supabase.channel(`ai-record-${submissionId}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ai_agent_actions", filter }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ai_agent_runs", filter }, refresh)
+      .subscribe();
+    return () => { clearTimeout(debounce); supabase.removeChannel(ch); };
+  }, [submissionId, load]);
+
   const review = async (instructionText?: string) => {
     setBusy(true);
     try {
