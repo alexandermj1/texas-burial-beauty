@@ -954,6 +954,8 @@ Deno.serve(async (req) => {
     if (sub.archived_at || sub.deleted_at || sub.closed_at || sub.sold_at || sub.ai_paused_at) return json({ error: "This seller record is closed, archived or paused" }, 409);
     const now = new Date().toISOString();
     let error: string | null = null;
+    // Emails sent by approved actions must not retire the other suggestions from the same review.
+    const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
     if (act.action_type === "reply_email") {
       const { data: siblings, error: siblingError } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
@@ -1175,6 +1177,9 @@ Deno.serve(async (req) => {
     await db.from("ai_agent_actions").update(error
       ? { error }
       : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, decision_reason: body.reason || null, error: null }).eq("id", act.id);
+    if (!error && openSiblings?.length) {
+      await db.from("ai_agent_actions").update({ status: "proposed" }).in("id", openSiblings.map((x: any) => x.id)).eq("status", "superseded");
+    }
     if (!error) {
       const { error: feedbackError } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: sub.id, kind: "accepted", comment: body.reason || null, author_user_id: user.id, author_name: user.name });
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);

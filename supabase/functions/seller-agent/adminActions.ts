@@ -101,7 +101,7 @@ export async function sendQuotePack(db: any, m: Mail, callInternal: (name: strin
   if (saveErr) throw new Error(saveErr.message);
   const first = properFirstName(sub.name) || "there";
   const sig = `Best regards,<br><br>${esc(o.adminName)}<br>Cemetery Salesperson<br>Texas Cemetery Brokers<br>www.texascemeterybrokers.com`;
-  const html = `<p style="${P}">Dear ${esc(first)},</p>${o.intro?.trim() ? `<p style="${P}">${esc(o.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}${block}<p style="${P}">${sig}</p>`;
+  const html = `<div data-tcb-email="ai_agent"></div><p style="${P}">Dear ${esc(first)},</p>${o.intro?.trim() ? `<p style="${P}">${esc(o.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}${block}<p style="${P}">${sig}</p>`;
   const subject = `Your offer to list${sub.cemetery ? ` at ${properCase(sub.cemetery)}` : ""} — Texas Cemetery Brokers`;
   const sent = await sendMail(m, { to: sub.email, subject, body: `Dear ${first},\n\nYour quote from Texas Cemetery Brokers: ${o.count} space${o.count === 1 ? "" : "s"} at $${o.perSpace.toLocaleString()} per space. Open this email in a browser to choose your listing option.\n\n${SITE}`, html, threadId: o.threadId, submissionId: sub.id });
   await db.from("contact_submissions").update({ quote_sent_at: now.toISOString(), quote_expires_at: new Date(now.getTime() + 10 * 86_400_000).toISOString(), quote_message: null }).eq("id", sub.id);
@@ -119,7 +119,7 @@ export async function resendEarlierEmail(db: any, m: Mail, sub: Sub, emailId: st
   const mine = e.matched_submission_id === sub.id || String(e.to_email ?? "").toLowerCase().includes(String(sub.email ?? "").toLowerCase());
   if (!mine || !sub.email) throw new Error("That email does not belong to this seller.");
   const body = String(e.body_html || "").trim() || plainHtml(String(e.body_text ?? ""));
-  const html = `${intro?.trim() ? `<div data-tcb-email="ai_agent" style="${P}">${esc(intro.trim()).replace(/\n/g, "<br>")}</div>` : ""}${body}`;
+  const html = `${intro?.trim() ? `<div data-tcb-email="ai_agent" style="${P}">${esc(intro.trim()).replace(/\n/g, "<br>")}</div>` : `<div data-tcb-email="ai_agent"></div>`}${body}`;
   const subject = subjectOverride?.trim() || (() => { const s0 = String(e.subject ?? "Your cemetery property").replace(/^(Re:\s*)*(Automatic email:\s*)?/i, ""); return `Re: ${s0}`; })();
   await sendMail(m, { to: sub.email, subject, body: `${intro?.trim() ? `${intro.trim()}\n\n` : ""}${String(e.body_text ?? "").slice(0, 8000)}`, html, threadId: e.gmail_thread_id, submissionId: sub.id });
   return { subject: e.subject as string };
