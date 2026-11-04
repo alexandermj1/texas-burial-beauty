@@ -1507,8 +1507,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
    * remove, update the locations being sold + rebuild), then the normal review
    * opens so the request is previewed and sent the usual way.
    */
-  const applyAiInstruction = async () => {
-    const instruction = aiInstruction.trim();
+  const applyAiInstruction = async (override?: string) => {
+    const instruction = (override ?? aiInstruction).trim();
     if (instruction.length < 3) return toast.error("Tell the AI what to change");
     setAiApplying(true);
     try {
