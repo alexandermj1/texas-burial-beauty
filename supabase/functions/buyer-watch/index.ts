@@ -50,7 +50,7 @@ Be LOOSE and generous like a good salesperson: exact matches will rarely exist. 
 pick up the phone about it — e.g. up to ~35% over a soft budget (~15% over a firm one), one or two spaces fewer/more,
 a different but nearby cemetery, a crypt instead of ground burial if they did not rule it out. Hide only clear mismatches
 (things they explicitly rejected, niche vs ground burial, far too expensive, or wrong area entirely).
-Return JSON only: {"picks":[{"id":"candidate id","fit":"good"|"close","reason":"one short sentence comparing it to what they wanted, mention the gap, e.g. '2 spaces at Restland at $5,400 — about 8% over their $5,000 budget.'"}]}. Empty picks if none.`;
+Return JSON only: {"picks":[{"id":"candidate id","fit":"good"|"close","reason":"one short sentence comparing it to what they wanted, third person, mention the gap, e.g. '2 spaces at Restland at $5,400 — about 8% over their $5,000 budget.'"}]}. Empty picks if none.`;
 
 async function directory(db: any) {
   const { data, error } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude,transfer_fee").is("deleted_at", null).limit(3000);
