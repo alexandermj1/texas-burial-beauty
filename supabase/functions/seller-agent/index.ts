@@ -76,7 +76,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     db.from("email_messages").select("id,from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
     db.from("customer_notes").select("body,author_name,created_at").or(`submission_id.eq.${sub.id}${sub.customer_profile_id ? `,customer_profile_id.eq.${sub.customer_profile_id}` : ""}`).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
     sub.customer_profile_id
-      ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
+      ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,extracted_data,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
     db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,countersigned_at,signed_copy_emailed_at,sign_token,sign_token_expires_at,principal_key,fill_data").eq("submission_id", sub.id).is("deleted_at", null),
     db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
@@ -88,6 +88,11 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
   const sectionPrices = (cemRows ?? []).flatMap((c: any) => (Array.isArray(c.sections) ? c.sections : []).map((x: any) => ({ cemetery: c.name, lawn: String(x.name ?? "").trim().slice(0, 160), retail_per_space: x.price ?? null, type: x.property_type || null, notes: clip(x.notes, 120), as_of: x.date ?? null }))).slice(0, 40);
 
   const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
+  let deedReading: string | null = null;
+  try {
+    const c = await db.storage.from("customer-files").download(`deed-highlights/${sub.id}.json`);
+    if (!c.error) { const j = JSON.parse(await c.data.text()); deedReading = j?.is_deed === false ? "The attachment read was not recognised as a deed." : JSON.stringify((j?.regions ?? []).map((r: any) => ({ kind: r.kind, text: r.text }))); }
+  } catch { deedReading = null; }
   const pipelineStage = sellerStage(sub, hasSellerAttachments(sub, (files.data ?? []).length));
   const stageLine = `CURRENT PIPELINE STAGE: ${STAGE_LABEL[pipelineStage]} — do what moves the seller to the next stage (see THE SELLER PIPELINE).`;
   const record = {
@@ -103,7 +108,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     family_tree_completed_at: answers.sellerConfirmedAt ?? null, documents_requested_at: sub.documents_requested_at,
     documents_completed_at: sub.documents_completed_at, listing_live_at: sub.listing_live_at, sold_at: sub.sold_at,
     stage: sub.texas_pipeline_stage ?? sub.pipeline_stage_override, ai_summary: sub.ai_summary,
-    family_tree_answers: (() => { const { autopilot: _a, requestExplanation: _r, ...rest } = answers; return clip(JSON.stringify(rest), 9000); })(),
+    family_tree_answers: (() => { const { autopilot: _a, requestExplanation: _r, v2: _v, treeEdits: _t, ...rest } = answers; return clip(JSON.stringify(rest), 6000); })(),
     deed_owner_roster: sub.ownership_roster ?? null,
     why_these_documents_are_needed: answers.requestExplanation?.text ?? null,
   };
@@ -146,7 +151,9 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     `SELLER'S DOCUMENT PAGE (include in replies about downloads, uploads or outstanding documents ONLY if a document request has been sent): ${sub.documents_requested_at ? `https://www.texascemeterybrokers.com/documents?s=${sub.id}` : "Not yet available"}`,
     `EXAMPLE AVAILABLE PROPERTY LIST (not this seller's live listing): https://www.texascemeterybrokers.com/sample-listing-sheet.html`,
     `CEMETERY SECTION PRICES (our file, retail per space by lawn/section):\n${sectionPrices.length ? JSON.stringify(sectionPrices) : "(none on file)"}`,
-    `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
+    `FAMILY TREE (ownership_answers.v2 — the rules engine builds the document request from this; edit it with edit_family_tree):\n${answers.v2 ? JSON.stringify(answers.v2).slice(0, 14000) : "(not started)"}${Array.isArray(answers.treeEdits) && answers.treeEdits.length ? `\nEARLIER TREE CORRECTIONS: ${JSON.stringify(answers.treeEdits.map((t: any) => ({ at: t.at, by: t.by, reason: t.reason })))}` : ""}`,
+    `FILES ON FILE (document insights = every field our reader extracted from the file):\n${JSON.stringify((files.data ?? []).map(({ extracted_data, ...f }: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300), document_insights: extracted_data ? clip(JSON.stringify(extracted_data), 900) : null })))}`,
+    `DEED READING (names and space lines our deed reader outlined on the deed photo; compare with the record): ${deedReading ?? "(not read yet)"}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
     `STAFF ACTION FEEDBACK (specific action evidence, not general instructions):\n${JSON.stringify(feedback.data ?? [])}`,
