@@ -40,6 +40,7 @@ import AiRecordCard from "./ai/AiRecordCard";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
 import { Bot } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
+import { BuyerWatchPanel, useBuyerWatch } from "./BuyerWatchPanel";
 
 import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus, EyeOff } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
@@ -2383,23 +2384,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Potential plot match — manual clear */}
-            {plotMatchMap[selected.id] && (
-              <div className="bg-card rounded-xl border border-fuchsia-300/60 dark:border-fuchsia-800 p-3 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] uppercase tracking-wide text-fuchsia-700 dark:text-fuchsia-300 mr-1 inline-flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> Potential plot match
-                </span>
-                <span className="text-xs text-muted-foreground flex-1 min-w-[10rem]">
-                  Inventory came up at {plotMatchMap[selected.id].cemetery || "their cemetery"}.
-                </span>
-                <button
-                  onClick={() => setReplyState(selected, new Date().toISOString())}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
-                  title="Removes the Potential Plot Match tag and Needs reply. It returns only if this buyer emails again or new inventory appears."
-                >
-                  <CheckCircle className="w-3.5 h-3.5" /> Remove from plot match
-                </button>
-              </div>
+            {/* Buyer "waiting for" note and Back-on-top alerts */}
+            {resolveKind(selected.customer_kind, selected.source) === "buyer" && (
+              <BuyerWatchPanel
+                submissionId={selected.id}
+                want={buyerWatch.wants[selected.id]}
+                alerts={buyerWatch.alerts[selected.id] ?? []}
+                onChange={buyerWatch.refresh}
+              />
             )}
 
 
@@ -3735,9 +3727,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               chips.push({
                 key: "plotmatch",
                 icon: Sparkles,
-                text: "Potential Plot Match",
-                tone: "text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-950/30 border-fuchsia-300/70 dark:border-fuchsia-800",
-                title: `Pre-need buyer — a seller just accepted a quote at ${plotMatch.cemetery || "their cemetery"} (${formatDate(plotMatch.at)})`,
+                text: plotMatch.count > 1 ? `Back on top · ${plotMatch.count} plots` : "Back on top",
+                tone: "text-primary bg-primary/10 border-primary/40",
+                title: `${plotMatch.reason} (${formatDate(plotMatch.at)})`,
               });
             }
 
