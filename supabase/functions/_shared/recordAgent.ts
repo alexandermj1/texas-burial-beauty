@@ -104,7 +104,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
   }
   if (name === "get_payments") {
     const { data } = await db.from("payment_transactions").select("kind,description,amount_cents,status,environment,recipient_email,recipient_name,paid_at,created_at,refunded_at,refund_amount_cents,dispute_status,created_by_name,metadata").eq("submission_id", id).is("deleted_at", null).order("created_at", { ascending: true });
-    return (data ?? []).map((p: any) => ({ for: p.kind, description: p.description, amount: p.amount_cents / 100, status: p.status, test_payment: p.environment !== "live", payer: p.metadata?.customer_email ?? p.recipient_email, payer_name: p.recipient_name, link_created: p.created_at, link_created_by: p.created_by_name, paid_at: p.paid_at, refunded_at: p.refunded_at, refund: p.refund_amount_cents ? p.refund_amount_cents / 100 : null, dispute: p.dispute_status, tier: p.metadata?.listingTier ?? null }));
+    return (data ?? []).map((p: any) => ({ for: p.kind, description: p.description, amount: p.amount_cents / 100, status: p.status, test_payment: p.environment !== "live", payer: p.metadata?.customer_email ?? p.recipient_email, payer_name: p.recipient_name, link_created: p.created_at, link_created_by: p.created_by_name, paid_at: p.paid_at, refunded_at: p.refunded_at, refund: p.refund_amount_cents ? p.refund_amount_cents / 100 : null, dispute: p.dispute_status, tier: p.metadata?.listing_tier ?? p.metadata?.listingTier ?? null }));
   }
   if (name === "get_quote_history") {
     const [est, rev, hist] = await Promise.all([

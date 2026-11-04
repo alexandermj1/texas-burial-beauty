@@ -79,7 +79,7 @@ export function allowedQuoteFigures(sub: Sub, tenPercent: number | null) {
  * optional explanation as its own email in the same thread.
  */
 export async function sendQuotePack(db: any, m: Mail, callInternal: (name: string, body: unknown) => Promise<any>, sub: Sub, o: {
-  perSpace: number; count: number; plotDescription?: string | null; explanation?: string | null; threadId?: string | null; adminName: string;
+  perSpace: number; count: number; plotDescription?: string | null; intro?: string | null; explanation?: string | null; threadId?: string | null; adminName: string;
 }) {
   if (!sub.email) throw new Error("This seller has no email address.");
   const fee = Number(sub.transfer_fee_amount);
@@ -101,7 +101,7 @@ export async function sendQuotePack(db: any, m: Mail, callInternal: (name: strin
   if (saveErr) throw new Error(saveErr.message);
   const first = properFirstName(sub.name) || "there";
   const sig = `Best regards,<br><br>${esc(o.adminName)}<br>Cemetery Salesperson<br>Texas Cemetery Brokers<br>www.texascemeterybrokers.com`;
-  const html = `<p style="${P}">Dear ${esc(first)},</p>${block}<p style="${P}">${sig}</p>`;
+  const html = `<p style="${P}">Dear ${esc(first)},</p>${o.intro?.trim() ? `<p style="${P}">${esc(o.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}${block}<p style="${P}">${sig}</p>`;
   const subject = `Your offer to list${sub.cemetery ? ` at ${properCase(sub.cemetery)}` : ""} — Texas Cemetery Brokers`;
   const sent = await sendMail(m, { to: sub.email, subject, body: `Dear ${first},\n\nYour quote from Texas Cemetery Brokers: ${o.count} space${o.count === 1 ? "" : "s"} at $${o.perSpace.toLocaleString()} per space. Open this email in a browser to choose your listing option.\n\n${SITE}`, html, threadId: o.threadId, submissionId: sub.id });
   await db.from("contact_submissions").update({ quote_sent_at: now.toISOString(), quote_expires_at: new Date(now.getTime() + 10 * 86_400_000).toISOString(), quote_message: null }).eq("id", sub.id);
