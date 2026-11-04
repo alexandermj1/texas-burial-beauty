@@ -1002,7 +1002,9 @@ Deno.serve(async (req) => {
     if (body.action === "client_result") {
       if (act.status !== "executed") return json({ error: "Not an executed action" }, 409);
       await db.from("ai_agent_actions").update({ error: body.ok ? null : `Not finished on the Documents panel: ${body.message ?? "unknown error"}` }).eq("id", act.id);
-      await db.from("customer_notes").insert({ submission_id: act.submission_id, body: body.ok ? `Documents panel finished the approved AI step (${act.action_type.replace(/_/g, " ")}): ${body.message ?? "done"}.` : `The approved AI step (${act.action_type.replace(/_/g, " ")}) did not finish on the Documents panel: ${body.message ?? "unknown error"}.`, author_name: `AI agent (approved by ${user.name})` });
+      const { data: cs } = await db.from("contact_submissions").select("customer_profile_id").eq("id", act.submission_id).maybeSingle();
+      const why = String(act.reason ?? "").trim().replace(/[.\s]+$/, "");
+      await db.from("customer_notes").insert({ submission_id: act.submission_id, customer_profile_id: cs?.customer_profile_id ?? null, body: body.ok ? `Documents panel finished the approved AI step (${act.action_type.replace(/_/g, " ")}): ${String(body.message ?? "done").replace(/[.\s]+$/, "")}.${why ? ` Why: ${why}.` : ""}` : `The approved AI step (${act.action_type.replace(/_/g, " ")}) did not finish on the Documents panel: ${body.message ?? "unknown error"}.`, author_name: `AI agent (approved by ${user.name})` });
       return json({ ok: true });
     }
     if (act.status !== "proposed") return json({ error: `Action already ${act.status}` }, 409);
@@ -1022,6 +1024,7 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     let error: string | null = null;
     let clientOp: Record<string, unknown> | null = null;
+    let notedByAction = false;
     // Emails sent by approved actions must not retire the other suggestions from the same review.
     const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
@@ -1060,7 +1063,7 @@ Deno.serve(async (req) => {
         if (chk.status === "filled") await aiNote(`Read the deed and filled in ${Object.keys(chk.patch ?? {}).map((k) => FIELD_LABEL[k] ?? k).join(" and ")}: ${chk.summary}`);
         return { ...(fresh ?? sub), ...patch };
       };
-      const aiNote = async (body: string) => { await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body, author_name: `AI agent (approved by ${user.name})` }); };
+      const aiNote = async (body: string) => { notedByAction = true; await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body, author_name: `AI agent (approved by ${user.name})` }); };
       try {
         if (act.action_type === "send_listing_agreement" || act.action_type === "send_family_tree") {
           // The family tree starts from the deed owners — make sure they are right first.
@@ -1255,7 +1258,7 @@ Deno.serve(async (req) => {
           const before = sub.listing_tier ?? sub.listing_option ?? "none";
           const { error: e } = await db.from("contact_submissions").update({ listing_tier: tier, listing_option: tier }).eq("id", sub.id);
           if (e) throw new Error(e.message);
-          await aiNote(`Changed the listing option from ${before} to ${tier}${act.reason ? `: ${String(act.reason).replace(/[.\s]+$/, "")}` : ""}. (No payment taken; the quote is not marked accepted.)`);
+          await aiNote(`Changed the listing option from ${before} to ${tier}${act.reason ? `: ${String(act.reason).replace(/[.\s]+$/, "")}` : ""} (no payment taken; the quote is not marked accepted).`);
         } else if (act.action_type === "edit_family_tree") {
           const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
           const v = validateTreeEdit(answers.v2, act.payload?.tree);
@@ -1292,6 +1295,12 @@ Deno.serve(async (req) => {
     await db.from("ai_agent_actions").update(error
       ? { error }
       : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, decision_reason: body.reason || null, error: null }).eq("id", act.id);
+    // Every approved AI step leaves a plain note on the file explaining what it did.
+    if (!error && !notedByAction && !["reply_email", "add_note"].includes(act.action_type) && !clientOp) {
+      const what = act.action_type.replace(/_/g, " ");
+      const why = String(act.reason ?? act.note_body ?? "").trim().replace(/[.\s]+$/, "");
+      await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Approved AI step (${what})${why ? `: ${why}` : ""}.`, author_name: `AI agent (approved by ${user.name})` });
+    }
     if (!error && openSiblings?.length) {
       await db.from("ai_agent_actions").update({ status: "proposed" }).in("id", openSiblings.map((x: any) => x.id)).eq("status", "superseded");
     }
