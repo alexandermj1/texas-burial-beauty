@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, Loader2 } from "lucide-react";
+import { ChevronDown, ExternalLink, Loader2 } from "lucide-react";
 
 // Deeds received from this moment onwards are outlined automatically the first
 // time a staff member opens the record (one cheap AI read, then cached).
@@ -42,13 +42,6 @@ export default function SellerDeedPreview({ submissionId, createdAt, sellingLoca
   const owners = regions.filter(r => r.kind === "owner").map(r => r.text).filter(Boolean);
   const spaces = regions.filter(r => r.kind === "space").map(r => r.text).filter(Boolean);
 
-  const nums = (t: string) => (t.match(/\d+/g) || []).map(n => String(Number(n)));
-  const deedNums = nums(deedLocation || "");
-  const sellNums = new Set(nums(sellingLocation || ""));
-  const check = !deedLocation ? { tone: "muted", text: "Deed wording not read yet" }
-    : deedNums.length && deedNums.every(n => sellNums.has(n)) ? { tone: "ok", text: "Location confirmed by deed reading" }
-    : { tone: "warn", text: "Location differs from deed reading — compare below" };
-
   const Deed = ({ big }: { big: boolean }) => (
     <div className="relative w-fit">
       <img src={data.deed!.url!} alt={`Deed: ${data.deed!.name}`} loading="lazy" className={`block w-auto rounded ${big ? "max-h-[640px] max-w-full" : "h-36 max-w-[180px] object-contain"}`} />
@@ -71,7 +64,6 @@ export default function SellerDeedPreview({ submissionId, createdAt, sellingLoca
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Deed they sent</span>
             {regions.length > 0 && <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"><span className="h-2 w-2 rounded-sm border-2 border-destructive" />outlined</span>}
           </div>
-          <p className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${check.tone === "ok" ? "bg-primary/10 text-primary" : check.tone === "warn" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>{check.tone === "ok" ? <CheckCircle2 className="h-3 w-3" /> : check.tone === "warn" ? <AlertTriangle className="h-3 w-3" /> : null}{check.text}</p>
           {deedLocation && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">AI read from deed:</span> {deedLocation}</p>}
           {owners.length > 0 && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Names:</span> {owners.join(" · ")}</p>}
           {spaces.length > 0 && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Spaces:</span> {spaces.join(" · ")}</p>}
