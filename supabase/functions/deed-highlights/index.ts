@@ -57,14 +57,14 @@ Deno.serve(async (req) => {
     let cached: any = null;
     const c = await db.storage.from(BUCKET).download(cachePath(id));
     if (!c.error) { try { cached = JSON.parse(await c.data.text()); } catch { cached = null; } }
-    if (cached && cached.path !== deed.path) cached = null;
+    if (cached && (cached.path !== deed.path || !cached.upright)) cached = null;
 
-    if (body.action === "scan" && !cached) {
-      const dl = await db.storage.from(BUCKET).download(deed.path); if (dl.error) throw dl.error;
-      const bytes = new Uint8Array(await dl.data.arrayBuffer());
-      if (bytes.length > 7_000_000) return json({ error: "Deed image too large to read" }, 413);
-      let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-      const mime = /png$/i.test(deed.path) ? "image/png" : /webp$/i.test(deed.path) ? "image/webp" : "image/jpeg";
+    if (body.action === "scan" && (!cached || body.force === true)) {
+      // Phone photos often carry an EXIF rotation the AI ignores, so boxes would land
+      // in the wrong place. The caller sends the image already turned upright, exactly
+      // as the browser displays it; boxes are then relative to what staff see.
+      const upright = typeof body.image === "string" && /^data:image\/jpeg;base64,/.test(body.image) && body.image.length < 9_000_000 ? body.image : null;
+      if (!upright) return json({ error: "Upright image required" }, 400);
       const prompt = `This is a photo a seller sent us of a cemetery deed / certificate of ownership. Locate the key details.
 Return ONLY JSON: {"is_deed": boolean, "regions": [{"kind": "owner"|"space", "text": string exactly as written, "box_2d": [ymin, xmin, ymax, xmax]}]}
 - "owner": each owner/purchaser name line.
@@ -73,7 +73,7 @@ box_2d is 0-1000 relative to the image as provided. Boxes must be tight around t
       const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: "google/gemini-3.8-flash", response_format: { type: "json_object" },
-          messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${btoa(bin)}` } }] }] }),
+          messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: upright } }] }] }),
       });
       if (ai.status === 429 || ai.status === 402) return json({ deed: { url: signed?.signedUrl, name: deed.name }, highlights: null, error: ai.status === 402 ? "AI credits used up" : "AI busy" });
       if (!ai.ok) throw new Error(`Deed reading failed (${ai.status})`);
@@ -81,7 +81,7 @@ box_2d is 0-1000 relative to the image as provided. Boxes must be tight around t
       let p: any = {}; try { p = JSON.parse(String(raw).replace(/^```json|```$/g, "").trim()); } catch { p = {}; }
       const regions = (Array.isArray(p.regions) ? p.regions : []).filter((r: any) => Array.isArray(r?.box_2d) && r.box_2d.length === 4 && r.box_2d.every((n: any) => Number.isFinite(Number(n))))
         .slice(0, 12).map((r: any) => ({ kind: r.kind === "owner" ? "owner" : "space", text: String(r.text ?? "").slice(0, 160), box: r.box_2d.map((n: any) => Math.max(0, Math.min(1000, Number(n)))) }));
-      cached = { path: deed.path, is_deed: p.is_deed !== false, regions, scanned_at: new Date().toISOString() };
+      cached = { path: deed.path, upright: true, is_deed: p.is_deed !== false, regions, scanned_at: new Date().toISOString() };
       await db.storage.from(BUCKET).upload(cachePath(id), new Blob([JSON.stringify(cached)], { type: "application/json" }), { upsert: true, contentType: "application/json" });
     }
     return json({ deed: { url: signed?.signedUrl ?? null, name: deed.name }, highlights: cached });

@@ -9,6 +9,20 @@ const AUTO_OUTLINE_FROM = "2026-11-04T19:00:00Z";
 type Region = { kind: "owner" | "space"; text: string; box: [number, number, number, number] };
 type Resp = { deed: { url: string | null; name: string } | null; highlights: { is_deed: boolean; regions: Region[] } | null };
 
+// Draw the photo the way the browser shows it (EXIF rotation applied) so the AI's
+// boxes line up with what staff see.
+async function uprightJpeg(url: string): Promise<string | null> {
+  try {
+    const blob = await (await fetch(url)).blob();
+    const bmp = await createImageBitmap(blob, { imageOrientation: "from-image" });
+    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.85);
+  } catch { return null; }
+}
+
 const cache = new Map<string, Resp>();
 
 export default function SellerDeedPreview({ submissionId, createdAt, sellingLocation, deedLocation }: { submissionId: string; createdAt?: string | null; sellingLocation?: string; deedLocation?: string }) {
@@ -22,11 +36,12 @@ export default function SellerDeedPreview({ submissionId, createdAt, sellingLoca
     setLoading(true); setData(null);
     const auto = !!createdAt && createdAt >= AUTO_OUTLINE_FROM;
     (async () => {
-      const call = (action: string) => supabase.functions.invoke("deed-highlights", { body: { submission_id: submissionId, action } });
+      const call = (action: string, image?: string) => supabase.functions.invoke("deed-highlights", { body: { submission_id: submissionId, action, image } });
       let { data: r } = await call("view");
       if (alive && r?.deed && !r.highlights && auto) {
         if (alive) { setData(r); setLoading(false); }
-        const scanned = await call("scan");
+        const image = await uprightJpeg(r.deed.url);
+        const scanned = image ? await call("scan", image) : { data: null };
         if (scanned.data?.deed) r = scanned.data;
       }
       if (!alive) return;
