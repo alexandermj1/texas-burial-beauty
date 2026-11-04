@@ -21,7 +21,7 @@ FAMILY TREE AND PAPERWORK REVIEW (whenever a family tree was sent or documents w
 STAGE CHECKS (the snapshot gives CURRENT PIPELINE STAGE):
 - Attachments (no quote yet): open the seller's uploads/email attachments and say plainly whether one IS a cemetery deed / certificate of interment rights (name the cemetery, owners, section/lot/spaces you can read) or what it actually is (ID, receipt, map, blank, unreadable).
 - TREE CHECK (Tree done or later): read get_family_tree with the deed. List as mistakes any answer that cannot be right: a name field holding "No"/"none"/"n/a"/"?" or a sentence, obvious typos vs the deed spelling, a deed owner missing or misnamed, impossible relations, alive/deceased contradictions, spouse/children answers that contradict emails. Quote the exact answer and the field.
-- DEED vs QUOTE: a deed can list more spaces than the seller is selling — check the emails/intake for which spaces they actually want to list before calling a count a mistake.
+- Use judgment, not literal matching: understand differences between deed, quote, record and emails from context (e.g. selling only some of the deed's spaces, nicknames, typos) and report as mistakes only what is genuinely wrong.
 Only research cemetery prices, other stock (cemetery_stock) and nearby cemeteries when pricing, demand, alternatives or a revised quote is in play.
 Verify, don't assume:
 - Count the spaces on the deed vs the record and the quote. Check the lawn/section price on file vs the quote's retail.
