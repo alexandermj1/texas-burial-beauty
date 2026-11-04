@@ -169,6 +169,13 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
       <AiVisuals visuals={a.payload?.visuals} />
+      {a.payload?.research && (
+        <details className="text-xs bg-muted/40 rounded-lg p-2.5">
+          <summary className="cursor-pointer text-muted-foreground">What the AI checked first ({a.payload.research.tools.length} lookups)</summary>
+          <p className="mt-1.5 text-muted-foreground">{[...new Set(a.payload.research.tools)].map((t) => t.replace(/_/g, " ")).join(" · ") || "No lookups"}</p>
+          <pre className="mt-1.5 whitespace-pre-wrap font-sans text-foreground">{a.payload.research.text}</pre>
+        </details>
+      )}
        {EMAIL_TYPES.includes(a.action_type) && a.email_body !== null && (pending ? (
         <div className="space-y-2">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
