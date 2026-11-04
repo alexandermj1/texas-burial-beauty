@@ -29,6 +29,8 @@ const Body = z.discriminatedUnion("action", [
   // Staff tell the AI what to change on a document request; the panel applies it with the staff code.
   z.object({ action: z.literal("plan_packet"), submission_id: z.string().uuid(), instruction: z.string().trim().min(3).max(2000), items: z.array(z.object({ key: z.string().max(300), label: z.string().max(300), person: z.string().max(200).nullable().optional() })).max(60) }),
   // Replay old vs lean design on a few sellers (nothing saved as a suggestion).
+  // The Documents panel reports how a browser-applied AI action went.
+  z.object({ action: z.literal("client_result"), action_id: z.string().uuid(), ok: z.boolean(), message: z.string().trim().max(1000).optional() }),
   z.object({ action: z.literal("compare"), submission_ids: z.array(z.string().uuid()).min(1).max(4), batch_id: z.string().uuid().optional() }),
 ]);
 
@@ -166,7 +168,7 @@ const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)
 const SITE = "https://www.texascemeterybrokers.com";
 import { sellerStage, hasSellerAttachments, STAGE_LABEL, PIPELINE_GUIDE } from "./pipeline.ts";
 import { validateTreeEdit, treeDiff, isUsableTree, LISTING_TIERS } from "./familyTree.ts";
-import { parityAllowed, CLIENT_OP_TYPES, RECORD_CHANGE_TYPES } from "./parity.ts";
+import { parityAllowed, pendingBefore } from "./parity.ts";
 import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQuoteFigures, contractLabel, TEXAS_STAGES } from "./adminActions.ts";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
@@ -984,6 +986,12 @@ Deno.serve(async (req) => {
       const { error } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: act.submission_id, kind: body.kind, comment: body.comment || null, correct: body.correct ?? null, went_live: body.went_live ?? null, author_user_id: user.id, author_name: user.name });
       return error ? json({ error: error.message }, 500) : json({ ok: true });
     }
+    if (body.action === "client_result") {
+      if (act.status !== "executed") return json({ error: "Not an executed action" }, 409);
+      await db.from("ai_agent_actions").update({ error: body.ok ? null : `Not finished on the Documents panel: ${body.message ?? "unknown error"}` }).eq("id", act.id);
+      await db.from("customer_notes").insert({ submission_id: act.submission_id, body: body.ok ? `Documents panel finished the approved AI step (${act.action_type.replace(/_/g, " ")}): ${body.message ?? "done"}.` : `The approved AI step (${act.action_type.replace(/_/g, " ")}) did not finish on the Documents panel: ${body.message ?? "unknown error"}.`, author_name: `AI agent (approved by ${user.name})` });
+      return json({ ok: true });
+    }
     if (act.status !== "proposed") return json({ error: `Action already ${act.status}` }, 409);
 
     if (body.action === "reject") {
@@ -1000,6 +1008,7 @@ Deno.serve(async (req) => {
     if (sub.archived_at || sub.deleted_at || sub.closed_at || sub.sold_at || sub.ai_paused_at) return json({ error: "This seller record is closed, archived or paused" }, 409);
     const now = new Date().toISOString();
     let error: string | null = null;
+    let clientOp: Record<string, unknown> | null = null;
     // Emails sent by approved actions must not retire the other suggestions from the same review.
     const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
@@ -1227,6 +1236,38 @@ Deno.serve(async (req) => {
             if (!res.ok || /"error"/.test(t)) throw new Error(`Signed copy not sent (${res.status}): ${t.slice(0, 200)}`);
             await aiNote(`Emailed ${first(sub)} a copy of their signed ${contractLabel(c)}.`);
           }
+        } else if (act.action_type === "change_listing_option") {
+          const tier = String(act.payload?.fields?.tier ?? "");
+          if (!(LISTING_TIERS as readonly string[]).includes(tier)) throw new Error("Unknown listing option");
+          const before = sub.listing_tier ?? sub.listing_option ?? "none";
+          const { error: e } = await db.from("contact_submissions").update({ listing_tier: tier, listing_option: tier }).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          await aiNote(`Changed the listing option from ${before} to ${tier}${act.reason ? `: ${act.reason}` : ""}. (No payment taken; the quote is not marked accepted.)`);
+        } else if (act.action_type === "edit_family_tree") {
+          const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
+          const v = validateTreeEdit(answers.v2, act.payload?.tree);
+          if ("error" in v) throw new Error(`Family tree change not applied: ${v.error}`);
+          if (JSON.stringify(answers.v2 ?? null) !== JSON.stringify(act.payload?.before_tree ?? null)) throw new Error("The family tree changed since the AI proposed this. Re-run the AI.");
+          const history = Array.isArray(answers.treeEdits) ? answers.treeEdits.slice(-9) : [];
+          const next = { ...answers, v2: v.tree, treeEdits: [...history, { at: now, by: `AI agent (approved by ${user.name})`, reason: act.reason ?? null, before: answers.v2 ?? null }] };
+          const { error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          const lines = treeDiff(answers.v2, v.tree).map((l) => `${l.label}: ${l.before} → ${l.after}`);
+          await aiNote(`Corrected the family tree${act.reason ? ` (${act.reason})` : ""}: ${lines.join("; ") || "details updated"}. The document checklist re-syncs from it.`);
+          clientOp = { kind: "sync", fromTree: true };
+        } else if (act.action_type === "sync_checklist") {
+          clientOp = { kind: "sync" };
+        } else if (act.action_type === "prepare_listing_agreement") {
+          clientOp = { kind: "prepare_listing_agreement" };
+        } else if (act.action_type === "change_cemetery") {
+          const f = (act.payload?.fields ?? {}) as Record<string, string>;
+          const { data: m } = await db.from("texas_cemeteries").select("name,city").eq("name", String(f.cemetery ?? "")).is("deleted_at", null).limit(2);
+          if (m?.length !== 1) throw new Error("That cemetery is no longer a single match in our registry.");
+          clientOp = { kind: "change_cemetery", cemetery: m[0].name, city: m[0].city ?? null };
+        } else if (act.action_type === "send_document_request") {
+          const { data: sibs } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
+          if (pendingBefore(sibs ?? [], act)) throw new Error("Approve (or decline) the family tree / document changes from this review first, then send the request.");
+          clientOp = { kind: "send_request", greeting: String(act.payload?.fields?.greeting_name ?? "").slice(0, 120), note: String(act.email_body ?? "").slice(0, 4000) };
         } else if (act.action_type === "edit_document_request") {
           await aiNote(`Document request change approved by ${user.name}, applied on the Documents panel for checking: ${act.note_body ?? act.payload?.instruction ?? ""}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
@@ -1246,7 +1287,8 @@ Deno.serve(async (req) => {
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : ["open_document_request", "edit_document_request"].includes(act.action_type) ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null });
+    if (!error && act.action_type === "edit_document_request") clientOp = { kind: "instruction", instruction: act.note_body ?? act.payload?.instruction ?? "" };
+    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : (clientOp || act.action_type === "open_document_request") ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null, client_op: clientOp ? { ...clientOp, action_id: act.id } : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);
