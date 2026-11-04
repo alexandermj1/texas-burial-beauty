@@ -338,7 +338,7 @@ RULES FOR YOUR OUTPUT
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
- "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null}]}`;
+ "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null, "tree": object|null (edit_family_tree only — the complete corrected FAMILY TREE)}]}`;
 
 // ───────────── Lean mode: same rules, sent only when relevant ─────────────
 // Static part (identical for every seller → cached): role, core playbook chapters,
