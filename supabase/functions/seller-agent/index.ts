@@ -206,8 +206,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (signed && answers.questionsSentAt && !answers.sellerConfirmedAt && !sub.documents_requested_at) out.add("resend_family_tree");
-  // Document requests are never proposed automatically — staff trigger them
-  // ("Fill with AI" on the Check the request screen).
+  // The document request itself is proposed as send_document_request (parity.ts) once the tree is complete; staff approve it.
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   if (sub.quote_sent_at && !accepted && !signed && quoteExpired(sub)) out.add("resend_expired_quote");
