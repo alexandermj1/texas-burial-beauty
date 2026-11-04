@@ -52,11 +52,13 @@ export default function SellerDeedPreview({ submissionId, createdAt, deedLocatio
     return () => { alive = false; };
   }, [submissionId, createdAt]);
 
+  const ownerList = data?.highlights?.is_deed ? data.highlights.regions.filter(r => r.kind === "owner").map(r => r.text).filter(Boolean) : [];
+  const ownerKey = ownerList.join("|");
+  useEffect(() => { if (ownerKey) onOwners?.(ownerKey.split("|")); }, [ownerKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading && !data) return null;
   if (!data?.deed?.url) return null;
   const regions = data.highlights?.is_deed ? data.highlights.regions : [];
-  const ownerKey = regions.filter(r => r.kind === "owner").map(r => r.text).join("|");
-  const owners = regions.filter(r => r.kind === "owner").map(r => r.text).filter(Boolean);
   const spaces = regions.filter(r => r.kind === "space").map(r => r.text).filter(Boolean);
 
   // Draw the outline just outside the text so it never covers what staff are reading.
