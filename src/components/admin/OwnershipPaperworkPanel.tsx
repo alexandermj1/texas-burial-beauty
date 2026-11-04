@@ -1193,7 +1193,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   /** Write the computed checklist into submission_documents, preserving progress. */
   /** fromTree: the family tree was corrected — rebuild from the rules even after a request went out. */
   const syncChecklist = async (silent = false, opts?: { fromTree?: boolean }) => {
-    const reqs = opts?.fromTree ? computedRequirements : reqs;
+    const reqs = opts?.fromTree ? computedRequirements : requirements;
     setSaving(true);
     const cemeteryMoved = await reconcileCemeteryChange().catch(() => false);
     try {
