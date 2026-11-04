@@ -3607,6 +3607,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const la = laMap[s.id];
             const stage = (() => {
               const accepted = (sg as any).quote_response === "accepted";
+              if ((sg as any).sold_at || (sg as any).closed_outcome === "sold") return { step: 10, label: (sg as any).seller_payout_status === "paid" ? "Sold · paid out" : "Sold · payout due", accent: "amber", cls: "bg-yellow-400 text-yellow-950 border-yellow-500", bar: "bg-yellow-400", tint: "bg-yellow-300/[0.18] hover:bg-yellow-300/[0.26]", icon: DollarSign, at: (sg as any).sold_at };
               if ((sg as any).documents_completed_at) return { step: 9, label: "Complete", accent: "emerald", cls: "bg-emerald-600 text-primary-foreground border-emerald-700", bar: "bg-emerald-500", tint: "bg-emerald-500/[0.07] hover:bg-emerald-500/[0.12]", icon: CheckCircle, at: (sg as any).documents_completed_at };
               if ((sg as any).documents_requested_at) {
                 const retE = (sg.email || "").trim().toLowerCase();
