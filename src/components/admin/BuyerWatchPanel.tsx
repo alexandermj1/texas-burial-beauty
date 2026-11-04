@@ -57,6 +57,7 @@ export function BuyerWatchPanel({ submissionId, want, alerts, onChange }: { subm
           <div className="text-[11px] uppercase tracking-wide text-primary inline-flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Back on top — {a.fit === "good" ? "new plot fits what they wanted" : "new plot is close to what they wanted"}
           </div>
+          {a.ai_verdict === "hidden" && <p className="text-xs font-medium text-destructive">On a closer look the AI thinks this doesn't suit them. Dismiss it, or contact them if you disagree.</p>}
           <p className="text-sm text-foreground">{a.reason}</p>
           {a.offer_summary && <p className="text-xs text-muted-foreground">{a.offer_summary}</p>}
           {a.investigation && (
