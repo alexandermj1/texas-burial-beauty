@@ -490,6 +490,7 @@ Deno.serve(async (req) => {
       return json({ ok: true, enabled: b.enabled });
     }
     if (b.action === "resume") { await db.from("automation_job_state").update({ status: "active", pause_reason: null }).eq("job_name", "buyer-ai-drafts"); return json({ ok: true }); }
+    if (b.action === "preview_matches") { const { data: buyer } = await db.from("contact_submissions").select("*").eq("id", b.submission_id).maybeSingle(); if (!buyer) return json({ error: "Not found" }, 404); const m = await matches(db, buyer, []); return json({ ...m, items: m.items.map((x: any) => ({ cemetery: x.cemetery, garden: x.garden, spaces: x.spaces, type: x.type, our_total: x.our_total, readiness: x.readiness })) }); }
     if (b.action === "run") { if (!apiKey) return json({ error: "AI is not configured" }, 500); return json(await draft(db, apiKey, b.submission_id, true)); }
     const { data: d } = await db.from("buyer_ai_drafts").select("*").eq("id", b.draft_id).is("deleted_at", null).maybeSingle();
     if (!d || d.status !== "proposed") return json({ error: "Draft is no longer awaiting approval" }, 409);
