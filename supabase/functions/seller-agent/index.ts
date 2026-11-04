@@ -733,7 +733,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch(() => null)));
     const rows = d.actions.map((a, ai) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
