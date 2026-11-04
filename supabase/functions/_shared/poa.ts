@@ -77,7 +77,8 @@ function heading(ctx: Ctx, text: string, size = 14) {
 }
 
 function venue(ctx: Ctx) {
-  para(ctx, `STATE OF TEXAS${' '.repeat(50)}§`, { size: 10.5, font: ctx.bold, gap: 0 });
+  // Left blank so an out-of-state notary (e.g. Arkansas) can complete the venue.
+  para(ctx, `STATE OF ________________________${' '.repeat(20)}§`, { size: 10.5, font: ctx.bold, gap: 0 });
   para(ctx, `COUNTY OF ________________________${' '.repeat(18)}§`, { size: 10.5, font: ctx.bold, gap: 4 });
   para(ctx, 'County to be completed at signing — the county where this instrument is actually signed before the notary.',
     { size: 8.5, font: ctx.italic, gap: 10 });
