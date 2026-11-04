@@ -20,11 +20,13 @@ export const LOOSE_MILES = 40;
  * in a wanted city/region, or the buyer is open to anywhere. Price and space count are never
  * filtered here — "under $5,000" vs $6,000 and 5 vs 6 spaces are judgement calls for the AI. */
 export function looseCandidate(
-  want: { cemeteryKeys: string[]; points: { lat: number; lng: number }[]; places: string[]; anywhere: boolean; kind: string },
+  want: { cemeteryKeys: string[]; points: { lat: number; lng: number }[]; places: string[]; anywhere: boolean; kind: string; onlyNamed?: boolean },
   seller: { cemeteryKey: string; point: { lat: number; lng: number } | null; place: string[]; kind: string },
 ): { keep: boolean; miles: number | null } {
   if (!kindsCompatible(want.kind, seller.kind)) return { keep: false, miles: null };
   if (want.cemeteryKeys.includes(seller.cemeteryKey)) return { keep: true, miles: 0 };
+  // Buyer named specific cemeteries and did not say nearby/other places are fine: stay at those cemeteries.
+  if (want.onlyNamed && want.cemeteryKeys.length) return { keep: false, miles: null };
   const miles = seller.point && want.points.length ? Math.min(...want.points.map(p => milesBetween(p, seller.point!))) : null;
   if (miles != null && miles <= LOOSE_MILES) return { keep: true, miles };
   if (want.places.some(p => p && seller.place.includes(p))) return { keep: true, miles };

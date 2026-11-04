@@ -38,7 +38,7 @@ const EXTRACT = `You track what a cemetery-plot BUYER is still waiting for, for 
 You get: their original enquiry, the broker's last email to them, the buyer's newest reply, and the current note (if any).
 Return JSON only:
 {"status":"waiting"|"done"|"none","summary":"one or two plain sentences a salesperson reads, e.g. 'Wants 2 side-by-side burial spaces at Restland or nearby, ideally under $5,000; happy to wait.'",
- "cemeteries":["names they would accept"],"area":"city/region if they named one or null","anywhere_nearby":true|false,
+ "cemeteries":["names they would accept"],"area":"city/region if they named one or null","anywhere_nearby":true|false (true ONLY if they said nearby/other cemeteries are fine; false if they want a specific cemetery),
  "type":"burial"|"niche"|"crypt"|"any","spaces":number|null,"max_price":number|null,"price_firm":true|false,
  "timing":"short text or null","avoid":"what they rejected and why, or null","buyer_words":"short exact quote from their reply that shows this","confidence":"high"|"low"}
 status: "waiting" = they want something we did not have or they want us to tell them when something comes up / are open to other options later.
@@ -160,7 +160,7 @@ async function matchStock(db: any, apiKey: string) {
   for (const w of wants) {
     const c = w.criteria ?? {};
     const wanted = (c.cemeteries ?? []).map((n: string) => resolveBuyerCemetery(n, dir, c.area)).filter(Boolean);
-    const spec = { cemeteryKeys: [...wanted.map((x: any) => cemeteryNameKey(x.name)), ...(c.cemeteries ?? []).map(cemeteryNameKey)], points: wanted.map(pt).filter(Boolean), places: [place(c.area)].filter(Boolean), anywhere: !!c.anywhere_nearby && !wanted.length && !c.area, kind: c.type ?? "any" };
+    const spec = { cemeteryKeys: [...wanted.map((x: any) => cemeteryNameKey(x.name)), ...(c.cemeteries ?? []).map(cemeteryNameKey)], points: wanted.map(pt).filter(Boolean), places: [place(c.area)].filter(Boolean), anywhere: !!c.anywhere_nearby && !wanted.length && !c.area, kind: c.type ?? "any", onlyNamed: (c.cemeteries ?? []).length > 0 && !c.anywhere_nearby && !c.area };
     const cands = sellers.filter(x => x.since > w.checked_until && !seen.has(`${w.submission_id}:${x.s.id}`))
       .map(x => ({ x, r: looseCandidate(spec, x) })).filter(o => o.r.keep)
       .sort((a, b) => (a.r.miles ?? 99) - (b.r.miles ?? 99)).slice(0, 8);
