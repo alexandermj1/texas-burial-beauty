@@ -1611,84 +1611,6 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
-  // Approved seller-AI steps (tree fixes, sync, send, edits) arrive here and run with the staff code above.
-  const latest = useRef({ syncChecklist, sendPacketCore, applyAiInstruction, generateDoc, load, requirements, answers, genFailed });
-  latest.current = { syncChecklist, sendPacketCore, applyAiInstruction, generateDoc, load, requirements, answers, genFailed };
-  const runningOps = useRef(false);
-  const processOps = useCallback(async () => {
-    if (runningOps.current) return;
-    runningOps.current = true;
-    const L = () => latest.current;
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    const waitFor = async (ok: () => boolean, ms = 6000) => { const t = Date.now(); while (!ok() && Date.now() - t < ms) await sleep(100); };
-    // Reload, then wait until this panel shows the family tree that is saved now.
-    const fresh = async () => {
-      const { data } = await supabase.from("contact_submissions").select("ownership_answers").eq("id", submissionId).maybeSingle();
-      const want = JSON.stringify(((data?.ownership_answers ?? {}) as Record<string, unknown>).v2 ?? null);
-      await L().load();
-      await waitFor(() => JSON.stringify((L().answers as Record<string, unknown>).v2 ?? null) === want);
-      await sleep(150);
-    };
-    try {
-      let op: AiDocOp | null;
-      while ((op = shiftAiDocOp(submissionId))) {
-        const report = (ok: boolean, message: string) => supabase.functions.invoke("seller-agent", { body: { action: "client_result", action_id: op!.action_id, ok, message } });
-        try {
-          if (op.kind === "instruction") {
-            await fresh();
-            await L().applyAiInstruction(String(op.instruction ?? ""));
-            await report(true, "document request updated — check it, then preview and send");
-          } else if (op.kind === "sync") {
-            await fresh();
-            await L().syncChecklist(true, { fromTree: !!op.fromTree });
-            await fresh();
-            toast.success(op.fromTree ? "Family tree corrected — checklist re-synced" : "Checklist synced");
-            await report(true, op.fromTree ? "family tree saved and checklist re-synced from it" : "checklist synced");
-          } else if (op.kind === "prepare_listing_agreement") {
-            await fresh();
-            const r = L().requirements.find((x) => x.contractKind === "listing_agreement");
-            if (!r) throw new Error("No listing agreement is on this checklist.");
-            await L().generateDoc(r, undefined, true);
-            if (L().genFailed.has(reqKey(r))) throw new Error("The listing agreement could not be prepared.");
-            toast.success("Listing agreement prepared");
-            await report(true, "listing agreement prepared (not emailed)");
-          } else if (op.kind === "send_request") {
-            await fresh();
-            await L().syncChecklist(true);
-            // Prepared POAs/affidavits fill in the background; wait for their PDFs like staff would.
-            let sent: { items: number; poas: number; docs: number } | null = null;
-            for (let i = 0; i < 30 && !sent; i++) {
-              try { sent = await L().sendPacketCore(String(op.greeting ?? "").trim() || greetName.trim(), String(op.note ?? "")); }
-              catch (e) {
-                if (!/being prepared|no PDF yet|could not be found/i.test((e as Error).message) || i === 29) throw e;
-                await sleep(3000); await fresh();
-              }
-            }
-            toast.success(`Document request emailed to ${sellerEmail}`, { description: `${sent!.items} item${sent!.items === 1 ? "" : "s"}${sent!.poas ? ` + ${sent!.poas} POA` : ""}${sent!.docs ? ` + ${sent!.docs} prepared document${sent!.docs === 1 ? "" : "s"}` : ""}` });
-            await fresh();
-            await report(true, `document request emailed (${sent!.items} items, ${sent!.poas} POA, ${sent!.docs} prepared documents)`);
-            onSent?.();
-          } else {
-            throw new Error(`Unknown step ${op.kind}`);
-          }
-        } catch (e) {
-          toast.error("An approved AI step didn't finish", { description: (e as Error).message });
-          await report(false, (e as Error).message).catch(() => {});
-        }
-      }
-    } finally {
-      runningOps.current = false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submissionId]);
-  useEffect(() => {
-    if (loading) return;
-    void processOps();
-    const pick = () => void processOps();
-    window.addEventListener("ai-doc-instruction", pick);
-    return () => window.removeEventListener("ai-doc-instruction", pick);
-  }, [loading, processOps]);
-
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {
     await persistAnswers({
@@ -2087,6 +2009,84 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
 
+
+  // Approved seller-AI steps (tree fixes, sync, send, edits) arrive here and run with the staff code above.
+  const latest = useRef({ syncChecklist, sendPacketCore, applyAiInstruction, generateDoc, load, requirements, answers, genFailed });
+  latest.current = { syncChecklist, sendPacketCore, applyAiInstruction, generateDoc, load, requirements, answers, genFailed };
+  const runningOps = useRef(false);
+  const processOps = useCallback(async () => {
+    if (runningOps.current) return;
+    runningOps.current = true;
+    const L = () => latest.current;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const waitFor = async (ok: () => boolean, ms = 6000) => { const t = Date.now(); while (!ok() && Date.now() - t < ms) await sleep(100); };
+    // Reload, then wait until this panel shows the family tree that is saved now.
+    const fresh = async () => {
+      const { data } = await supabase.from("contact_submissions").select("ownership_answers").eq("id", submissionId).maybeSingle();
+      const want = JSON.stringify(((data?.ownership_answers ?? {}) as Record<string, unknown>).v2 ?? null);
+      await L().load();
+      await waitFor(() => JSON.stringify((L().answers as Record<string, unknown>).v2 ?? null) === want);
+      await sleep(150);
+    };
+    try {
+      let op: AiDocOp | null;
+      while ((op = shiftAiDocOp(submissionId))) {
+        const report = (ok: boolean, message: string) => supabase.functions.invoke("seller-agent", { body: { action: "client_result", action_id: op!.action_id, ok, message } });
+        try {
+          if (op.kind === "instruction") {
+            await fresh();
+            await L().applyAiInstruction(String(op.instruction ?? ""));
+            await report(true, "document request updated — check it, then preview and send");
+          } else if (op.kind === "sync") {
+            await fresh();
+            await L().syncChecklist(true, { fromTree: !!op.fromTree });
+            await fresh();
+            toast.success(op.fromTree ? "Family tree corrected — checklist re-synced" : "Checklist synced");
+            await report(true, op.fromTree ? "family tree saved and checklist re-synced from it" : "checklist synced");
+          } else if (op.kind === "prepare_listing_agreement") {
+            await fresh();
+            const r = L().requirements.find((x) => x.contractKind === "listing_agreement");
+            if (!r) throw new Error("No listing agreement is on this checklist.");
+            await L().generateDoc(r, undefined, true);
+            if (L().genFailed.has(reqKey(r))) throw new Error("The listing agreement could not be prepared.");
+            toast.success("Listing agreement prepared");
+            await report(true, "listing agreement prepared (not emailed)");
+          } else if (op.kind === "send_request") {
+            await fresh();
+            await L().syncChecklist(true);
+            // Prepared POAs/affidavits fill in the background; wait for their PDFs like staff would.
+            let sent: { items: number; poas: number; docs: number } | null = null;
+            for (let i = 0; i < 30 && !sent; i++) {
+              try { sent = await L().sendPacketCore(String(op.greeting ?? "").trim() || greetName.trim(), String(op.note ?? "")); }
+              catch (e) {
+                if (!/being prepared|no PDF yet|could not be found/i.test((e as Error).message) || i === 29) throw e;
+                await sleep(3000); await fresh();
+              }
+            }
+            toast.success(`Document request emailed to ${sellerEmail}`, { description: `${sent!.items} item${sent!.items === 1 ? "" : "s"}${sent!.poas ? ` + ${sent!.poas} POA` : ""}${sent!.docs ? ` + ${sent!.docs} prepared document${sent!.docs === 1 ? "" : "s"}` : ""}` });
+            await fresh();
+            await report(true, `document request emailed (${sent!.items} items, ${sent!.poas} POA, ${sent!.docs} prepared documents)`);
+            onSent?.();
+          } else {
+            throw new Error(`Unknown step ${op.kind}`);
+          }
+        } catch (e) {
+          toast.error("An approved AI step didn't finish", { description: (e as Error).message });
+          await report(false, (e as Error).message).catch(() => {});
+        }
+      }
+    } finally {
+      runningOps.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissionId]);
+  useEffect(() => {
+    if (loading) return;
+    void processOps();
+    const pick = () => void processOps();
+    window.addEventListener("ai-doc-instruction", pick);
+    return () => window.removeEventListener("ai-doc-instruction", pick);
+  }, [loading, processOps]);
 
   /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
   const contractNameOf = (c: ContractRow) =>
