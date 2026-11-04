@@ -8,7 +8,13 @@ const words = (s: string) => String(s || "").toLowerCase().replace(/[^a-z\s]/g, 
 /** Splits "Wayne Kenneth & Billie Marie Carlton" style lines into separate people. */
 export function splitOwners(lines: string[]): string[] {
   const out: string[] = [];
-  for (const l of lines) for (const p of String(l).split(/\s*(?:&|\band\b|,|;|\/)\s*/i)) if (p.trim()) out.push(p.trim());
+  let last: number[] = [];
+  for (const l of lines) {
+    const parts = String(l).split(/\s*(?:&|\band\b|,|;|\/)\s*/i).map(p => p.trim()).filter(Boolean);
+    // A lone surname on its own line ("Carlton") belongs to the people just above it.
+    if (parts.length === 1 && !/\s/.test(parts[0]) && last.length) { for (const i of last) out[i] = `${out[i]} ${parts[0]}`; last = []; continue; }
+    last = parts.map((p) => out.push(p) - 1);
+  }
   return out;
 }
 
