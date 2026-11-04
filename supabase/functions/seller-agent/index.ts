@@ -350,6 +350,7 @@ const TRIAGE_SYS = `You screen a cemetery-plot SELLER's file for Texas Cemetery 
 needs_review = true if: the seller's latest email is unanswered, a staff note asks for something, the change may need a reply / record fix / document update, or you are at all unsure.
 needs_review = false ONLY when clearly nothing is needed right now (we already replied and are waiting on them, the seller only said thanks/ok, a staff note says hold or don't chase).
 topics = every area the next step might touch, from: documents (deeds, POAs, heirs, family tree, uploads, mailing originals), quote (prices, fees, spaces, expired, declined, wants more), signing (listing agreement / links not working), listing (where is my listing, marketing), cash (asks us to buy directly), standard (common questions). Include a topic when in doubt.
+Files at the Attachments stage (deed needs checking) or Tree done (tree needs checking) always need review.
 Return {"needs_review": boolean, "topics": string[], "stage_summary": string (max 12 words)}.`;
 
 const HISTORY_SYS = `Summarise these older emails between Texas Cemetery Brokers ("US (TCB)") and a cemetery-plot seller for a colleague who will read only this summary.
