@@ -29,6 +29,8 @@ const Body = z.discriminatedUnion("action", [
   // Staff tell the AI what to change on a document request; the panel applies it with the staff code.
   z.object({ action: z.literal("plan_packet"), submission_id: z.string().uuid(), instruction: z.string().trim().min(3).max(2000), items: z.array(z.object({ key: z.string().max(300), label: z.string().max(300), person: z.string().max(200).nullable().optional() })).max(60) }),
   // Replay old vs lean design on a few sellers (nothing saved as a suggestion).
+  // The Documents panel reports how a browser-applied AI action went.
+  z.object({ action: z.literal("client_result"), action_id: z.string().uuid(), ok: z.boolean(), message: z.string().trim().max(1000).optional() }),
   z.object({ action: z.literal("compare"), submission_ids: z.array(z.string().uuid()).min(1).max(4), batch_id: z.string().uuid().optional() }),
 ]);
 
@@ -74,7 +76,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     db.from("email_messages").select("id,from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
     db.from("customer_notes").select("body,author_name,created_at").or(`submission_id.eq.${sub.id}${sub.customer_profile_id ? `,customer_profile_id.eq.${sub.customer_profile_id}` : ""}`).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
     sub.customer_profile_id
-      ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
+      ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,extracted_data,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
     db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,countersigned_at,signed_copy_emailed_at,sign_token,sign_token_expires_at,principal_key,fill_data").eq("submission_id", sub.id).is("deleted_at", null),
     db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
@@ -86,6 +88,11 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
   const sectionPrices = (cemRows ?? []).flatMap((c: any) => (Array.isArray(c.sections) ? c.sections : []).map((x: any) => ({ cemetery: c.name, lawn: String(x.name ?? "").trim().slice(0, 160), retail_per_space: x.price ?? null, type: x.property_type || null, notes: clip(x.notes, 120), as_of: x.date ?? null }))).slice(0, 40);
 
   const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
+  let deedReading: string | null = null;
+  try {
+    const c = await db.storage.from("customer-files").download(`deed-highlights/${sub.id}.json`);
+    if (!c.error) { const j = JSON.parse(await c.data.text()); deedReading = j?.is_deed === false ? "The attachment read was not recognised as a deed." : JSON.stringify((j?.regions ?? []).map((r: any) => ({ kind: r.kind, text: r.text }))); }
+  } catch { deedReading = null; }
   const pipelineStage = sellerStage(sub, hasSellerAttachments(sub, (files.data ?? []).length));
   const stageLine = `CURRENT PIPELINE STAGE: ${STAGE_LABEL[pipelineStage]} — do what moves the seller to the next stage (see THE SELLER PIPELINE).`;
   const record = {
@@ -101,7 +108,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     family_tree_completed_at: answers.sellerConfirmedAt ?? null, documents_requested_at: sub.documents_requested_at,
     documents_completed_at: sub.documents_completed_at, listing_live_at: sub.listing_live_at, sold_at: sub.sold_at,
     stage: sub.texas_pipeline_stage ?? sub.pipeline_stage_override, ai_summary: sub.ai_summary,
-    family_tree_answers: (() => { const { autopilot: _a, requestExplanation: _r, ...rest } = answers; return clip(JSON.stringify(rest), 9000); })(),
+    family_tree_answers: (() => { const { autopilot: _a, requestExplanation: _r, v2: _v, treeEdits: _t, ...rest } = answers; return clip(JSON.stringify(rest), 6000); })(),
     deed_owner_roster: sub.ownership_roster ?? null,
     why_these_documents_are_needed: answers.requestExplanation?.text ?? null,
   };
@@ -144,7 +151,9 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     `SELLER'S DOCUMENT PAGE (include in replies about downloads, uploads or outstanding documents ONLY if a document request has been sent): ${sub.documents_requested_at ? `https://www.texascemeterybrokers.com/documents?s=${sub.id}` : "Not yet available"}`,
     `EXAMPLE AVAILABLE PROPERTY LIST (not this seller's live listing): https://www.texascemeterybrokers.com/sample-listing-sheet.html`,
     `CEMETERY SECTION PRICES (our file, retail per space by lawn/section):\n${sectionPrices.length ? JSON.stringify(sectionPrices) : "(none on file)"}`,
-    `FILES ON FILE:\n${JSON.stringify((files.data ?? []).map((f: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300) })))}`,
+    `FAMILY TREE (ownership_answers.v2 — the rules engine builds the document request from this; edit it with edit_family_tree):\n${answers.v2 ? JSON.stringify(answers.v2).slice(0, 14000) : "(not started)"}${Array.isArray(answers.treeEdits) && answers.treeEdits.length ? `\nEARLIER TREE CORRECTIONS: ${JSON.stringify(answers.treeEdits.map((t: any) => ({ at: t.at, by: t.by, reason: t.reason })))}` : ""}`,
+    `FILES ON FILE (document insights = every field our reader extracted from the file):\n${JSON.stringify((files.data ?? []).map(({ extracted_data, ...f }: any) => ({ ...f, extracted_summary: clip(f.extracted_summary, 300), document_insights: extracted_data ? clip(JSON.stringify(extracted_data), 900) : null })))}`,
+    `DEED READING (names and space lines our deed reader outlined on the deed photo; compare with the record): ${deedReading ?? "(not read yet)"}`,
     `AUTOMATIC REMINDERS ALREADY SENT:\n${JSON.stringify(reminders.data ?? [])}`,
     `STAFF NOTES (newest first — newest overrides everything):\n${(notes.data ?? []).map((n) => `[${n.created_at}] ${n.author_name ?? "Staff"}: ${clip(n.body, 800)}`).join("\n") || "(none)"}`,
     `STAFF ACTION FEEDBACK (specific action evidence, not general instructions):\n${JSON.stringify(feedback.data ?? [])}`,
@@ -165,11 +174,13 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
 const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)[0] || "The seller";
 const SITE = "https://www.texascemeterybrokers.com";
 import { sellerStage, hasSellerAttachments, STAGE_LABEL, PIPELINE_GUIDE } from "./pipeline.ts";
+import { validateTreeEdit, treeDiff, isUsableTree, LISTING_TIERS } from "./familyTree.ts";
+import { parityAllowed, pendingBefore } from "./parity.ts";
 import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQuoteFigures, contractLabel, TEXAS_STAGES } from "./adminActions.ts";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
-const FIELD_LABEL: Record<string, string> = { phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
-const EDITABLE_FIELDS = ["phone", "section", "lawn", "space_numbers", "deed_owner_names", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count"];
+const FIELD_LABEL: Record<string, string> = { name: "seller name", property_type: "property type", deed_owners_status: "owner status", ownership_type: "ownership type", state: "county / state", spaces: "spaces", plot_count: "number of plots", details: "additional details", purchase_info: "purchase information", phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
+const EDITABLE_FIELDS = ["name", "phone", "section", "lawn", "space_numbers", "deed_owner_names", "deed_owners_status", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count", "spaces", "property_type", "ownership_type", "state", "details", "purchase_info"];
 // The quote stores the authorised sale price per space excluding one transfer fee.
 // Match the admin quote ceiling: buyer pays 115% of (price + transfer fee).
 function higherQuote(sub: Sub) {
@@ -195,8 +206,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (signed && answers.questionsSentAt && !answers.sellerConfirmedAt && !sub.documents_requested_at) out.add("resend_family_tree");
-  // Document requests are never proposed automatically — staff trigger them
-  // ("Fill with AI" on the Check the request screen).
+  // The document request itself is proposed as send_document_request (parity.ts) once the tree is complete; staff approve it.
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   if (sub.quote_sent_at && !accepted && !signed && quoteExpired(sub)) out.add("resend_expired_quote");
@@ -205,6 +215,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (contracts.some((c) => ["sent", "viewed", "draft"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()))) out.add("resend_contract_link");
   if (contracts.some((c) => ["signed", "notarized", "completed"].includes(c.status))) out.add("email_signed_copy");
   if (sub.documents_requested_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status)) || sub.la_signed_at) out.add("edit_document_request");
+  for (const t of parityAllowed(sub, contracts)) out.add(t);
   return { allowed: out, liveLink };
 }
 
@@ -240,6 +251,13 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 D1 deed photos/scans are copies only: the original must physically arrive before listing paperwork is complete. A seller saying mailed is not receipt. For all original-required items attach the copy without setting received; physical receipt is logged by staff separately. Apply record/checklist updates before the reply that reports them done.
+- update_fields can correct ANY descriptive detail on the submission (seller name spelling, phone, property type, owner status, county/state, plot count, section/lawn/spaces, deed owner names, relationship, additional details, purchase info). Use the evidence (deed, emails, tree) and quote it in reason.
+- change_cemetery: the record is matched to the wrong cemetery. Fields: fields = {cemetery: the EXACT name from our cemetery registry (see CEMETERY SECTION PRICES / research get_cemetery)}. On approval the record is reassigned the same way as the Change cemetery button and unsigned prepared documents are rebuilt.
+- change_listing_option: set the listing option like the Starter/Pro/Featured/Set Your Own Price buttons. Fields: fields = {tier: one of ${LISTING_TIERS.join(" | ")}}. Only with a clear reason (the seller chose/asked for a different option, a staff note agreed it, or the record shows the wrong one) — quote it in reason. It does not take a payment or mark the quote accepted.
+- prepare_listing_agreement: prepare (generate & fill) the listing agreement PDF from the accepted quote WITHOUT emailing it. Agreements are normally created automatically after payment, so use this only when one is genuinely missing.
+- edit_family_tree: correct the family tree itself. The document request is generated by our software FROM the tree, so this is THE way to fix a wrong document request caused by the family: a misspelt name, a missing/extra relative (cousin, grandchild, sibling), wrong living/deceased, wrong spouse or will answer. Field: tree = the COMPLETE corrected FAMILY TREE JSON (same shape as FAMILY TREE below: keep every existing id, keep everything you are not changing exactly as it is, give new people a new short unique id; maps like spouse/will/poa/noKids are keyed by person id, signerSpouse/signerPoa/contacts by "first last" lowercase name key — rename those keys too when a name changes). On approval the tree is saved (previous version kept in history), the checklist re-syncs from the rules engine and prepared POAs/affidavits are rebuilt. Always prefer this over edit_document_request when the request is wrong because of the tree, so the tree and request never disagree. If you are NOT sure what the right answer is, do not guess: reply_email asking the family the specific question first.
+- sync_checklist: re-run the rules engine and refresh the checklist from the current tree (like the Sync checklist button). Use when the checklist is out of date with the tree.
+- send_document_request: email the seller the document request (the same Review & send request email: their documents page, every outstanding item explained, prepared POAs/affidavits attached). Fields: fields = {greeting_name?: who to greet}; body = optional short personal note shown in that email (no greeting/sign-off). Only when the family tree is complete and you have checked it against the deed and the emails and are happy the resulting request is right (or after your edit_family_tree / edit_document_request in this same review fixes it). It also works to re-send an updated request. Do not also write a reply_email saying the same thing.
 VERIFIED RESEARCH: before you decide, a research pass read the whole file with tools (every email, payments, quote history, checklist and the actual files, contracts, activity, cemetery data). Trust it over guesses, fix the MISTAKES it found with the right actions, and close OPEN PROMISES. Do the checking yourself — never ask staff to "check" something the research already answered.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
@@ -320,7 +338,7 @@ RULES FOR YOUR OUTPUT
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
- "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null}]}`;
+ "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null, "tree": object|null (edit_family_tree only — the complete corrected FAMILY TREE)}]}`;
 
 // ───────────── Lean mode: same rules, sent only when relevant ─────────────
 // Static part (identical for every seller → cached): role, core playbook chapters,
@@ -569,7 +587,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
     visuals: parseVisuals(obj.visuals),
     actions: actions
       .filter((a: any) => allowed.has(a?.type) && (a?.type !== "increase_quote_ten_percent" || (typeof a.body === "string" && a.body.trim().length > 0)))
-      .slice(0, 4)
+      .slice(0, 6)
       .map((a: any) => ({
         type: a.type as string,
         reason: String(a.reason ?? ""),
@@ -580,6 +598,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
         fields: FIELD_KEYS[a.type] && a.fields && typeof a.fields === "object"
           ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => FIELD_KEYS[a.type].includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
+        tree: a.type === "edit_family_tree" ? parseTree(a.tree ?? a.fields?.tree) : null,
         items: a.type === "update_document_items" && Array.isArray(a.items)
           ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
               id: String(i.id), state: DOC_STATES.includes(i.state) ? i.state : null,
@@ -597,14 +616,24 @@ function parseDecision(raw: string, allowed: Set<string>) {
       .filter((a: any) => a.type !== "resend_email" || /^[0-9a-f-]{36}$/i.test(String(a.fields?.email_id ?? "")))
       .filter((a: any) => a.type !== "set_stage" || TEXAS_STAGES.includes(String(a.fields?.stage)))
       .filter((a: any) => !["resend_contract_link", "email_signed_copy"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
-      .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5)),
+      .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5))
+      .filter((a: any) => a.type !== "edit_family_tree" || a.tree)
+      .filter((a: any) => a.type !== "change_listing_option" || (LISTING_TIERS as readonly string[]).includes(String(a.fields?.tier)))
+      .filter((a: any) => a.type !== "change_cemetery" || String(a.fields?.cemetery ?? "").trim().length > 2),
   };
 }
 
 const FIELD_KEYS: Record<string, string[]> = {
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
-  send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
+  send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery"], send_document_request: ["greeting_name"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
 };
+
+function parseTree(t: unknown) {
+  let v = t;
+  if (typeof v === "string") { try { v = JSON.parse(v); } catch { v = null; } }
+  if (!v || typeof v !== "object" || Array.isArray(v)) { console.warn("edit_family_tree without a usable tree", typeof t); return null; }
+  return v as Record<string, unknown>;
+}
 
 function parseVisuals(v: unknown) {
   const str = (x: unknown, n: number) => (x == null ? "" : String(x)).slice(0, n);
@@ -638,6 +667,20 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
       else untouched.push(`${name} (already correct)`);
     }
     return { fields, rebuild, untouched };
+  }
+  if (a.type === "edit_family_tree") {
+    const v = validateTreeEdit((sub.ownership_answers ?? {}).v2, a.tree);
+    if ("error" in v) throw new Error(v.error);
+    a.tree = v.tree;
+    return { fields: treeDiff((sub.ownership_answers ?? {}).v2, v.tree) };
+  }
+  if (a.type === "change_listing_option") return { fields: [{ label: "listing option", before: String(sub.listing_tier ?? sub.listing_option ?? "(none)"), after: String(a.fields.tier) }] };
+  if (a.type === "change_cemetery") {
+    const want = String(a.fields.cemetery).trim();
+    const { data: m } = await db.from("texas_cemeteries").select("name,city").ilike("name", want.replace(/[%_]/g, "")).is("deleted_at", null).limit(2);
+    if (m?.length !== 1) throw new Error(`"${want}" is not exactly one cemetery in our registry`);
+    a.fields = { cemetery: m[0].name, city: m[0].city ?? "" };
+    return { fields: [{ label: "cemetery", before: String(sub.cemetery ?? "(blank)"), after: `${m[0].name}${m[0].city ? `, ${m[0].city}` : ""}` }] };
   }
   if (a.type === "update_document_items" && a.items?.length) {
     const { data: rows } = await db.from("submission_documents").select("id,label,person_name,status").eq("submission_id", sub.id).in("id", a.items.map((i: any) => i.id));
@@ -730,14 +773,17 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
-    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch(() => null)));
+    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
+    // An invalid family-tree edit or unknown cemetery is dropped rather than shown as approvable.
+    const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
+    if (dropped.size) { console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid)); d.actions = d.actions.filter((_, i) => !dropped.has(i)); previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i))); }
     const rows = d.actions.map((a, ai) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
       rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
@@ -953,6 +999,12 @@ Deno.serve(async (req) => {
       const { error } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: act.submission_id, kind: body.kind, comment: body.comment || null, correct: body.correct ?? null, went_live: body.went_live ?? null, author_user_id: user.id, author_name: user.name });
       return error ? json({ error: error.message }, 500) : json({ ok: true });
     }
+    if (body.action === "client_result") {
+      if (act.status !== "executed") return json({ error: "Not an executed action" }, 409);
+      await db.from("ai_agent_actions").update({ error: body.ok ? null : `Not finished on the Documents panel: ${body.message ?? "unknown error"}` }).eq("id", act.id);
+      await db.from("customer_notes").insert({ submission_id: act.submission_id, body: body.ok ? `Documents panel finished the approved AI step (${act.action_type.replace(/_/g, " ")}): ${body.message ?? "done"}.` : `The approved AI step (${act.action_type.replace(/_/g, " ")}) did not finish on the Documents panel: ${body.message ?? "unknown error"}.`, author_name: `AI agent (approved by ${user.name})` });
+      return json({ ok: true });
+    }
     if (act.status !== "proposed") return json({ error: `Action already ${act.status}` }, 409);
 
     if (body.action === "reject") {
@@ -969,6 +1021,7 @@ Deno.serve(async (req) => {
     if (sub.archived_at || sub.deleted_at || sub.closed_at || sub.sold_at || sub.ai_paused_at) return json({ error: "This seller record is closed, archived or paused" }, 409);
     const now = new Date().toISOString();
     let error: string | null = null;
+    let clientOp: Record<string, unknown> | null = null;
     // Emails sent by approved actions must not retire the other suggestions from the same review.
     const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
@@ -1196,6 +1249,38 @@ Deno.serve(async (req) => {
             if (!res.ok || /"error"/.test(t)) throw new Error(`Signed copy not sent (${res.status}): ${t.slice(0, 200)}`);
             await aiNote(`Emailed ${first(sub)} a copy of their signed ${contractLabel(c)}.`);
           }
+        } else if (act.action_type === "change_listing_option") {
+          const tier = String(act.payload?.fields?.tier ?? "");
+          if (!(LISTING_TIERS as readonly string[]).includes(tier)) throw new Error("Unknown listing option");
+          const before = sub.listing_tier ?? sub.listing_option ?? "none";
+          const { error: e } = await db.from("contact_submissions").update({ listing_tier: tier, listing_option: tier }).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          await aiNote(`Changed the listing option from ${before} to ${tier}${act.reason ? `: ${String(act.reason).replace(/[.\s]+$/, "")}` : ""}. (No payment taken; the quote is not marked accepted.)`);
+        } else if (act.action_type === "edit_family_tree") {
+          const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
+          const v = validateTreeEdit(answers.v2, act.payload?.tree);
+          if ("error" in v) throw new Error(`Family tree change not applied: ${v.error}`);
+          if (JSON.stringify(answers.v2 ?? null) !== JSON.stringify(act.payload?.before_tree ?? null)) throw new Error("The family tree changed since the AI proposed this. Re-run the AI.");
+          const history = Array.isArray(answers.treeEdits) ? answers.treeEdits.slice(-9) : [];
+          const next = { ...answers, v2: v.tree, treeEdits: [...history, { at: now, by: `AI agent (approved by ${user.name})`, reason: act.reason ?? null, before: answers.v2 ?? null }] };
+          const { error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id);
+          if (e) throw new Error(e.message);
+          const lines = treeDiff(answers.v2, v.tree).map((l) => `${l.label}: ${l.before} → ${l.after}`);
+          await aiNote(`Corrected the family tree${act.reason ? ` (${act.reason})` : ""}: ${lines.join("; ") || "details updated"}. The document checklist re-syncs from it.`);
+          clientOp = { kind: "sync", fromTree: true };
+        } else if (act.action_type === "sync_checklist") {
+          clientOp = { kind: "sync" };
+        } else if (act.action_type === "prepare_listing_agreement") {
+          clientOp = { kind: "prepare_listing_agreement" };
+        } else if (act.action_type === "change_cemetery") {
+          const f = (act.payload?.fields ?? {}) as Record<string, string>;
+          const { data: m } = await db.from("texas_cemeteries").select("name,city").eq("name", String(f.cemetery ?? "")).is("deleted_at", null).limit(2);
+          if (m?.length !== 1) throw new Error("That cemetery is no longer a single match in our registry.");
+          clientOp = { kind: "change_cemetery", cemetery: m[0].name, city: m[0].city ?? null };
+        } else if (act.action_type === "send_document_request") {
+          const { data: sibs } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
+          if (pendingBefore(sibs ?? [], act)) throw new Error("Approve (or decline) the family tree / document changes from this review first, then send the request.");
+          clientOp = { kind: "send_request", greeting: String(act.payload?.fields?.greeting_name ?? "").slice(0, 120), note: String(act.email_body ?? "").slice(0, 4000) };
         } else if (act.action_type === "edit_document_request") {
           await aiNote(`Document request change approved by ${user.name}, applied on the Documents panel for checking: ${act.note_body ?? act.payload?.instruction ?? ""}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
@@ -1215,7 +1300,8 @@ Deno.serve(async (req) => {
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : ["open_document_request", "edit_document_request"].includes(act.action_type) ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null });
+    if (!error && act.action_type === "edit_document_request") clientOp = { kind: "instruction", instruction: act.note_body ?? act.payload?.instruction ?? "" };
+    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : (clientOp || act.action_type === "open_document_request") ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null, client_op: clientOp ? { ...clientOp, action_id: act.id } : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);

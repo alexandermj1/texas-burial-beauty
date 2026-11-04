@@ -74,9 +74,9 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
   if (name === "get_files" || name === "read_deed") {
     const r = await record(db, id);
     if (!r?.customer_profile_id) return { files: [], note: "No files on this record." };
-    const { data } = await db.from("customer_files").select("id,file_name,file_path,mime_type,document_type,extracted_summary").eq("customer_profile_id", r.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(20);
+    const { data } = await db.from("customer_files").select("id,file_name,file_path,mime_type,document_type,extracted_summary,extracted_data").eq("customer_profile_id", r.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(20);
     const files = data ?? [];
-    if (name === "get_files") return files.map((f: any) => ({ name: f.file_name, type: f.document_type, summary: clip(f.extracted_summary, 500) }));
+    if (name === "get_files") return files.map((f: any) => ({ name: f.file_name, type: f.document_type, summary: clip(f.extracted_summary, 500), insights: f.extracted_data ? clip(JSON.stringify(f.extracted_data), 1500) : null }));
     if (ctx.deedReads >= 2) return { error: "Deed reading budget used for this check — rely on file summaries." };
     const isImg = (f: any) => /^image\/(jpe?g|png|webp)$/i.test(f.mime_type ?? "") || /\.(jpe?g|png|webp)$/i.test(f.file_name ?? "");
     const score = (f: any) => /(deed|certificate|sepulture|ownership|interment right|title)/i.test(`${f.document_type} ${f.extracted_summary} ${f.file_name}`) ? 1 : 0;

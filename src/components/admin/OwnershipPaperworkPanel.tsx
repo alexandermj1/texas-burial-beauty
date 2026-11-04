@@ -20,6 +20,7 @@ import ProofreadButton from "./ProofreadButton";
 import SellerAnswersSummary, { type V2State } from "./SellerAnswersSummary";
 import { softDelete } from "@/lib/softDelete";
 import { matchFilesToDocs, type CandidateFile } from "@/lib/matchFilesToDocs";
+import { shiftAiDocOp, type AiDocOp } from "@/lib/aiDocOps";
 import { rebuildUnsignedSubmissionDocuments } from "@/lib/rebuildUnsignedSubmissionDocuments";
 import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 import { useAuth } from "@/hooks/useAuth";
@@ -1190,7 +1191,9 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
   /** Write the computed checklist into submission_documents, preserving progress. */
-  const syncChecklist = async (silent = false) => {
+  /** fromTree: the family tree was corrected — rebuild from the rules even after a request went out. */
+  const syncChecklist = async (silent = false, opts?: { fromTree?: boolean }) => {
+    const reqs = opts?.fromTree ? computedRequirements : requirements;
     setSaving(true);
     const cemeteryMoved = await reconcileCemeteryChange().catch(() => false);
     try {
@@ -1213,7 +1216,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       const inserts: Record<string, unknown>[] = [];
       const updates: { id: string; patch: Record<string, unknown> }[] = [];
 
-      requirements.forEach((r, i) => {
+      reqs.forEach((r, i) => {
         const key = reqDbKey(r);
         if (seen.has(key)) return; // never write the same item twice in one pass
         seen.add(key);
@@ -1284,17 +1287,17 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
       // Remove auto-generated rows that the rules no longer call for and that
       // nobody has touched (untouched = still pending, no file, no override).
-      const wanted = new Set(requirements.map(reqDbKey));
+      const wanted = new Set(reqs.map(reqDbKey));
       const wantedFamilies = new Set(
-        requirements.map((r) => familyKey(r.code, r.personName, r.label)).filter(Boolean) as string[],
+        reqs.map((r) => familyKey(r.code, r.personName, r.label)).filter(Boolean) as string[],
       );
       const stale = live.filter((r) => {
          const key = keyOf(r.doc_code, r.person_name);
          if (adopted.has(r.id)) return false;
-         const supersededGeneralId = r.doc_code === "D2" && requirements.some((x) => x.code === "D2P");
+         const supersededGeneralId = r.doc_code === "D2" && reqs.some((x) => x.code === "D2P");
          const supersededPlaceholder = !!r.person_name
            && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
-           && requirements.some((x) => x.code === r.doc_code && x.personName && x.personName !== r.person_name);
+           && reqs.some((x) => x.code === r.doc_code && x.personName && x.personName !== r.person_name);
          // A hand-typed row that says the same thing as a generated requirement
          // for the same person is a duplicate — drop it (never when a file is on it).
          const fk = familyKey(r.doc_code, r.person_name, r.label);
@@ -1317,7 +1320,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       // contract used to stay — which is why sellers kept being asked to notarise
       // a POA the broker could no longer even see. Void those too.
       const wantedPoaPeople = new Set(
-        requirements.filter((r) => r.code === "D21")
+        reqs.filter((r) => r.code === "D21")
           .flatMap((r) => [r.personName, ...(r.jointNames ?? [])])
           .filter(Boolean)
           .map((n) => personKey(n as string)),
@@ -1602,27 +1605,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
        setTimeout(() => setReview({ step: 1 }), 600);
     } catch (e) {
       toast.error("AI couldn't make that change", { description: e instanceof Error ? e.message : String(e) });
+      if (override !== undefined) throw e;
     } finally {
       setAiApplying(false);
     }
   };
-
-  // An approved seller-AI "Change document request" arrives here and is applied with the steps above.
-  const applyAiRef = useRef(applyAiInstruction);
-  applyAiRef.current = applyAiInstruction;
-  useEffect(() => {
-    const pick = () => {
-      const key = `ai-doc-instruction:${submissionId}`;
-      const ins = sessionStorage.getItem(key);
-      if (!ins || !requirements.length) return;
-      sessionStorage.removeItem(key);
-      setAiInstruction(ins);
-      void applyAiRef.current(ins);
-    };
-    pick();
-    window.addEventListener("ai-doc-instruction", pick);
-    return () => window.removeEventListener("ai-doc-instruction", pick);
-  }, [submissionId, requirements.length]);
 
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {
@@ -1658,6 +1645,20 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
 
   /** One email: the curated upload page, every outstanding item explained, and
    *  the POA notary route folded in so the seller only ever gets one message. */
+  /** Sends the request exactly as the button does; throws instead of toasting. */
+  const sendPacketCore = async (greeting: string, note: string) => {
+    if (!sellerEmail) throw new Error("This submission has no email address");
+    await syncChecklist(true);
+    await persistAnswers({ ...answers, packetGreeting: greeting, packetEmailNote: note, packetNote: pageNote } as OwnershipAnswers);
+    const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
+    if (!items.length) throw new Error("Nothing is outstanding on the checklist, so there is no request to send.");
+    const { data, error } = await supabase.functions.invoke("send-document-packet", {
+      body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greeting, note },
+    });
+    if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
+    return { items: items.length, poas: poas.length, docs: docs.length };
+  };
+
   const sendPacketEmail = async () => {
     if (!sellerEmail) return toast.error("This submission has no email address");
     setSending(true);
@@ -2008,6 +2009,84 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
   };
 
 
+
+  // Approved seller-AI steps (tree fixes, sync, send, edits) arrive here and run with the staff code above.
+  const latest = useRef({ syncChecklist, sendPacketCore, applyAiInstruction, generateDoc, load, requirements, answers, genFailed });
+  latest.current = { syncChecklist, sendPacketCore, applyAiInstruction, generateDoc, load, requirements, answers, genFailed };
+  const runningOps = useRef(false);
+  const processOps = useCallback(async () => {
+    if (runningOps.current) return;
+    runningOps.current = true;
+    const L = () => latest.current;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const waitFor = async (ok: () => boolean, ms = 6000) => { const t = Date.now(); while (!ok() && Date.now() - t < ms) await sleep(100); };
+    // Reload, then wait until this panel shows the family tree that is saved now.
+    const fresh = async () => {
+      const { data } = await supabase.from("contact_submissions").select("ownership_answers").eq("id", submissionId).maybeSingle();
+      const want = JSON.stringify(((data?.ownership_answers ?? {}) as Record<string, unknown>).v2 ?? null);
+      await L().load();
+      await waitFor(() => JSON.stringify((L().answers as Record<string, unknown>).v2 ?? null) === want);
+      await sleep(150);
+    };
+    try {
+      let op: AiDocOp | null;
+      while ((op = shiftAiDocOp(submissionId))) {
+        const report = (ok: boolean, message: string) => supabase.functions.invoke("seller-agent", { body: { action: "client_result", action_id: op!.action_id, ok, message } });
+        try {
+          if (op.kind === "instruction") {
+            await fresh();
+            await L().applyAiInstruction(String(op.instruction ?? ""));
+            await report(true, "document request updated — check it, then preview and send");
+          } else if (op.kind === "sync") {
+            await fresh();
+            await L().syncChecklist(true, { fromTree: !!op.fromTree });
+            await fresh();
+            toast.success(op.fromTree ? "Family tree corrected — checklist re-synced" : "Checklist synced");
+            await report(true, op.fromTree ? "family tree saved and checklist re-synced from it" : "checklist synced");
+          } else if (op.kind === "prepare_listing_agreement") {
+            await fresh();
+            const r = L().requirements.find((x) => x.contractKind === "listing_agreement");
+            if (!r) throw new Error("No listing agreement is on this checklist.");
+            await L().generateDoc(r, undefined, true);
+            if (L().genFailed.has(reqKey(r))) throw new Error("The listing agreement could not be prepared.");
+            toast.success("Listing agreement prepared");
+            await report(true, "listing agreement prepared (not emailed)");
+          } else if (op.kind === "send_request") {
+            await fresh();
+            await L().syncChecklist(true);
+            // Prepared POAs/affidavits fill in the background; wait for their PDFs like staff would.
+            let sent: { items: number; poas: number; docs: number } | null = null;
+            for (let i = 0; i < 30 && !sent; i++) {
+              try { sent = await L().sendPacketCore(String(op.greeting ?? "").trim() || greetName.trim(), String(op.note ?? "")); }
+              catch (e) {
+                if (!/being prepared|no PDF yet|could not be found/i.test((e as Error).message) || i === 29) throw e;
+                await sleep(3000); await fresh();
+              }
+            }
+            toast.success(`Document request emailed to ${sellerEmail}`, { description: `${sent!.items} item${sent!.items === 1 ? "" : "s"}${sent!.poas ? ` + ${sent!.poas} POA` : ""}${sent!.docs ? ` + ${sent!.docs} prepared document${sent!.docs === 1 ? "" : "s"}` : ""}` });
+            await fresh();
+            await report(true, `document request emailed (${sent!.items} items, ${sent!.poas} POA, ${sent!.docs} prepared documents)`);
+            onSent?.();
+          } else {
+            throw new Error(`Unknown step ${op.kind}`);
+          }
+        } catch (e) {
+          toast.error("An approved AI step didn't finish", { description: (e as Error).message });
+          await report(false, (e as Error).message).catch(() => {});
+        }
+      }
+    } finally {
+      runningOps.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submissionId]);
+  useEffect(() => {
+    if (loading) return;
+    void processOps();
+    const pick = () => void processOps();
+    window.addEventListener("ai-doc-instruction", pick);
+    return () => window.removeEventListener("ai-doc-instruction", pick);
+  }, [loading, processOps]);
 
   /** Who a prepared contract is made out to — the signature if signed, else the filled name. */
   const contractNameOf = (c: ContractRow) =>

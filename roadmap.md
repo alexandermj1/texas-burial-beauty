@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Seller AI parity: edit family tree (re-syncs request), sync checklist, send/re-send document request, prepare listing agreement, change listing option and cemetery, correct all submission details; sees full document insights, family tree and deed reading. Never archives or buyer-matches. Tested tree fix + send on Alexander's record; listing-agreement prep and cemetery change not run end-to-end.
 - [x] Replace "Potential plot match" with buyer "waiting for" notes (cheap AI per buyer reply), loose new-stock matching and "Back on top" reasons; hourly check, never emails.
 - [x] Correct buyer AI free-text cemetery matching across lookup, seller rows, model searches and send-time checks; 25 buyer tests and isolated actual-function Bluebonnet lookup pass. Unknown/ambiguous names block no-stock replies, inventory reads paginate, and zero-option automatic replies require staff review when own-cemetery stock exists. Existing Bruce email and submission unchanged; no customer email sent during testing.
 - [x] Correct missing attachment labels across direct uploads, profile files and document files; paginate metadata beyond 1,000 rows, refresh on file/profile/document changes with three-minute fallback, preserve labels on failures and original-receipt rules. Sixteen tests pass; signed-in check reads all 1,435 files and verifies Simon’s previously missed Deed.jpeg now has the Attachments label; preview clean, not published.

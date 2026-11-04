@@ -6,13 +6,16 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import AiVisuals, { type AiVisual } from "./AiVisuals";
 import AiActionFeedback from "./AiActionFeedback";
+import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
+import { treeDocumentChanges } from "@/lib/aiTreeDocPreview";
+import { queueAiDocOp } from "@/lib/aiDocOps";
 import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, Users, DollarSign, FileText, PencilLine } from "lucide-react";
 
 export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
-  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string } | null;
+  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string; tree?: Record<string, unknown>; before_tree?: Record<string, unknown> | null } | null;
 };
 
 type AiChanges = {
@@ -65,8 +68,22 @@ function ChangesView({ c }: { c: AiChanges }) {
   );
 }
 
+/** Which documents the rules engine would ask for before vs after a family-tree correction. */
+function TreeDocsView({ before, after }: { before: Record<string, unknown> | null; after: Record<string, unknown> }) {
+  const d = treeDocumentChanges(before, after);
+  if (!d.added.length && !d.removed.length) return <p className="text-xs text-muted-foreground">The document checklist stays the same with this correction.</p>;
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm space-y-1.5">
+      <div className="text-xs font-semibold text-foreground">Document request after this correction</div>
+      {d.added.map((l) => <div key={`a${l}`} className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />Adds {l}</div>)}
+      {d.removed.map((l) => <div key={`r${l}`} className="flex items-center gap-1.5 text-muted-foreground line-through"><FileText className="w-3.5 h-3.5" />{l}</div>)}
+      <div className="text-[11px] text-muted-foreground">Cemetery-specific forms are added on sync as usual.</div>
+    </div>
+  );
+}
+
 /** Actions whose email text staff can edit before approving. */
-const EMAIL_TYPES = ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "update_quote_spaces", "send_quote", "resend_email"];
+const EMAIL_TYPES = ["send_document_request", "reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "update_quote_spaces", "send_quote", "resend_email"];
 
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
   reply_email: { label: "Reply email", Icon: Mail, approve: "Approve & send" },
@@ -90,6 +107,12 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   resend_contract_link: { label: "Re-send contract signing link", Icon: Link2, approve: "Re-send link" },
   email_signed_copy: { label: "Email signed copy", Icon: FileSignature, approve: "Email copy" },
   edit_document_request: { label: "Change document request", Icon: FileText, approve: "Apply on Documents panel" },
+  edit_family_tree: { label: "Correct family tree", Icon: Users, approve: "Fix tree & resync checklist" },
+  sync_checklist: { label: "Sync document checklist", Icon: FileText, approve: "Sync checklist" },
+  send_document_request: { label: "Send document request", Icon: FileText, approve: "Send document request" },
+  prepare_listing_agreement: { label: "Prepare listing agreement", Icon: FileSignature, approve: "Prepare agreement" },
+  change_listing_option: { label: "Change listing option", Icon: DollarSign, approve: "Change option" },
+  change_cemetery: { label: "Change cemetery", Icon: PencilLine, approve: "Change cemetery" },
   resend_quote_free_listing: { label: "Resend historical waived-fee quote (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
@@ -130,12 +153,21 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
       const r = await callSellerAgent({ action: "execute", action_id: a.id, reason: decisionReason.trim() });
-      if (r?.open === "documents" && r?.instruction) {
-        // Hand the AI's change to the Documents panel, which applies it with the normal staff steps.
-        sessionStorage.setItem(`ai-doc-instruction:${a.submission_id}`, String(r.instruction));
-        window.dispatchEvent(new CustomEvent("ai-doc-instruction", { detail: { submissionId: a.submission_id } }));
+      const op = r?.client_op as ({ kind: string; action_id: string } & Record<string, unknown>) | null | undefined;
+      if (op?.kind === "change_cemetery") {
+        // Same audited reassignment as the Change cemetery button.
+        try {
+          await updateSubmissionCemetery(a.submission_id, String(op.cemetery), (op.city as string | null) ?? null);
+          await callSellerAgent({ action: "client_result", action_id: a.id, ok: true, message: `cemetery set to ${op.cemetery}` });
+        } catch (e) {
+          await callSellerAgent({ action: "client_result", action_id: a.id, ok: false, message: (e as Error).message }).catch(() => {});
+          throw e;
+        }
+      } else if (op) {
+        // Hand the step to the Documents panel, which applies it with the normal staff code.
+        queueAiDocOp(a.submission_id, op);
       }
-      if (r?.open) {
+      if (r?.open && !(op?.kind === "change_cemetery")) {
         if (onOpen) onOpen(r.open, a);
         else { onOpenSubmission?.(a.submission_id); toast({ title: "Opening the record", description: r.open === "quote" ? "Use Send quote on the record to review and send." : "Open Family tree & documents to review and send." }); }
       } else toast({ title: "Done", description: meta.label });
@@ -189,6 +221,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           {Object.entries(a.payload.fields).map(([k, v]) => <li key={k}><span className="text-muted-foreground">{k.replace(/_/g, " ")}:</span> {v}</li>)}
         </ul>
       )}
+      {a.action_type === "edit_family_tree" && a.payload?.tree && <TreeDocsView before={a.payload.before_tree ?? null} after={a.payload.tree} />}
       {!a.payload?.changes && a.action_type === "update_document_items" && a.payload?.items && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {a.payload.items.map((i) => <li key={i.id}>{i.note ?? "Checklist item"}{i.state ? ` — mark ${i.state.replace(/_/g, " ")}` : ""}{i.attach_file_ids.length ? ` · attach ${i.attach_file_ids.length} file${i.attach_file_ids.length > 1 ? "s" : ""}` : ""}</li>)}
@@ -198,6 +231,11 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {["increase_quote_ten_percent", "update_quote_spaces", "send_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval emails the seller the branded quote with live listing-option buttons (same as Send seller pack); any text above then goes out as a separate follow-up email.</p>}
       {a.action_type === "resend_expired_quote" && <p className="text-xs text-muted-foreground">Approval re-sends the quote at the same figures with a fresh 10-day window; the text above appears as its intro.</p>}
       {a.action_type === "edit_document_request" && <p className="text-xs text-muted-foreground">Approval opens the Documents panel and applies this change with the normal steps; check the request there, then preview and send.</p>}
+      {a.action_type === "edit_family_tree" && <p className="text-xs text-muted-foreground">Approval saves the corrected family tree (the old version is kept), re-syncs the document checklist from it and rebuilds prepared forms. Nothing is emailed by this step.</p>}
+      {a.action_type === "send_document_request" && <p className="text-xs text-muted-foreground">Approval syncs the checklist, waits for prepared forms, then emails the seller their document request. The text above appears as the personal note in that email.</p>}
+      {a.action_type === "sync_checklist" && <p className="text-xs text-muted-foreground">Approval re-runs the document rules from the current family tree, like Sync checklist.</p>}
+      {a.action_type === "prepare_listing_agreement" && <p className="text-xs text-muted-foreground">Approval prepares and fills the listing agreement without emailing it.</p>}
+      {a.action_type === "change_listing_option" && <p className="text-xs text-muted-foreground">Only changes the saved option — no payment is taken and the quote is not marked accepted.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
         <div className="space-y-2">
