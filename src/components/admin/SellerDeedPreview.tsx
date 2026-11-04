@@ -73,31 +73,32 @@ export default function SellerDeedPreview({ submissionId, createdAt, deedLocatio
       })}
     </div>
   );
-  const showDetails = locationMatch !== "green";
+  const owners = regions.filter(r => r.kind === "owner").map(r => r.text).filter(Boolean);
+  const matchLabel = locationMatch === "green" ? "Matches the locations being sold" : locationMatch === "orange" ? "Selling only some of the spaces on the deed" : locationMatch === "red" ? "Includes a space not on the deed" : null;
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-muted/20 p-2.5">
-      <Dialog>
-        <DialogTrigger asChild>
-          <button type="button" className="group relative shrink-0 overflow-hidden rounded-md bg-background p-1 ring-1 ring-border/60 transition hover:ring-primary/60" title="View deed">
-            <Deed big={false} />
-            <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition group-hover:bg-foreground/25 group-hover:opacity-100"><Maximize2 className="h-4 w-4 text-background" /></span>
-          </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-5xl p-3">
-          <DialogTitle className="sr-only">Deed they sent</DialogTitle>
-          <div className="flex justify-center"><Deed big /></div>
-          <a href={data.deed.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 justify-self-end text-xs text-muted-foreground hover:text-foreground"><ExternalLink className="h-3 w-3" />Open original</a>
-        </DialogContent>
-      </Dialog>
-      <div className="min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em]">Deed they sent</p>
-        {showDetails ? <>
-          {deedLocation && <p><span className="font-medium text-foreground">Deed reads:</span> {deedLocation}</p>}
-          {!deedLocation && spaces.length > 0 && <p><span className="font-medium text-foreground">Spaces:</span> {spaces.join(" · ")}</p>}
-        </> : <p>Matches the locations being sold.</p>}
-        {loading && <p className="flex items-center gap-1.5"><Loader2 className="h-3 w-3 animate-spin" />Reading deed…</p>}
-      </div>
-    </div>
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button" className="group relative shrink-0 overflow-hidden rounded-md bg-background p-0.5 shadow-sm ring-1 ring-border/60 transition hover:ring-primary/60" title="View the deed they sent">
+          <img src={data.deed.url} alt={`Deed: ${data.deed.name}`} loading="lazy" className="block h-16 w-12 rounded-[3px] object-cover" />
+          <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition group-hover:bg-foreground/30 group-hover:opacity-100"><Maximize2 className="h-3.5 w-3.5 text-background" /></span>
+          {loading && <span className="absolute inset-0 grid place-items-center bg-background/60"><Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /></span>}
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-5xl gap-0 overflow-hidden p-0">
+        <DialogTitle className="sr-only">Deed they sent</DialogTitle>
+        <div className="grid md:grid-cols-[1fr_260px]">
+          <div className="flex justify-center bg-muted/30 p-4"><Deed big /></div>
+          <aside className="space-y-4 border-t border-border/60 p-5 text-sm md:border-l md:border-t-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Read from the deed</p>
+            {matchLabel && <p className="text-xs font-medium text-foreground">{matchLabel}</p>}
+            {owners.length > 0 && <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground">Names</p><p className="mt-1 text-foreground">{owners.join(" · ")}</p></div>}
+            {(deedLocation || spaces.length > 0) && <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground">Property</p><p className="mt-1 text-foreground">{deedLocation || spaces.join(" · ")}</p></div>}
+            {!owners.length && !deedLocation && !spaces.length && <p className="text-xs text-muted-foreground">{loading ? "Reading deed…" : "Nothing read from this deed yet."}</p>}
+            <a href={data.deed.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ExternalLink className="h-3 w-3" />Open original</a>
+          </aside>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
