@@ -145,7 +145,7 @@ PROCESS IN PLAIN TERMS:
 1. Seller sends ownership documents and details.
 2. We confirm who has authority to sell.
 3. We send a quote.
-4. Seller accepts and signs the listing agreement + a limited POA appointing us.
+4. Seller picks a listing option, pays the listing fee, then signs the listing agreement, then completes the family tree questionnaire; the limited POA comes later with the document request.
 5. We complete and record the transfer with the cemetery.
 
 FOUR OWNERSHIP SITUATIONS (identify which one applies; if unclear, ask ONE clarifying question):
