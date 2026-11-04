@@ -120,7 +120,7 @@ export async function resendEarlierEmail(db: any, m: Mail, sub: Sub, emailId: st
   if (!mine || !sub.email) throw new Error("That email does not belong to this seller.");
   const body = String(e.body_html || "").trim() || plainHtml(String(e.body_text ?? ""));
   const html = `${intro?.trim() ? `<div data-tcb-email="ai_agent" style="${P}">${esc(intro.trim()).replace(/\n/g, "<br>")}</div>` : ""}${body}`;
-  const subject = subjectOverride?.trim() || (String(e.subject ?? "").startsWith("Re:") ? e.subject : `Re: ${e.subject ?? "Your cemetery property"}`);
+  const subject = subjectOverride?.trim() || (() => { const s0 = String(e.subject ?? "Your cemetery property").replace(/^(Re:\s*)*(Automatic email:\s*)?/i, ""); return `Re: ${s0}`; })();
   await sendMail(m, { to: sub.email, subject, body: `${intro?.trim() ? `${intro.trim()}\n\n` : ""}${String(e.body_text ?? "").slice(0, 8000)}`, html, threadId: e.gmail_thread_id, submissionId: sub.id });
   return { subject: e.subject as string };
 }
