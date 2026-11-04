@@ -1026,8 +1026,8 @@ Deno.serve(async (req) => {
           await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${liveLink.sign_token}` });
           await aiNote(`Re-sent ${first(sub)} the link to sign the listing agreement.`);
         } else if (act.action_type === "resend_family_tree") {
-          const follow = String(act.payload?.body ?? act.body ?? "").trim();
-          if (follow) await sendMail(mail, { to: sub.email, subject: `Re: ${String(act.payload?.subject ?? act.subject ?? "Your family tree questionnaire")}`, body: follow, html: plainHtml(follow), threadId: ctx.threadId, submissionId: sub.id });
+          const follow = String(act.email_body ?? "").trim();
+          if (follow) await sendMail(mail, { to: sub.email, subject: act.email_subject || "Your family tree questionnaire", body: follow, html: plainHtml(follow), threadId: act.gmail_thread_id, submissionId: sub.id });
           const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree", force: true });
           if (r.status !== "sent") throw new Error(`Family tree not re-sent: ${r.reason ?? r.status}`);
           await aiNote(`Re-sent ${first(sub)} the family tree questionnaire link.`);
