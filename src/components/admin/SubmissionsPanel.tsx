@@ -1,4 +1,5 @@
 import { toast } from "@/hooks/use-toast";
+import SellerDeedPreview from "./SellerDeedPreview";
 import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore, Info, Pencil, MapPin, Save } from "lucide-react";
@@ -1733,7 +1734,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               const sellingLocation = sharedSellingLocation;
               const selectedTier = String(seller.listing_tier || seller.listing_option || "").toLowerCase();
               const tierName = selectedTier === "custom_plus" ? "Featured" : selectedTier ? TIER_LABEL[selectedTier as keyof typeof TIER_LABEL] || selectedTier : "Not selected";
-              const info = [seller.message, seller.details].filter(Boolean).join(" ") || "No additional information provided.";
+              const info = [seller.message, seller.details].filter(Boolean).join(" ").trim();
+              // Pricing & listing only matters once a quote, listing choice or payment exists.
+              const pricingRelevant = figures.hasQuote || !!selectedTier || !!paid || !!seller.payment_received_at || !!seller.listing_paid_at;
               const Fact = ({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) => (
                 <div className={`min-w-0 border-b border-border/50 pb-2 ${wide ? "sm:col-span-2" : ""}`}>
                   <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
@@ -1813,16 +1816,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {(customerLocation !== "Not provided" || deedLocation) && <details className="mt-3 border-t border-border/60 pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Compare source wording</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Customer wrote</span><span className="mt-1 block text-xs text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />AI read from deed</span><span className="mt-1 block text-xs font-medium text-foreground">{deedLocation || "No property description found"}</span>{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></details>}
                         </div>
                       </div>
+                      <SellerDeedPreview submissionId={selected.id} createdAt={selected.created_at} />
                       <div className="pt-1">
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seller details</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                           {!ftState(selected).doneAt && <Fact label="Owners on deed">{seller.deed_owner_names || selectedDeedOwners.join(", ") || "Not provided"}</Fact>}
                           {!ftState(selected).doneAt && seller.deed_owners_status && <Fact label="Owner status">{seller.deed_owners_status}</Fact>}
                           <Fact label="Relationship to deed owner">{seller.relationship_to_owner || "Not provided"}</Fact>
-                          <Fact label="Added information from form" wide>{info}</Fact>
+                          {info && <Fact label="Added information from form" wide>{info}</Fact>}
                         </div>
                       </div>
-                      <div className="border-t border-border pt-4">
+                      <div className={pricingRelevant || aiFacts.length > 0 ? "border-t border-border pt-4" : ""}>
+                        {pricingRelevant && <>
                          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
                            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
                             {[{l:"Cemetery price per plot",v:fmtMoney(retail)},{l:"Price per plot",v:fmtMoney(figures.netPerSpace)},{l:`Price for all ${plotCount} plot${plotCount === 1 ? "" : "s"}`,v:fmtMoney(figures.netTotal)},{l:"Cemetery transfer fee (once)",v:fmtMoney(figures.transferFee)}].map(item => <div key={item.l} className="border-l-2 border-accent pl-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.l}</p><p className="font-display text-lg text-foreground mt-0.5">{item.v}</p></div>)}
@@ -1869,7 +1874,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Listing option selected</p><div className="flex flex-wrap gap-1.5">{(["starter","pro","featured","set_your_price"] as const).map(tier => { const active=selectedTier===tier||(tier==="featured"&&selectedTier==="custom_plus"); return <button key={tier} onClick={() => selectListingTier(tier)} className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:bg-muted"}`}>{TIER_LABEL[tier]}</button>; })}</div><p className="text-xs text-muted-foreground mt-1.5">Current: {tierName}</p></div>
                           <div><p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Payment received</p><p className={`text-sm font-semibold ${paid ? "text-primary" : "text-muted-foreground"}`}>{paid ? `${paid.amountCents > 0 ? `$${(paid.amountCents/100).toLocaleString()}` : "$0"}${paid.paidAt ? ` · ${formatDate(paid.paidAt)}` : ""}` : seller.payment_received_at || seller.listing_paid_at ? formatDate(seller.payment_received_at || seller.listing_paid_at) : "Not received"}</p></div>
                         </div>
-                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                        </>}
+                        <div className={`flex flex-wrap items-center gap-2 ${pricingRelevant ? "mt-4 border-t border-border pt-4" : ""}`}>
                            {aiFacts.length > 0 && <Button type="button" size="sm" variant="outline" style={aiFactsOpen ? stagePrimaryStyle : stageSecondaryStyle} className="hover:brightness-95" onClick={() => setAiFactsOpen(v => !v)}><Sparkles className="h-3.5 w-3.5" />Document insights ({aiFacts.length})</Button>}
                         </div>
                         {(aiFactsOpen || expandedCemetery || editCemeteryInline) && <div className="mt-3 space-y-3">
