@@ -587,7 +587,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
     visuals: parseVisuals(obj.visuals),
     actions: actions
       .filter((a: any) => allowed.has(a?.type) && (a?.type !== "increase_quote_ten_percent" || (typeof a.body === "string" && a.body.trim().length > 0)))
-      .slice(0, 4)
+      .slice(0, 6)
       .map((a: any) => ({
         type: a.type as string,
         reason: String(a.reason ?? ""),
@@ -598,7 +598,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
         fields: FIELD_KEYS[a.type] && a.fields && typeof a.fields === "object"
           ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => FIELD_KEYS[a.type].includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
-        tree: a.type === "edit_family_tree" && a.tree && typeof a.tree === "object" && !Array.isArray(a.tree) ? a.tree : null,
+        tree: a.type === "edit_family_tree" ? parseTree(a.tree ?? a.fields?.tree) : null,
         items: a.type === "update_document_items" && Array.isArray(a.items)
           ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
               id: String(i.id), state: DOC_STATES.includes(i.state) ? i.state : null,
@@ -627,6 +627,13 @@ const FIELD_KEYS: Record<string, string[]> = {
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
   send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery"], send_document_request: ["greeting_name"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
 };
+
+function parseTree(t: unknown) {
+  let v = t;
+  if (typeof v === "string") { try { v = JSON.parse(v); } catch { v = null; } }
+  if (!v || typeof v !== "object" || Array.isArray(v)) { console.warn("edit_family_tree without a usable tree", typeof t); return null; }
+  return v as Record<string, unknown>;
+}
 
 function parseVisuals(v: unknown) {
   const str = (x: unknown, n: number) => (x == null ? "" : String(x)).slice(0, n);
