@@ -307,6 +307,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     send_listing_agreement: "ready to send the agreement",
     resend_signing_link: "can resend the signing link",
     send_family_tree: "ready to send the family tree",
+    resend_family_tree: "suggests resending the family tree",
     open_document_request: "document request to review",
     fix_document_request: "suggests fixing the document request",
   };

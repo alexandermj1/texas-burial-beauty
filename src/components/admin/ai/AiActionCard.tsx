@@ -76,6 +76,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   send_listing_agreement: { label: "Send listing agreement", Icon: FileSignature, approve: "Send agreement" },
   resend_signing_link: { label: "Resend signing link", Icon: Link2, approve: "Resend link" },
   send_family_tree: { label: "Send family tree", Icon: Users, approve: "Send family tree" },
+  resend_family_tree: { label: "Resend family tree", Icon: Users, approve: "Send follow-up + tree link" },
   open_quote_dialog: { label: "Send quote", Icon: DollarSign, approve: "Open quote dialog" },
   open_document_request: { label: "Document request", Icon: FileText, approve: "Open document request" },
   fix_document_request: { label: "Fix document request", Icon: FileText, approve: "Fix, resync & email seller" },
