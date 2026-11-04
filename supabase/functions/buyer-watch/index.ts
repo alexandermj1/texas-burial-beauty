@@ -43,7 +43,7 @@ Return JSON only:
  "timing":"short text or null","avoid":"what they rejected and why, or null","buyer_words":"short exact quote from their reply that shows this","confidence":"high"|"low"}
 status: "waiting" = they want something we did not have or they want us to tell them when something comes up / are open to other options later.
 "done" = bought elsewhere, no longer interested, or asked us to stop. "none" = nothing to wait for (e.g. they are going ahead with what we offered, or just a thank-you).
-If the reply adds nothing new, keep the current note's meaning. A companion space = 2 spaces. Be accurate; never invent a budget or count.`;
+If the reply adds nothing new, keep the current note's meaning. A companion space = 2 spaces. If they said an offer was too expensive, max_price must be BELOW that offered price (use their stated figure if they gave one). Be accurate; never invent a budget or count.`;
 
 const JUDGE = `You are a cemetery-plot broker deciding which NEW plots are worth mentioning to a buyer who is waiting.
 Be LOOSE and generous like a good salesperson: exact matches will rarely exist. Show a plot if a reasonable broker would
