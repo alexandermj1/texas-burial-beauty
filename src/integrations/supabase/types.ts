@@ -659,6 +659,108 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_want_alerts: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          dismissed_at: string | null
+          dismissed_by_name: string | null
+          feedback: string | null
+          feedback_verdict: string | null
+          fit: string
+          id: string
+          offer_summary: string | null
+          reason: string
+          seller_id: string
+          submission_id: string
+          want_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          dismissed_at?: string | null
+          dismissed_by_name?: string | null
+          feedback?: string | null
+          feedback_verdict?: string | null
+          fit?: string
+          id?: string
+          offer_summary?: string | null
+          reason: string
+          seller_id: string
+          submission_id: string
+          want_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          dismissed_at?: string | null
+          dismissed_by_name?: string | null
+          feedback?: string | null
+          feedback_verdict?: string | null
+          fit?: string
+          id?: string
+          offer_summary?: string | null
+          reason?: string
+          seller_id?: string
+          submission_id?: string
+          want_id?: string
+        }
+        Relationships: []
+      }
+      buyer_wants: {
+        Row: {
+          buyer_words: string | null
+          checked_until: string
+          confidence: string | null
+          created_at: string
+          criteria: Json
+          deleted_at: string | null
+          edited_by_name: string | null
+          id: string
+          source_at: string | null
+          source_email_id: string | null
+          staff_edited: boolean
+          status: string
+          submission_id: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_words?: string | null
+          checked_until?: string
+          confidence?: string | null
+          created_at?: string
+          criteria?: Json
+          deleted_at?: string | null
+          edited_by_name?: string | null
+          id?: string
+          source_at?: string | null
+          source_email_id?: string | null
+          staff_edited?: boolean
+          status?: string
+          submission_id: string
+          summary?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_words?: string | null
+          checked_until?: string
+          confidence?: string | null
+          created_at?: string
+          criteria?: Json
+          deleted_at?: string | null
+          edited_by_name?: string | null
+          id?: string
+          source_at?: string | null
+          source_email_id?: string | null
+          staff_edited?: boolean
+          status?: string
+          submission_id?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ca_inventory: {
         Row: {
           area: string | null

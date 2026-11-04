@@ -40,6 +40,7 @@ import AiRecordCard from "./ai/AiRecordCard";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
 import { Bot } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
+import { BuyerWatchPanel, useBuyerWatch } from "./BuyerWatchPanel";
 
 import { Megaphone, UserPlus, Building2, PanelLeftClose, PanelLeftOpen, ArrowUpFromLine, Plus, EyeOff } from "lucide-react";
 import { cleanDisplayName } from "@/lib/displayName";
@@ -1027,45 +1028,21 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const buyerSearch = /^buyers?$/.test(searchQuery.trim().toLowerCase());
   const buyerView = kindFilter === "buyer" || buyerSearch;
 
-  // ---- Potential plot match -------------------------------------------------
-  // When a SELLER submission reaches "quote accepted" at a cemetery, any pre-need
-  // BUYER who inquired about that same cemetery becomes actionable: we now have
-  // inventory for them. Those buyers get pulled into "Needs reply" with a
-  // "Potential Plot Match" tag.
+  // ---- Back on top (buyer "waiting for" alerts) ------------------------------
+  // The buyer-watch AI records what each buyer is waiting for and raises an alert
+  // when new stock may suit them. An open alert pulls the buyer into "Needs reply"
+  // until staff dismiss it or we email the buyer after the alert appeared.
+  const buyerWatch = useBuyerWatch();
   const plotMatchMap = useMemo(() => {
-    const inventory = new Map<string, string>(); // canon cemetery -> accepted date
-    for (const s of submissions) {
-      if (resolveKind(s.customer_kind, s.source) !== "seller") continue;
-      if ((s as any).quote_response !== "accepted") continue;
-      const canon = _canon(s.cemetery || "");
-      if (!canon) continue;
-      const at = (s as any).quote_responded_at || s.created_at;
-      const prev = inventory.get(canon);
-      if (!prev || new Date(at).getTime() > new Date(prev).getTime()) inventory.set(canon, at);
-    }
-    const out: Record<string, { cemetery: string; at: string }> = {};
-    if (inventory.size === 0) return out;
-    const preneedRx = /pre\s*-?\s*need/i;
-    for (const s of submissions) {
-      if (resolveKind(s.customer_kind, s.source) !== "buyer") continue;
-      const timelineText = [(s as any).timeline, s.details, s.message].filter(Boolean).join(" ");
-      if (!preneedRx.test(timelineText)) continue;
-      const canon = _canon(s.cemetery || "");
-      if (!canon) continue;
-      const at = inventory.get(canon);
-      if (!at) continue;
-      const atMs = new Date(at).getTime();
-      // Cleared once we've emailed this buyer back after the match appeared, or
-      // once an admin dismissed it. A NEW inbound email puts them back in
-      // "Needs reply" through the normal awaitingMap path.
-      const repliedAt = lastOutgoingMap[s.id];
-      if (repliedAt && new Date(repliedAt).getTime() >= atMs) continue;
-      const dismissedAt = (s as any).reply_dismissed_at;
-      if (dismissedAt && new Date(dismissedAt).getTime() >= atMs) continue;
-      out[s.id] = { cemetery: s.cemetery || "", at };
+    const out: Record<string, { reason: string; at: string; count: number }> = {};
+    for (const [sid, list] of Object.entries(buyerWatch.alerts)) {
+      const repliedAt = lastOutgoingMap[sid];
+      const open = list.filter(a => !repliedAt || new Date(repliedAt).getTime() < new Date(a.created_at).getTime());
+      if (!open.length) continue;
+      out[sid] = { reason: open[0].reason, at: open[0].created_at, count: open.length };
     }
     return out;
-  }, [submissions, lastOutgoingMap]);
+  }, [buyerWatch.alerts, lastOutgoingMap]);
 
   // Needs-reply set including buyers surfaced by a fresh plot match.
   const awaitingAll = useMemo(() => {
@@ -2407,23 +2384,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
             })()}
 
-            {/* Potential plot match — manual clear */}
-            {plotMatchMap[selected.id] && (
-              <div className="bg-card rounded-xl border border-fuchsia-300/60 dark:border-fuchsia-800 p-3 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] uppercase tracking-wide text-fuchsia-700 dark:text-fuchsia-300 mr-1 inline-flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" /> Potential plot match
-                </span>
-                <span className="text-xs text-muted-foreground flex-1 min-w-[10rem]">
-                  Inventory came up at {plotMatchMap[selected.id].cemetery || "their cemetery"}.
-                </span>
-                <button
-                  onClick={() => setReplyState(selected, new Date().toISOString())}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-foreground border border-border hover:bg-muted/70 transition-colors"
-                  title="Removes the Potential Plot Match tag and Needs reply. It returns only if this buyer emails again or new inventory appears."
-                >
-                  <CheckCircle className="w-3.5 h-3.5" /> Remove from plot match
-                </button>
-              </div>
+            {/* Buyer "waiting for" note and Back-on-top alerts */}
+            {resolveKind(selected.customer_kind, selected.source) === "buyer" && (
+              <BuyerWatchPanel
+                submissionId={selected.id}
+                want={buyerWatch.wants[selected.id]}
+                alerts={buyerWatch.alerts[selected.id] ?? []}
+                onChange={buyerWatch.refresh}
+              />
             )}
 
 
@@ -3759,9 +3727,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               chips.push({
                 key: "plotmatch",
                 icon: Sparkles,
-                text: "Potential Plot Match",
-                tone: "text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-950/30 border-fuchsia-300/70 dark:border-fuchsia-800",
-                title: `Pre-need buyer — a seller just accepted a quote at ${plotMatch.cemetery || "their cemetery"} (${formatDate(plotMatch.at)})`,
+                text: plotMatch.count > 1 ? `Back on top · ${plotMatch.count} plots` : "Back on top",
+                tone: "text-primary bg-primary/10 border-primary/40",
+                title: `${plotMatch.reason} (${formatDate(plotMatch.at)})`,
               });
             }
 
