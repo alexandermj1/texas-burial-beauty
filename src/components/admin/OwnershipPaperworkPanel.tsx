@@ -1607,6 +1607,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     }
   };
 
+  // An approved seller-AI "Change document request" arrives here and is applied with the steps above.
+  const applyAiRef = useRef(applyAiInstruction);
+  applyAiRef.current = applyAiInstruction;
+  useEffect(() => {
+    const pick = () => {
+      const key = `ai-doc-instruction:${submissionId}`;
+      const ins = sessionStorage.getItem(key);
+      if (!ins || !requirements.length) return;
+      sessionStorage.removeItem(key);
+      setAiInstruction(ins);
+      void applyAiRef.current(ins);
+    };
+    pick();
+    window.addEventListener("ai-doc-instruction", pick);
+    return () => window.removeEventListener("ai-doc-instruction", pick);
+  }, [submissionId, requirements.length]);
+
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {
     await persistAnswers({
