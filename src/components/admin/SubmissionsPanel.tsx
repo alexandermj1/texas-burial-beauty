@@ -1816,7 +1816,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {(customerLocation !== "Not provided" || deedLocation) && <details className="mt-3 border-t border-border/60 pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Compare source wording</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Customer wrote</span><span className="mt-1 block text-xs text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />AI read from deed</span><span className="mt-1 block text-xs font-medium text-foreground">{deedLocation || "No property description found"}</span>{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></details>}
                         </div>
                       </div>
-                      <SellerDeedPreview submissionId={selected.id} createdAt={selected.created_at} />
+                      <SellerDeedPreview submissionId={selected.id} createdAt={selected.created_at} sellingLocation={sellingLocation} deedLocation={deedLocation} />
                       <div className="pt-1">
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seller details</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
