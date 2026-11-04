@@ -4,8 +4,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
-import { resolveBuyerCemetery, cemeteryNameKey } from "../buyer-agent/cemeteryMatching.ts";
-import { quoteFigures, normalizeBuyerFees } from "../buyer-agent/quoteFigures.ts";
+import { resolveBuyerCemetery, cemeteryNameKey } from "../_shared/cemeteryMatching.ts";
+import { quoteFigures, normalizeBuyerFees } from "../_shared/quoteFigures.ts";
 import { kindOf, looseCandidate, newestText, roundDown } from "./logic.ts";
 
 const MODEL = "google/gemini-3.1-flash-lite";
