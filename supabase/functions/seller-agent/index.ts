@@ -99,7 +99,9 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     family_tree_completed_at: answers.sellerConfirmedAt ?? null, documents_requested_at: sub.documents_requested_at,
     documents_completed_at: sub.documents_completed_at, listing_live_at: sub.listing_live_at, sold_at: sub.sold_at,
     stage: sub.texas_pipeline_stage ?? sub.pipeline_stage_override, ai_summary: sub.ai_summary,
-    family_tree_answers: (() => { const { autopilot: _a, ...rest } = answers; return clip(JSON.stringify(rest), 4000); })(),
+    family_tree_answers: (() => { const { autopilot: _a, requestExplanation: _r, ...rest } = answers; return clip(JSON.stringify(rest), 9000); })(),
+    deed_owner_roster: sub.ownership_roster ?? null,
+    why_these_documents_are_needed: answers.requestExplanation?.text ?? null,
   };
 
   const emailList = (emails.data ?? []).reverse().map((e) => ({
@@ -983,6 +985,15 @@ Deno.serve(async (req) => {
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
       if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
       const mail = { url, auth: req.headers.get("authorization")!, anon: Deno.env.get("SUPABASE_ANON_KEY") ?? "", actor: `AI agent (approved by ${user.name})` };
+      // Same as staff: the quote is only sent once the deed owners and plot wording are confirmed from the deed,
+      // because the agreement and the start of the family tree are generated from them.
+      const deedReady = async (patch: Record<string, unknown> = {}) => {
+        const chk = await checkDeed(db, apiKey, { ...sub, ...patch });
+        if (chk.status === "conflict") throw new Error(`Deed check stopped this: ${chk.summary} Fix the deed owner names / plot wording, then approve again.`);
+        const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
+        if (chk.status === "filled") await aiNote(`Read the deed and filled in ${Object.keys(chk.patch ?? {}).map((k) => FIELD_LABEL[k] ?? k).join(" and ")}: ${chk.summary}`);
+        return { ...(fresh ?? sub), ...patch };
+      };
       const aiNote = async (body: string) => { await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body, author_name: `AI agent (approved by ${user.name})` }); };
       try {
         if (act.action_type === "send_listing_agreement" || act.action_type === "send_family_tree") {
@@ -1119,18 +1130,18 @@ Deno.serve(async (req) => {
           const patch: Record<string, unknown> = {};
           for (const k of ["space_numbers", "section", "lawn"]) if (f[k]) patch[k] = f[k];
           if (Object.keys(patch).length) { const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id); if (e) throw new Error(e.message); }
-          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), { ...sub, ...patch }, { perSpace: Number(sub.quote_amount), count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), await deedReady(patch), { perSpace: Number(sub.quote_amount), count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
           await aiNote(`Corrected ${first(sub)}'s quote from ${beforeN} to ${n} space${n === 1 ? "" : "s"}${f.space_numbers ? ` (spaces ${beforeNums || "—"} → ${f.space_numbers})` : ""} at the same $${Number(sub.quote_amount).toLocaleString()} per space ($${r.total.toLocaleString()} total) and emailed the corrected quote${act.email_body ? " plus an explanation" : ""}.`);
         } else if (act.action_type === "increase_quote_ten_percent") {
           const increased = higherQuote(sub);
           if (increased === null || !sub.email) throw new Error("The quote no longer qualifies for a 10% increase below the buyer-price ceiling. Review it manually.");
           const n = Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1);
-          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), sub, { perSpace: increased, count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), await deedReady(), { perSpace: increased, count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
           await aiNote(`Sent ${first(sub)} a revised quote at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}; $${r.total.toLocaleString()} for ${n}) and a separate email explaining it.`);
         } else if (act.action_type === "resend_expired_quote") {
           if (!quoteExpired(sub) || !sub.email || !(Number(sub.quote_amount) > 0)) throw new Error("This quote is no longer expired or has no saved price. Review it manually.");
           const n = Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1);
-          await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), sub, { perSpace: Number(sub.quote_amount), count: n, intro: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), await deedReady(), { perSpace: Number(sub.quote_amount), count: n, intro: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
           await aiNote(`${first(sub)}'s quote had expired — re-sent it at the same $${Number(sub.quote_amount).toLocaleString()} per space with a fresh 10-day window.`);
         } else if (act.action_type === "send_quote") {
           const f = (act.payload?.fields ?? {}) as Record<string, string>;
@@ -1138,7 +1149,7 @@ Deno.serve(async (req) => {
           const figs = allowedQuoteFigures(sub, higherQuote(sub));
           if (!figs.has(per)) throw new Error(`$${per} per space isn't an approved figure for this record (allowed: ${[...figs.keys()].map((v) => `$${v}`).join(", ") || "none"}). Send it from the quote screen instead.`);
           if (!(n >= 1 && n <= 20)) throw new Error("Number of spaces missing");
-          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), sub, { perSpace: per, count: n, plotDescription: f.plot_description, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), await deedReady(), { perSpace: per, count: n, plotDescription: f.plot_description, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
           await aiNote(`Sent ${first(sub)} their quote: ${n} space${n === 1 ? "" : "s"} at $${per.toLocaleString()} per space ($${r.total.toLocaleString()}), ${figs.get(per)}.`);
         } else if (act.action_type === "resend_email") {
           const id = String(act.payload?.fields?.email_id ?? "");

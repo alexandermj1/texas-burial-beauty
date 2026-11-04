@@ -17,6 +17,7 @@ export const TEXAS_STAGES = ["new", "intake_sent", "details_received", "quoted",
 
 const RESEARCH_SYS = `You are the research desk for Texas Cemetery Brokers' seller team. Before a senior admin decides the next step on one SELLER file, you check the file more carefully than the best admin would.
 Use the tools. Read every email on the record (page with get_all_emails until you have them all, max 3 pages), the payments, the quote history, the document checklist and contracts, the activity log and the files. Open the actual files that matter (deed, POA, ID, certificates) with read_file / read_deed when the question touches them — never assume a file is what its name says.
+FAMILY TREE AND PAPERWORK REVIEW (whenever a family tree was sent or documents were requested): read get_family_tree and get_documents together. Check each requested item against the answers and its why_needed — right people (living deed owners; for deceased owners the surviving spouse and heirs at law), right POA type (single vs joint for a married couple), death/marriage certificates and affidavit where the rules need them, nothing missing, nothing unnecessary. Then open the documents the seller sent back (read_file / read_deed) and confirm each is the right document, for the right person, legible, signed and notarised where needed. Photos/scans are copies only — never count them as the mailed original.
 Only research cemetery prices, other stock (cemetery_stock) and nearby cemeteries when pricing, demand, alternatives or a revised quote is in play.
 Verify, don't assume:
 - Count the spaces on the deed vs the record and the quote. Check the lawn/section price on file vs the quote's retail.
@@ -94,9 +95,12 @@ export async function sendQuotePack(db: any, m: Mail, callInternal: (name: strin
     createLink: (body) => callInternal("create-payment-link", body),
   });
   if ((block.match(/href="https?:\/\//g) ?? []).length < 2) throw new Error("Couldn't create the listing-fee payment links, so the quote was not sent.");
+  const deedNames = String(sub.deed_owner_names ?? "").trim();
+  if (!deedNames || !plotDescription) throw new Error("Deed owner names and the exact plot wording must be on the record before a quote goes out — the agreement and family tree are built from them.");
   const { error: saveErr } = await db.from("contact_submissions").update({
+    deed_owner_names: deedNames, ownership_roster: rosterFromNames(deedNames, sub.ownership_roster),
     quote_amount: o.perSpace, plot_count: o.count, spaces: String(o.count), list_price: total, plot_description: plotDescription,
-    ownership_answers: { ...answers, autopilot: { ...(answers.autopilot ?? {}), netPerPlot: o.perSpace, plotCount: o.count, authorizedMinTotal: total, transferFee: fee || null, plotDescription } },
+    ownership_answers: { ...answers, autopilot: { ...(answers.autopilot ?? {}), preparedAt: now.toISOString(), deedOwnerNames: deedNames, netPerPlot: o.perSpace, plotCount: o.count, authorizedMinTotal: total, transferFee: fee || null, plotDescription } },
   }).eq("id", sub.id);
   if (saveErr) throw new Error(saveErr.message);
   const first = properFirstName(sub.name) || "there";
@@ -109,6 +113,14 @@ export async function sendQuotePack(db: any, m: Mail, callInternal: (name: strin
     await sendMail(m, { to: sub.email, subject: `Re: ${subject}`, body: o.explanation.trim(), html: plainHtml(o.explanation.trim()), threadId: sent.threadId ?? o.threadId, submissionId: sub.id });
   }
   return { total, threadId: sent.threadId ?? o.threadId ?? null };
+}
+
+// Same roster the staff seller pack saves: one entry per deed owner, keeping known deceased flags.
+const normKey = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, "").trim();
+export function rosterFromNames(raw: string, existing?: unknown) {
+  const prev = new Set<string>();
+  if (Array.isArray(existing)) for (const p of existing as any[]) { const n = String(p?.name ?? "").trim(); if (n && (p?.deceased === true || p?.role === "decedent")) prev.add(normKey(n)); }
+  return String(raw || "").split(/\s*(?:&|,|;|\band\b)\s*/i).map((s) => s.trim()).filter(Boolean).map((name) => (prev.has(normKey(name)) ? { name, deceased: true } : { name }));
 }
 
 /** Re-sends one of OUR earlier emails (same HTML) in its thread, with an optional short intro above it. */
