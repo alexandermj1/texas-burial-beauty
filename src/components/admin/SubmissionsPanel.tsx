@@ -1825,7 +1825,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {info && <Fact label="Added information from form" wide>{info}</Fact>}
                         </div>
                       </div>
-                      <div className="border-t border-border pt-4">
+                      <div className={pricingRelevant || aiFacts.length > 0 ? "border-t border-border pt-4" : ""}>
                         {pricingRelevant && <>
                          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pricing & listing</p>
                            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
