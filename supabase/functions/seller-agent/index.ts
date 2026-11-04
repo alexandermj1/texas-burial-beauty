@@ -86,6 +86,8 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
   const sectionPrices = (cemRows ?? []).flatMap((c: any) => (Array.isArray(c.sections) ? c.sections : []).map((x: any) => ({ cemetery: c.name, lawn: String(x.name ?? "").trim().slice(0, 160), retail_per_space: x.price ?? null, type: x.property_type || null, notes: clip(x.notes, 120), as_of: x.date ?? null }))).slice(0, 40);
 
   const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
+  const pipelineStage = sellerStage(sub, hasSellerAttachments(sub, (files.data ?? []).length));
+  const stageLine = `CURRENT PIPELINE STAGE: ${STAGE_LABEL[pipelineStage]} — do what moves the seller to the next stage (see THE SELLER PIPELINE).`;
   const record = {
     name: sub.name, email: sub.email, phone: sub.phone, submitted: sub.created_at,
     cemetery: sub.cemetery, cemetery_city: sub.cemetery_city, property_type: sub.property_type,
@@ -134,6 +136,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
 
   const context = [
     `TODAY: ${new Date().toISOString()}`,
+    stageLine,
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
     `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
     `CONTRACTS (contract_id usable in resend_contract_link / email_signed_copy):\n${JSON.stringify((contracts.data ?? []).map(({ id, sign_token: _t, ...c }: any) => ({ contract_id: id, ...c })))}`,
@@ -150,16 +153,18 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
 
   // Short view of the file for the cheap screening step and topic picking.
   const focus = [
+    stageLine,
     `STAGE: ${record.stage ?? "?"}; quote sent: ${!!sub.quote_sent_at}; quote response: ${sub.quote_response ?? "none"}; agreement signed: ${!!sub.la_signed_at}; family tree done: ${!!answers.sellerConfirmedAt}; documents requested: ${!!sub.documents_requested_at}`,
     `NEWEST STAFF NOTES:\n${(notes.data ?? []).slice(0, 3).map((n) => `${n.author_name ?? "Staff"} (${n.created_at}): ${clip(n.body, 300)}`).join("\n") || "(none)"}`,
     `LATEST EMAILS:\n${emailList.slice(-2).map((e) => `${e.from} (${e.when}): ${clip(e.text, 700)}`).join("\n") || "(none)"}`,
   ].join("\n\n");
 
-  return { contracts: (contracts.data ?? []) as any[], context, focus, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
+  return { pipelineStage, contracts: (contracts.data ?? []) as any[], context, focus, threadId: latestThread?.gmail_thread_id ?? null, lastSellerAt: latestSeller?.received_at ?? null, lastEmailFromUs: emailList.at(-1)?.from === "US (TCB)" };
 }
 
 const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)[0] || "The seller";
 const SITE = "https://www.texascemeterybrokers.com";
+import { sellerStage, hasSellerAttachments, STAGE_LABEL, PIPELINE_GUIDE } from "./pipeline.ts";
 import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQuoteFigures, contractLabel, TEXAS_STAGES } from "./adminActions.ts";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
@@ -189,6 +194,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (accepted && !signed && !la.some((c) => ["sent", "viewed"].includes(c.status))) out.add("send_listing_agreement");
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
+  if (signed && answers.questionsSentAt && !answers.sellerConfirmedAt && !sub.documents_requested_at) out.add("resend_family_tree");
   // Document requests are never proposed automatically — staff trigger them
   // ("Fill with AI" on the Check the request screen).
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
@@ -217,6 +223,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
+- resend_family_tree: re-emails the family tree link when it was sent but not completed. body = optional short follow-up email sent first (thank them, explain briefly why we need it). Do not also write a reply_email.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with its listing fee waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to use the existing explicitly waived Starter option (never the current paid Starter button); we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the explicitly waived option in your original quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this instead of flag_human for fee waivers.
 - send_quote: send (or re-send) the seller their quote pack — the SAME branded quote email with live listing-option buttons that staff send. Fields: fields = {per_space (digits, MUST be one of ALLOWED QUOTE FIGURES), spaces (digits), plot_description?}; body = optional short separate explanation email (with greeting and sign-off) sent right after it in the same thread (leave empty if not needed). Use when a quote was never sent, the seller lost it, or staff ask. Never invent a figure.
 - resend_email: re-send one of OUR earlier emails exactly as it went (same HTML, links, buttons) in its thread. Fields: fields = {email_id (from the EMAIL THREAD [email_id ...] tags)}; body = optional one- or two-sentence intro shown above it (no sign-off); subject optional. Use when the seller can't find something we sent.
@@ -264,6 +271,8 @@ You can see the scans on file (deed, intake uploads, email attachments) attached
 const INSTRUCTIONS = (playbook: string) => `You are the TCB Seller Agent for Texas Cemetery Brokers. Your job: look at one seller's full record and decide the single best next step to move them through the selling process with as little staff time as possible, strictly following the playbook.
 
 ${playbook}
+
+${PIPELINE_GUIDE}
 
 ${TOOLS_DOC}
 
@@ -341,6 +350,7 @@ const TRIAGE_SYS = `You screen a cemetery-plot SELLER's file for Texas Cemetery 
 needs_review = true if: the seller's latest email is unanswered, a staff note asks for something, the change may need a reply / record fix / document update, or you are at all unsure.
 needs_review = false ONLY when clearly nothing is needed right now (we already replied and are waiting on them, the seller only said thanks/ok, a staff note says hold or don't chase).
 topics = every area the next step might touch, from: documents (deeds, POAs, heirs, family tree, uploads, mailing originals), quote (prices, fees, spaces, expired, declined, wants more), signing (listing agreement / links not working), listing (where is my listing, marketing), cash (asks us to buy directly), standard (common questions). Include a topic when in doubt.
+Files at the Attachments stage (deed needs checking) or Tree done (tree needs checking) always need review.
 Return {"needs_review": boolean, "topics": string[], "stage_summary": string (max 12 words)}.`;
 
 const HISTORY_SYS = `Summarise these older emails between Texas Cemetery Brokers ("US (TCB)") and a cemetery-plot seller for a colleague who will read only this summary.
@@ -398,6 +408,7 @@ function toolsFor(allowed: Set<string>, topics: Set<string>) {
 
 const LEAN_STATIC = (playbook: string) => [
   ROLE_LINE,
+  PIPELINE_GUIDE,
   playbookSections(playbook).filter((s) => !s.topics.length).map((s) => s.text).join("\n"),
   "Extra rulebook chapters, rules and the admin actions available for THIS seller are given at the top of the input under CASE RULES. Follow them exactly as if they were written here.",
   TONE_LINE,
@@ -436,7 +447,10 @@ async function preparePrompt(db: SupabaseClient, apiKey: string, sub: Sub, ctx: 
   // questions the documents/plots/details, or staff asked for a manual review.
   const lastText = String(ctx.context).slice(-3500).toLowerCase();
   const wantsCheck = /wrong|mistake|incorrect|not (right|correct)|deed|document|paperwork|plot|section|lot|space|name is|spelled|transfer|notar|power of attorney|poa|death cert|anything else|need anything|mailed|posted|sent (it|them|the)/.test(lastText);
-  const scans = ((o.customerWaiting && wantsCheck) || o.instruction || (o.trigger === "manual" && wantsCheck)) ? await loadScans(db, sub) : noScans;
+  // Attachments stage: always read the upload to confirm it really is the deed.
+  // Tree done: read the deed to sanity-check the family tree answers.
+  const stageNeedsScan = ctx.pipelineStage === "attachments" || ctx.pipelineStage === "tree_done";
+  const scans = (stageNeedsScan || (o.customerWaiting && wantsCheck) || o.instruction || (o.trigger === "manual" && wantsCheck)) ? await loadScans(db, sub) : noScans;
   if (scans.names.length) topics.add("documents");
   const directive = o.instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${o.instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
   const head = `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n`;
@@ -589,7 +603,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
 
 const FIELD_KEYS: Record<string, string[]> = {
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
-  send_quote: ["per_space", "spaces", "plot_description"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
+  send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
 };
 
 function parseVisuals(v: unknown) {
@@ -720,7 +734,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch(() => null)));
     const rows = d.actions.map((a, ai) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -1012,6 +1026,12 @@ Deno.serve(async (req) => {
         } else if (act.action_type === "resend_signing_link") {
           await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${liveLink.sign_token}` });
           await aiNote(`Re-sent ${first(sub)} the link to sign the listing agreement.`);
+        } else if (act.action_type === "resend_family_tree") {
+          const follow = String(act.email_body ?? "").trim();
+          if (follow) await sendMail(mail, { to: sub.email, subject: act.email_subject || "Your family tree questionnaire", body: follow, html: plainHtml(follow), threadId: act.gmail_thread_id, submissionId: sub.id });
+          const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree", force: true });
+          if (r.status !== "sent") throw new Error(`Family tree not re-sent: ${r.reason ?? r.status}`);
+          await aiNote(`Re-sent ${first(sub)} the family tree questionnaire link.`);
         } else if (act.action_type === "send_family_tree") {
           const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree", ...(staffRequested ? { force: true } : {}) });
           if (r.status !== "sent") throw new Error(`Family tree not sent: ${r.reason ?? r.status}`);
