@@ -7,6 +7,25 @@ import { z } from "npm:zod@3";
 import { resolveBuyerCemetery, cemeteryNameKey } from "../_shared/cemeteryMatching.ts";
 import { quoteFigures, normalizeBuyerFees } from "../_shared/quoteFigures.ts";
 import { kindOf, looseCandidate, newestText, roundDown } from "./logic.ts";
+import { runAgent } from "../_shared/recordAgent.ts";
+
+// Deep checks use a stronger model with record tools; capped per hourly run to bound cost.
+const MAX_INVESTIGATIONS_PER_RUN = 6;
+const INVESTIGATE = `You are a careful senior salesperson at a Texas cemetery-plot broker. The cheap screener thinks a NEW seller plot
+might suit a WAITING buyer. Check it properly before a colleague is interrupted, like a human would:
+1. Read the buyer's emails (get_emails) and notes to confirm what they actually want now — specific cemetery only? type, number of spaces
+   (a companion space = 2 burials stacked in one space = 2 regular spaces; two side-by-side regular spaces can substitute), budget, timing, anything they rejected.
+2. Read the seller record (get_record): is it still available, what lawn/section, how many spaces, our buyer price for all and for one.
+3. If spaces, lawn or count matter, read the seller's emails/notes and, only if still unclear, the deed (read_deed). Check the cemetery file (get_cemetery) for lawn type/price if useful.
+Be loose about near-misses (a bit over budget, a nearby lawn, one space more or fewer) but strict about real contradictions
+(buyer only wants a different cemetery, niche vs ground, plot no longer available, buyer said they bought elsewhere).
+Final answer JSON only:
+{"verdict":"show"|"hide","fit":"good"|"close","headline":"one short sentence for staff, third person, e.g. 'Restland has 2 side-by-side spaces in Garden of Peace at $9,800 — they wanted 2 there under $10k.'",
+ "why":"2-4 plain sentences: what they want (with their words) and how this plot compares, including the gaps",
+ "checked":["short bullet per thing you verified, e.g. 'Deed shows Lot 12 spaces 3 & 4'"],
+ "concerns":["anything staff should double-check, or empty"],
+ "suggested_next":"one sentence, e.g. 'Email her the 2 spaces with the price; mention they are side by side rather than a companion space.'"}
+Never invent facts; if you could not verify something, say so in concerns. Prices you mention must come from get_record.`;
 
 const MODEL = "google/gemini-3.1-flash-lite";
 const OURS = "from_email.ilike.%texascemeterybrokers%,from_email.ilike.%bayercemeterybrokers%";
@@ -20,6 +39,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("tick") }),
   z.object({ action: z.literal("analyze"), submission_id: z.string().uuid() }),
   z.object({ action: z.literal("save_want"), submission_id: z.string().uuid(), status: z.enum(["waiting", "done", "none"]), summary: z.string().max(1000) }),
+  z.object({ action: z.literal("recheck_alert"), alert_id: z.string().uuid() }),
   z.object({ action: z.literal("dismiss_alert"), alert_id: z.string().uuid(), verdict: z.enum(["useful", "not_suitable", "dismissed"]), feedback: z.string().max(500).nullable() }),
 ]);
 
@@ -157,6 +177,7 @@ async function matchStock(db: any, apiKey: string) {
   const { data: existingAlerts } = await db.from("buyer_want_alerts").select("submission_id,seller_id").in("submission_id", wants.map((w: any) => w.submission_id)).is("deleted_at", null);
   const seen = new Set((existingAlerts ?? []).map((a: any) => `${a.submission_id}:${a.seller_id}`));
   let alerts = 0;
+  const budget = { left: MAX_INVESTIGATIONS_PER_RUN };
   for (const w of wants) {
     const c = w.criteria ?? {};
     const wanted = (c.cemeteries ?? []).map((n: string) => resolveBuyerCemetery(n, dir, c.area)).filter(Boolean);
@@ -167,16 +188,36 @@ async function matchStock(db: any, apiKey: string) {
     if (cands.length) {
       const user = `BUYER WANTS: ${w.summary}\nDetails: ${JSON.stringify(c)}\n\nNEW PLOTS:\n${cands.map(o => `- id=${o.x.s.id}: ${o.x.text}${o.r.miles ? `; ~${Math.round(o.r.miles)} miles from what they asked for` : ""}`).join("\n")}`;
       const out = await ai(apiKey, JUDGE, user);
+      let deferred = false;
       for (const p of (out.picks ?? []) as any[]) {
         const o = cands.find(k => k.x.s.id === p.id);
         if (!o || !p.reason) continue;
-        const { error: insErr } = await db.from("buyer_want_alerts").insert({ submission_id: w.submission_id, want_id: w.id, seller_id: o.x.s.id, fit: p.fit === "good" ? "good" : "close", reason: String(p.reason).slice(0, 400), offer_summary: o.x.text });
-        if (!insErr) alerts++;
+        // Out of deep-check budget: leave checked_until so this buyer is retried next run.
+        if (budget.left <= 0) { deferred = true; continue; }
+        budget.left--;
+        const inv = await investigate(db, apiKey, dir, w, o.x.s.id, p.reason).catch(e => { if ([402, 429].includes((e as any).status)) throw e; console.error("investigate", e); return null; });
+        if (!inv) { deferred = true; continue; }
+        const show = inv.answer?.verdict !== "hide";
+        const { error: insErr } = await db.from("buyer_want_alerts").insert({
+          submission_id: w.submission_id, want_id: w.id, seller_id: o.x.s.id,
+          fit: (inv.answer?.fit ?? p.fit) === "good" ? "good" : "close",
+          reason: String(inv.answer?.headline || p.reason).slice(0, 400), offer_summary: o.x.text,
+          ai_verdict: show ? "show" : "hidden", investigation: { ...inv.answer, screener_reason: p.reason, tools_used: inv.trace }, investigated_at: new Date().toISOString(),
+          ...(show ? {} : { dismissed_at: new Date().toISOString(), dismissed_by_name: "AI check", feedback_verdict: "ai_rejected" }),
+        });
+        if (!insErr && show) alerts++;
       }
+      if (deferred) continue;
     }
     await db.from("buyer_wants").update({ checked_until: now }).eq("id", w.id);
   }
   return alerts;
+}
+
+/** Deep check of one buyer × seller pair with read-only record tools. */
+async function investigate(db: any, apiKey: string, dir: any[], want: any, sellerId: string, screener: string) {
+  const task = `WAITING BUYER record id: ${want.submission_id}\nOur note on what they want: ${want.summary}\nTheir words: ${want.buyer_words ?? "-"}\n\nNEW SELLER PLOT record id: ${sellerId}\nScreener said: ${screener}\n\nInvestigate and give your verdict.`;
+  return await runAgent({ db, apiKey, dir, deedReads: 0 }, INVESTIGATE, task);
 }
 
 async function staff(db: any, req: Request) {
@@ -219,6 +260,16 @@ Deno.serve(async req => {
       const r = w ? await db.from("buyer_wants").update(row).eq("id", w.id) : await db.from("buyer_wants").insert({ ...row, submission_id: b.submission_id });
       if (r.error) throw new Error(r.error.message);
       return json({ ok: true });
+    }
+    if (b.action === "recheck_alert") {
+      if (!apiKey) return json({ error: "AI is not configured" }, 500);
+      const { data: a } = await db.from("buyer_want_alerts").select("*").eq("id", b.alert_id).maybeSingle();
+      const { data: w } = a ? await db.from("buyer_wants").select("*").eq("submission_id", a.submission_id).is("deleted_at", null).maybeSingle() : { data: null };
+      if (!a || !w) return json({ error: "Alert not found" }, 404);
+      const inv = await investigate(db, apiKey, await directory(db), w, a.seller_id, a.reason);
+      const show = inv.answer?.verdict !== "hide";
+      await db.from("buyer_want_alerts").update({ ai_verdict: show ? "show" : "hidden", investigation: { ...inv.answer, screener_reason: a.investigation?.screener_reason ?? a.reason, tools_used: inv.trace }, investigated_at: new Date().toISOString(), reason: String(inv.answer?.headline || a.reason).slice(0, 400) }).eq("id", a.id);
+      return json({ ok: true, note: show ? "Checked — still looks worth a look" : "Checked — the AI now thinks this doesn't suit them (see why)" });
     }
     const { error } = await db.from("buyer_want_alerts").update({ dismissed_at: new Date().toISOString(), dismissed_by_name: user.name, feedback_verdict: b.verdict, feedback: b.feedback }).eq("id", b.alert_id);
     if (error) throw new Error(error.message);
