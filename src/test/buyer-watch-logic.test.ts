@@ -22,3 +22,13 @@ describe("buyer watch loose matching", () => {
     expect(newestText("Yes please add me.\n\nOn Mon, Nov 2, Simon wrote:\n> We have 3 plots")).toBe("Yes please add me.");
   });
 });
+
+describe("buyer who insists on one cemetery", () => {
+  it("does not surface a nearby different cemetery", async () => {
+    const { looseCandidate } = await import("../../supabase/functions/buyer-watch/logic");
+    const want = { cemeteryKeys: ["sparkman hillcrest"], points: [{ lat: 32.87, lng: -96.77 }], places: [], anywhere: false, kind: "crypt", onlyNamed: true };
+    const restland = { kind: "crypt", cemeteryKey: "restland", point: { lat: 32.92, lng: -96.73 }, place: "dallas" } as any;
+    expect(looseCandidate(want, restland).keep).toBe(false);
+    expect(looseCandidate(want, { ...restland, cemeteryKey: "sparkman hillcrest" }).keep).toBe(true);
+  });
+});
