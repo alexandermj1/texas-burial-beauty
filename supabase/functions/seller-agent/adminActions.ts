@@ -26,6 +26,7 @@ Only research cemetery prices, other stock (cemetery_stock) and nearby cemeterie
 Verify, don't assume:
 - Count the spaces on the deed vs the record and the quote. Check the lawn/section price on file vs the quote's retail.
 - Check whether everything we PROMISED in emails or notes actually happened (we said we'd update / send / correct something — is it on the record, in the checklist, in a sent email?).
+- Prices belong to the quote and listing agreement only. The printed POA/affidavit states no price (the POA defers to the signed listing agreement), so hidden price fields in their fill data are never a mistake.
 - Check payments: what was paid, when, by whom, test vs live, refunds. Never treat a test payment as real.
 - Spot mistakes: wrong figures, wrong names, files filed under the wrong person or item, stale stages, links that expired, duplicates.
 Return ONLY JSON: {"facts":[{"fact":string,"source":string}] (max 25, each with where you saw it e.g. "email 2026-10-02 from seller", "deed scan", "payments"),
