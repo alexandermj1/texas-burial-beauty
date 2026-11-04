@@ -661,6 +661,7 @@ export type Database = {
       }
       buyer_want_alerts: {
         Row: {
+          ai_verdict: string | null
           created_at: string
           deleted_at: string | null
           dismissed_at: string | null
@@ -669,6 +670,8 @@ export type Database = {
           feedback_verdict: string | null
           fit: string
           id: string
+          investigated_at: string | null
+          investigation: Json | null
           offer_summary: string | null
           reason: string
           seller_id: string
@@ -676,6 +679,7 @@ export type Database = {
           want_id: string
         }
         Insert: {
+          ai_verdict?: string | null
           created_at?: string
           deleted_at?: string | null
           dismissed_at?: string | null
@@ -684,6 +688,8 @@ export type Database = {
           feedback_verdict?: string | null
           fit?: string
           id?: string
+          investigated_at?: string | null
+          investigation?: Json | null
           offer_summary?: string | null
           reason: string
           seller_id: string
@@ -691,6 +697,7 @@ export type Database = {
           want_id: string
         }
         Update: {
+          ai_verdict?: string | null
           created_at?: string
           deleted_at?: string | null
           dismissed_at?: string | null
@@ -699,6 +706,8 @@ export type Database = {
           feedback_verdict?: string | null
           fit?: string
           id?: string
+          investigated_at?: string | null
+          investigation?: Json | null
           offer_summary?: string | null
           reason?: string
           seller_id?: string
