@@ -1,6 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import SellerDeedPreview from "./SellerDeedPreview";
 import { deedLocationMatch } from "@/lib/deedLocationMatch";
+import { deedOwnerMatch } from "@/lib/deedOwnerMatch";
 import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, ExternalLink, CheckCircle, Trash2, ChevronRight, Inbox, FileText, FileCheck, Send, MessageCircleX, Layers, RefreshCw, AlertTriangle, FileSignature, Search, Paperclip, FileX, DollarSign, Sparkles, X, Users, Clock, Archive, ArchiveRestore, Info, Pencil, MapPin, Save } from "lucide-react";
@@ -1357,6 +1358,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Pull deed-extracted owner names for the currently selected submission so the
   // seller-intake template can ask the right ownership follow-up question.
   const [selectedDeedOwners, setSelectedDeedOwners] = useState<string[]>([]);
+  const [deedHighlightOwners, setDeedHighlightOwners] = useState<{ id: string; owners: string[] } | null>(null);
   const [aiFacts, setAiFacts] = useState<Array<{ label: string; value: string; source: string; status: "match" | "differs" | "new"; customerValue?: string; customerLabel?: string }>>([]);
   const [aiSummaries, setAiSummaries] = useState<Array<{ file: string; summary: string }>>([]);
   const [aiFactsOpen, setAiFactsOpen] = useState(false);
@@ -1749,7 +1751,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                    <div className="grid gap-5 border-b border-border/70 bg-card px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] sm:items-start sm:px-7">
                     <div className="min-w-0">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Seller submission record</p>
-                      <h3 className="mt-1 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}</h3>
+                      <h3 className="mt-1 flex items-center gap-2 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}{(() => {
+                        const owners = deedHighlightOwners?.id === selected.id && deedHighlightOwners.owners.length ? deedHighlightOwners.owners : selectedDeedOwners.length ? selectedDeedOwners : String(seller.deed_owner_names || "").split(/\n/).filter(Boolean);
+                        const m = deedOwnerMatch(selected.name, owners);
+                        if (!m) return null;
+                        const tip = m.tone === "green" ? (m.others.length ? "Named on the deed, with others" : "The only owner named on the deed") : "Not named on the deed";
+                        return <span title={tip} className="shrink-0"><CheckCircle aria-label={tip} className="h-5 w-5" style={{ color: m.tone === "green" ? "hsl(var(--status-docs))" : "hsl(var(--destructive))" }} /></span>;
+                      })()}</h3>
+                      {(() => {
+                        const owners = deedHighlightOwners?.id === selected.id && deedHighlightOwners.owners.length ? deedHighlightOwners.owners : selectedDeedOwners.length ? selectedDeedOwners : String(seller.deed_owner_names || "").split(/\n/).filter(Boolean);
+                        const m = deedOwnerMatch(selected.name, owners);
+                        if (!m || !m.others.length) return null;
+                        return <p className="mt-1 text-xs text-muted-foreground">{m.tone === "green" ? "Also on the deed: " : "Deed is in the name of: "}<span className="font-medium text-foreground">{m.others.join(", ")}</span></p>;
+                      })()}
                        <p className="mt-2 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
                        <div className="mt-4 flex flex-wrap items-center gap-2">
                          {selected.email && <Button type="button" size="sm" style={stagePrimaryStyle} className="hover:brightness-95" onClick={() => openWorkspaceAt("email", `email-thread-${selected.id}`)}><Mail />Email seller</Button>}
@@ -1817,7 +1831,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {(customerLocation !== "Not provided" || deedLocation) && <details className="mt-3 border-t border-border/60 pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Compare source wording</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Customer wrote</span><span className="mt-1 block text-xs text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />AI read from deed</span><span className="mt-1 block text-xs font-medium text-foreground">{deedLocation || "No property description found"}</span>{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></details>}
                         </div>
                       </div>
-                      <SellerDeedPreview submissionId={selected.id} createdAt={selected.created_at} sellingLocation={sellingLocation} deedLocation={deedLocation} />
+                      <SellerDeedPreview submissionId={selected.id} createdAt={selected.created_at} deedLocation={deedLocation} locationMatch={deedLocationMatch(sellingLocation, deedLocation)} onOwners={(owners) => setDeedHighlightOwners({ id: selected.id, owners })} />
                       <div className="pt-1">
                         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Seller details</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">

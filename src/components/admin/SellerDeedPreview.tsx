@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import type { DeedMatch } from "@/lib/deedLocationMatch";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown, ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Maximize2 } from "lucide-react";
 
 // Deeds received from this moment onwards are outlined automatically the first
 // time a staff member opens the record (one cheap AI read, then cached).
@@ -25,10 +27,9 @@ async function uprightJpeg(url: string): Promise<string | null> {
 
 const cache = new Map<string, Resp>();
 
-export default function SellerDeedPreview({ submissionId, createdAt, sellingLocation, deedLocation }: { submissionId: string; createdAt?: string | null; sellingLocation?: string; deedLocation?: string }) {
+export default function SellerDeedPreview({ submissionId, createdAt, deedLocation, locationMatch, onOwners }: { submissionId: string; createdAt?: string | null; deedLocation?: string; locationMatch?: DeedMatch; onOwners?: (owners: string[]) => void }) {
   const [data, setData] = useState<Resp | null>(cache.get(submissionId) ?? null);
   const [loading, setLoading] = useState(!cache.has(submissionId));
-  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (cache.has(submissionId)) { setData(cache.get(submissionId)!); setLoading(false); return; }
@@ -51,45 +52,52 @@ export default function SellerDeedPreview({ submissionId, createdAt, sellingLoca
     return () => { alive = false; };
   }, [submissionId, createdAt]);
 
+  const ownerList = data?.highlights?.is_deed ? data.highlights.regions.filter(r => r.kind === "owner").map(r => r.text).filter(Boolean) : [];
+  const ownerKey = ownerList.join("|");
+  useEffect(() => { if (ownerKey) onOwners?.(ownerKey.split("|")); }, [ownerKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading && !data) return null;
   if (!data?.deed?.url) return null;
   const regions = data.highlights?.is_deed ? data.highlights.regions : [];
-  const owners = regions.filter(r => r.kind === "owner").map(r => r.text).filter(Boolean);
   const spaces = regions.filter(r => r.kind === "space").map(r => r.text).filter(Boolean);
 
+  // Draw the outline just outside the text so it never covers what staff are reading.
   const Deed = ({ big }: { big: boolean }) => (
     <div className="relative w-fit">
-      <img src={data.deed!.url!} alt={`Deed: ${data.deed!.name}`} loading="lazy" className={`block w-auto rounded ${big ? "max-h-[640px] max-w-full" : "h-36 max-w-[180px] object-contain"}`} />
+      <img src={data.deed!.url!} alt={`Deed: ${data.deed!.name}`} loading="lazy" className={`block w-auto rounded-sm ${big ? "max-h-[80vh] max-w-full" : "h-24 max-w-[140px] object-contain"}`} />
       {regions.map((r, i) => {
         const [y1, x1, y2, x2] = r.box;
-        return <span key={i} title={r.text} className={`pointer-events-none absolute rounded-[2px] border-destructive ${big ? "border-2" : "border"}`}
-          style={{ top: `${y1 / 10}%`, left: `${x1 / 10}%`, height: `${Math.max(1, (y2 - y1) / 10)}%`, width: `${Math.max(1, (x2 - x1) / 10)}%` }} />;
+        const padY = 0.9, padX = 0.6;
+        return <span key={i} title={r.text} className="pointer-events-none absolute rounded-[3px] border border-destructive/90"
+          style={{ top: `${Math.max(0, y1 / 10 - padY)}%`, left: `${Math.max(0, x1 / 10 - padX)}%`, height: `${(y2 - y1) / 10 + padY * 2}%`, width: `${(x2 - x1) / 10 + padX * 2}%` }} />;
       })}
     </div>
   );
+  const showDetails = locationMatch !== "green";
 
   return (
-    <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
-      <div className="flex gap-4">
-        <button type="button" onClick={() => setOpen(v => !v)} className="shrink-0 rounded-md bg-background p-1.5 shadow-sm ring-1 ring-border/60 transition hover:ring-primary/50" title={open ? "Hide large view" : "Enlarge deed"}>
-          <Deed big={false} />
-        </button>
-        <div className="min-w-0 flex-1 space-y-2 text-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Deed they sent</span>
-            {regions.length > 0 && <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"><span className="h-2 w-2 rounded-sm border-2 border-destructive" />outlined</span>}
-          </div>
-          {deedLocation && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">AI read from deed:</span> {deedLocation}</p>}
-          {owners.length > 0 && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Names:</span> {owners.join(" · ")}</p>}
-          {spaces.length > 0 && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Spaces:</span> {spaces.join(" · ")}</p>}
-          {loading && <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Outlining names and spaces…</p>}
-          <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
-            <button type="button" onClick={() => setOpen(v => !v)} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />{open ? "Hide large view" : "Enlarge"}</button>
-            <a href={data.deed.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"><ExternalLink className="h-3 w-3" />Open full size</a>
-          </div>
-        </div>
+    <div className="flex items-center gap-4 rounded-xl border border-border/70 bg-muted/20 p-2.5">
+      <Dialog>
+        <DialogTrigger asChild>
+          <button type="button" className="group relative shrink-0 overflow-hidden rounded-md bg-background p-1 ring-1 ring-border/60 transition hover:ring-primary/60" title="View deed">
+            <Deed big={false} />
+            <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition group-hover:bg-foreground/25 group-hover:opacity-100"><Maximize2 className="h-4 w-4 text-background" /></span>
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-w-5xl p-3">
+          <DialogTitle className="sr-only">Deed they sent</DialogTitle>
+          <div className="flex justify-center"><Deed big /></div>
+          <a href={data.deed.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 justify-self-end text-xs text-muted-foreground hover:text-foreground"><ExternalLink className="h-3 w-3" />Open original</a>
+        </DialogContent>
+      </Dialog>
+      <div className="min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em]">Deed they sent</p>
+        {showDetails ? <>
+          {deedLocation && <p><span className="font-medium text-foreground">Deed reads:</span> {deedLocation}</p>}
+          {!deedLocation && spaces.length > 0 && <p><span className="font-medium text-foreground">Spaces:</span> {spaces.join(" · ")}</p>}
+        </> : <p>Matches the locations being sold.</p>}
+        {loading && <p className="flex items-center gap-1.5"><Loader2 className="h-3 w-3 animate-spin" />Reading deed…</p>}
       </div>
-      {open && <div className="mt-3 flex justify-center rounded-lg bg-background p-2 ring-1 ring-border/60"><Deed big /></div>}
     </div>
   );
 }
