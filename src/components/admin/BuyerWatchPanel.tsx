@@ -4,7 +4,7 @@ import { Sparkles, Check, X, RefreshCw, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 export type BuyerWant = { id: string; submission_id: string; status: string; summary: string; buyer_words: string | null; confidence: string | null; staff_edited: boolean; edited_by_name: string | null; updated_at: string };
-export type BuyerWantAlert = { id: string; submission_id: string; seller_id: string; fit: string; reason: string; offer_summary: string | null; created_at: string; dismissed_at: string | null };
+export type BuyerWantAlert = { id: string; submission_id: string; seller_id: string; fit: string; reason: string; offer_summary: string | null; ai_verdict?: string | null; investigation?: { why?: string; checked?: string[]; concerns?: string[]; suggested_next?: string } | null; created_at: string; dismissed_at: string | null };
 
 /** Open "waiting for" notes and undismissed alerts, refreshed every minute. */
 export function useBuyerWatch() {
@@ -59,9 +59,21 @@ export function BuyerWatchPanel({ submissionId, want, alerts, onChange }: { subm
           </div>
           <p className="text-sm text-foreground">{a.reason}</p>
           {a.offer_summary && <p className="text-xs text-muted-foreground">{a.offer_summary}</p>}
+          {a.investigation && (
+            <details className="text-xs text-foreground/90">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">What the AI checked and why</summary>
+              <div className="mt-1.5 space-y-1.5">
+                {a.investigation.why && <p>{a.investigation.why}</p>}
+                {!!a.investigation.checked?.length && <ul className="list-disc pl-4 space-y-0.5">{a.investigation.checked.map((c, i) => <li key={i}>{c}</li>)}</ul>}
+                {!!a.investigation.concerns?.length && <div><span className="font-medium">Double-check:</span><ul className="list-disc pl-4 space-y-0.5">{a.investigation.concerns.map((c, i) => <li key={i}>{c}</li>)}</ul></div>}
+                {a.investigation.suggested_next && <p><span className="font-medium">Suggested next step:</span> {a.investigation.suggested_next}</p>}
+              </div>
+            </details>
+          )}
           <div className="flex flex-wrap gap-1.5">
             <button disabled={busy} onClick={() => call({ action: "dismiss_alert", alert_id: a.id, verdict: "useful", feedback: null }, "Marked useful")} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-muted border border-border hover:bg-muted/70"><Check className="w-3 h-3" /> Done — useful</button>
             <button disabled={busy} onClick={() => { const why = window.prompt("Why isn't it suitable? (helps tune the AI)") ; if (why === null) return; call({ action: "dismiss_alert", alert_id: a.id, verdict: "not_suitable", feedback: why || null }, "Thanks — noted"); }} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-muted border border-border hover:bg-muted/70"><X className="w-3 h-3" /> Not suitable</button>
+            <button disabled={busy} onClick={() => call({ action: "recheck_alert", alert_id: a.id }, "Checked again")} title="Have the AI re-read both records now" className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-muted-foreground hover:text-foreground"><RefreshCw className={`w-3 h-3 ${busy ? "animate-spin" : ""}`} /> Check again</button>
           </div>
         </div>
       ))}
