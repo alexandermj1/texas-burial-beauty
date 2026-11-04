@@ -284,7 +284,7 @@ ${DOC_CHECK_GUIDE}
 
 RULES FOR YOUR OUTPUT
 - Only propose actions for this seller. Use only facts in the record; never invent prices, fees, documents or dates. Figures must match the record exactly.
-- If the seller's latest email is unanswered, propose a reply_email that answers it fully per the playbook.
+- If the seller's latest email is unanswered, ALWAYS propose a reply_email that answers it fully per the playbook — even when you also add notes, flag a call or something is still unresolved (answer what you can, say honestly what we are checking, never leave them without a reply).
 - If nothing needs saying (we already replied, waiting on them, a staff note says hold), propose no email; you may propose an add_note summarising status.
 - SOLVE IT YOURSELF: nothing goes to staff except a phone call. Complaints, legal questions, refunds, cancellations, holds, price disputes, probate, conflicting notes — work out the best response from the file and propose the concrete actions that resolve it (reply_email, add_note, update_fields, set_stage, document/quote actions). Any older playbook line saying "hand to a human" / "flag" now means: handle it yourself, and use flag_human only when a call is truly needed (always alongside the reply you can send now). If unsure, still propose your best answer and lower confidence — staff approve every action anyway. Only propose actions in ALLOWED NOW; never promise something no action can do.
 - DEED ALREADY SENT, NO QUOTE YET: if the seller has sent the deed (and any other paperwork, e.g. an affidavit) as attachments and no quote has gone out, reply that we have everything we need for now and are completing their valuation and coordinating with the cemetery. Do not ask for more, do not flag.
