@@ -102,6 +102,12 @@ Deno.serve(async (req) => {
     }
     explanation = (explanation || reasoningSummary).replace(/^```[a-z]*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
     if (!explanation) return json({ error: "AI returned no explanation." }, 500);
+    // Keep the latest "Why these documents are needed" text on the record so the seller AI reads the same explanation staff see.
+    const { data: fresh } = await svc.from("contact_submissions").select("ownership_answers").eq("id", submissionId).maybeSingle();
+    const prev = ((fresh?.ownership_answers ?? {}) as Record<string, unknown>);
+    if ((prev.requestExplanation as { text?: string } | undefined)?.text !== explanation) {
+      await svc.from("contact_submissions").update({ ownership_answers: { ...prev, requestExplanation: { text: explanation, at: new Date().toISOString(), items: useful.map((i) => i.label).slice(0, 40) } } }).eq("id", submissionId);
+    }
     return json({ explanation });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Could not explain this request." }, 500);

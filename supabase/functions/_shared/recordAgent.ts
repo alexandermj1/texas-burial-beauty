@@ -24,6 +24,7 @@ export const ADMIN_READ_TOOLS = [
   { name: "get_payments", description: "Every payment on the record: what for, amount, status, who paid, when paid, refunds, test vs live.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_quote_history", description: "Quote history: AI estimates, approved revisions and every past change to quote/price/space fields with who changed them.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_activity", description: "The record's activity log (who did what, when), newest first.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
+  { name: "get_family_tree", description: "The seller's family-tree questionnaire exactly as answered (every person, relationship, alive/deceased, spouses, heirs, wills, notes), the deed-owner roster it started from, when it was sent/confirmed, staff-added/removed document requests, and the saved 'Why these documents are needed' explanation.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_documents", description: "The live document request checklist: each item, person, state, notary need, received date, notes and attached file names.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_contracts", description: "Every contract on the record (listing agreement, POAs, affidavits): status, sent/viewed/signed/countersigned dates, link expiry; plus buyer purchase agreements for this plot.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "read_file", description: "Open ONE file (image or PDF) from get_files (file_id) or a checklist upload path from get_documents (path) and read it with vision. Ask a specific question.", parameters: { type: "object", properties: { id: { type: "string" }, file_id: { type: "string" }, path: { type: "string" }, question: { type: "string" } }, required: ["id", "question"] } },
@@ -102,6 +103,14 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     const { data, count } = await db.from("email_messages").select("id,from_email,to_email,subject,body_text,snippet,received_at,gmail_thread_id", { count: "exact" }).or(await emailOr(db, id)).is("deleted_at", null).order("received_at", { ascending: true }).range(off, off + lim - 1);
     return { total: count ?? 0, offset: off, emails: (data ?? []).map((m: any) => ({ id: m.id, from: US.test(m.from_email) ? "US" : "THEM", to: m.to_email, at: m.received_at, subject: m.subject, text: clip(String(m.body_text || m.snippet || "").replace(/\nOn .{5,160}wrote:[\s\S]*$/, ""), 5000) })) };
   }
+  if (name === "get_family_tree") {
+    const { data: r } = await db.from("contact_submissions").select("deed_owner_names,ownership_roster,ownership_answers,documents_requested_at,documents_completed_at").eq("id", id).maybeSingle();
+    if (!r) return { error: "Record not found." };
+    const { autopilot: _a, requestExplanation, ...answers } = (r.ownership_answers ?? {}) as Record<string, any>;
+    return { deed_owner_names: r.deed_owner_names, roster_from_deed: r.ownership_roster ?? [], sent_at: answers.questionsSentAt ?? null, seller_confirmed_at: answers.sellerConfirmedAt ?? null,
+      answers: clip(JSON.stringify(answers), 14000), why_these_documents: requestExplanation?.text ?? null, explanation_written_at: requestExplanation?.at ?? null,
+      documents_requested_at: r.documents_requested_at, documents_completed_at: r.documents_completed_at };
+  }
   if (name === "get_payments") {
     const { data } = await db.from("payment_transactions").select("kind,description,amount_cents,status,environment,recipient_email,recipient_name,paid_at,created_at,refunded_at,refund_amount_cents,dispute_status,created_by_name,metadata").eq("submission_id", id).is("deleted_at", null).order("created_at", { ascending: true });
     return (data ?? []).map((p: any) => ({ for: p.kind, description: p.description, amount: p.amount_cents / 100, status: p.status, test_payment: p.environment !== "live", payer: p.metadata?.customer_email ?? p.recipient_email, payer_name: p.recipient_name, link_created: p.created_at, link_created_by: p.created_by_name, paid_at: p.paid_at, refunded_at: p.refunded_at, refund: p.refund_amount_cents ? p.refund_amount_cents / 100 : null, dispute: p.dispute_status, tier: p.metadata?.listing_tier ?? p.metadata?.listingTier ?? null }));
@@ -121,8 +130,8 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     return data ?? [];
   }
   if (name === "get_documents") {
-    const { data } = await db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,manual_override,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", id).is("deleted_at", null).order("sort_order");
-    return (data ?? []).map((d: any) => ({ id: d.id, code: d.doc_code, label: d.label, person: d.person_name, state: d.manual_override ?? d.required_state ?? d.status, status: d.status, needs_notary: d.needs_notary, received_at: d.received_at, notes: clip(d.notes, 300), files: [...new Set([...(d.file_urls ?? []), ...(d.file_url ? [d.file_url] : [])])] }));
+    const { data } = await db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,manual_override,needs_notary,received_at,notes,why,file_url,file_urls").eq("submission_id", id).is("deleted_at", null).order("sort_order");
+    return (data ?? []).map((d: any) => ({ id: d.id, code: d.doc_code, label: d.label, person: d.person_name, state: d.manual_override ?? d.required_state ?? d.status, status: d.status, why_needed: clip(d.why, 400), needs_notary: d.needs_notary, received_at: d.received_at, notes: clip(d.notes, 300), files: [...new Set([...(d.file_urls ?? []), ...(d.file_url ? [d.file_url] : [])])] }));
   }
   if (name === "get_contracts") {
     const [c, pa] = await Promise.all([
