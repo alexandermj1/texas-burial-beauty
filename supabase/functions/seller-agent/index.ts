@@ -1158,7 +1158,10 @@ Deno.serve(async (req) => {
             await aiNote(`Re-sent ${first(sub)} the signing link for the ${contractLabel(c)}.`);
           } else {
             if (!["signed", "notarized", "completed"].includes(c.status)) throw new Error("That contract isn't signed yet.");
-            await callInternal(url, "email-signed-contract", { contract_id: c.id });
+            // Staff-only function: call it as the approving staff member.
+            const res = await fetch(`${url}/functions/v1/email-signed-contract`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: mail.auth, apikey: mail.anon }, body: JSON.stringify({ contract_id: c.id }) });
+            const t = await res.text();
+            if (!res.ok || /"error"/.test(t)) throw new Error(`Signed copy not sent (${res.status}): ${t.slice(0, 200)}`);
             await aiNote(`Emailed ${first(sub)} a copy of their signed ${contractLabel(c)}.`);
           }
         } else if (act.action_type === "edit_document_request") {
