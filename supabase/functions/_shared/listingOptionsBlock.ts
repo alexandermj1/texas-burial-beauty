@@ -1,0 +1,560 @@
+// Shared (browser + edge function) builder for the "Quote (with pay buttons)" block. Injected into
+// the email body between the greeting and the signature. Styled as a
+// self-contained, marketing-quality branded card (Texas Cemetery Brokers)
+// modelled on the Bayer Purchase Offer email: logo header, property
+// callout, prominent price callout, section cards, tier cards, and a
+// muted footnote — all inline styles so Gmail/Outlook/Apple Mail render
+// it consistently.
+
+import { properCase } from "./properCase.ts";
+
+/** Creates one listing-fee payment link. Injected so browser and server builders share this exact HTML. */
+export type CreateListingLink = (body: Record<string, unknown>) => Promise<{ url?: string | null; free?: boolean } | null>;
+
+const fmtUsd = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+export const TIERS = [
+  { id: "starter", label: "Starter", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurb: "List your property with a one-time upfront fee. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
+  { id: "pro", label: "Pro", price: 399, priceLabel: "$399 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors to help find a buyer. Cancel anytime at no charge." },
+  { id: "custom_plus", label: "Featured", price: 499, priceLabel: "$499 One-Time Upfront Fee", blurbTemplate: (cem: string) => `Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots to prompt a faster sale. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at ${cem}. Cancel anytime at no charge.` },
+  { id: "set_your_price", label: "Set Your Own Price", price: 799, priceLabel: "$799 One-Time Upfront Fee", blurb: "Everything included in the Featured package, plus the right to set your own asking price rather than our suggested sales price. Because it contains the whole Featured package, your listing agreement is marked Featured and you type your own minimum price into the agreement when you sign it. This option is designed for sellers who are willing to wait longer in exchange for a potentially higher return. We always pursue the highest achievable price regardless of which option you choose — this simply raises the floor below which we will not sell. Please note that pricing above the suggested figure typically lengthens the time to sell. Cancel anytime at no charge." },
+] as const;
+
+
+export const parseSpaces = (s: string | null | undefined): number => {
+  if (!s) return 1;
+  const n = parseInt(String(s).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+};
+
+export interface SellerForBlock {
+  id: string;
+  name: string | null;
+  email: string | null;
+  cemetery: string | null;
+  section: string | null;
+  property_type: string | null;
+  spaces: string | null;
+  space_numbers?: string | null;
+  lawn?: string | null;
+  transfer_fee_amount?: number | string | null;
+}
+
+// ── Texas brand tokens ──────────────────────────────────────────────
+const BRAND_PRIMARY = "#7c3a2e";     // burgundy
+const BRAND_PRIMARY_FG = "#ffffff";
+const BRAND_BG_ACCENT = "#f7f1e8";   // warm sand
+const BRAND_CARD_BG = "#ffffff";
+const BRAND_PAGE_BG = "#f1ece2";     // outer page tan
+const BRAND_BORDER = "#e7e2d8";
+const BRAND_INK = "#1f2937";
+const BRAND_INK_MUTED = "#4b4537";
+const BRAND_INK_FAINT = "#9a8f7a";
+const SERIF = "Georgia, 'Times New Roman', serif";
+const SANS = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+const LOGO_URL =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/ba491ce8-b20f-42a1-a37e-059bb277ea85/hibiscus-coral.png";
+/** Public PDF of the real Available Property List we circulate to mortuaries. */
+export const SAMPLE_SHEET_URL =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/4f4d9a57-3daf-4acc-bef9-f182c7bf8e0f/texas-cemetery-brokers-featured-listings.pdf";
+/** Public web page (HTML) version of the sample Available Property List. */
+export const SAMPLE_SHEET_WEB_URL =
+  "https://www.texascemeterybrokers.com/sample-listing-sheet.html";
+
+/**
+ * Small, email-safe branded block that links to the Available Property List
+ * (the sheet we circulate to mortuaries). Inserted by the "Include mortuary
+ * sheet" button in the email composer. Marked with data-mortuary-sheet="1"
+ * so repeat clicks replace the block instead of stacking copies.
+ */
+export function buildMortuarySheetEmailBlock(): string {
+  return `
+<div data-mortuary-sheet="1" style="margin:18px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border:1px solid ${BRAND_BORDER};border-radius:12px;">
+  <tr><td style="padding:20px 24px;">
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 8px;font-weight:700;">Available Property List</p>
+    <p style="font-family:${SANS};font-size:14.5px;line-height:1.7;color:${BRAND_INK};margin:0 0 12px;">Here is our Available Property List — the verified, deed-clear property sheet we circulate to funeral homes, mortuaries and family counselors across Texas. Featured placements open the list with photography and an expanded description; every other property appears in the standard schedule.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px;"><tr><td style="border-radius:8px;background:${BRAND_PRIMARY};">
+      <a href="${SAMPLE_SHEET_URL}" target="_blank" style="display:inline-block;padding:11px 20px;font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.06em;color:${BRAND_PRIMARY_FG};text-decoration:none;">Open the Available Property List</a>
+    </td></tr></table>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:0;">You can also <a href="${SAMPLE_SHEET_WEB_URL}" target="_blank" style="color:${BRAND_PRIMARY};">view it in your browser</a>. To reserve a property for a family, simply reply to this email.</p>
+  </td></tr>
+</table>
+</div>
+<p><br></p>`.trim();
+}
+
+export async function buildListingOptionsBlock(opts: {
+  seller: SellerForBlock;
+  /** Authorized minimum sale price per space (gross, before 15% commission). */
+  netPerPlot: number;
+  plotCount: number;
+  transferFee: number;
+  /** Stripe environment — defaults to sandbox if omitted. */
+  environment?: "sandbox" | "live";
+  /**
+   * Exact property wording the broker typed in the quote generator. When set
+   * it is printed verbatim (after the cemetery name) instead of being rebuilt
+   * from the raw intake fields, so the quote, agreement and family tree all
+   * describe the property identically.
+   */
+  plotDescription?: string | null;
+  createLink: CreateListingLink;
+}): Promise<string> {
+  const { seller, netPerPlot, plotCount, transferFee, environment = "sandbox" } = opts;
+  const salePerSpace = netPerPlot;
+  const fee = transferFee > 0 ? transferFee : 0;
+  // The headline figure is quoted INCLUSIVE of the cemetery transfer fee and
+  // the fee is then deducted in the breakdown below, so the seller can see the
+  // full price the property is listed at rather than a pre-netted number.
+  // Across multiple spaces the cemetery charges its transfer fee ONCE, so the
+  // "all spaces" column adds it a single time rather than per space.
+  const grossPerSpace = salePerSpace + fee;
+  const commissionPerSpace = Math.round(salePerSpace * 0.15);
+  const proceedsPerSpace = salePerSpace - commissionPerSpace;
+  const saleSubtotal = salePerSpace * plotCount;
+  const commissionTotal = Math.round(saleSubtotal * 0.15);
+  const totalSale = saleSubtotal + fee;
+  const totalProceeds = saleSubtotal - commissionTotal;
+  const cemLabel = properCase(seller.cemetery || "your cemetery");
+
+
+  const links = await Promise.all(
+    TIERS.map(async (t) => {
+      try {
+        const data = await opts.createLink({
+            submissionId: seller.id,
+            kind: "listing_fee",
+            amountCents: t.price * 100,
+            description: `${t.label} listing — ${seller.cemetery || "your plot"}`,
+            recipientEmail: seller.email || "",
+            recipientName: properCase(seller.name || ""),
+            listingTier: t.id,
+            environment,
+        });
+        return { tier: t, url: (data as any)?.url as string | null, free: !!(data as any)?.free };
+      } catch (e) {
+        console.warn("listing tier link failed", t.id, e);
+        return { tier: t, url: null, free: false };
+      }
+    }),
+  );
+
+  const typedDescription = (opts.plotDescription ?? "").trim();
+  const propertyLine = typedDescription
+    ? [escapeHtml(cemLabel), escapeHtml(typedDescription)].join(" · ")
+    : buildPropertyDescription({
+        cemetery: cemLabel,
+        lawn: seller.lawn,
+        section: seller.section,
+        propertyType: seller.property_type,
+        spaceNumbers: seller.space_numbers,
+        plotCount,
+      });
+
+  const spaceWord = plotCount === 1 ? "space" : "spaces";
+  const deadline = escapeHtml(nextOfferDeadline());
+
+  const tierCards = links.map(({ tier, url, free }) => buildListingCard(tier, url, free, cemLabel)).join("\n");
+
+  const eyebrow = (label: string) =>
+    `<p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 8px;font-weight:700;">${label}</p>`;
+
+  const h2 = (label: string) =>
+    `<h2 style="font-family:${SERIF};font-size:20px;font-weight:600;color:${BRAND_INK};margin:0 0 12px;line-height:1.25;letter-spacing:-0.005em;">${label}</h2>`;
+
+  const p = (body: string, muted = false) =>
+    `<p style="font-family:${SANS};font-size:14.5px;line-height:1.7;color:${muted ? BRAND_INK_MUTED : BRAND_INK};margin:0 0 14px;">${body}</p>`;
+
+  const section = (title: string, inner: string) => `
+        <tr><td style="padding:26px 40px 4px;">
+          ${eyebrow("Section")}
+          ${h2(title)}
+          ${inner}
+        </td></tr>`;
+
+  // ── PROPERTY CALLOUT ──────────────────────────────────────────────
+  const propertyCallout = `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border-radius:10px;margin:0 0 20px;">
+  <tr><td style="padding:18px 22px;">
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Your Property</p>
+    <p style="font-family:${SERIF};font-size:17px;line-height:1.45;color:${BRAND_INK};margin:0;font-weight:600;">${propertyLine}</p>
+    <p style="font-family:${SANS};font-size:13px;line-height:1.55;color:${BRAND_INK_MUTED};margin:6px 0 0;">${plotCount} ${spaceWord}</p>
+  </td></tr>
+</table>`.trim();
+
+  // ── AUTHORIZED PRICE CALLOUT (primary) ────────────────────────────
+  const priceCallout = `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:2px solid ${BRAND_PRIMARY};border-radius:12px;margin:0 0 22px;background:${BRAND_CARD_BG};">
+  <tr><td style="padding:24px 26px;">
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:800;">Our Suggested Sales Price</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_BG_ACCENT};border-radius:8px;margin:14px 0 16px;">
+      <tr><td style="padding:18px 20px;">
+        <p style="font-family:${SERIF};font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">Suggested Sales Price</p>
+        ${plotCount > 1
+          ? `<p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(totalSale)} <span style="font-size:15px;font-weight:500;color:${BRAND_INK_MUTED};letter-spacing:0;">total for all ${plotCount} spaces</span></p><p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:9px 0 0;">This total is made up of ${fmtUsd(salePerSpace)} per space (${fmtUsd(saleSubtotal)} for the property)${fee > 0 ? ` plus one ${fmtUsd(fee)} cemetery transfer fee` : ""}.</p>`
+          : `<p style="font-family:${SERIF};font-size:32px;color:${BRAND_PRIMARY};margin:0;font-weight:700;letter-spacing:-0.02em;line-height:1;">${fmtUsd(grossPerSpace)}</p>${fee > 0 ? `<p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:9px 0 0;">This total is made up of ${fmtUsd(salePerSpace)} for the property plus the cemetery's ${fmtUsd(fee)} transfer fee.</p>` : ""}`}
+      </td></tr>
+    </table>
+    <p style="font-family:${SANS};font-size:13.5px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0;">This is the minimum sales price you authorize us to accept. We always pursue the highest achievable price, so the property may sell for more and your proceeds would increase on the same terms.${transferFee > 0 ? ` The ${fmtUsd(transferFee)} cemetery fee is paid by the buyer and passed to the cemetery; it is not money taken from your proceeds.` : ""}</p>
+
+  </td></tr>
+</table>`.trim();
+
+  // ── PROCEEDS BREAKDOWN ROW ────────────────────────────────────────
+  const multi = plotCount > 1;
+  const proceedsRow = (label: string, value: string) => `
+<tr>
+  <td style="padding:10px 0;border-bottom:1px solid ${BRAND_BORDER};font-family:${SANS};font-size:14px;color:${BRAND_INK_MUTED};">${label}</td>
+  <td style="padding:10px 0;border-bottom:1px solid ${BRAND_BORDER};font-family:${SERIF};font-size:15px;color:${BRAND_INK};font-weight:600;text-align:right;">${value}</td>
+</tr>`;
+
+  const proceedsCard = `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${BRAND_BORDER};border-radius:10px;margin:0 0 22px;background:${BRAND_CARD_BG};">
+  <tr><td style="padding:22px 24px;">
+    <p style="font-family:${SERIF};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 5px;font-weight:800;">What You Receive</p>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.6;color:${BRAND_INK_MUTED};margin:0 0 10px;">The cemetery fee is kept separate because it belongs to the cemetery. Your proceeds are calculated only from the property price.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      ${proceedsRow(`Property price${multi ? ` (${fmtUsd(salePerSpace)} × ${plotCount} spaces)` : ""}`, fmtUsd(saleSubtotal))}
+      ${proceedsRow("Our selling commission (15%)", `–${fmtUsd(commissionTotal)}`)}
+      <tr>
+        <td style="padding:14px 0 0;font-family:${SANS};font-size:14px;color:${BRAND_INK};font-weight:600;">You receive${multi ? ` for all ${plotCount} spaces` : ""}</td>
+        <td style="padding:14px 0 0;font-family:${SERIF};font-size:19px;color:${BRAND_PRIMARY};font-weight:700;text-align:right;">${fmtUsd(totalProceeds)}</td>
+      </tr>
+    </table>
+    <p style="font-family:${SANS};font-size:12.5px;line-height:1.65;color:${BRAND_INK_FAINT};margin:14px 0 0;font-style:italic;">${multi ? `${fmtUsd(proceedsPerSpace)} per space after commission. ` : ""}You receive more if the property sells above the suggested price.</p>
+
+
+  </td></tr>
+</table>`.trim();
+
+  // ── TIER SECTION ──────────────────────────────────────────────────
+  const tierSection = `
+<p style="font-family:${SANS};font-size:14px;line-height:1.7;color:${BRAND_INK_MUTED};margin:0 0 16px;">To move forward, choose one of four tailored listing options. There are no additional broker fees beyond the 15% commission in any of these options:</p>
+${tierCards}
+<p style="font-family:${SANS};font-size:12.5px;color:${BRAND_INK_FAINT};margin:6px 0 4px;font-style:italic;">This suggested price is valid until ${deadline}.</p>`.trim();
+
+  // ── ASSEMBLE ──────────────────────────────────────────────────────
+  const cardHtml = `
+<div data-listing-options="1" style="margin:18px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND_PAGE_BG};border-radius:14px;">
+  <tr><td align="center" style="padding:28px 16px;">
+    <table role="presentation" width="720" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:720px;background:${BRAND_CARD_BG};border-radius:12px;overflow:hidden;box-shadow:0 10px 32px rgba(124,58,46,0.10);">
+
+      <!-- HEADER -->
+      <tr><td align="center" style="background:${BRAND_CARD_BG};padding:28px 40px 18px;border-bottom:1px solid ${BRAND_BORDER};">
+        <img src="${LOGO_URL}" alt="Texas Cemetery Brokers" width="56" style="display:block;width:56px;height:auto;margin:0 auto 12px;">
+        <p style="font-family:${SERIF};font-size:18px;color:${BRAND_INK};margin:0 0 4px;font-weight:600;letter-spacing:.01em;">Texas Cemetery Brokers</p>
+        <p style="font-family:${SERIF};font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:${BRAND_PRIMARY};font-weight:700;margin:0;">Suggested Sales Price</p>
+      </td></tr>
+
+      <!-- INTRO -->
+      <tr><td style="padding:30px 40px 4px;">
+        ${p(`Thank you for considering Texas Cemetery Brokers for the sale of your interment property. After conducting a thorough evaluation of your specific property, current resale market conditions, and recent comparable sales at ${escapeHtml(cemLabel)}, we are pleased to present our suggested sales price.`)}
+        ${propertyCallout}
+      </td></tr>
+
+      <!-- PRICE -->
+      <tr><td style="padding:6px 40px 4px;">
+        ${priceCallout}
+        ${p(`We have positioned this figure to offer the highest realistic value release compared to current active listings and recently-closed comparable plot sales. The cemetery resale market is highly sensitive to pricing: plots priced near cemetery retail typically sit unsold, because resale buyers are specifically seeking meaningful savings versus buying direct from the cemetery. This valuation positions your property to actually sell.`, true)}
+      </td></tr>
+
+      <!-- HOW IT WORKS -->
+      ${section("How this works", `
+        ${p(`Our process is simple: you authorize us to sell your property at (or above) an agreed minimum price, and we handle everything from there — marketing, buyer negotiations, cemetery paperwork, and the closing itself. Because we can complete a sale the moment a qualified buyer commits, without coming back to you for approval on each offer, your property stays competitive with buyers who need to move quickly.`, true)}
+        ${p(`When the sale closes, our 15% commission is deducted from the final sale price and the remainder is paid directly to you.`, true)}
+      `)}
+
+      <!-- WHY PRE-AUTH -->
+      ${section("Why pre-authorization matters", `
+        ${p(`A significant share of cemetery resales are at-need transfers — families who have just experienced a loss and need to complete a purchase within days, sometimes hours. These buyers cannot wait on a back-and-forth approval process, and properties that require one are routinely passed over for ones that can close immediately. Your authorization allows us to act the moment a qualified buyer commits, at your authorized price or better, without risking the sale on delays.`, true)}
+      `)}
+
+      <!-- PROCEEDS -->
+      <tr><td style="padding:26px 40px 4px;">
+        ${eyebrow("Section")}
+        ${h2("Your proceeds")}
+        ${p(`Only two figures determine what you receive: the property price and our 15% selling commission. The cemetery transfer fee is paid separately by the buyer and does not reduce your proceeds.`, true)}
+        ${proceedsCard}
+      </td></tr>
+
+      <!-- BUYER PAID -->
+      ${section("Buyer-paid costs", `
+        ${p(`For clarity on the closing statement you'll eventually see, these charges fall to the buyer, not to you:`, true)}
+        ${p(`&bull; <strong style="color:${BRAND_INK};">Buyer's fee — 15% of the sale price.</strong> A fee we charge the buyer for handling the purchase, paperwork and cemetery coordination. It is calculated on the full sale price including the cemetery's transfer fee, is paid on top of that sale price, and is entirely separate from the 15% commission deducted from your side.<br>&bull; <strong style="color:${BRAND_INK};">Cemetery transfer fee${transferFee > 0 ? ` — ${fmtUsd(transferFee)} at ${escapeHtml(cemLabel)}` : ""}.</strong> Charged by the cemetery to move the interment rights into the buyer's name${plotCount > 1 ? ", and charged once per transfer &mdash; if the spaces are sold to more than one buyer, each of those transfers carries its own transfer fee" : ""}.<br>&bull; <strong style="color:${BRAND_INK};">Other cemetery and service charges.</strong> Quitclaim, recording and endowment care fees, plus optional buyer services such as financing, mortuary referral coordination and in-person showings, itemized separately to the buyer.<br>&bull; <strong style="color:${BRAND_INK};">Any other fees or charges properly assessed at closing.</strong> Cemeteries and third parties may assess additional administrative, documentary, notarial or statutory fees in connection with a transfer. Any such amounts, together with any applicable taxes, are the responsibility of the buyer and are billed to the buyer at closing.`, true)}
+        ${p(`As a result, the buyer's total at closing will read higher than the sale price your proceeds are calculated from. This is standard, and none of it reduces your proceeds.`, true)}
+
+      `)}
+
+      <!-- MORTUARY SHEET LINK -->
+      <tr><td style="padding:26px 40px 4px;">
+        ${eyebrow("How buyers see it")}
+        ${h2("Your property on our mortuary list")}
+        ${p(`Every fortnight we send a verified property list to funeral homes, mortuaries and family counselors across Texas — the people who are sitting with families at the moment a plot is needed. This is a relationship-driven channel most resale companies simply don't have, and it is where the majority of our sales begin.`, true)}
+        ${p(`Where your property appears on that list depends on the option you choose below: <strong style="color:${BRAND_INK};">Featured</strong> listings open the sheet with an expanded description and a direct broker line, while <strong style="color:${BRAND_INK};">Pro</strong> and <strong style="color:${BRAND_INK};">Starter</strong> listings appear in the standard property schedule.`, true)}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:14px 0 4px;"><tr><td style="border-radius:8px;background:${BRAND_PRIMARY};">
+          <a href="${SAMPLE_SHEET_WEB_URL}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${SANS};font-size:13px;font-weight:700;letter-spacing:.06em;color:${BRAND_PRIMARY_FG};text-decoration:none;">View a sample listing sheet</a>
+        </td></tr></table>
+        ${p(`Click above to open an example of the actual document that goes out to our mortuary and funeral-home network, so you can see exactly how a Featured placement and a standard schedule line are presented. You can also <a href="${SAMPLE_SHEET_URL}" target="_blank" style="color:${BRAND_PRIMARY};">download it as a PDF</a>.`, true)}
+      </td></tr>
+
+
+      <!-- LISTING OPTIONS -->
+      <tr><td style="padding:26px 40px 4px;">
+        ${eyebrow("Choose your plan")}
+        ${h2("Listing options")}
+        ${tierSection}
+      </td></tr>
+
+
+      <!-- NEXT STEPS -->
+      <tr><td style="padding:26px 40px 32px;">
+        ${eyebrow("Next steps")}
+        ${h2("How to move forward")}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;">
+          ${nextStep(1, "Review the suggested sales price", "Consider the suggested sales price and the market strategy outlined above.")}
+          ${nextStep(2, "Select your listing option", "Choose Starter, Pro, Featured, or Set Your Own Price — simply click the button on the option you want.")}
+          ${nextStep(3, "Authorize the sale", "Reply to this email to confirm your authorization for us to sell at the agreed price or higher. We will promptly send your Exclusive Sales Agreement, which formalizes the authorization and commission terms, and guide you through listing.")}
+        </table>
+        <p style="font-family:${SANS};font-size:14px;line-height:1.7;color:${BRAND_INK};margin:16px 0 0;">We look forward to achieving a successful sale on your behalf.</p>
+      </td></tr>
+
+      <!-- FOOTNOTE -->
+      <tr><td style="padding:16px 40px 22px;border-top:1px solid ${BRAND_BORDER};background:${BRAND_BG_ACCENT};text-align:center;">
+        <p style="font-family:${SANS};font-size:11px;color:${BRAND_INK_FAINT};margin:0;">Texas Cemetery Brokers · <a href="https://www.texascemeterybrokers.com" style="color:${BRAND_PRIMARY};text-decoration:none;">texascemeterybrokers.com</a></p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</div>
+<p><br></p>`;
+
+  return cardHtml.trim();
+}
+
+// ── Mortuary "Available Property List" preview ──────────────────────
+// A miniature, email-safe replica of the printed sheet we circulate to
+// funeral homes, so the seller can see the difference between a Featured
+// placement and a standard schedule line.
+const SHEET_PAGE = "#faf7f2";
+const SHEET_CARD = "#fffdf9";
+const SHEET_BORDER = "#e3d9c6";
+const SHEET_RULE = "#ede5d6";
+const SHEET_INK = "#1f2a37";
+const SHEET_MUTED = "#8b7d6b";
+const SHEET_BODY = "#4a5568";
+const SHEET_CORAL = "#c97b5d";
+const SHEET_GOLD = "#a08256";
+
+function sheetRow(name: string, city: string, detail: string, type: string, price: string, faint = false) {
+  const c = faint ? SHEET_MUTED : SHEET_INK;
+  return `
+<tr>
+  <td style="padding:7px 4px;border-bottom:1px solid ${SHEET_RULE};font-family:${SANS};font-size:11px;color:${c};font-weight:${faint ? 400 : 600};">${name}<span style="color:${SHEET_MUTED};font-weight:400;"> · ${city}</span><br><span style="color:${SHEET_MUTED};font-size:10px;">${detail} · ${type}</span></td>
+  <td align="right" style="padding:7px 4px;border-bottom:1px solid ${SHEET_RULE};font-family:${SANS};font-size:11.5px;color:${SHEET_INK};font-weight:600;white-space:nowrap;">${price}</td>
+</tr>`;
+}
+
+const SHEET_PHOTO_1 =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/c10da282-9a37-4c7b-a105-49d1cae46bf5/sheet-featured-1.webp";
+const SHEET_PHOTO_2 =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/a6187396-d504-4570-bd25-e033c1442046/sheet-featured-2.webp";
+const BAYER_LOGO_NAVY =
+  "https://www.texascemeterybrokers.com/__l5e/assets-v1/5fec1b45-9ea7-4701-8042-2118c14883e8/bayer-logo-navy.png";
+
+function featuredCard(opts: {
+  photo: string;
+  badge: string;
+  title: string;
+  sub: string;
+  body: string;
+  price: string;
+  wasPrice?: string;
+  saves?: string;
+  highlight?: boolean;
+}) {
+  const { photo, badge, title, sub, body, price, wasPrice, saves, highlight } = opts;
+  return `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_CARD};border:1px solid ${highlight ? SHEET_CORAL : SHEET_BORDER};border-radius:10px;margin:8px 0 0;overflow:hidden;">
+  <tr><td style="padding:0;">
+    <img src="${photo}" alt="" width="560" style="display:block;width:100%;max-width:100%;height:auto;border-radius:10px 10px 0 0;">
+  </td></tr>
+  <tr><td style="padding:14px 16px;">
+    <span style="display:inline-block;background:${highlight ? SHEET_CORAL : SHEET_INK};color:${highlight ? "#ffffff" : "#d9c7a3"};font-family:${SANS};font-size:8px;letter-spacing:.24em;text-transform:uppercase;padding:4px 7px;border-radius:3px;">${badge}</span>
+    <p style="font-family:${SERIF};font-size:17px;color:${SHEET_INK};margin:8px 0 2px;font-weight:600;">${title}</p>
+    <p style="font-family:${SANS};font-size:11px;color:${SHEET_MUTED};margin:0 0 8px;">${sub}</p>
+    <p style="font-family:${SANS};font-size:11.5px;line-height:1.55;color:${SHEET_BODY};margin:0 0 10px;">${body}</p>
+    <p style="font-family:${SERIF};font-size:20px;color:${SHEET_INK};margin:0;font-weight:700;">${price} <span style="font-family:${SANS};font-size:11px;font-weight:400;color:${SHEET_MUTED};">per space${wasPrice ? ` · cemetery price <span style="text-decoration:line-through;">${wasPrice}</span>` : " · verified, deed-clear, transfer-ready"}</span></p>
+    ${saves ? `<p style="margin:8px 0 0;"><span style="display:inline-block;background:#e9f2ec;color:#3f6b52;font-family:${SANS};font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:5px 8px;border-radius:3px;">Family saves ${saves}</span></p>` : ""}
+  </td></tr>
+</table>`;
+}
+
+function buildMortuarySheetPreview(opts: { cemLabel: string; propertyLine: string; salePerSpace: number }) {
+  const { cemLabel, propertyLine, salePerSpace } = opts;
+  const listPrice = fmtUsd(salePerSpace);
+  const cemPrice = fmtUsd(Math.round((salePerSpace / 0.55) / 100) * 100);
+  const saves = fmtUsd(Math.round((salePerSpace / 0.55) / 100) * 100 - salePerSpace);
+
+  return `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${SHEET_PAGE};border:1px solid ${SHEET_BORDER};border-radius:10px;margin:0 0 18px;overflow:hidden;">
+  <tr><td style="height:4px;background:${SHEET_INK};line-height:4px;font-size:0;">&nbsp;</td></tr>
+
+  <!-- sheet header -->
+  <tr><td style="background:${SHEET_CARD};border-bottom:1px solid ${SHEET_BORDER};padding:14px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td valign="middle" width="34" style="padding-right:10px;"><img src="${LOGO_URL}" alt="" width="30" style="display:block;width:30px;height:auto;"></td>
+        <td valign="middle">
+          <p style="font-family:${SERIF};font-size:16px;color:${SHEET_INK};margin:0;font-weight:600;">Texas Cemetery Brokers</p>
+          <p style="font-family:${SANS};font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:${SHEET_GOLD};margin:3px 0 0;">Available Property List · sent to Texas mortuaries</p>
+        </td>
+        <td valign="middle" align="right"><span style="display:inline-block;background:${SHEET_CORAL};color:${SHEET_CARD};font-family:${SANS};font-size:9px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;padding:6px 9px;border-radius:4px;">Example</span></td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- prepared-for bar -->
+  <tr><td style="background:${BRAND_BG_ACCENT};border-bottom:1px solid ${SHEET_BORDER};padding:9px 18px;">
+    <p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:0;">Prepared for funeral homes, mortuaries &amp; family counselors · To reserve a property call <strong style="color:${SHEET_INK};">(469) 630-9040</strong> or email <strong style="color:${SHEET_INK};">info@texascemeterybrokers.com</strong></p>
+  </td></tr>
+
+  <!-- featured -->
+  <tr><td style="padding:14px 18px 6px;">
+    <p style="font-family:${SERIF};font-size:14px;color:${SHEET_INK};margin:0 0 2px;font-weight:600;">Featured Properties <span style="font-family:${SANS};font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:${SHEET_CORAL};">Priority placement</span></p>
+    ${featuredCard({
+      photo: SHEET_PHOTO_1,
+      badge: "Featured · your property",
+      title: escapeHtml(cemLabel),
+      sub: propertyLine,
+      body: "Photography of the section, an expanded description written by your broker, and a direct line for the family — shown ahead of every other property at this cemetery.",
+      price: listPrice,
+      wasPrice: cemPrice,
+      saves,
+      highlight: true,
+    })}
+    ${featuredCard({
+      photo: SHEET_PHOTO_2,
+      badge: "Featured",
+      title: "Restland Memorial Park",
+      sub: "Dallas · Garden of Devotion · Lot 208, Spaces 1–2",
+      body: "Companion pair on a level lawn section with mature oaks, walking distance from the chapel. Deed verified and transfer-ready.",
+      price: "$11,400",
+      wasPrice: "$27,000",
+      saves: "$15,600",
+    })}
+  </td></tr>
+
+  <!-- standard schedule -->
+  <tr><td style="padding:14px 18px 16px;">
+    <p style="font-family:${SERIF};font-size:13px;color:${SHEET_INK};margin:0 0 6px;font-weight:600;">Standard Schedule</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      ${sheetRow(escapeHtml(cemLabel), "Your listing", "Starter / Pro placement", "Name, location and price only", listPrice)}
+      ${sheetRow("Bluebonnet Hills Mem. Park", "Fort Worth", "Mausoleum · Tier C, Crypt 214", "Companion crypt", "$18,900", true)}
+      ${sheetRow("Memorial Oaks Cemetery", "Houston", "Garden of Faith · Lot 42B", "Single plot", "$11,750", true)}
+      ${sheetRow("Laurel Land Memorial Park", "Dallas", "Sec. 7 · Lot 118, Sp. 3", "Single plot", "$9,200", true)}
+    </table>
+    <p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:8px 0 0;">Illustrative sheet — other properties shown are examples, not live inventory.</p>
+  </td></tr>
+
+  <!-- partner footer -->
+  <tr><td style="background:${SHEET_CARD};border-top:1px solid ${SHEET_BORDER};padding:12px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="middle"><p style="font-family:${SANS};font-size:10px;color:${SHEET_MUTED};margin:0;">Distributed in partnership with</p></td>
+      <td valign="middle" align="right"><img src="${BAYER_LOGO_NAVY}" alt="Bayer Cemetery Brokers" height="18" style="display:block;height:18px;width:auto;"></td>
+    </tr></table>
+  </td></tr>
+</table>`.trim();
+}
+
+
+function nextStep(n: number, title: string, body: string) {
+
+
+  return `
+<tr>
+  <td valign="top" width="34" style="padding:6px 12px 6px 0;">
+    <div style="width:28px;height:28px;border-radius:999px;background:${BRAND_PRIMARY};color:${BRAND_PRIMARY_FG};font-family:${SERIF};font-size:14px;font-weight:700;text-align:center;line-height:28px;">${n}</div>
+  </td>
+  <td valign="top" style="padding:6px 0 12px;font-family:${SANS};font-size:14px;line-height:1.65;color:${BRAND_INK_MUTED};">
+    <strong style="color:${BRAND_INK};font-weight:700;">${title}.</strong> ${body}
+  </td>
+</tr>`;
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
+
+// Next Friday 5pm if today is Sat/Sun/Mon/Tue; next Tuesday 5pm if Wed/Thu/Fri.
+function nextOfferDeadline(now: Date = new Date()): string {
+  const day = now.getDay();
+  const target = [0, 1, 2, 6].includes(day) ? 5 : 2;
+  let diff = target - day;
+  if (diff <= 0) diff += 7;
+  const d = new Date(now);
+  d.setDate(d.getDate() + diff);
+  const weekday = d.toLocaleDateString("en-US", { weekday: "long" });
+  const month = d.toLocaleDateString("en-US", { month: "long" });
+  const dayNum = d.getDate();
+  const suffix = (n: number) => {
+    if (n >= 11 && n <= 13) return "th";
+    const r = n % 10;
+    return r === 1 ? "st" : r === 2 ? "nd" : r === 3 ? "rd" : "th";
+  };
+  return `5pm on ${weekday}, ${month} ${dayNum}${suffix(dayNum)}`;
+}
+
+function buildPropertyDescription(opts: {
+  cemetery: string;
+  lawn?: string | null;
+  section?: string | null;
+  propertyType?: string | null;
+  spaceNumbers?: string | null;
+  plotCount: number;
+}) {
+  const bits: string[] = [escapeHtml(opts.cemetery)];
+  const lawnOrSection = (opts.lawn && opts.lawn.trim()) || (opts.section && opts.section.trim());
+  if (lawnOrSection) bits.push(escapeHtml(properCase(lawnOrSection)));
+  if (opts.propertyType && opts.propertyType.trim()) bits.push(escapeHtml(opts.propertyType.trim()));
+  if (opts.spaceNumbers && opts.spaceNumbers.trim()) {
+    bits.push(escapeHtml(opts.spaceNumbers.trim()));
+  }
+  return bits.join(" · ");
+}
+
+function buildListingCard(
+  tier: { id: string; label: string; price: number; priceLabel: string; blurb?: string; blurbTemplate?: (c: string) => string },
+  url: string | null,
+  free: boolean,
+  cemLabel: string,
+) {
+  const buttonLabel = tier.price === 0 ? "Select Starter" : `Pay & select ${tier.label}`;
+  const button = url
+    ? `<a href="${url}" style="display:inline-block;background:${BRAND_PRIMARY};color:${BRAND_PRIMARY_FG};padding:14px 28px;border-radius:999px;text-decoration:none;font-family:${SANS};font-size:14.5px;font-weight:700;letter-spacing:.02em;">${buttonLabel}</a>`
+    : free
+      ? `<span style="display:inline-block;background:${BRAND_BG_ACCENT};color:${BRAND_INK_MUTED};padding:14px 28px;border-radius:999px;font-family:${SANS};font-size:14.5px;font-weight:600;border:1px solid ${BRAND_BORDER};">Reply to select</span>`
+      : `<span style="display:inline-block;background:${BRAND_BG_ACCENT};color:${BRAND_INK_FAINT};padding:14px 28px;border-radius:999px;font-family:${SANS};font-size:14.5px;font-weight:500;border:1px solid ${BRAND_BORDER};">Payment link unavailable — reply to select</span>`;
+
+  const blurb = tier.blurb ?? (tier.blurbTemplate ? tier.blurbTemplate(cemLabel) : "");
+  const isFeatured = tier.id === "custom_plus";
+  const cardBorder = isFeatured ? `2px solid ${BRAND_PRIMARY}` : `1px solid ${BRAND_BORDER}`;
+  const cardBg = isFeatured ? BRAND_BG_ACCENT : BRAND_CARD_BG;
+
+  return `
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 14px;border-collapse:separate;border:${cardBorder};border-radius:12px;background:${cardBg};overflow:hidden;">
+  <tr>
+    <td style="padding:20px 22px;">
+      <p style="font-family:${SERIF};font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:${BRAND_PRIMARY};margin:0 0 6px;font-weight:700;">${isFeatured ? "Recommended" : "Listing Option"}</p>
+      <h2 style="font-family:${SERIF};font-size:20px;font-weight:600;color:${BRAND_INK};margin:0 0 2px;line-height:1.25;">${escapeHtml(tier.label)}</h2>
+      <p style="font-family:${SANS};font-size:13px;color:${BRAND_PRIMARY};margin:0 0 12px;font-weight:700;letter-spacing:.02em;">${escapeHtml(tier.priceLabel)}</p>
+      <p style="font-family:${SANS};font-size:13.5px;color:${BRAND_INK_MUTED};margin:0 0 16px;line-height:1.65;">${escapeHtml(blurb)}</p>
+      <div style="margin-top:4px;">${button}</div>
+      <p style="font-family:${SANS};font-size:11px;color:${BRAND_INK_FAINT};margin:10px 0 0;">Secure checkout via Stripe</p>
+    </td>
+  </tr>
+</table>`.trim();
+}

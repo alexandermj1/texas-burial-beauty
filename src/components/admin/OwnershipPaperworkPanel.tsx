@@ -1507,8 +1507,8 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
    * remove, update the locations being sold + rebuild), then the normal review
    * opens so the request is previewed and sent the usual way.
    */
-  const applyAiInstruction = async () => {
-    const instruction = aiInstruction.trim();
+  const applyAiInstruction = async (override?: string) => {
+    const instruction = (override ?? aiInstruction).trim();
     if (instruction.length < 3) return toast.error("Tell the AI what to change");
     setAiApplying(true);
     try {
@@ -1606,6 +1606,23 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
       setAiApplying(false);
     }
   };
+
+  // An approved seller-AI "Change document request" arrives here and is applied with the steps above.
+  const applyAiRef = useRef(applyAiInstruction);
+  applyAiRef.current = applyAiInstruction;
+  useEffect(() => {
+    const pick = () => {
+      const key = `ai-doc-instruction:${submissionId}`;
+      const ins = sessionStorage.getItem(key);
+      if (!ins || !requirements.length) return;
+      sessionStorage.removeItem(key);
+      setAiInstruction(ins);
+      void applyAiRef.current(ins);
+    };
+    pick();
+    window.addEventListener("ai-doc-instruction", pick);
+    return () => window.removeEventListener("ai-doc-instruction", pick);
+  }, [submissionId, requirements.length]);
 
   /** Save the greeting and messages so both the email and the seller's page use them. */
   const persistPacketMessages = async () => {

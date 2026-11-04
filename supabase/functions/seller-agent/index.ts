@@ -71,12 +71,12 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
   const email = String(sub.email ?? "").toLowerCase();
   const [siblings, emails, notes, files, contracts, docs, reminders, feedback] = await Promise.all([
     db.from("contact_submissions").select("id,created_at,cemetery,property_type,spaces,quote_sent_at,quote_response,la_signed_at,archived_at").eq("email", sub.email).neq("id", sub.id).is("deleted_at", null).limit(10),
-    db.from("email_messages").select("from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
+    db.from("email_messages").select("id,from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
     db.from("customer_notes").select("body,author_name,created_at").or(`submission_id.eq.${sub.id}${sub.customer_profile_id ? `,customer_profile_id.eq.${sub.customer_profile_id}` : ""}`).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
     sub.customer_profile_id
       ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
-    db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,sign_token,sign_token_expires_at,principal_key").eq("submission_id", sub.id).is("deleted_at", null),
+    db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,countersigned_at,signed_copy_emailed_at,sign_token,sign_token_expires_at,principal_key,fill_data").eq("submission_id", sub.id).is("deleted_at", null),
     db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
     db.from("reminder_log").select("reminder_type,status,sent_at").eq("submission_id", sub.id).is("deleted_at", null).order("sent_at", { ascending: false }).limit(10),
     db.from("ai_agent_feedback").select("action_id,kind,comment,correct,went_live,author_name,created_at").eq("submission_id", sub.id).order("created_at", { ascending: false }).limit(20),
@@ -103,12 +103,13 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
   };
 
   const emailList = (emails.data ?? []).reverse().map((e) => ({
+    ...(String(e.from_email).toLowerCase().includes("texascemeterybrokers") ? { email_id: e.id } : {}),
     when: e.received_at,
     from: String(e.from_email).toLowerCase().includes("texascemeterybrokers") ? "US (TCB)" : "SELLER",
     subject: e.subject,
     text: clip(stripQuoted(String(e.body_text ?? e.snippet ?? "")), 1400),
   }));
-  const fmt = (e: (typeof emailList)[number]) => `--- ${e.when} ${e.from} | ${e.subject}\n${e.text}`;
+  const fmt = (e: (typeof emailList)[number]) => `--- ${e.when} ${e.from}${(e as any).email_id ? ` [email_id ${(e as any).email_id}]` : ""} | ${e.subject}\n${e.text}`;
   let threadText = emailList.map(fmt).join("\n");
   // Lean mode: older emails are summarised once (cheap model) and the summary reused until more mail ages out.
   if (summarizeKey && emailList.length > 6) {
@@ -133,7 +134,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     `TODAY: ${new Date().toISOString()}`,
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
     `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
-    `CONTRACTS:\n${JSON.stringify((contracts.data ?? []).map(({ id: _i, sign_token: _t, ...c }: any) => c))}`,
+    `CONTRACTS (contract_id usable in resend_contract_link / email_signed_copy):\n${JSON.stringify((contracts.data ?? []).map(({ id, sign_token: _t, ...c }: any) => ({ contract_id: id, ...c })))}`,
     `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, file_url, file_urls, notes, ...d }: any) => ({ ...d, files_attached: (file_urls?.length ?? 0) || (file_url ? 1 : 0), notes: clip(notes, 200) })))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
     `SELLER'S DOCUMENT PAGE (include in replies about downloads, uploads or outstanding documents ONLY if a document request has been sent): ${sub.documents_requested_at ? `https://www.texascemeterybrokers.com/documents?s=${sub.id}` : "Not yet available"}`,
     `EXAMPLE AVAILABLE PROPERTY LIST (not this seller's live listing): https://www.texascemeterybrokers.com/sample-listing-sheet.html`,
@@ -157,6 +158,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
 
 const first = (sub: Sub) => String(sub.name ?? "The seller").trim().split(/\s+/)[0] || "The seller";
 const SITE = "https://www.texascemeterybrokers.com";
+import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQuoteFigures, contractLabel, TEXAS_STAGES } from "./adminActions.ts";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
 const FIELD_LABEL: Record<string, string> = { phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
@@ -190,6 +192,11 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   if (sub.quote_sent_at && !accepted && !signed && quoteExpired(sub)) out.add("resend_expired_quote");
+  if (!accepted && !signed && allowedQuoteFigures(sub, null).size) out.add("send_quote");
+  out.add("resend_email"); out.add("set_stage");
+  if (contracts.some((c) => ["sent", "viewed", "draft"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()))) out.add("resend_contract_link");
+  if (contracts.some((c) => ["signed", "notarized", "completed"].includes(c.status))) out.add("email_signed_copy");
+  if (sub.documents_requested_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status)) || sub.la_signed_at) out.add("edit_document_request");
   return { allowed: out, liveLink };
 }
 
@@ -209,15 +216,22 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with its listing fee waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to use the existing explicitly waived Starter option (never the current paid Starter button); we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the explicitly waived option in your original quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this instead of flag_human for fee waivers.
-- update_quote_spaces: quote corrections when the seller, the deed scan or the record shows the quote has the wrong spaces in the SAME section/lawn/garden — add/remove/swap spaces, or the count/space numbers were copied wrongly (e.g. quote for 1 space but the deed/record shows spaces 3 & 4). Spaces in the same area are valued at the same per-space price, so the total scales with the count. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and opens the normal Send quote screen prefilled. Put a one-line summary in reason (e.g. "Corrects to spaces 3 & 4: 2 × $7,600 = $15,200"). May be combined with increase_quote_ten_percent (whose body then explains both); otherwise do not also write a reply_email.
- - increase_quote_ten_percent: when a seller asks for more / says the price is too low, an existing unaccepted quote is on file, and this action is ALLOWED NOW. body = the SEPARATE explanation email sent alongside the revised quote: we revisited their quote, raised it 10%, a higher price may take slightly longer to sell, and (if paired with update_quote_spaces) the corrected space count. The server calculates the exact 10% and checks the 70%-of-retail buyer ceiling. Staff approval opens the normal seller quote packet. Never propose for a plain decline, an accepted quote, or a demand for a specific figure beyond 10%. Never pair it with reply_email.
- - resend_expired_quote: ONLY when the seller's unaccepted quote has EXPIRED (ALLOWED NOW) and they want to go ahead, ask about it, or ask for more time. Same price per space, same spaces — nothing changes except a fresh 10-day window. Field: body = a SHORT friendly intro shown above the quote (e.g. "Your earlier quote has expired, so we've renewed it at the same figures for another ten days."). On approval it opens the normal quote email generator prefilled; staff press Send. Never pair it with reply_email. Use this instead of flag_human for expired quotes.
+- send_quote: send (or re-send) the seller their quote pack — the SAME branded quote email with live listing-option buttons that staff send. Fields: fields = {per_space (digits, MUST be one of ALLOWED QUOTE FIGURES), spaces (digits), plot_description?}; body = optional short separate explanation email (with greeting and sign-off) sent right after it in the same thread (leave empty if not needed). Use when a quote was never sent, the seller lost it, or staff ask. Never invent a figure.
+- resend_email: re-send one of OUR earlier emails exactly as it went (same HTML, links, buttons) in its thread. Fields: fields = {email_id (from the EMAIL THREAD [email_id ...] tags)}; body = optional one- or two-sentence intro shown above it (no sign-off); subject optional. Use when the seller can't find something we sent.
+- set_stage: move the Texas pipeline stage like the stage buttons. Fields: fields = {stage: one of ${TEXAS_STAGES.join(" | ")}}. Only when the record clearly shows the stage is wrong.
+- resend_contract_link: re-email the still-valid signing link for ANY unsigned contract (listing agreement, POA, affidavit, spousal consent). Fields: fields = {contract_id}.
+- email_signed_copy: email the seller a copy of a contract they already signed. Fields: fields = {contract_id}.
+- edit_document_request: change the document request the way staff do on the Documents panel — add/remove/rename items, add a POA or joint POA, change the name on a POA, add an affidavit, rebuild for different plots. Field: note = the exact instruction (e.g. "Add a limited POA for Mary Smith; remove the marriage certificate for John"). On approval the Documents panel opens with it applied through the normal rules engine so staff can check and send. Pair with reply_email only after it is applied — do not promise it is done.
+- update_quote_spaces: quote corrections when the seller, the deed scan or the record shows the quote has the wrong spaces in the SAME section/lawn/garden — add/remove/swap spaces, or the count/space numbers were copied wrongly (e.g. quote for 1 space but the deed/record shows spaces 3 & 4). Spaces in the same area are valued at the same per-space price, so the total scales with the count. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and SENDS the corrected quote pack (same price per space × new count); body = optional separate explanation email. Put a one-line summary in reason (e.g. "Corrects to spaces 3 & 4: 2 × $7,600 = $15,200"). May be combined with increase_quote_ten_percent (whose body then explains both); otherwise do not also write a reply_email.
+ - increase_quote_ten_percent: when a seller asks for more / says the price is too low, an existing unaccepted quote is on file, and this action is ALLOWED NOW. body = the SEPARATE explanation email sent alongside the revised quote: we revisited their quote, raised it 10%, a higher price may take slightly longer to sell, and (if paired with update_quote_spaces) the corrected space count. The server calculates the exact 10% and checks the 70%-of-retail buyer ceiling. Staff approval SENDS the revised quote pack, then this explanation as its own email. Never propose for a plain decline, an accepted quote, or a demand for a specific figure beyond 10%. Never pair it with reply_email.
+ - resend_expired_quote: ONLY when the seller's unaccepted quote has EXPIRED (ALLOWED NOW) and they want to go ahead, ask about it, or ask for more time. Same price per space, same spaces — nothing changes except a fresh 10-day window. Field: body = a SHORT friendly intro shown above the quote — one or two sentences, NO greeting and NO sign-off (the quote email adds both) (e.g. "Your earlier quote has expired, so we've renewed it at the same figures for another ten days."). On approval it re-sends the quote pack with a fresh 10-day window, with body shown as the intro. Never pair it with reply_email. Use this instead of flag_human for expired quotes.
  - PRICE DISPUTES / FEE QUESTIONS: answer them yourself with reply_email from the SAVED QUOTE FIGURES (quote_amount = per space excluding the transfer fee, plot count, transfer_fee_amount charged once and paid from the sale, separate 15% buyer fee paid by the buyer) and the quote email actually sent in the thread. Explain calmly how the numbers fit together and correct any misunderstanding. If an earlier email from us gave a different figure, acknowledge it honestly and say which figure is current. Do not invent a new price; if they want more, use increase_quote_ten_percent when allowed.
  - STARTER CANCELLATION FEE: quote whatever fee the seller's own quote email states (read it in the thread). Only if their quote email is not visible use the playbook figure.
- - Quotes: apart from resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, a different garden/lawn (different area) or a different cemetery, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
+ - Quotes: apart from send_quote, resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, a different garden/lawn (different area) or a different cemetery, an unverified retail/transfer fee, or a price change beyond the standard 10%: flag_human with the reason.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 D1 deed photos/scans are copies only: the original must physically arrive before listing paperwork is complete. A seller saying mailed is not receipt. For all original-required items attach the copy without setting received; physical receipt is logged by staff separately. Apply record/checklist updates before the reply that reports them done.
+VERIFIED RESEARCH: before you decide, a research pass read the whole file with tools (every email, payments, quote history, checklist and the actual files, contracts, activity, cemetery data). Trust it over guesses, fix the MISTAKES it found with the right actions, and close OPEN PROMISES. Do the checking yourself — never ask staff to "check" something the research already answered.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
 // Ownership / document questions — the AI answers these itself from the same
@@ -547,8 +561,8 @@ function parseDecision(raw: string, allowed: Set<string>) {
         subject: a.subject ? String(a.subject).slice(0, 300) : null,
         body: a.body ? String(a.body).slice(0, 12000) : null,
         note: a.note ? String(a.note).slice(0, 4000) : null,
-        fields: ["update_fields", "fix_document_request", "update_quote_spaces"].includes(a.type) && a.fields && typeof a.fields === "object"
-          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => (a.type === "fix_document_request" ? FIX_FIELDS : a.type === "update_quote_spaces" ? ["spaces", "space_numbers", "section", "lawn"] : EDITABLE_FIELDS).includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
+        fields: FIELD_KEYS[a.type] && a.fields && typeof a.fields === "object"
+          ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => FIELD_KEYS[a.type].includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
         items: a.type === "update_document_items" && Array.isArray(a.items)
           ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
@@ -562,9 +576,19 @@ function parseDecision(raw: string, allowed: Set<string>) {
       .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length))
       .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body))
       .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body)
-      .filter((a: any) => a.type !== "update_quote_spaces" || (Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20)),
+      .filter((a: any) => a.type !== "update_quote_spaces" || (Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20))
+      .filter((a: any) => a.type !== "send_quote" || (Number(a.fields?.per_space) > 0 && Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20))
+      .filter((a: any) => a.type !== "resend_email" || /^[0-9a-f-]{36}$/i.test(String(a.fields?.email_id ?? "")))
+      .filter((a: any) => a.type !== "set_stage" || TEXAS_STAGES.includes(String(a.fields?.stage)))
+      .filter((a: any) => !["resend_contract_link", "email_signed_copy"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
+      .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5)),
   };
 }
+
+const FIELD_KEYS: Record<string, string[]> = {
+  update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
+  send_quote: ["per_space", "spaces", "plot_description"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
+};
 
 function parseVisuals(v: unknown) {
   const str = (x: unknown, n: number) => (x == null ? "" : String(x)).slice(0, n);
@@ -652,6 +676,19 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   try {
     const { allowed } = allowedActions(sub, ctx.contracts);
     const prep = await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger });
+    let research: { tools: string[]; text: string } | null = null;
+    if (!prep.skip) {
+      // Admin-grade research pass: reads the whole file with tools before the decision.
+      try {
+        const r = await researchRecord(db, apiKey, sub, ctx.focus, instruction);
+        research = { tools: r.trace, text: r.text.slice(0, 6000) };
+        prep.input += `\n\nVERIFIED RESEARCH (tools used: ${r.trace.join(", ") || "none"}):\n${r.text}`;
+        await db.from("ai_agent_runs").update({ stage_summary: `Researched file (${r.trace.length} lookups)` }).eq("id", run!.id);
+      } catch (e) { console.warn("research pass failed", e); prep.input += "\n\nVERIFIED RESEARCH: unavailable for this review — rely on the file above."; }
+      const figs = allowedQuoteFigures(sub, higherQuote(sub));
+      prep.input += `\n\nALLOWED QUOTE FIGURES (per space, excl. transfer fee): ${figs.size ? [...figs].map(([v, why]) => `$${v} (${why})`).join("; ") : "none — never send a quote"}`;
+      prep.input += `\nALLOWED NOW: ${[...allowed].join(", ")}`;
+    }
     if (prep.skip) {
       await db.from("ai_agent_runs").update({ status: "done", stage_summary: prep.skip.stage_summary, next_step: prep.skip.next_step || "No action needed", reasoning: "Quick check: nothing new needs doing on this file.", confidence: 1, needs_human: false }).eq("id", run!.id);
       return { status: "done", run_id: run!.id, effort: "triage", decision: { actions: [], ...prep.skip } };
@@ -681,11 +718,11 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch(() => null)));
     const rows = d.actions.map((a, ai) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
       rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
@@ -917,6 +954,8 @@ Deno.serve(async (req) => {
     if (sub.archived_at || sub.deleted_at || sub.closed_at || sub.sold_at || sub.ai_paused_at) return json({ error: "This seller record is closed, archived or paused" }, 409);
     const now = new Date().toISOString();
     let error: string | null = null;
+    // Emails sent by approved actions must not retire the other suggestions from the same review.
+    const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
     if (act.action_type === "reply_email") {
       const { data: siblings, error: siblingError } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
@@ -943,6 +982,7 @@ Deno.serve(async (req) => {
       const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
       if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
+      const mail = { url, auth: req.headers.get("authorization")!, anon: Deno.env.get("SUPABASE_ANON_KEY") ?? "", actor: `AI agent (approved by ${user.name})` };
       const aiNote = async (body: string) => { await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body, author_name: `AI agent (approved by ${user.name})` }); };
       try {
         if (act.action_type === "send_listing_agreement" || act.action_type === "send_family_tree") {
@@ -1076,32 +1116,58 @@ Deno.serve(async (req) => {
           if (!(n >= 1 && n <= 20)) throw new Error("Number of spaces missing");
           const beforeN = sub.plot_count ?? sub.spaces ?? "?";
           const beforeNums = sub.space_numbers ?? "";
-          const patch: Record<string, unknown> = { plot_count: n, spaces: String(n) };
-          const ans = { ...(sub.ownership_answers ?? {}) } as Record<string, any>;
-          if (ans.autopilot && Number(sub.quote_amount) > 0) patch.ownership_answers = { ...ans, autopilot: { ...ans.autopilot, authorizedMinTotal: Number(sub.quote_amount) * n } };
+          const patch: Record<string, unknown> = {};
           for (const k of ["space_numbers", "section", "lawn"]) if (f[k]) patch[k] = f[k];
-          const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
-          if (e) throw new Error(e.message);
-          await aiNote(`Changed ${first(sub)}'s quote from ${beforeN} to ${n} space${n === 1 ? "" : "s"}${f.space_numbers ? ` (spaces ${beforeNums || "—"} → ${f.space_numbers})` : ""}, same price per space. ${user.name} opened the quote to send.`);
+          if (Object.keys(patch).length) { const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id); if (e) throw new Error(e.message); }
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), { ...sub, ...patch }, { perSpace: Number(sub.quote_amount), count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          await aiNote(`Corrected ${first(sub)}'s quote from ${beforeN} to ${n} space${n === 1 ? "" : "s"}${f.space_numbers ? ` (spaces ${beforeNums || "—"} → ${f.space_numbers})` : ""} at the same $${Number(sub.quote_amount).toLocaleString()} per space ($${r.total.toLocaleString()} total) and emailed the corrected quote${act.email_body ? " plus an explanation" : ""}.`);
         } else if (act.action_type === "increase_quote_ten_percent") {
           const increased = higherQuote(sub);
           if (increased === null || !sub.email) throw new Error("The quote no longer qualifies for a 10% increase below the buyer-price ceiling. Review it manually.");
-          const answers = { ...(sub.ownership_answers ?? {}) } as Record<string, any>;
-          const prep = { ...(answers.autopilot ?? {}) };
-          // Save a draft only. The normal staff seller-pack builder confirms the
-          // deed and makes the acceptance links; no quote is sent here.
-          const { error: e } = await db.from("contact_submissions").update({
-            quote_amount: increased,
-            quote_message: String(act.email_body ?? "").slice(0, 1500) || null,
-            ownership_answers: { ...answers, autopilot: { ...prep, netPerPlot: increased, authorizedMinTotal: increased * Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1) } },
-          }).eq("id", sub.id).eq("quote_amount", sub.quote_amount).or("quote_response.is.null,quote_response.neq.accepted").is("accepted_quote_amount", null).is("la_signed_at", null).is("archived_at", null).is("deleted_at", null).is("closed_at", null).is("sold_at", null).is("ai_paused_at", null).select("id").single();
-          if (e) throw new Error(e.message);
-          await aiNote(`Prepared a revised quote for ${first(sub)} at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}). ${user.name} will review and send the seller pack.`);
+          const n = Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1);
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), sub, { perSpace: increased, count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          await aiNote(`Sent ${first(sub)} a revised quote at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}; $${r.total.toLocaleString()} for ${n}) and a separate email explaining it.`);
         } else if (act.action_type === "resend_expired_quote") {
           if (!quoteExpired(sub) || !sub.email || !(Number(sub.quote_amount) > 0)) throw new Error("This quote is no longer expired or has no saved price. Review it manually.");
-          const { error: e } = await db.from("contact_submissions").update({ quote_message: String(act.email_body ?? "").slice(0, 1500) || null, quote_expires_at: null }).eq("id", sub.id).is("accepted_quote_amount", null).is("la_signed_at", null);
+          const n = Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1);
+          await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), sub, { perSpace: Number(sub.quote_amount), count: n, intro: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          await aiNote(`${first(sub)}'s quote had expired — re-sent it at the same $${Number(sub.quote_amount).toLocaleString()} per space with a fresh 10-day window.`);
+        } else if (act.action_type === "send_quote") {
+          const f = (act.payload?.fields ?? {}) as Record<string, string>;
+          const per = Math.round(Number(f.per_space)), n = Math.round(Number(f.spaces));
+          const figs = allowedQuoteFigures(sub, higherQuote(sub));
+          if (!figs.has(per)) throw new Error(`$${per} per space isn't an approved figure for this record (allowed: ${[...figs.keys()].map((v) => `$${v}`).join(", ") || "none"}). Send it from the quote screen instead.`);
+          if (!(n >= 1 && n <= 20)) throw new Error("Number of spaces missing");
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), sub, { perSpace: per, count: n, plotDescription: f.plot_description, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          await aiNote(`Sent ${first(sub)} their quote: ${n} space${n === 1 ? "" : "s"} at $${per.toLocaleString()} per space ($${r.total.toLocaleString()}), ${figs.get(per)}.`);
+        } else if (act.action_type === "resend_email") {
+          const id = String(act.payload?.fields?.email_id ?? "");
+          const r = await resendEarlierEmail(db, mail, sub, id, act.email_body, act.email_subject);
+          await aiNote(`Re-sent ${first(sub)} our earlier email "${r.subject}".`);
+        } else if (act.action_type === "set_stage") {
+          const st = String(act.payload?.fields?.stage ?? "");
+          if (!TEXAS_STAGES.includes(st)) throw new Error("Unknown stage");
+          const { error: e } = await db.from("contact_submissions").update(stagePatch(sub, st)).eq("id", sub.id);
           if (e) throw new Error(e.message);
-          await aiNote(`${first(sub)}'s quote had expired — renewed at the same $${Number(sub.quote_amount).toLocaleString()} per space. ${user.name} opened the quote email to send.`);
+          await aiNote(`Moved ${first(sub)}'s file to stage "${st.replace(/_/g, " ")}"${act.reason ? `: ${act.reason}` : ""}.`);
+        } else if (act.action_type === "resend_contract_link" || act.action_type === "email_signed_copy") {
+          const cid = String(act.payload?.fields?.contract_id ?? "");
+          const { data: c } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at,fill_data,submission_id").eq("id", cid).is("deleted_at", null).maybeSingle();
+          if (!c || c.submission_id !== sub.id) throw new Error("That contract isn't on this record.");
+          if (act.action_type === "resend_contract_link") {
+            if (!["sent", "viewed", "draft"].includes(c.status) || !c.sign_token || (c.sign_token_expires_at && c.sign_token_expires_at < now)) throw new Error("That contract is signed, void or its link has expired — regenerate it from the Contracts panel.");
+            await callInternal(url, "send-contract-link", { contract_id: c.id, sign_url: `${SITE}/sign/${c.sign_token}` });
+            await aiNote(`Re-sent ${first(sub)} the signing link for the ${contractLabel(c)}.`);
+          } else {
+            if (!["signed", "notarized", "completed"].includes(c.status)) throw new Error("That contract isn't signed yet.");
+            // Staff-only function: call it as the approving staff member.
+            const res = await fetch(`${url}/functions/v1/email-signed-contract`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: mail.auth, apikey: mail.anon }, body: JSON.stringify({ contract_id: c.id }) });
+            const t = await res.text();
+            if (!res.ok || /"error"/.test(t)) throw new Error(`Signed copy not sent (${res.status}): ${t.slice(0, 200)}`);
+            await aiNote(`Emailed ${first(sub)} a copy of their signed ${contractLabel(c)}.`);
+          }
+        } else if (act.action_type === "edit_document_request") {
+          await aiNote(`Document request change approved by ${user.name}, applied on the Documents panel for checking: ${act.note_body ?? act.payload?.instruction ?? ""}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
@@ -1111,12 +1177,15 @@ Deno.serve(async (req) => {
     await db.from("ai_agent_actions").update(error
       ? { error }
       : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, decision_reason: body.reason || null, error: null }).eq("id", act.id);
+    if (!error && openSiblings?.length) {
+      await db.from("ai_agent_actions").update({ status: "proposed" }).in("id", openSiblings.map((x: any) => x.id)).eq("status", "superseded");
+    }
     if (!error) {
       const { error: feedbackError } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: sub.id, kind: "accepted", comment: body.reason || null, author_user_id: user.id, author_name: user.name });
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    return error ? json({ error }, 502) : json({ ok: true, open: ["open_quote_dialog", "update_quote_spaces", "increase_quote_ten_percent", "resend_expired_quote"].includes(act.action_type) ? "quote" : act.action_type === "open_document_request" ? "documents" : null });
+    return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : ["open_document_request", "edit_document_request"].includes(act.action_type) ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null });
   } catch (e) {
     console.error("seller-agent error", e);
     return json({ error: String((e as Error).message ?? e) }, 500);

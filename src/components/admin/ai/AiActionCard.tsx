@@ -12,7 +12,7 @@ export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
-  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges } | null;
+  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string } | null;
 };
 
 type AiChanges = {
@@ -65,6 +65,9 @@ function ChangesView({ c }: { c: AiChanges }) {
   );
 }
 
+/** Actions whose email text staff can edit before approving. */
+const EMAIL_TYPES = ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "update_quote_spaces", "send_quote", "resend_email"];
+
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
   reply_email: { label: "Reply email", Icon: Mail, approve: "Approve & send" },
   add_note: { label: "Internal note", Icon: StickyNote, approve: "Add note" },
@@ -77,9 +80,15 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   open_document_request: { label: "Document request", Icon: FileText, approve: "Open document request" },
   fix_document_request: { label: "Fix document request", Icon: FileText, approve: "Fix, resync & email seller" },
   update_document_items: { label: "Update document checklist", Icon: FileText, approve: "Apply to checklist" },
-  update_quote_spaces: { label: "Correct quote spaces", Icon: DollarSign, approve: "Update & open quote" },
-  increase_quote_ten_percent: { label: "Revised quote · +10%", Icon: DollarSign, approve: "Review seller pack" },
-  resend_expired_quote: { label: "Renew expired quote", Icon: DollarSign, approve: "Open quote email" },
+  update_quote_spaces: { label: "Correct quote spaces", Icon: DollarSign, approve: "Correct & send quote" },
+  increase_quote_ten_percent: { label: "Revised quote · +10%", Icon: DollarSign, approve: "Send revised quote" },
+  resend_expired_quote: { label: "Renew expired quote", Icon: DollarSign, approve: "Re-send quote" },
+  send_quote: { label: "Send quote", Icon: DollarSign, approve: "Send quote" },
+  resend_email: { label: "Re-send earlier email", Icon: Mail, approve: "Re-send email" },
+  set_stage: { label: "Move pipeline stage", Icon: PencilLine, approve: "Move stage" },
+  resend_contract_link: { label: "Re-send contract signing link", Icon: Link2, approve: "Re-send link" },
+  email_signed_copy: { label: "Email signed copy", Icon: FileSignature, approve: "Email copy" },
+  edit_document_request: { label: "Change document request", Icon: FileText, approve: "Apply on Documents panel" },
   resend_quote_free_listing: { label: "Resend historical waived-fee quote (recorded as Pro)", Icon: DollarSign, approve: "Resend quote" },
 };
 
@@ -116,10 +125,15 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const approve = async () => {
     setBusy(true);
     try {
-       if (["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
+       if (EMAIL_TYPES.includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
       const r = await callSellerAgent({ action: "execute", action_id: a.id, reason: decisionReason.trim() });
+      if (r?.open === "documents" && r?.instruction) {
+        // Hand the AI's change to the Documents panel, which applies it with the normal staff steps.
+        sessionStorage.setItem(`ai-doc-instruction:${a.submission_id}`, String(r.instruction));
+        window.dispatchEvent(new CustomEvent("ai-doc-instruction", { detail: { submissionId: a.submission_id } }));
+      }
       if (r?.open) {
         if (onOpen) onOpen(r.open, a);
         else { onOpenSubmission?.(a.submission_id); toast({ title: "Opening the record", description: r.open === "quote" ? "Use Send quote on the record to review and send." : "Open Family tree & documents to review and send." }); }
@@ -155,14 +169,21 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
       <AiVisuals visuals={a.payload?.visuals} />
-       {["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.email_body !== null && (pending ? (
+      {a.payload?.research && (
+        <details className="text-xs bg-muted/40 rounded-lg p-2.5">
+          <summary className="cursor-pointer text-muted-foreground">What the AI checked first ({a.payload.research.tools.length} lookups)</summary>
+          <p className="mt-1.5 text-muted-foreground">{[...new Set(a.payload.research.tools)].map((t) => t.replace(/_/g, " ")).join(" · ") || "No lookups"}</p>
+          <pre className="mt-1.5 whitespace-pre-wrap font-sans text-foreground">{a.payload.research.text}</pre>
+        </details>
+      )}
+       {EMAIL_TYPES.includes(a.action_type) && a.email_body !== null && (pending ? (
         <div className="space-y-2">
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
           <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
         </div>
       ) : <pre className="whitespace-pre-wrap text-sm text-foreground bg-muted/40 rounded-lg p-3 font-sans">{a.email_body}</pre>)}
       {a.payload?.changes && <ChangesView c={a.payload.changes} />}
-      {!a.payload?.changes && ["update_fields", "fix_document_request", "update_quote_spaces"].includes(a.action_type) && a.payload?.fields && (
+      {!a.payload?.changes && ["update_fields", "fix_document_request", "update_quote_spaces", "send_quote", "set_stage", "resend_email", "resend_contract_link", "email_signed_copy"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
           {Object.entries(a.payload.fields).map(([k, v]) => <li key={k}><span className="text-muted-foreground">{k.replace(/_/g, " ")}:</span> {v}</li>)}
         </ul>
@@ -173,7 +194,9 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         </ul>
       )}
       {!["reply_email", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
-      {["increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval fills in the quote generator with the revised price and opens it. Check the fields and send the quote as normal; the text above then goes out as a separate follow-up email.</p>}
+      {["increase_quote_ten_percent", "update_quote_spaces", "send_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval emails the seller the branded quote with live listing-option buttons (same as Send seller pack); any text above then goes out as a separate follow-up email.</p>}
+      {a.action_type === "resend_expired_quote" && <p className="text-xs text-muted-foreground">Approval re-sends the quote at the same figures with a fresh 10-day window; the text above appears as its intro.</p>}
+      {a.action_type === "edit_document_request" && <p className="text-xs text-muted-foreground">Approval opens the Documents panel and applies this change with the normal steps; check the request there, then preview and send.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
         <div className="space-y-2">
