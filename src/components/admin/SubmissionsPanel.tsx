@@ -2045,6 +2045,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                   <span className="text-sm font-semibold">{formatDate(paid.paidAt)}</span>
                                 </div>
                               )}
+                              {(() => {
+                                const cur = manualTier === "custom_plus" ? "featured" : manualTier;
+                                const paidKey = tierLabel === "custom_plus" ? "featured" : tierLabel;
+                                if (!cur || cur === paidKey || !(cur in TIER_LABEL)) return null;
+                                return (
+                                  <div className="flex flex-col leading-tight border-l border-teal-500/30 pl-3">
+                                    <span className="text-[9px] uppercase tracking-wide font-bold opacity-70">Current option</span>
+                                    <span className="text-sm font-semibold">{TIER_LABEL[cur as keyof typeof TIER_LABEL]} (changed after payment)</span>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           );
                         })()}
