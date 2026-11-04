@@ -1255,7 +1255,7 @@ Deno.serve(async (req) => {
           const before = sub.listing_tier ?? sub.listing_option ?? "none";
           const { error: e } = await db.from("contact_submissions").update({ listing_tier: tier, listing_option: tier }).eq("id", sub.id);
           if (e) throw new Error(e.message);
-          await aiNote(`Changed the listing option from ${before} to ${tier}${act.reason ? `: ${act.reason}` : ""}. (No payment taken; the quote is not marked accepted.)`);
+          await aiNote(`Changed the listing option from ${before} to ${tier}${act.reason ? `: ${String(act.reason).replace(/[.\s]+$/, "")}` : ""}. (No payment taken; the quote is not marked accepted.)`);
         } else if (act.action_type === "edit_family_tree") {
           const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
           const v = validateTreeEdit(answers.v2, act.payload?.tree);
