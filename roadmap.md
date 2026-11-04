@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Replace "Potential plot match" with buyer "waiting for" notes (cheap AI per buyer reply), loose new-stock matching and "Back on top" reasons; hourly check, never emails.
 - [x] Correct buyer AI free-text cemetery matching across lookup, seller rows, model searches and send-time checks; 25 buyer tests and isolated actual-function Bluebonnet lookup pass. Unknown/ambiguous names block no-stock replies, inventory reads paginate, and zero-option automatic replies require staff review when own-cemetery stock exists. Existing Bruce email and submission unchanged; no customer email sent during testing.
 - [x] Correct missing attachment labels across direct uploads, profile files and document files; paginate metadata beyond 1,000 rows, refresh on file/profile/document changes with three-minute fallback, preserve labels on failures and original-receipt rules. Sixteen tests pass; signed-in check reads all 1,435 files and verifies Simon’s previously missed Deed.jpeg now has the Attachments label; preview clean, not published.
 - [x] Add the preneed-style buyer form to all four metro pages and buying, cost and funeral-planning articles using one shared frame; eight five-step intercepted submissions and phone layouts pass, 12 tests pass, buyer classification explicit, build clean; no real enquiries/emails sent, not published.
