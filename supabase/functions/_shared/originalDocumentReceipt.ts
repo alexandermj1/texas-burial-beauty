@@ -24,5 +24,5 @@ export function documentSatisfied(doc: Document, answers: Answers = {}): boolean
 }
 
 export function pendingRecordChanges(actions: { id: string; run_id?: string | null; status: string; action_type: string }[], reply: { id: string; run_id?: string | null }): boolean {
-  return !!reply.run_id && actions.some(a => a.id !== reply.id && a.run_id === reply.run_id && a.status === "proposed" && ["update_fields", "update_document_items", "fix_document_request"].includes(a.action_type));
+  return !!reply.run_id && actions.some(a => a.id !== reply.id && a.run_id === reply.run_id && a.status === "proposed" && ["update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "change_cemetery", "change_listing_option", "sync_checklist"].includes(a.action_type));
 }

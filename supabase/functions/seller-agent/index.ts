@@ -590,6 +590,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
         fields: FIELD_KEYS[a.type] && a.fields && typeof a.fields === "object"
           ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => FIELD_KEYS[a.type].includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
+        tree: a.type === "edit_family_tree" && a.tree && typeof a.tree === "object" && !Array.isArray(a.tree) ? a.tree : null,
         items: a.type === "update_document_items" && Array.isArray(a.items)
           ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
               id: String(i.id), state: DOC_STATES.includes(i.state) ? i.state : null,
@@ -607,13 +608,16 @@ function parseDecision(raw: string, allowed: Set<string>) {
       .filter((a: any) => a.type !== "resend_email" || /^[0-9a-f-]{36}$/i.test(String(a.fields?.email_id ?? "")))
       .filter((a: any) => a.type !== "set_stage" || TEXAS_STAGES.includes(String(a.fields?.stage)))
       .filter((a: any) => !["resend_contract_link", "email_signed_copy"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
-      .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5)),
+      .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5))
+      .filter((a: any) => a.type !== "edit_family_tree" || a.tree)
+      .filter((a: any) => a.type !== "change_listing_option" || (LISTING_TIERS as readonly string[]).includes(String(a.fields?.tier)))
+      .filter((a: any) => a.type !== "change_cemetery" || String(a.fields?.cemetery ?? "").trim().length > 2),
   };
 }
 
 const FIELD_KEYS: Record<string, string[]> = {
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
-  send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
+  send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery"], send_document_request: ["greeting_name"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
 };
 
 function parseVisuals(v: unknown) {
@@ -648,6 +652,20 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
       else untouched.push(`${name} (already correct)`);
     }
     return { fields, rebuild, untouched };
+  }
+  if (a.type === "edit_family_tree") {
+    const v = validateTreeEdit((sub.ownership_answers ?? {}).v2, a.tree);
+    if ("error" in v) throw new Error(v.error);
+    a.tree = v.tree;
+    return { fields: treeDiff((sub.ownership_answers ?? {}).v2, v.tree) };
+  }
+  if (a.type === "change_listing_option") return { fields: [{ label: "listing option", before: String(sub.listing_tier ?? sub.listing_option ?? "(none)"), after: String(a.fields.tier) }] };
+  if (a.type === "change_cemetery") {
+    const want = String(a.fields.cemetery).trim();
+    const { data: m } = await db.from("texas_cemeteries").select("name,city").ilike("name", want.replace(/[%_]/g, "")).is("deleted_at", null).limit(2);
+    if (m?.length !== 1) throw new Error(`"${want}" is not exactly one cemetery in our registry`);
+    a.fields = { cemetery: m[0].name, city: m[0].city ?? "" };
+    return { fields: [{ label: "cemetery", before: String(sub.cemetery ?? "(blank)"), after: `${m[0].name}${m[0].city ? `, ${m[0].city}` : ""}` }] };
   }
   if (a.type === "update_document_items" && a.items?.length) {
     const { data: rows } = await db.from("submission_documents").select("id,label,person_name,status").eq("submission_id", sub.id).in("id", a.items.map((i: any) => i.id));
@@ -740,14 +758,17 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
-    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch(() => null)));
+    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
+    // An invalid family-tree edit or unknown cemetery is dropped rather than shown as approvable.
+    const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
+    if (dropped.size) { console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid)); d.actions = d.actions.filter((_, i) => !dropped.has(i)); previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i))); }
     const rows = d.actions.map((a, ai) => ({
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
       rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
