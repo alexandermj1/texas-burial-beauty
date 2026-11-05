@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Buyer watcher: (1) a cheap model reads each NEW buyer reply to us once and records what they
 // are waiting for; (2) when new seller stock appears, code drops clear mismatches and the cheap
 // model judges the rest loosely, surfacing the buyer with a plain reason. Never emails anyone.

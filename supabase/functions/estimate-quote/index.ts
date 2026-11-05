@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Quote estimator for California cemetery plots.
 //
 // Strategy: comparables are pulled STRICTLY from the same cemetery (canonical key),

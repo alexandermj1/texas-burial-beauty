@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Generates a short "where is this submission up to" summary for the CRM list.
 // Cheap model (gemini flash lite), cached on contact_submissions.ai_summary and
 // keyed on a state fingerprint so we only re-generate when something changed.

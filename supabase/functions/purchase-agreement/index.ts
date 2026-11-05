@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Buyer Purchase Agreement: staff match a buyer to a seller's property, edit the
 // schedule, email a private signing link; the buyer completes and e-signs on
 // /purchase-agreement/:token; staff countersign, which produces the executed PDF

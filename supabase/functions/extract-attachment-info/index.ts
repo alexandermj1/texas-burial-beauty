@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Reads a customer_files attachment (PDF or image) via Lovable AI Gateway
 // (google/gemini-3.1-flash-lite) and stores structured extracted fields +
 // a short human summary on the customer_files row.

@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Proofreads an email body using Lovable AI. Returns a corrected version
 // with the same meaning, tone, formatting, line breaks, greeting, and signature.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";

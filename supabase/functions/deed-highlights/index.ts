@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Seller deed preview: returns a short-lived link to the deed image a seller sent,
 // plus (optionally) AI-located boxes around owner names and space/lot numbers.
 // "view" never calls AI; "scan" reads the deed once with a cheap vision model and

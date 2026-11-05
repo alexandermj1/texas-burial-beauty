@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Drafts a full email reply using Lovable AI with a tool-calling architecture
 // for cost efficiency. The initial system prompt is intentionally small (tone +
 // business identity + rules). The model must call tools to load heavy reference
