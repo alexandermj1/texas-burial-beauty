@@ -798,7 +798,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.human_attention ? humanAttentionNote(a.human_attention) : a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length && ai === 0 ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (rows.length) {
       const { error: actionError } = await db.from("ai_agent_actions").insert(rows);
