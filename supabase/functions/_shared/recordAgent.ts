@@ -159,7 +159,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     ctx.fileReads = (ctx.fileReads ?? 0) + 1;
     const data = `data:${mime};base64,${b64(bytes)}`;
     const part = mime === "application/pdf" ? { type: "file", file: { filename: fileName, file_data: data } } : { type: "image_url", image_url: { url: data } };
-    const out = await chat(ctx.apiKey, [{ role: "user", content: [{ type: "text", text: `You are checking a document for a cemetery-plot brokerage. Question: ${clip(args?.question, 600)}\nAnswer exactly from what is visible. Quote names, plot/lot/space wording, dates, signatures, notary seals as written. Say clearly what is missing or unreadable. Max 200 words.` }, part] }]);
+    const out = await chat(ctx.apiKey, [{ role: "user", content: [{ type: "text", text: `You are checking a document for a cemetery-plot brokerage. Question: ${clip(args?.question, 600)}\nAnswer exactly from what is visible. Quote names, plot/lot/space wording, dates, signatures, notary seals as written. Say clearly what is missing or unreadable. Max 200 words.` }, part] }], { label: `AI checking a file: ${fileName}` });
     return { file: fileName, answer: clip(out.content, 2500) };
   }
   if (name === "cemetery_stock") {
