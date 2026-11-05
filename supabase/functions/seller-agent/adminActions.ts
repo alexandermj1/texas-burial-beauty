@@ -110,8 +110,8 @@ export async function sendQuotePack(db: any, m: Mail, callInternal: (name: strin
   if (saveErr) throw new Error(saveErr.message);
   const first = properFirstName(sub.name) || "there";
   const sig = `Best regards,<br><br>${esc(o.adminName)}<br>Cemetery Salesperson<br>Texas Cemetery Brokers<br>www.texascemeterybrokers.com`;
-  const html = `<div data-tcb-email="ai_agent"></div><p style="${P}">Dear ${esc(first)},</p>${o.intro?.trim() ? `<p style="${P}">${esc(o.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}${block}<p style="${P}">${sig}</p>`;
-  const subject = `Your offer to list${sub.cemetery ? ` at ${properCase(sub.cemetery)}` : ""} — Texas Cemetery Brokers`;
+  const html = `<div data-tcb-email="quote" data-tcb-sent-by="ai"></div><p style="${P}">Dear ${esc(first)},</p>${o.intro?.trim() ? `<p style="${P}">${esc(o.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}${block}<p style="${P}">${sig}</p>`;
+  const subject = `Your Property Valuation is Complete - Listing Offer${sub.cemetery ? ` for ${properCase(sub.cemetery)}` : ""}`;
   const sent = await sendMail(m, { to: sub.email, subject, body: `Dear ${first},\n\nYour quote from Texas Cemetery Brokers: ${o.count} space${o.count === 1 ? "" : "s"} at $${o.perSpace.toLocaleString()} per space. Open this email in a browser to choose your listing option.\n\n${SITE}`, html, threadId: o.threadId, submissionId: sub.id });
   await db.from("contact_submissions").update({ quote_sent_at: now.toISOString(), quote_expires_at: new Date(now.getTime() + 10 * 86_400_000).toISOString(), quote_message: null }).eq("id", sub.id);
   if (o.explanation?.trim()) {
