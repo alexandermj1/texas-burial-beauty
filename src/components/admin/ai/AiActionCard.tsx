@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import AiVisuals, { type AiVisual } from "./AiVisuals";
 import AiActionFeedback from "./AiActionFeedback";
+import AiQuotePreview from "./AiQuotePreview";
 import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 import { treeDocumentChanges } from "@/lib/aiTreeDocPreview";
 import { queueAiDocOp } from "@/lib/aiDocOps";
@@ -248,6 +249,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         </ul>
       )}
       {!["reply_email", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
+      {a.action_type === "send_quote" && <AiQuotePreview submissionId={a.submission_id} fields={a.payload?.fields} />}
       {["increase_quote_ten_percent", "update_quote_spaces", "send_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval emails the seller the branded quote with live listing-option buttons (same as Send seller pack); any text above then goes out as a separate follow-up email.</p>}
       {a.action_type === "resend_expired_quote" && <p className="text-xs text-muted-foreground">Approval re-sends the quote at the same figures with a fresh 10-day window; the text above appears as its intro.</p>}
       {a.action_type === "edit_document_request" && <p className="text-xs text-muted-foreground">Approval opens the Documents panel and applies this change with the normal steps; check the request there, then preview and send.</p>}
