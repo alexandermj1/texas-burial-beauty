@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Build disabled seller-AI human-attention queue: AI-chosen priority/importance, specific staff task/reason/evidence notes, record-ID top-of-list ordering and outcome-based resolution. Hard release lock false plus strict boolean setting; no activation, deployment, live settings or customer changes. 34 tests pass; signed-in admin unchanged with no page errors, build clean. Live task creation/resolution intentionally deferred until owner-authorized activation testing.
 - [x] Seller AI parity: edit family tree (re-syncs request), sync checklist, send/re-send document request, prepare listing agreement, change listing option and cemetery, correct all submission details; sees full document insights, family tree and deed reading. Never archives or buyer-matches. Tested tree fix + send on Alexander's record; listing-agreement prep and cemetery change not run end-to-end.
 - [x] Replace "Potential plot match" with buyer "waiting for" notes (cheap AI per buyer reply), loose new-stock matching and "Back on top" reasons; hourly check, never emails.
 - [x] Correct buyer AI free-text cemetery matching across lookup, seller rows, model searches and send-time checks; 25 buyer tests and isolated actual-function Bluebonnet lookup pass. Unknown/ambiguous names block no-stock replies, inventory reads paginate, and zero-option automatic replies require staff review when own-cemetery stock exists. Existing Bruce email and submission unchanged; no customer email sent during testing.

@@ -9,13 +9,14 @@ import AiActionFeedback from "./AiActionFeedback";
 import { updateSubmissionCemetery } from "@/lib/updateSubmissionCemetery";
 import { treeDocumentChanges } from "@/lib/aiTreeDocPreview";
 import { queueAiDocOp } from "@/lib/aiDocOps";
+import { HUMAN_ATTENTION_RELEASED, parseHumanAttention } from "@/lib/humanAttention";
 import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, Users, DollarSign, FileText, PencilLine } from "lucide-react";
 
 export type AiAction = {
   id: string; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
-  payload?: { fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string; tree?: Record<string, unknown>; before_tree?: Record<string, unknown> | null } | null;
+  payload?: { human_attention?: unknown; fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string; tree?: Record<string, unknown>; before_tree?: Record<string, unknown> | null } | null;
 };
 
 type AiChanges = {
@@ -143,10 +144,16 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const [subject, setSubject] = useState(a.email_subject ?? "");
   const [body, setBody] = useState(a.email_body ?? "");
   const [decisionReason, setDecisionReason] = useState("");
-  const meta = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
+  const attention = HUMAN_ATTENTION_RELEASED ? parseHumanAttention(a.payload?.human_attention) : null;
+  const baseMeta = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
+  const meta = attention ? { ...baseMeta, approve: "Resolved" } : baseMeta;
   const pending = a.status === "proposed";
 
   const approve = async () => {
+    if (attention && !decisionReason.trim()) {
+      toast({ title: "What did you find?", description: "Add the result of your check or call before resolving it." });
+      return;
+    }
     setBusy(true);
     try {
        if (EMAIL_TYPES.includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
@@ -201,6 +208,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
+      {attention && <div className="border-l-2 border-primary pl-3 text-sm space-y-1"><p className="font-semibold text-foreground">{attention.priority} priority · {attention.task}</p><p className="text-muted-foreground">{attention.reason}</p><p className="text-xs text-muted-foreground">Where to check: {attention.evidence}</p></div>}
       <AiVisuals visuals={a.payload?.visuals} />
       {a.payload?.research && (
         <details className="text-xs bg-muted/40 rounded-lg p-2.5">

@@ -1,4 +1,5 @@
 import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
+import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, parseHumanAttention, humanAttentionNote, withHumanAttentionPolicy } from "../_shared/humanAttention.ts";
 import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
 // Seller Agent — reviews one seller's whole record against the TCB Seller
 // Playbook and proposes the next step (reply, internal note, or hand to a
@@ -352,6 +353,13 @@ async function leanMode(db: SupabaseClient) {
   return data?.value === true || data?.value === "true";
 }
 
+async function attentionQueueEnabled(db: SupabaseClient) {
+  // No setting read, new prompt, notes or queue behavior until the owner releases it.
+  if (!HUMAN_ATTENTION_RELEASED) return false;
+  const { data, error } = await db.from("ai_agent_settings").select("value").eq("key", HUMAN_ATTENTION_SETTING).maybeSingle();
+  return !error && humanAttentionEnabled(data?.value);
+}
+
 async function callCheap(apiKey: string, system: string, user: string): Promise<any> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -447,6 +455,7 @@ function leanCaseRules(playbook: string, allowed: Set<string>, topics: Set<strin
 type Prep = { instructions: string; input: string; scans: { parts: any[]; names: string[]; refs: any[] }; skip?: { stage_summary: string; next_step: string } };
 
 async function preparePrompt(db: SupabaseClient, apiKey: string, sub: Sub, ctx: any, allowed: Set<string>, playbook: string, o: { lean: boolean; instruction: string; customerWaiting: boolean; trigger: string }): Promise<Prep> {
+  const attentionEnabled = await attentionQueueEnabled(db);
   const noScans = { parts: [], names: [], refs: [] as any[] };
   let topics = new Set<string>();
   if (o.lean) {
@@ -470,10 +479,10 @@ async function preparePrompt(db: SupabaseClient, apiKey: string, sub: Sub, ctx: 
   const stageNeedsScan = ctx.pipelineStage === "attachments" || ctx.pipelineStage === "tree_done";
   const scans = (stageNeedsScan || (o.customerWaiting && wantsCheck) || o.instruction || (o.trigger === "manual" && wantsCheck)) ? await loadScans(db, sub) : noScans;
   if (scans.names.length) topics.add("documents");
-  const directive = o.instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${o.instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead.\n\n` : "";
+  const directive = o.instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${o.instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. ${attentionEnabled ? "Do the requested safe work; if a real human-only blocker remains, explain the concrete task using flag_human, without bouncing ordinary work back." : "A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead."}\n\n` : "";
   const head = `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n`;
-  if (!o.lean) return { instructions: INSTRUCTIONS(playbook), input: head + ctx.context, scans };
-  return { instructions: LEAN_STATIC(playbook), input: `${leanCaseRules(playbook, allowed, topics)}\n\n${head}${ctx.context}`, scans };
+  if (!o.lean) return { instructions: withHumanAttentionPolicy(INSTRUCTIONS(playbook), attentionEnabled), input: head + ctx.context, scans };
+  return { instructions: withHumanAttentionPolicy(LEAN_STATIC(playbook), attentionEnabled), input: `${withHumanAttentionPolicy(leanCaseRules(playbook, allowed, topics), attentionEnabled)}\n\n${head}${ctx.context}`, scans };
 }
 
 /** Replay helper: one decision, nothing saved. */
@@ -572,7 +581,7 @@ async function callModel(apiKey: string, instructions: string, input: string, ef
   return out;
 }
 
-function parseDecision(raw: string, allowed: Set<string>) {
+function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = false) {
   const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
   const start = t.indexOf("{"), end = t.lastIndexOf("}");
   const obj = JSON.parse(t.slice(start, end + 1));
@@ -595,6 +604,7 @@ function parseDecision(raw: string, allowed: Set<string>) {
         subject: a.subject ? String(a.subject).slice(0, 300) : null,
         body: a.body ? String(a.body).slice(0, 12000) : null,
         note: a.note ? String(a.note).slice(0, 4000) : null,
+        human_attention: attentionEnabled && a.type === "flag_human" ? parseHumanAttention(a.human_attention) : null,
         fields: FIELD_KEYS[a.type] && a.fields && typeof a.fields === "object"
           ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => FIELD_KEYS[a.type].includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
           : null,
@@ -754,8 +764,10 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     }
     const scans = prep.scans;
     const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts);
-    const d = parseDecision(raw, allowed);
-    if (instruction) {
+    const attentionEnabled = await attentionQueueEnabled(db);
+    const d = parseDecision(raw, allowed, attentionEnabled);
+    if (attentionEnabled) d.actions = d.actions.filter((a) => a.type !== "flag_human" || a.human_attention);
+    if (instruction && !attentionEnabled) {
       // Staff-directed: never bounce the work back to a human.
       const kept = d.actions.filter((a) => a.type !== "flag_human");
       d.actions = kept.length ? kept : d.actions.map((a) => a.type === "flag_human" ? { ...a, type: "add_note", note: a.note ?? d.human_reason ?? a.reason } : a);
@@ -781,14 +793,21 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
       email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
-      note_body: a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
+      note_body: a.human_attention ? humanAttentionNote(a.human_attention) : a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
-    if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
-      rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
+    if (rows.length) {
+      const { error: actionError } = await db.from("ai_agent_actions").insert(rows);
+      if (actionError) throw new Error(actionError.message);
+      if (attentionEnabled) {
+        const flags = rows.filter(r => r.action_type === "flag_human" && r.payload?.human_attention);
+        if (flags.length) {
+          const { error: noteError } = await db.from("customer_notes").insert(flags.map(r => ({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: r.note_body, author_name: "AI agent (human attention)" })));
+          if (noteError) throw new Error(`Human task was queued, but the file note could not be saved: ${noteError.message}`);
+        }
+      }
     }
-    if (rows.length) await db.from("ai_agent_actions").insert(rows);
     return { status: "done", run_id: run!.id, effort, decision: d };
   } catch (e) {
     const msg = String((e as Error).message ?? e);
@@ -1014,6 +1033,12 @@ Deno.serve(async (req) => {
       await db.from("ai_agent_actions").update({ status: "rejected", decided_by_name: user.name, decided_by_user_id: user.id ?? null, decision_reason: reason, decided_at: new Date().toISOString() }).eq("id", act.id);
       const { error: feedbackError } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: act.submission_id, kind: "declined", comment: reason, author_user_id: user.id, author_name: user.name });
       if (feedbackError) return json({ error: feedbackError.message }, 500);
+      const attention = parseHumanAttention(act.payload?.human_attention);
+      if (attention && await attentionQueueEnabled(db)) {
+        const { data: cs } = await db.from("contact_submissions").select("customer_profile_id").eq("id", act.submission_id).maybeSingle();
+        const { error: noteError } = await db.from("customer_notes").insert({ submission_id: act.submission_id, customer_profile_id: cs?.customer_profile_id ?? null, body: `${user.name} dismissed the human task: ${attention.task}${reason ? `\n${reason}` : ""}`, author_name: `AI agent (reviewed by ${user.name})` });
+        if (noteError) return json({ error: noteError.message }, 500);
+      }
       return json({ ok: true });
     }
 
@@ -1048,6 +1073,14 @@ Deno.serve(async (req) => {
     } else if (act.action_type === "add_note") {
       const { error: e } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `${act.note_body ?? act.reason}`, author_name: `AI agent (approved by ${user.name})` });
       if (e) error = e.message;
+    } else if (act.action_type === "flag_human" && act.payload?.human_attention) {
+      if (!await attentionQueueEnabled(db)) return json({ error: "The human-attention queue is not enabled." }, 409);
+      const attention = parseHumanAttention(act.payload.human_attention);
+      if (!attention) return json({ error: "Human task details are incomplete; review the record again." }, 409);
+      if (!body.reason?.trim()) return json({ error: "Explain the completed check or call before resolving this task." }, 400);
+      const { error: noteError } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `${user.name} resolved the human task: ${attention.task}\n${body.reason.trim()}`, author_name: `AI agent (reviewed by ${user.name})` });
+      if (noteError) error = noteError.message;
+      notedByAction = !noteError;
     } else if (act.action_type !== "flag_human") {
       // Re-check against the record as it is NOW — it may have moved on since the proposal.
       const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
