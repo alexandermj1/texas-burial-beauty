@@ -124,10 +124,10 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
       <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
       {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI only looks at this seller when you press Review now.</p>}
-      {pending.map((a) => (
-        <AiActionCard key={a.id} action={a} compact onChanged={() => { load(); onRefresh?.(); }}
+      {(() => { const own = visualOwners(pending); return pending.map((a) => (
+        <AiActionCard key={a.id} action={a} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
-      ))}
+      )); })()}
 
       <div className="flex gap-2">
         <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={1} placeholder="Instruction for AI (e.g. hold until after the funeral)" className="min-h-9 text-sm bg-card" />
@@ -152,7 +152,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           </button>
           {showHistory && (
             <ul className="mt-2 space-y-1.5">
-              {history.map(a => <li key={a.id}><AiActionCard action={a} compact onChanged={() => { load(); onRefresh?.(); }} /></li>)}
+              {(() => { const own = visualOwners(history); return history.map(a => <li key={a.id}><AiActionCard action={a} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }} /></li>); })()}
             </ul>
           )}
         </div>

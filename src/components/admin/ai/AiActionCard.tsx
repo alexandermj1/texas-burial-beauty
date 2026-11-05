@@ -138,7 +138,18 @@ type Props = {
   compact?: boolean;
 };
 
-export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenSubmission, onOpen, onChanged, compact }: Props) {
+/** Ids of actions that should show their visuals: a run's shared deed/compare visuals appear on only the first card that carries them. */
+export function visualOwners(actions: { id: string; run_id?: string | null; payload?: { visuals?: unknown } | null }[]): Set<string> {
+  const seen = new Set<string>(), owners = new Set<string>();
+  for (const a of actions) {
+    const v = a.payload?.visuals; if (!v) { owners.add(a.id); continue; }
+    const key = `${a.run_id ?? a.id}|${JSON.stringify(v)}`;
+    if (!seen.has(key)) { seen.add(key); owners.add(a.id); }
+  }
+  return owners;
+}
+
+export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenSubmission, onOpen, onChanged, compact, hideVisuals }: Props & { hideVisuals?: boolean }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [subject, setSubject] = useState(a.email_subject ?? "");
@@ -210,7 +221,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
       {attention && <div className="border-l-2 border-primary pl-3 text-sm space-y-1"><p className="font-semibold text-foreground">{attention.priority} priority · {attention.task}</p><p className="text-muted-foreground">{attention.reason}</p><p className="text-xs text-muted-foreground">Where to check: {attention.evidence}</p></div>}
       {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}
-      <AiVisuals visuals={a.payload?.changes ? a.payload?.visuals?.filter((v) => v.kind !== "compare") : a.payload?.visuals} />
+      {!hideVisuals && <AiVisuals visuals={a.payload?.changes ? a.payload?.visuals?.filter((v) => v.kind !== "compare") : a.payload?.visuals} />}
       {a.payload?.research && (
         <details className="text-xs bg-muted/40 rounded-lg p-2.5">
           <summary className="cursor-pointer text-muted-foreground">What the AI checked first ({a.payload.research.tools.length} lookups)</summary>

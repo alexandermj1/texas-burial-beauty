@@ -140,10 +140,10 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
         <div className="py-16 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl">Nothing here right now.</div>
       ) : (
         <div className="space-y-3">
-          {shown.map((a) => {
+          {(() => { const own = visualOwners(shown); return shown.map((a) => {
             const s = subs[a.submission_id];
-            return <AiActionCard key={a.id} action={a} sellerName={s?.name ?? null} sellerSub={`${s?.cemetery ?? ""}${s?.email ? ` · ${s.email}` : ""}`} onOpenSubmission={onOpenSubmission} onChanged={load} />;
-          })}
+            return <AiActionCard key={a.id} action={a} hideVisuals={!own.has(a.id)} sellerName={s?.name ?? null} sellerSub={`${s?.cemetery ?? ""}${s?.email ? ` · ${s.email}` : ""}`} onOpenSubmission={onOpenSubmission} onChanged={load} />;
+          }); })()}
         </div>
       )}
     </div>
