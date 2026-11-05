@@ -17,6 +17,7 @@ const BUYER_SOURCES = new Set(["buy_property_wizard", "buy_inquiry", "cemetery_p
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("auto"), submission_id: z.string().uuid() }),
   z.object({ action: z.literal("run"), submission_id: z.string().uuid() }),
+  z.object({ action: z.literal("preview_matches"), submission_id: z.string().uuid() }),
   z.object({ action: z.literal("set_auto_reply"), submission_id: z.string().uuid(), enabled: z.boolean() }),
   z.object({ action: z.literal("resume") }),
   z.object({ action: z.literal("sweep") }),
