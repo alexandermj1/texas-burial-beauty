@@ -39,4 +39,3 @@
 - Seller-agent stage logic lives in supabase/functions/seller-agent/pipeline.ts, mirroring the Submissions panel stage order; prompts take one stage-goal guide from it — why: the AI must work the same discrete stages staff see.
 - Human attention reuses flag_human payloads and record-ID sorting via _shared/humanAttention, gated by an owner release lock and boolean setting; resolution requires an outcome note — why: discretionary priorities without accidental activation or automatic reviews.
 - AI doc requests verify plot wording first (autopilot.plotVerified) — why: only spaces sold.
-- Gateway calls use aiRunLabel aiFetch — why: readable run names.

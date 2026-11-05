@@ -1,0 +1,1 @@
+- Gateway calls use _shared/aiRunLabel aiFetch with a plain-English label — why: readable run names in the AI activity log.
