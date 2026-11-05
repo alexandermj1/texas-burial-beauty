@@ -34,6 +34,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
 import { useAuth } from "@/hooks/useAuth";
 import { canUseAi } from "@/lib/aiAccess";
+import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, attentionIndex, prioritizeHumanAttention, type AttentionEntry, type AttentionAction } from "@/lib/humanAttention";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
@@ -302,6 +303,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [priceSheetOpen, setPriceSheetOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiPending, setAiPending] = useState<Map<string, { type: string; label: string }>>(new Map());
+  const [humanQueueOn, setHumanQueueOn] = useState(false);
+  const [humanTasks, setHumanTasks] = useState<Map<string, AttentionEntry>>(new Map());
   const AI_ROW_LABEL: Record<string, string> = {
     reply_email: "drafted a reply",
     add_note: "left a status note",
@@ -336,7 +339,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       m.set(k, { type: r.action_type, label: AI_ROW_LABEL[r.action_type] ?? "has a suggestion" });
     }
     setAiPending(m);
-  }, []);
+    // Separate record-ID map: a newer AI reply or another test record with the
+    // same email must never conceal the specific file needing a human.
+    if (HUMAN_ATTENTION_RELEASED && aiOn) {
+      const { data: setting, error: settingError } = await supabase.from("ai_agent_settings").select("value").eq("key", HUMAN_ATTENTION_SETTING).maybeSingle();
+      const enabled = !settingError && humanAttentionEnabled(setting?.value);
+      setHumanQueueOn(enabled);
+      if (!enabled) { setHumanTasks(new Map()); return; }
+      const flags: AttentionAction[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data: page, error } = await supabase.from("ai_agent_actions" as never).select("id,submission_id,action_type,status,created_at,deleted_at,payload").eq("action_type", "flag_human").eq("status", "proposed").is("deleted_at", null).order("id").range(offset, offset + 499);
+        if (error) { setHumanQueueOn(false); setHumanTasks(new Map()); return; }
+        const batch = (page ?? []) as unknown as AttentionAction[];
+        flags.push(...batch);
+        if (batch.length < 500) break;
+      }
+      setHumanTasks(attentionIndex(flags));
+    }
+  }, [aiOn]);
   const [aiFirst, setAiFirst] = useState(false);
   useEffect(() => {
     loadAiPending();
@@ -1164,9 +1184,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       if (ca !== cb) return ca < cb ? -1 : 1;
       return byNewest(a, b);
     };
-    const ordered = buyerView
+    const baseline = buyerView
       ? [...matches].sort(byCemetery)
       : [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
+    const ordered = prioritizeHumanAttention(baseline, humanTasks, humanQueueOn && aiOn && !buyerView && !archivedView);
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -1184,12 +1205,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       deduped.push(s);
     }
 
-    if (aiFirst && !buyerView) {
+    if (aiFirst && !buyerView && !humanQueueOn) {
       const withAi = deduped.filter(x => aiPending.has(aiKey(x)));
       return [...withAi, ...deduped.filter(x => !aiPending.has(aiKey(x)))];
     }
     return deduped;
-  }, [aiFirst, aiPending, submissions, archivedView, hideBuyers, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, docsIds, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
+  }, [humanTasks, humanQueueOn, aiOn, aiFirst, aiPending, submissions, archivedView, hideBuyers, regionFilter, cemeteryCanon, cemeteriesOpen, docsFilter, awaitingQuoteFilter, quotedFilter, acceptedFilter, docsOutFilter, docsReturnedFilter, completeFilter, ftSentFilter, ftDoneFilter, docsEmails, docsIds, returnedDocsEmails, eFilter, eKind, eStage, eSellerView, searchQuery, buyerSearch, buyerView, startOfToday, awaitingAll, followupMap, paidMap]);
 
   const archivedCount = useMemo(() => submissions.filter(s => !!s.archived_at).length, [submissions]);
 
@@ -3871,6 +3892,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     })()}
 
                     {/* Line 2 — plain-language summary */}
+                    {humanQueueOn && aiOn && humanTasks.get(s.id) && (() => {
+                      const task = humanTasks.get(s.id)?.attention;
+                      return task ? <div className="text-xs leading-snug text-foreground border-l-2 border-primary pl-2 space-y-1"><p className="font-semibold">Needs a person · {task.priority}</p><p>{task.task}</p><p className="text-muted-foreground">{task.reason}</p></div> : null;
+                    })()}
                     {(() => {
                       const raw = summaryMap[s.id] || "";
                       const [headline, body] = raw.includes("||")
