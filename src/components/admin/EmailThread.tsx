@@ -351,6 +351,11 @@ const EmailThread = ({ submissionId, customerEmail, customerName, cemetery, newE
                     <p className="font-medium text-foreground truncate">{sender}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    {outgoing && kind !== "ai_agent" && isSentByAi(e.body_html) && (
+                      <span className={`inline-flex items-center px-2 py-1 font-bold rounded-md border text-[9px] uppercase tracking-wide ${EMAIL_KIND_META.ai_agent.className}`} title="The AI prepared this and staff approved it">
+                        Sent by AI
+                      </span>
+                    )}
                     {kind && (
                       <span
                         className={`inline-flex max-w-full flex-wrap items-center gap-1 px-2 py-1 font-bold rounded-md border ${kind === "quote" ? "text-[10px] normal-case" : "text-[9px] uppercase tracking-wide"} ${kindClass}`}
