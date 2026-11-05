@@ -218,7 +218,7 @@ async function matchStock(db: any, apiKey: string) {
 /** Deep check of one buyer × seller pair with read-only record tools. */
 async function investigate(db: any, apiKey: string, dir: any[], want: any, sellerId: string, screener: string) {
   const task = `WAITING BUYER record id: ${want.submission_id}\nOur note on what they want: ${want.summary}\nTheir words: ${want.buyer_words ?? "-"}\n\nNEW SELLER PLOT record id: ${sellerId}\nScreener said: ${screener}\n\nInvestigate and give your verdict.`;
-  return await runAgent({ db, apiKey, dir, deedReads: 0 }, INVESTIGATE, task);
+  return await runAgent({ db, apiKey, dir, deedReads: 0 }, INVESTIGATE, task, 7, undefined, "Buyer watch — double-checking a possible match");
 }
 
 async function staff(db: any, req: Request) {

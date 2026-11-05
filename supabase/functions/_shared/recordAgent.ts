@@ -194,11 +194,11 @@ export async function chat(apiKey: string, messages: any[], opts: { tools?: any[
 }
 
 /** Bounded tool loop: at most `maxSteps` model turns, then forces a final JSON answer. */
-export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSteps = 7, tools: readonly any[] = RECORD_TOOLS): Promise<{ answer: any; trace: { tool: string; args: unknown }[] }> {
+export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSteps = 7, tools: readonly any[] = RECORD_TOOLS, label = "AI researching a record"): Promise<{ answer: any; trace: { tool: string; args: unknown }[] }> {
   const messages: any[] = [{ role: "system", content: system }, { role: "user", content: task }];
   const trace: { tool: string; args: unknown }[] = [];
   for (let step = 0; step < maxSteps; step++) {
-    const msg = await chat(ctx.apiKey, messages, { tools: [...tools] });
+    const msg = await chat(ctx.apiKey, messages, { tools: [...tools], label: `${label} (step ${step + 1})` });
     messages.push({ role: "assistant", content: msg.content ?? "", ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
     if (!msg.tool_calls?.length) return { answer: parseJson(msg.content), trace };
     for (const tc of msg.tool_calls) {
@@ -209,7 +209,7 @@ export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSt
     }
   }
   messages.push({ role: "user", content: "Stop using tools. Give your final JSON answer now." });
-  const last = await chat(ctx.apiKey, messages, { json: true });
+  const last = await chat(ctx.apiKey, messages, { json: true, label: `${label} (final answer)` });
   return { answer: parseJson(last.content), trace };
 }
 
