@@ -1653,7 +1653,7 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     const { items, poas, docs, poaUrl, poaFor, poaMailTo } = await buildPacketPayload();
     if (!items.length) throw new Error("Nothing is outstanding on the checklist, so there is no request to send.");
     const { data, error } = await supabase.functions.invoke("send-document-packet", {
-      body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greeting, note },
+      body: { submission_id: submissionId, items, packet_url: packetUrl, poas, docs, poa_url: poaUrl, poa_for: poaFor, poa_mail_to: poaMailTo, greeting_name: greeting, note, sent_by_ai: true },
     });
     if (error || (data as { error?: string } | null)?.error) throw new Error((data as { error?: string } | null)?.error || error?.message);
     return { items: items.length, poas: poas.length, docs: docs.length };

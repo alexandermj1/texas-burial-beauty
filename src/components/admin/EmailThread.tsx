@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Mail, Sparkles, Reply, PenLine } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { isOutgoing, classifyEmailKind, extractQuoteAmount, extractQuoteDetails, EMAIL_KIND_META, EMAIL_KIND_RING } from "@/lib/emailReply";
+import { isOutgoing, classifyEmailKind, extractQuoteAmount, extractQuoteDetails, EMAIL_KIND_META, EMAIL_KIND_RING, isSentByAi } from "@/lib/emailReply";
 import InlineEmailComposer from "./InlineEmailComposer";
 
 interface EmailRow {
