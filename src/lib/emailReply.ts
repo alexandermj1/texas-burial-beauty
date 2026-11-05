@@ -108,6 +108,10 @@ export const classifyEmailKind = (
 };
 
 
+/** True when an approved AI step sent this email (any generator can carry the marker). */
+export const isSentByAi = (html?: string | null): boolean =>
+  /data-tcb-sent-by=["']ai["']/i.test(stripQuoted(html));
+
 const parseMoney = (raw: string): number | null => {
   const n = Number(raw.replace(/,/g, ""));
   return Number.isFinite(n) ? n : null;
