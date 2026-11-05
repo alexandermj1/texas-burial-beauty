@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import QRCode from "qrcode";
 import {
-  CheckCircle2, Loader2, Upload, Smartphone, FileText, ShieldCheck,
+  Check, CheckCircle2, Loader2, Upload, Smartphone, FileText, ShieldCheck,
   ChevronDown, Stamp, X, Mail, Trash2, Phone, HelpCircle, ArrowRight, MapPin,
 } from "lucide-react";
 
@@ -230,17 +230,24 @@ const MailTick = ({
       variant="outline"
       onClick={toggle}
       disabled={saving}
-      className={`mt-3 w-full h-auto whitespace-normal text-left justify-start inline-flex items-start gap-2.5 rounded-md border px-4 py-3 min-h-[44px] transition-colors disabled:opacity-60 ${
-        confirmed ? "border-primary/40 bg-primary/[0.06]" : "border-border/70 bg-card/70 hover:border-primary/40"
+      role="checkbox"
+      aria-checked={confirmed}
+      className={`mt-4 w-full h-auto whitespace-normal text-left justify-start inline-flex items-center gap-4 rounded-lg border-2 px-4 sm:px-5 py-4 min-h-[60px] shadow-sm transition-colors disabled:opacity-60 ${
+        confirmed ? "border-primary bg-primary/[0.08]" : "border-primary/40 bg-card hover:border-primary hover:bg-primary/[0.04]"
       }`}
     >
-      <span className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${confirmed ? "bg-primary border-primary text-primary-foreground" : "border-border"}`}>
-        {confirmed && <CheckCircle2 className="w-3 h-3" />}
+      <span className={`w-7 h-7 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${confirmed ? "bg-primary border-primary text-primary-foreground" : "border-primary/60 bg-background"}`}>
+        {confirmed && <Check className="w-4 h-4" strokeWidth={3} />}
       </span>
-      <span className="text-xs text-foreground leading-relaxed">
-        {confirmed
-          ? "Thank you — we've told our team to expect the original in the post."
-          : "Tick here to confirm you're posting the original to us."}
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-foreground">
+          {confirmed ? "Original marked as posted" : "I've posted the original"}
+        </span>
+        <span className="block mt-0.5 text-xs text-muted-foreground leading-relaxed">
+          {confirmed
+            ? "Thank you — our team will look out for it. Tap again if you haven't sent it yet."
+            : "Tap this box once the signed original is in the post, so we know to expect it."}
+        </span>
       </span>
     </Button>
   );
