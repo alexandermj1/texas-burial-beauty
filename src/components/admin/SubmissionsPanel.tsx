@@ -1473,8 +1473,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         facts.push({ label, value: str, source, status, customerValue, customerLabel });
       };
       const summaries: Array<{ file: string; summary: string }> = [];
-      for (const f of files as any[]) {
+      // Read the actual deed / certificate first so its section/lot/space wins over
+      // contracts or receipts, which often garble plot numbers (e.g. lot "4-5-6").
+      const deedRank = (f: any) => {
+        const t = `${f.extracted_data?.document_type ?? ""} ${f.document_type ?? ""} ${f.file_name ?? ""}`;
+        if (/(certificate of (interment|ownership|burial)|interment rights|\bdeed\b)/i.test(t)) return 0;
+        if (/(contract|invoice|receipt|statement)/i.test(t)) return 2;
+        return 1;
+      };
+      const orderedFiles = [...(files as any[])].sort((a, b) => deedRank(a) - deedRank(b));
+      const deedFile = orderedFiles.find((f) => deedRank(f) === 0);
+      for (const f of orderedFiles) {
         const ex = f.extracted_data || {};
+        const locSkip = deedFile && f !== deedFile;
         const src = f.file_name || "document";
         const list = Array.isArray(ex.owners) ? ex.owners : [];
         list.forEach((n: any) => { if (typeof n === "string" && n.trim()) owners.add(n.trim()); });
@@ -1484,10 +1495,10 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         pushFact("Purchaser address", ex.purchaser_address, src);
         pushFact("Cemetery", ex.cemetery, src);
         pushFact("Cemetery address", ex.cemetery_address, src);
-        pushFact("Section", ex.section, src);
-        pushFact("Lot", ex.lot, src);
-        pushFact("Block", ex.block, src);
-        pushFact("Space", ex.space, src);
+        if (!locSkip) pushFact("Section", ex.section, src);
+        if (!locSkip) pushFact("Lot", ex.lot, src);
+        if (!locSkip) pushFact("Block", ex.block, src);
+        if (!locSkip) pushFact("Space", ex.space, src);
         pushFact("Plot type", ex.plot_type, src);
         pushFact("Deed number", ex.deed_number, src);
         pushFact("Certificate number", ex.certificate_number, src);
@@ -1849,7 +1860,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                              {!locationEditing && <Button type="button" size="icon" variant="outline" style={stageSecondaryStyle} className="h-8 w-8 shrink-0 hover:brightness-95" title="Edit the selling location everywhere" onClick={() => { setLocationDraft(sellingLocation === "Not provided" ? "" : sellingLocation); setLocationEditing(true); }}><Pencil className="h-3.5 w-3.5" /><span className="sr-only">Edit locations being sold</span></Button>}
                           </div>
                            {locationEditing && <div className="mt-3 space-y-2 border-t border-border/60 pt-3"><textarea aria-label="Locations being sold" value={locationDraft} onChange={e => setLocationDraft(e.currentTarget.value)} rows={2} autoFocus className="w-full resize-y rounded-md border bg-background px-2.5 py-2 text-base font-medium text-foreground outline-none" style={{ borderColor: toneVar("-border") }} /><div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" style={stagePrimaryStyle} className="hover:brightness-95" onClick={() => void saveSellingLocation(locationDraft)} disabled={locationSaving}><Save className="h-3.5 w-3.5" />{locationSaving ? "Updating…" : "Update everywhere"}</Button><Button type="button" size="sm" variant="outline" style={stageSecondaryStyle} className="hover:brightness-95" onClick={() => { setLocationEditing(false); setLocationDraft(""); }} disabled={locationSaving}><X className="h-3.5 w-3.5" />Cancel</Button></div></div>}
-                          {(customerLocation !== "Not provided" || deedLocation) && <details className="mt-3 border-t border-border/60 pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Compare source wording</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Customer wrote</span><span className="mt-1 block text-xs text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />AI read from deed</span><span className="mt-1 block text-xs font-medium text-foreground">{deedLocation || "No property description found"}</span>{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></details>}
+                          {(customerLocation !== "Not provided" || deedLocation) && <details className="mt-3 border-t border-border/60 pt-2"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Compare source wording</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Customer wrote</span><span className="mt-1 block text-xs text-muted-foreground">{customerLocation}</span></div><div><span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3 w-3" />AI read from deed</span><span className="mt-1 block text-xs font-medium text-foreground">{deedLocation || "No property description found"}</span>{deedLocation && deedLocation !== String(seller.plot_description || "").trim() && <button type="button" disabled={locationSaving} onClick={() => saveSellingLocation(deedLocation)} className="mt-2 inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:border-primary/60 disabled:opacity-50"><Sparkles className="h-3 w-3" />Use this as locations being sold</button>}{deedLocationSource && <span className="mt-1 block truncate text-[10px] text-muted-foreground" title={deedLocationSource}>From {deedLocationSource}</span>}</div></div></details>}
                         </div>
                       </div>
                       <div className="pt-1">
