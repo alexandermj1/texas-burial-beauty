@@ -90,7 +90,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     const mime = /png$/i.test(deed.file_name) ? "image/png" : /webp$/i.test(deed.file_name) ? "image/webp" : "image/jpeg";
     const out = await chat(ctx.apiKey, [{ role: "user", content: [
       { type: "text", text: `Read this cemetery deed exactly. Return JSON only: {"cemetery":string,"section_or_lawn":string,"spaces":[{"label":"as written","lot":string,"space":string}],"interments_per_space":string|null,"notes":string}. List every grave/space/crypt/niche separately. Never invent; say what is unreadable in notes. Do not include owner names or addresses.` },
-      { type: "image_url", image_url: { url: `data:${mime};base64,${btoa(bin)}` } }] }], { json: true });
+      { type: "image_url", image_url: { url: `data:${mime};base64,${btoa(bin)}` } }] }], { json: true, label: "AI reading the deed" });
     try { return { file: deed.file_name, ...JSON.parse(String(out.content ?? "{}").replace(/^```json|```$/g, "").trim()) }; } catch { return { error: "Deed could not be read clearly." }; }
   }
   if (name === "get_cemetery") {
