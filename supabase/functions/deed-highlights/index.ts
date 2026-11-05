@@ -20,26 +20,50 @@ async function isStaff(req: Request) {
   return Boolean(roles?.length);
 }
 
-type Cand = { path: string; name: string; score: number; at: string };
+type Cand = { path: string; name: string; score: number; at: string; pdf: boolean };
+
+const IS_PDF = (name: string, mime?: string | null) => /\.pdf$/i.test(name) || mime === "application/pdf";
+// Positive evidence a file IS the deed (from the AI file summary / type), and
+// evidence it clearly is not (logos, blank images, IDs, medical/billing papers,
+// sales contracts). A file only becomes the thumbnail with positive evidence —
+// never as a "best of a bad bunch" fallback.
+const DEED_TEXT = /(\bdeed\b|certificate of (interment|ownership|burial|title)|interment rights?|burial rights?|right of (interment|sepulture)|sepulture|deed of (sale|conveyance)|certificate of purchase)/i;
+const NOT_DEED_TEXT = /(death certificate|driver|licen[cs]e|passport|\bid card\b|photo id|logo|linkedin|facebook|instagram|blank|damaged|no readable|unreadable|signature block|email signature|health|hospital|medical|patient|invoice|receipt|bank|statement|installment contract|retail installment|keyboard|screenshot of (an )?email|power of attorney|affidavit)/i;
+
+function scoreFile(name: string, text: string): number {
+  if (NOT_DEED_TEXT.test(text)) return 0;
+  if (DEED_TEXT.test(text)) return 3;
+  if (/(deed|certificate|sepulture|interment)/i.test(name)) return 1;
+  return 0;
+}
 
 async function findDeed(submissionId: string): Promise<Cand | null> {
   const { data: sub } = await db.from("contact_submissions").select("id,customer_profile_id,seller_attachments,created_at").eq("id", submissionId).maybeSingle();
   if (!sub) return null;
   const c: Cand[] = [];
-  for (const f of (Array.isArray(sub.seller_attachments) ? sub.seller_attachments : []) as any[]) {
-    if (f?.path && (IMG.test(f.name ?? f.path) || /^image\//.test(f.type ?? ""))) c.push({ path: f.path, name: f.name ?? "Deed", score: DEEDISH.test(f.name ?? "") ? 1 : 0.5, at: sub.created_at });
-  }
+  const seen = new Set<string>();
   if (sub.customer_profile_id) {
-    const { data } = await db.from("customer_files").select("file_name,file_path,mime_type,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(40);
+    const { data } = await db.from("customer_files").select("file_name,file_path,mime_type,document_type,extracted_summary,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(60);
     for (const f of data ?? []) {
-      if (!(IMG.test(f.file_name ?? "") || /^image\//.test(f.mime_type ?? ""))) continue;
-      const deed = /(deed|certificate|sepulture|ownership|interment right)/i.test(`${f.document_type} ${f.extracted_summary}`);
-      const notDeed = /(death certificate|driver|license|passport|\bid\b|photo of (a|the) (person|keyboard))/i.test(`${f.document_type} ${f.extracted_summary}`);
-      c.push({ path: f.file_path, name: f.file_name, score: notDeed ? 0 : deed ? 2 : DEEDISH.test(f.file_name) ? 1 : 0.4, at: f.created_at });
+      const name = f.file_name ?? "";
+      const pdf = IS_PDF(name, f.mime_type);
+      if (!pdf && !(IMG.test(name) || /^image\//.test(f.mime_type ?? ""))) continue;
+      seen.add(f.file_path);
+      const score = scoreFile(name, `${f.document_type ?? ""} ${f.extracted_summary ?? ""}`);
+      // Images draw sharper thumbnails than a first PDF page, so prefer them on a tie.
+      if (score > 0) c.push({ path: f.file_path, name, score: score + (pdf ? 0 : 0.1), at: f.created_at, pdf });
     }
   }
+  for (const f of (Array.isArray(sub.seller_attachments) ? sub.seller_attachments : []) as any[]) {
+    if (!f?.path || seen.has(f.path)) continue;
+    const name = String(f.name ?? f.path);
+    const pdf = IS_PDF(name, f.type);
+    if (!pdf && !(IMG.test(name) || /^image\//.test(f.type ?? ""))) continue;
+    const score = scoreFile(name, name);
+    if (score > 0) c.push({ path: f.path, name, score: score + (pdf ? 0 : 0.1), at: sub.created_at, pdf });
+  }
   c.sort((a, b) => b.score - a.score || b.at.localeCompare(a.at));
-  return c.find((x) => x.score > 0) ?? null;
+  return c[0] ?? null;
 }
 
 const cachePath = (id: string) => `deed-highlights/${id}.json`;
@@ -75,7 +99,7 @@ box_2d is 0-1000 relative to the image as provided. Boxes must be tight around t
         body: JSON.stringify({ model: "google/gemini-3.8-flash", response_format: { type: "json_object" },
           messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: upright } }] }] }),
       });
-      if (ai.status === 429 || ai.status === 402) return json({ deed: { url: signed?.signedUrl, name: deed.name }, highlights: null, error: ai.status === 402 ? "AI credits used up" : "AI busy" });
+      if (ai.status === 429 || ai.status === 402) return json({ deed: { url: signed?.signedUrl, name: deed.name, pdf: deed.pdf }, highlights: null, error: ai.status === 402 ? "AI credits used up" : "AI busy" });
       if (!ai.ok) throw new Error(`Deed reading failed (${ai.status})`);
       const raw = (await ai.json())?.choices?.[0]?.message?.content ?? "{}";
       let p: any = {}; try { p = JSON.parse(String(raw).replace(/^```json|```$/g, "").trim()); } catch { p = {}; }
@@ -84,7 +108,7 @@ box_2d is 0-1000 relative to the image as provided. Boxes must be tight around t
       cached = { path: deed.path, upright: true, is_deed: p.is_deed !== false, regions, scanned_at: new Date().toISOString() };
       await db.storage.from(BUCKET).upload(cachePath(id), new Blob([JSON.stringify(cached)], { type: "application/json" }), { upsert: true, contentType: "application/json" });
     }
-    return json({ deed: { url: signed?.signedUrl ?? null, name: deed.name }, highlights: cached });
+    return json({ deed: { url: signed?.signedUrl ?? null, name: deed.name, pdf: deed.pdf }, highlights: cached });
   } catch (e) {
     console.error(e);
     return json({ error: e instanceof Error ? e.message : "Failed" }, 500);
