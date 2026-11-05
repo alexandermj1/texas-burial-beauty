@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
-import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META } from "./AiActionCard";
+import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
 
 type Run = { created_at: string; status: string; stage_summary: string | null; next_step: string | null; needs_human: boolean | null; error: string | null };
 

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, RefreshCw, BookOpen } from "lucide-react";
-import AiActionCard, { type AiAction as Action } from "./ai/AiActionCard";
+import AiActionCard, { type AiAction as Action , visualOwners } from "./ai/AiActionCard";
 
 type Sub = { id: string; name: string | null; cemetery: string | null; email: string | null };
 type View = "approve" | "human" | "done" | "playbook";

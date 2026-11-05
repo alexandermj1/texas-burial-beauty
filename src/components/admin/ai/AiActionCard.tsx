@@ -139,11 +139,11 @@ type Props = {
 };
 
 /** Ids of actions that should show their visuals: a run's shared deed/compare visuals appear on only the first card that carries them. */
-export function visualOwners(actions: { id: string; run_id?: string | null; payload?: { visuals?: unknown } | null }[]): Set<string> {
+export function visualOwners(actions: { id: string; submission_id?: string | null; payload?: { visuals?: unknown } | null }[]): Set<string> {
   const seen = new Set<string>(), owners = new Set<string>();
   for (const a of actions) {
     const v = a.payload?.visuals; if (!v) { owners.add(a.id); continue; }
-    const key = `${a.run_id ?? a.id}|${JSON.stringify(v)}`;
+    const key = `${a.submission_id ?? ""}|${JSON.stringify(v)}`;
     if (!seen.has(key)) { seen.add(key); owners.add(a.id); }
   }
   return owners;
