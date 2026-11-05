@@ -328,6 +328,9 @@ const GuideBuyingCemeteryPlot = () => (
           <p className="text-foreground/85 text-lg leading-relaxed mb-8 max-w-3xl">
             You'll find cemetery plots listed on Craigslist, eBay and for-sale-by-owner sites. They can look cheaper at a glance — but the price on the screen isn't the whole story, and the risks are real. On a marketplace <strong>you do everything yourself</strong>: verify the seller is the real owner, confirm the plot exists and isn't already used, arrange payment safely, and figure out the cemetery's transfer paperwork on your own. Plot-sale scams are common, and once money changes hands incorrectly it's very hard to undo.
           </p>
+          <p className="text-foreground/85 text-lg leading-relaxed mb-8 max-w-3xl">
+            Payment isn’t always as final as it looks either — cheques bounce, and even a cashier’s cheque can be pulled back. A buyer can believe they hold title to a plot and only find out years later that they don’t. Many buyers know this and have grown cautious, wisely so. A broker with a track record, reviews and relationships with local funeral homes and cemeteries gives both sides a sale they can trust, at a price both understand is fair.
+          </p>
           <div className="grid sm:grid-cols-2 gap-5">
             {trustReasons.map(({ Icon, t, d }) => (
               <div key={t} className="p-6 rounded-2xl bg-card border border-border/60 hover:border-primary/30 transition-colors">
