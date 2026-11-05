@@ -797,9 +797,6 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       gmail_thread_id: ctx.threadId,
       payload: { ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
-    if (needsHuman && !rows.some((r) => r.action_type === "flag_human")) {
-      rows.push({ run_id: run!.id, submission_id: sub.id, action_type: "flag_human", reason: d.human_reason ?? "Low confidence", confidence: d.confidence, email_to: null, email_subject: null, email_body: null, original_email_body: null, note_body: d.human_reason ?? d.next_step, gmail_thread_id: ctx.threadId, payload: visuals.length ? { visuals } : null });
-    }
     if (rows.length) {
       const { error: actionError } = await db.from("ai_agent_actions").insert(rows);
       if (actionError) throw new Error(actionError.message);
