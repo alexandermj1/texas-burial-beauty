@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import { openFileViewer } from "@/lib/fileViewer";
+import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import hillsidePhoto from "@/assets/cemetery_hillside_view.jpeg.asset.json";
 
 /**
@@ -761,11 +762,12 @@ const SellerDocuments = () => {
       {/* Sticky progress header — always tells the seller where they are */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+          <img src={hibiscusLogo.url} alt="" width={32} height={32} className="h-8 w-8 sm:h-9 sm:w-9 object-contain shrink-0" />
           <div className="min-w-0 flex-1">
-            <div className="text-[9px] sm:text-[10px] tracking-[0.26em] uppercase text-primary/80 truncate">
+            <div className="text-[13px] sm:text-[15px] font-semibold text-foreground truncate">
               Texas Cemetery Brokers
             </div>
-            <div className="text-[12px] sm:text-[13px] text-foreground font-medium truncate">
+            <div className="text-[11px] sm:text-[12px] text-muted-foreground truncate">
               {total > 0 ? `${done} of ${total} received` : "Your document page"}
             </div>
           </div>
