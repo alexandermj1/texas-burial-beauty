@@ -17,6 +17,7 @@ const BUYER_SOURCES = new Set(["buy_property_wizard", "buy_inquiry", "cemetery_p
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("auto"), submission_id: z.string().uuid() }),
   z.object({ action: z.literal("run"), submission_id: z.string().uuid() }),
+  z.object({ action: z.literal("preview_matches"), submission_id: z.string().uuid() }),
   z.object({ action: z.literal("set_auto_reply"), submission_id: z.string().uuid(), enabled: z.boolean() }),
   z.object({ action: z.literal("resume") }),
   z.object({ action: z.literal("sweep") }),
@@ -154,12 +155,28 @@ async function matches(db: any, buyer: any, exclude: string[] = []) {
     const have = new Set((cems ?? []).map((c: any) => c.name));
     cems = [...(cems ?? []), ...(allCems ?? []).filter((c: any) => !have.has(c.name))];
   }
-  const items: any[] = [];
-  for (const c of cems ?? []) {
-    if (items.length >= 6) break;
-    try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude); items.push(...r.items.slice(0, 2).map((x: any) => ({ ...x, cemetery: c.name }))); } catch { /* pricing needs staff; skip that cemetery */ }
+  // Check every cemetery in the area (not just the first few alphabetically), keep the
+  // best-fitting option per cemetery, then offer a spread across several cemeteries.
+  const want = requestedSpaces(buyer.spaces, buyer.message);
+  const score = (x: any) => (x.readiness === "available now" ? 0 : /2 weeks/.test(x.readiness) ? 1 : 2) * 10 + (want >= 1 && (x.spaces === want || x.partial_offer) ? 0 : 5);
+  const perCem: any[][] = [];
+  // One light read of which cemeteries hold live stock, so we only price those.
+  const { data: dir } = await db.from("texas_cemeteries").select("name,city,region,transfer_fee").is("deleted_at", null).limit(2000);
+  const stocked = new Set<string>();
+  for (let offset = 0; ; offset += 1000) {
+    const { data: page } = await db.from("contact_submissions").select("cemetery,cemetery_city").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null).or("la_signed_at.not.is.null,quote_response.eq.accepted").order("id").range(offset, offset + 999);
+    for (const r of page ?? []) { const m = resolveBuyerCemetery(r.cemetery, dir ?? [], r.cemetery_city); if (m) stocked.add(m.name); }
+    if ((page ?? []).length < 1000) break;
   }
-  return { kind, items: items.slice(0, 6), area, area_widened: areaWidened };
+  for (const c of (cems ?? []).filter((c: any) => stocked.has(c.name))) {
+    if (!areaWidened || perCem.length < 8) {
+      try { const r = await inventory(db, { ...buyer, cemetery: c.name }, exclude, dir ?? []); const best = [...r.items].sort((a: any, b: any) => score(a) - score(b) || (b.savings_percent ?? 0) - (a.savings_percent ?? 0)); if (best.length) perCem.push(best.map((x: any) => ({ ...x, cemetery: c.name }))); } catch { /* pricing needs staff; skip that cemetery */ }
+    }
+  }
+  perCem.sort((a, b) => score(a[0]) - score(b[0]));
+  const items: any[] = perCem.map((g) => g[0]);
+  for (const g of perCem) if (items.length < 8 && g[1]) items.push(g[1]);
+  return { kind, items: items.slice(0, 8), area, area_widened: areaWidened };
 }
 
 // Inventory search the model can call itself, so it can look around like a broker
@@ -253,7 +270,7 @@ Reply like a real person: respond briefly and helpfully to anything else the buy
 When an option has partial_offer, the option is a group larger than the buyer needs: say clearly we have just the number of spaces they want from that group, and give partial_offer.our_total as our total for those spaces (it also already includes the transfer fee once). Still state the full-group figures too. A group of adjacent spaces at the buyer's own cemetery is a real match for a smaller request: a buyer wanting 2 plots, a companion plot or companion crypt can take 2 side-by-side spaces from a larger group. Never tell a buyer we have nothing suitable at their cemetery, or offer a waitlist there, while such a group exists — present it first, before any nearby alternatives. A companion space is one space holding two burials, one on top of the other; it counts as 2 spaces. If the buyer asks for a companion space and we have no companion space that fits, offer 2 regular spaces next to each other as the equal alternative, and say plainly that they sit side by side rather than stacked. Keep the tone warm and low-pressure: say "we have", "we currently have" or "there are spaces available"; never write "we can sell you" or other pushy sales phrasing. Plain text, short paragraphs, no markdown. Return JSON only.
 FIRST decide whether to email at all, like a careful broker checking the file. Read prior_emails and staff_notes (last_contact_at is when our team last emailed or noted this buyer). Set should_send false, with a short reason for staff, when: we are already in conversation with them by phone or email about something else, a note says not to contact them or that they are handled, they have bought elsewhere or said they are no longer interested, or a new email would be redundant or awkward. If they were contacted before, only send when an option is genuinely new since then (listed_at after last_contact_at) AND our most recent email to them said we would reach back out if something came available; otherwise later communication belongs to our team, so hold; open by mentioning a space has come available. When unsure, hold. If should_send is false, subject and body may be empty.
 PROBLEM PLOTS: never hold the whole email just because one option has a problem. If a seller record shows that seller withdrawing, cancelling, asking for a refund or no longer selling, silently leave that option out and offer the remaining ones (or the waitlist if none remain). If an option's garden or section in the record conflicts with its deed, go by the deed and describe it broadly. Only hold for buyer-side reasons, such as the contact rules above.
-LOOK AROUND YOURSELF: you have a search_inventory tool over all our live inventory. The options supplied are only a first pass. If they do not genuinely suit what the buyer really needs (wrong number of spaces, wrong type, a family estate, too far away, or none at all), search before writing: other cemeteries near the one they asked for (start around 15-30 miles, widen if needed), the city or area they mention, or a different property type if their message suggests it. Use judgement, a few searches at most. Any option you present — supplied or found — must be listed in chosen_listing_ids, and only those may appear in the email, with figures exactly as returned. Found options follow every rule above; mention miles_away for them when present.
+GIVE REAL CHOICE: when the buyer asked about an area or city rather than one cemetery (searched_area), or we have nothing at their cemetery, do not narrow down to a single "best" option. Present our matching options across several different cemeteries — usually 3 to 5 cemeteries, one option each (two only if genuinely different) — so they can compare locations and prices. Include options whose readiness is not "available now" even for at-need buyers, using the readiness wording exactly. Keep each option to one or two short lines so a longer list stays easy to read. If the property type is unsure, briefly show both burial and other types we have. LOOK AROUND YOURSELF: you have a search_inventory tool over all our live inventory. The options supplied are only a first pass. If they do not genuinely suit what the buyer really needs (wrong number of spaces, wrong type, a family estate, too far away, or none at all), search before writing: other cemeteries near the one they asked for (start around 15-30 miles, widen if needed), the city or area they mention, or a different property type if their message suggests it. Use judgement, a few searches at most. Any option you present — supplied or found — must be listed in chosen_listing_ids, and only those may appear in the email, with figures exactly as returned. Found options follow every rule above; mention miles_away for them when present.
 If staff_feedback_on_previous_draft is present, a staff member declined the last draft for that reason — correct that specific problem in the new draft while still following every rule above.`;
   const gateway = createLovableAiGatewayRunIdFetch();
   const tools = tool ? [{ type: "function", name: "search_inventory", description: "Search our live cemetery property inventory. Provide exactly one of cemetery, near_cemetery (with max_miles) or area (city/region/county text).", strict: false, parameters: { type: "object", properties: { cemetery: { type: "string" }, near_cemetery: { type: "string" }, max_miles: { type: "number" }, area: { type: "string" }, property_type: { type: "string", description: "burial, niche, crypt, etc. Omit to use the buyer's" } } } }] : undefined;
@@ -474,6 +491,7 @@ Deno.serve(async (req) => {
       return json({ ok: true, enabled: b.enabled });
     }
     if (b.action === "resume") { await db.from("automation_job_state").update({ status: "active", pause_reason: null }).eq("job_name", "buyer-ai-drafts"); return json({ ok: true }); }
+    if (b.action === "preview_matches") { const { data: buyer } = await db.from("contact_submissions").select("*").eq("id", b.submission_id).maybeSingle(); if (!buyer) return json({ error: "Not found" }, 404); const m = await matches(db, buyer, []); return json({ ...m, items: m.items.map((x: any) => ({ cemetery: x.cemetery, garden: x.garden, spaces: x.spaces, type: x.type, our_total: x.our_total, readiness: x.readiness })) }); }
     if (b.action === "run") { if (!apiKey) return json({ error: "AI is not configured" }, 500); return json(await draft(db, apiKey, b.submission_id, true)); }
     const { data: d } = await db.from("buyer_ai_drafts").select("*").eq("id", b.draft_id).is("deleted_at", null).maybeSingle();
     if (!d || d.status !== "proposed") return json({ error: "Draft is no longer awaiting approval" }, 409);
