@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     // The email stays deliberately short: one button, nothing else. The list of
     // documents, how to get each one, notary steps and the mailing address all
     // live on the seller's document page — never in the email itself.
-    const subject = `Automatic email: the documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
+    const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
     const attachCount = poas.filter((p) => p.path).length + extraDocs.filter((d) => d.path).length;
 
 
