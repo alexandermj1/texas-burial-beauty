@@ -278,7 +278,7 @@ Confidence: ${confidence_label} (${confidence}/100)
 
 Write a brief justification.`;
 
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        const aiRes = await aiFetch("Estimating a seller quote", "https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${LOVABLE_API_KEY}`,

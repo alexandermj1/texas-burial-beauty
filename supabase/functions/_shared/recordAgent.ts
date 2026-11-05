@@ -1,3 +1,4 @@
+import { aiFetch } from "./aiRunLabel.ts";
 // Shared, READ-ONLY record toolkit + bounded tool-calling loop for AI agents.
 // Built so any agent (buyer-watch today; a future buyer/seller communications agent) can read
 // records the way staff do: the record, its email thread, staff notes, files, the deed, cemetery
@@ -183,8 +184,8 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
   return { error: `Unknown tool ${name}` };
 }
 
-export async function chat(apiKey: string, messages: any[], opts: { tools?: any[]; json?: boolean; model?: string } = {}) {
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+export async function chat(apiKey: string, messages: any[], opts: { tools?: any[]; json?: boolean; model?: string; label?: string } = {}) {
+  const r = await aiFetch(opts.label ?? "AI researching a record", "https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
     body: JSON.stringify({ model: opts.model ?? AGENT_MODEL, messages, ...(opts.tools ? { tools: opts.tools.map(t => ({ type: "function", function: t })) } : {}), ...(opts.json ? { response_format: { type: "json_object" } } : {}) }),
   });

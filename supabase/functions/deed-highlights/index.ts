@@ -94,7 +94,7 @@ Return ONLY JSON: {"is_deed": boolean, "regions": [{"kind": "owner"|"space", "te
 - "owner": each owner/purchaser name line.
 - "space": each section / lot / block / grave / space / crypt / niche identifier line.
 box_2d is 0-1000 relative to the image as provided. Boxes must be tight around the text. Never invent text; at most 12 regions. If it is not a deed, is_deed=false and regions=[].`;
-      const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const ai = await aiFetch("Reading deed — exact plot wording", "https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: "google/gemini-3.8-flash", response_format: { type: "json_object" },
           messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: upright } }] }] }),

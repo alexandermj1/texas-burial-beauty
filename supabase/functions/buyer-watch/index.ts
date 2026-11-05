@@ -45,7 +45,7 @@ const Body = z.discriminatedUnion("action", [
 ]);
 
 async function ai(apiKey: string, system: string, user: string) {
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const r = await aiFetch("Buyer watch — checking new stock for buyers", "https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
     body: JSON.stringify({ model: MODEL, response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
   });

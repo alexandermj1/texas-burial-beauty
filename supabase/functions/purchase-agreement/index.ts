@@ -430,7 +430,7 @@ Return ONLY JSON:
  "notes": string}
 Rules: list EVERY individual grave/space/crypt/niche the deed conveys as its own entry (e.g. "Lot 23, Graves 7 & 8" is two entries). Never invent spaces; if unclear say so in notes.
 box_2d coordinates are 0-1000 relative to the image exactly as provided (before any rotation). Include TIGHT boxes (one per line of text) covering only the owner/purchaser names and their home address. Boxes must NEVER overlap the section, lot, grave/space numbers, number of interments, price, dates or cemetery name — the buyer must be able to read those. Do not box cemetery officials' or notary signatures/names.`;
-      const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const ai = await aiFetch("Purchase agreement — reading details", "https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: "google/gemini-3.8-flash", response_format: { type: "json_object" },
           messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } }] }] }),

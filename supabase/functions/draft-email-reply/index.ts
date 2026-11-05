@@ -580,7 +580,7 @@ Before writing, silently check the file above for: what they asked for, what the
     // Tool-calling loop. Cap at 4 rounds to prevent runaway spend.
     let draft = "";
     for (let round = 0; round < 4; round++) {
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const resp = await aiFetch("Drafting an email reply", "https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
         body: JSON.stringify({
