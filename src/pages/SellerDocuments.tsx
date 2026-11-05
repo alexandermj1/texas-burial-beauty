@@ -787,27 +787,32 @@ const SellerDocuments = () => {
       </header>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7 sm:pt-10 pb-24">
-        <div className="mb-7 sm:mb-10 max-w-4xl">
+        <div className="mb-8 sm:mb-12 pb-8 sm:pb-10 border-b border-border">
           <Eyebrow>{packet?.cemetery || "Your property documents"}</Eyebrow>
-          <h1 className="mt-2 text-[29px] sm:text-[40px] leading-tight font-semibold text-foreground">
+          <h1 className="mt-3 text-[30px] sm:text-[42px] leading-[1.1] font-semibold tracking-tight text-foreground">
             {firstName ? `${firstName}, your documents` : "Your documents"}
           </h1>
-            <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
+          <p className="mt-3 max-w-2xl text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
             {packet?.broker_note || "Review and send the documents needed for your sale."}
           </p>
           {packet?.plot_description && (
-            <p className="mt-4 flex items-start gap-2 border-l-2 border-primary pl-3 text-sm leading-relaxed">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span><span className="text-muted-foreground">Locations being sold: </span><strong className="font-medium break-words">{packet.plot_description}</strong></span>
-            </p>
+            <div className="mt-6 inline-flex max-w-full items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <MapPin className="h-4 w-4 text-primary" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Locations being sold</span>
+                <span className="mt-0.5 block text-sm font-medium text-foreground break-words">{packet.plot_description}</span>
+              </span>
+            </div>
           )}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] gap-8 xl:gap-12 items-start">
           {/* ---------------------------------------------------------------- */}
           {/* Left column — intro, context, and help (sticky on desktop)        */}
           {/* ---------------------------------------------------------------- */}
-          <aside className="order-2 lg:sticky lg:top-24 lg:self-start space-y-4">
-            <div className="border-t border-border pt-4">
+          <aside className="order-2 lg:sticky lg:top-24 lg:self-start rounded-xl border border-border bg-card p-5 shadow-sm space-y-5">
+            <div>
               <p className="text-sm font-semibold">Need a hand?</p>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">Your broker can help with any item on this list.</p>
               {packet?.seller_name && (
@@ -817,7 +822,7 @@ const SellerDocuments = () => {
               )}
             </div>
 
-            <div className="border-t border-border pt-4">
+            <div className="border-t border-border pt-5">
               <div className="flex flex-col gap-2">
                 <a
                   href="tel:+12142304740"
@@ -842,8 +847,22 @@ const SellerDocuments = () => {
             {/* ---------------------------------------------------------------- */}
             {/* Context, folded away so the list is the first thing they act on   */}
             {/* ---------------------------------------------------------------- */}
-            <div className="space-y-2">
-              <details className="group rounded-2xl border border-border/60 bg-card/60 px-4 sm:px-5 py-4">
+            {allDone && (
+              <div className="mb-6 rounded-xl border border-primary/25 bg-primary/[0.06] px-5 sm:px-6 py-5 flex items-start gap-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <CheckCircle2 className="w-5 h-5" />
+                </span>
+                <div>
+                  <p className="text-lg font-semibold text-foreground">That's everything — thank you.</p>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    We have every item on this list. Your broker is reviewing it now and will be in touch if anything needs a clearer copy.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border shadow-sm">
+              <details className="group px-5 py-4">
                 <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
                   <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
                     <HelpCircle className="w-4 h-4 text-primary shrink-0" /> Why we need each of these
@@ -858,12 +877,12 @@ const SellerDocuments = () => {
                 </p>
               </details>
 
-              <details className="group rounded-2xl border border-accent/40 bg-accent/10 px-4 sm:px-5 py-4">
+              <details className="group px-5 py-4">
                 <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
                   <span className="text-[13px] font-medium text-foreground inline-flex items-center gap-2">
-                    <Mail className="w-4 h-4 shrink-0" /> Where the original paperwork goes
+                    <Mail className="w-4 h-4 text-primary shrink-0" /> Where the original paperwork goes
                   </span>
-                  <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open:rotate-180" />
+                  <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
                 </summary>
                 <p className="text-[13px] text-foreground/90 whitespace-pre-line mt-3 font-medium leading-relaxed">{MAIL_ADDRESS}</p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
@@ -873,18 +892,6 @@ const SellerDocuments = () => {
                 </p>
               </details>
             </div>
-
-            {allDone && (
-              <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/[0.06] px-5 py-5 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-display text-lg text-foreground">That's everything — thank you.</p>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    We have every item on this list. Your broker is reviewing it now and will be in touch if anything needs a clearer copy.
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* ---------------------------------------------------------------- */}
             {/* Loading / error                                                   */}
@@ -922,8 +929,8 @@ const SellerDocuments = () => {
                 {/* Power of attorney — the one thing unique to selling with us   */}
                 {/* ------------------------------------------------------------ */}
                 {poaList.length > 0 && (
-                  <section className="mt-10">
-                    <div className="flex items-baseline justify-between gap-3 mb-3">
+                  <section className="mt-12">
+                    <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-border">
                       <Eyebrow>Sign with a notary</Eyebrow>
                       {poaList.length > 1 && (
                         <span className="text-[11px] text-muted-foreground">{poaList.length} signers</span>
@@ -931,8 +938,8 @@ const SellerDocuments = () => {
                     </div>
                     <div className="space-y-4">
                       {poaList.map((poa, i, all) => (
-                        <div key={poa.contract_id ?? i} className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 sm:p-5">
-                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <div key={poa.contract_id ?? i} className="rounded-xl border border-border bg-card p-5 sm:p-7 shadow-sm">
+                          <div className="flex items-center gap-2 flex-wrap mb-3">
                             {poa.notarized
                               ? <Chip tone="solid" icon={CheckCircle2}>Received</Chip>
                               : <Chip tone="primary" icon={Stamp}>Notary needed</Chip>}
@@ -944,7 +951,7 @@ const SellerDocuments = () => {
                               ? `Limited Power of Attorney — ${poa.signer_name}`
                               : "Your Limited Power of Attorney"}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                          <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-3xl">
                             Cemeteries will only discuss or transfer a plot with the person named on the deed. The Limited Power of
                             Attorney is the single page that lets us speak to {packet?.cemetery ?? "the cemetery"} on
                             {poa.signer_name && all.length > 1 ? ` ${poa.signer_name}'s` : " your"} behalf,
@@ -958,7 +965,7 @@ const SellerDocuments = () => {
                             </p>
                           )}
 
-                          <details className="group mt-3 rounded-xl bg-background/70 border border-border/60 px-4 py-3">
+                          <details className="group mt-5 rounded-xl bg-muted/40 border border-border px-4 py-3">
                             <summary className="flex items-center justify-between gap-3 cursor-pointer list-none">
                               <span className="text-[11px] font-medium text-foreground">It is deliberately limited — what it does and doesn't allow</span>
                               <ChevronDown className="w-3.5 h-3.5 text-primary shrink-0 transition-transform group-open:rotate-180" />
@@ -970,9 +977,9 @@ const SellerDocuments = () => {
                             </p>
                           </details>
 
-                          <div className="mt-3 rounded-xl bg-background/70 border border-border/60 px-4 py-3.5">
-                            <p className="text-[11px] font-medium text-foreground">What to do — about 15 minutes</p>
-                            <ol className="mt-2 space-y-1.5 text-[12px] text-muted-foreground leading-relaxed list-decimal pl-4">
+                          <div className="mt-3 rounded-xl bg-muted/40 border border-border px-4 sm:px-5 py-4">
+                            <p className="text-[13px] font-semibold text-foreground">What to do — about 15 minutes</p>
+                            <ol className="mt-3 space-y-2 text-[13px] text-muted-foreground leading-relaxed list-decimal pl-5 marker:text-primary marker:font-medium">
                               <li>Open the PDF below and print every page. It is already filled in from your answers — nothing to complete.</li>
                               <li>Do <span className="text-foreground">not</span> sign it yet. The notary has to watch you sign.</li>
                               <li>Take it, with {poa.signer_name && all.length > 1 ? `${poa.signer_name}'s` : "your"} photo ID, to any notary: most banks and credit unions (often free for customers), UPS Store, FedEx Office, courthouses, or a mobile notary who comes to you.</li>
@@ -980,7 +987,7 @@ const SellerDocuments = () => {
                               <li>Photograph or scan every page and upload it here — then post the original to the address below.</li>
                             </ol>
                             {poa.pdf_url && (
-                              <div className="mt-3">
+                              <div className="mt-4">
                                 <Action full icon={Stamp} onClick={() => void openPrivateFile(poa.pdf_url!, setError)}>
                                   Open the completed Power of Attorney
                                 </Action>
@@ -1028,8 +1035,8 @@ const SellerDocuments = () => {
                 ) : (
                   <>
                     {openDocs.length > 0 && (
-                      <section className="mt-10">
-                        <div className="flex items-baseline justify-between gap-3 mb-3">
+                      <section className="mt-12">
+                        <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-border">
                           <Eyebrow>Still to send</Eyebrow>
                           <span className="text-[11px] text-muted-foreground">
                             {openDocs.length} {openDocs.length === 1 ? "item" : "items"}
@@ -1069,11 +1076,11 @@ const SellerDocuments = () => {
             {/* ---------------------------------------------------------------- */}
             {/* FAQ                                                               */}
             {/* ---------------------------------------------------------------- */}
-            <section className="mt-14">
-              <div className="mb-3"><Eyebrow>Your questions, answered</Eyebrow></div>
-              <div className="space-y-2">
+            <section className="mt-16">
+              <div className="mb-4 pb-3 border-b border-border"><Eyebrow>Your questions, answered</Eyebrow></div>
+              <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border shadow-sm">
                 {FAQ.map((f) => (
-                  <details key={f.q} className="group rounded-2xl border border-border/60 bg-card/60 px-4 sm:px-5 py-4">
+                  <details key={f.q} className="group px-5 py-4">
                     <summary className="flex items-center justify-between gap-4 cursor-pointer list-none">
                       <span className="font-display text-[15px] sm:text-base text-foreground leading-snug">{f.q}</span>
                       <ChevronDown className="w-4 h-4 text-primary shrink-0 transition-transform group-open:rotate-180" />
