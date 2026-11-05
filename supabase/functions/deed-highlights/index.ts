@@ -9,7 +9,6 @@ const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
 const BUCKET = "customer-files";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 const IMG = /\.(jpe?g|png|webp)$/i;
-const DEEDISH = /(deed|certificate|sepulture|ownership|interment|title|lot|plot)/i;
 
 async function isStaff(req: Request) {
   const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");

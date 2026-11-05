@@ -3,13 +3,34 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import type { DeedMatch } from "@/lib/deedLocationMatch";
 import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, Loader2, Maximize2 } from "lucide-react";
+import * as pdfjs from "pdfjs-dist";
+import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+// When the deed was sent as a PDF, draw its first page as a picture so staff
+// see the actual deed in the thumbnail (and the AI outlines line up with it).
+async function pdfFirstPageJpeg(url: string): Promise<string | null> {
+  try {
+    const pdf = await pdfjs.getDocument({ url }).promise;
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: Math.min(3, 1600 / Math.max(base.width, base.height)) });
+    const c = document.createElement("canvas");
+    c.width = Math.round(viewport.width); c.height = Math.round(viewport.height);
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return c.toDataURL("image/jpeg", 0.85);
+  } catch { return null; }
+}
 
 // Deeds received from this moment onwards are outlined automatically the first
 // time a staff member opens the record (one cheap AI read, then cached).
 const AUTO_OUTLINE_FROM = "2026-11-04T19:00:00Z";
 
 type Region = { kind: "owner" | "space"; text: string; box: [number, number, number, number] };
-type Resp = { deed: { url: string | null; name: string } | null; highlights: { is_deed: boolean; regions: Region[] } | null };
+type Resp = { deed: { url: string | null; name: string; pdf?: boolean; display?: string | null } | null; highlights: { is_deed: boolean; regions: Region[] } | null };
 
 // Draw the photo the way the browser shows it (EXIF rotation applied) so the AI's
 // boxes line up with what staff see.
@@ -39,11 +60,16 @@ export default function SellerDeedPreview({ submissionId, createdAt, deedLocatio
     (async () => {
       const call = (action: string, image?: string) => supabase.functions.invoke("deed-highlights", { body: { submission_id: submissionId, action, image } });
       let { data: r } = await call("view");
+      let image: string | null = null;
+      if (alive && r?.deed?.url && r.deed.pdf) {
+        image = await pdfFirstPageJpeg(r.deed.url);
+        r = { ...r, deed: { ...r.deed, display: image } };
+      }
       if (alive && r?.deed && !r.highlights && auto) {
         if (alive) { setData(r); setLoading(false); }
-        const image = await uprightJpeg(r.deed.url);
+        if (!image) image = await uprightJpeg(r.deed.url);
         const scanned = image ? await call("scan", image) : { data: null };
-        if (scanned.data?.deed) r = scanned.data;
+        if (scanned.data?.deed) r = { ...scanned.data, deed: { ...scanned.data.deed, display: r.deed.display } };
       }
       if (!alive) return;
       const value = (r ?? { deed: null, highlights: null }) as Resp;
@@ -58,13 +84,15 @@ export default function SellerDeedPreview({ submissionId, createdAt, deedLocatio
 
   if (loading && !data) return null;
   if (!data?.deed?.url) return null;
+  if (data.deed.pdf && !data.deed.display) return null;
+  const src = data.deed.display || data.deed.url;
   const regions = data.highlights?.is_deed ? data.highlights.regions : [];
   const spaces = regions.filter(r => r.kind === "space").map(r => r.text).filter(Boolean);
 
   // Draw the outline just outside the text so it never covers what staff are reading.
   const Deed = ({ big }: { big: boolean }) => (
     <div className="relative w-fit">
-      <img src={data.deed!.url!} alt={`Deed: ${data.deed!.name}`} loading="lazy" className={`block w-auto rounded-sm ${big ? "max-h-[80vh] max-w-full" : "h-24 max-w-[140px] object-contain"}`} />
+      <img src={src} alt={`Deed: ${data.deed!.name}`} loading="lazy" className={`block w-auto rounded-sm ${big ? "max-h-[80vh] max-w-full" : "h-24 max-w-[140px] object-contain"}`} />
       {regions.map((r, i) => {
         const [y1, x1, y2, x2] = r.box;
         const padY = 0.9, padX = 0.6;
@@ -80,7 +108,7 @@ export default function SellerDeedPreview({ submissionId, createdAt, deedLocatio
     <Dialog>
       <DialogTrigger asChild>
         <button type="button" className="group relative shrink-0 overflow-hidden rounded-md bg-background p-0.5 shadow-sm ring-1 ring-border/60 transition hover:ring-primary/60" title="View the deed they sent">
-          <img src={data.deed.url} alt={`Deed: ${data.deed.name}`} loading="lazy" className="block h-16 w-12 rounded-[3px] object-cover" />
+          <img src={src} alt={`Deed: ${data.deed.name}`} loading="lazy" className="block h-16 w-12 rounded-[3px] object-cover" />
           <span className="absolute inset-0 grid place-items-center bg-foreground/0 opacity-0 transition group-hover:bg-foreground/30 group-hover:opacity-100"><Maximize2 className="h-3.5 w-3.5 text-background" /></span>
           {loading && <span className="absolute inset-0 grid place-items-center bg-background/60"><Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /></span>}
         </button>
