@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Drafts a full email reply using Lovable AI with a tool-calling architecture
 // for cost efficiency. The initial system prompt is intentionally small (tone +
 // business identity + rules). The model must call tools to load heavy reference
@@ -579,7 +580,7 @@ Before writing, silently check the file above for: what they asked for, what the
     // Tool-calling loop. Cap at 4 rounds to prevent runaway spend.
     let draft = "";
     for (let round = 0; round < 4; round++) {
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const resp = await aiFetch("Drafting an email reply", "https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
         body: JSON.stringify({

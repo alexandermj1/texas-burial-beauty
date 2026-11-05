@@ -39,7 +39,7 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
   const { data: dir } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude,transfer_fee").is("deleted_at", null).limit(3000);
   const ctx = { db, apiKey, dir: dir ?? [], deedReads: 0, fileReads: 0 };
   const task = `Seller record id: ${sub.id}\nSeller: ${sub.name} <${sub.email}>, cemetery: ${sub.cemetery ?? "?"}\n${instruction ? `STAFF INSTRUCTION FOR THIS REVIEW: ${instruction}\n` : ""}CURRENT SNAPSHOT:\n${focus}\n\nResearch this file now.`;
-  const { answer, trace } = await runAgent(ctx as any, RESEARCH_SYS, task, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS]);
+  const { answer, trace } = await runAgent(ctx as any, RESEARCH_SYS, task, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record");
   const a = answer && typeof answer === "object" ? answer : {};
   const list = (x: unknown) => (Array.isArray(x) ? x : []);
   const text = [

@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
       requestSent: !!sub.documents_requested_at,
       requestedItems: useful,
     };
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    const response = await aiFetch("Explaining a document request to a seller", "https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

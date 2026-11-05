@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Buyer watcher: (1) a cheap model reads each NEW buyer reply to us once and records what they
 // are waiting for; (2) when new seller stock appears, code drops clear mismatches and the cheap
 // model judges the rest loosely, surfacing the buyer with a plain reason. Never emails anyone.
@@ -44,7 +45,7 @@ const Body = z.discriminatedUnion("action", [
 ]);
 
 async function ai(apiKey: string, system: string, user: string) {
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const r = await aiFetch("Buyer watch — checking new stock for buyers", "https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
     body: JSON.stringify({ model: MODEL, response_format: { type: "json_object" }, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
   });
@@ -217,7 +218,7 @@ async function matchStock(db: any, apiKey: string) {
 /** Deep check of one buyer × seller pair with read-only record tools. */
 async function investigate(db: any, apiKey: string, dir: any[], want: any, sellerId: string, screener: string) {
   const task = `WAITING BUYER record id: ${want.submission_id}\nOur note on what they want: ${want.summary}\nTheir words: ${want.buyer_words ?? "-"}\n\nNEW SELLER PLOT record id: ${sellerId}\nScreener said: ${screener}\n\nInvestigate and give your verdict.`;
-  return await runAgent({ db, apiKey, dir, deedReads: 0 }, INVESTIGATE, task);
+  return await runAgent({ db, apiKey, dir, deedReads: 0 }, INVESTIGATE, task, 7, undefined, "Buyer watch — double-checking a possible match");
 }
 
 async function staff(db: any, req: Request) {

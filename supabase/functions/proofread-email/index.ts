@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Proofreads an email body using Lovable AI. Returns a corrected version
 // with the same meaning, tone, formatting, line breaks, greeting, and signature.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
 
     const userMsg = `Subject: ${subject || "(none)"}\n\nEmail body to proofread:\n---\n${body}\n---`;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const resp = await aiFetch("Proofreading a staff email", "https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

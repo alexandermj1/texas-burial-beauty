@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
 import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, parseHumanAttention, humanAttentionNote, withHumanAttentionPolicy } from "../_shared/humanAttention.ts";
 import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
@@ -363,7 +364,7 @@ async function attentionQueueEnabled(db: SupabaseClient) {
 }
 
 async function callCheap(apiKey: string, system: string, user: string): Promise<any> {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await aiFetch("Seller AI — quick check for anything new", "https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ model: CHEAP_MODEL, messages: [{ role: "system", content: system }, { role: "user", content: `${user}\n\nReply with JSON only.` }], response_format: { type: "json_object" } }),
@@ -538,7 +539,7 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
 }
 
 async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: any[] = []) {
-  const res = await fetch(GATEWAY, {
+  const res = await aiFetch("Seller AI — deciding next steps", GATEWAY, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" },
     body: JSON.stringify({

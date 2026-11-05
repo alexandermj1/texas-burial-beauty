@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Reads everything we already know about a submission — the intake form, the
 // admin notes and the full email chain — and proposes answers to the ownership
 // questionnaire, with a short reason for each. The admin always keeps the final
@@ -248,7 +249,7 @@ Deno.serve(async (req) => {
       },
     };
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await aiFetch("Reading deed — owners and family tree", "https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({

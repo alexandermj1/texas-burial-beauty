@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Reads a customer_files attachment (PDF or image) via Lovable AI Gateway
 // (google/gemini-3.1-flash-lite) and stores structured extracted fields +
 // a short human summary on the customer_files row.
@@ -194,7 +195,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await aiFetch("Reading an uploaded file", "https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

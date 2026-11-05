@@ -1,3 +1,4 @@
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Buyer AI: prepares one approval-only reply for a buyer inquiry using real seller inventory.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -277,11 +278,11 @@ If staff_feedback_on_previous_draft is present, a staff member declined the last
   for (const it of items) tool?.found.set(it.listing_id, it);
   const input: any[] = [{ role: "user", content: JSON.stringify({ buyer: { first_name: String(buyer.name ?? "").split(/\s+/)[0] || "there", cemetery: buyer.cemetery, type: buyer.property_type, spaces: buyer.spaces, timeline: buyer.timeline, message: buyer.message, details: buyer.details }, prior_emails: ctx.emails, staff_notes: ctx.notes, options: items.map(({ seller_name, ...o }: any) => ({ ...o, private_seller_record: records[o.listing_id] ?? null })), staff_feedback_on_previous_draft: feedback ?? null, last_contact_at: lastContact, searched_area: area, nearest_miles_away: location.nearest_miles_away ?? null, area_widened: !!location.area_widened, inquiry_age_days: Math.floor((Date.now() - new Date(buyer.created_at).getTime()) / 86400000) }) }];
   for (let round = 0; round < 6; round++) {
-    const res = await gateway.fetch(GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
+    const res = await aiFetch(`Buyer AI — finding options and drafting reply to ${String(buyer.name ?? "buyer")}`, GATEWAY, { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({
       model: MODEL, instructions, stream: true, store: false, reasoning: { effort: "high", summary: "auto" }, include: ["reasoning.encrypted_content"], input,
       ...(tools && round < 5 ? { tools } : {}),
       text: { format: { type: "json_schema", name: "buyer_reply", strict: true, schema: { type: "object", additionalProperties: false, required: ["should_send", "subject", "body", "reason", "chosen_listing_ids"], properties: { should_send: { type: "boolean" }, subject: { type: "string" }, body: { type: "string" }, reason: { type: "string" }, chosen_listing_ids: { type: "array", items: { type: "string" } } } } } },
-    }) });
+    }) }, gateway.fetch.bind(gateway));
     if (!res.ok || !res.body) { let message = await res.text(); try { const j = JSON.parse(message); message = j.message ?? j.error?.message ?? j.error ?? message; } catch { /* keep */ } const e = new Error(String(message).slice(0, 500)) as Error & { status?: number }; e.status = res.status; throw e; }
     const reader = res.body.getReader(), dec = new TextDecoder(); let buf = "", out = "", failed = ""; const outputs: any[] = [];
     while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n")) >= 0) { const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line.startsWith("data:")) continue; try { const e = JSON.parse(line.slice(5)); if (e.type === "response.output_text.delta") out += e.delta ?? ""; if (e.type === "response.output_item.done" && e.item) outputs.push(e.item); if (e.type === "response.failed" || e.type === "error") failed = JSON.stringify(e).slice(0, 300); } catch { /* partial */ } } }

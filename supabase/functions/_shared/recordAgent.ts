@@ -1,3 +1,4 @@
+import { aiFetch } from "./aiRunLabel.ts";
 // Shared, READ-ONLY record toolkit + bounded tool-calling loop for AI agents.
 // Built so any agent (buyer-watch today; a future buyer/seller communications agent) can read
 // records the way staff do: the record, its email thread, staff notes, files, the deed, cemetery
@@ -89,7 +90,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     const mime = /png$/i.test(deed.file_name) ? "image/png" : /webp$/i.test(deed.file_name) ? "image/webp" : "image/jpeg";
     const out = await chat(ctx.apiKey, [{ role: "user", content: [
       { type: "text", text: `Read this cemetery deed exactly. Return JSON only: {"cemetery":string,"section_or_lawn":string,"spaces":[{"label":"as written","lot":string,"space":string}],"interments_per_space":string|null,"notes":string}. List every grave/space/crypt/niche separately. Never invent; say what is unreadable in notes. Do not include owner names or addresses.` },
-      { type: "image_url", image_url: { url: `data:${mime};base64,${btoa(bin)}` } }] }], { json: true });
+      { type: "image_url", image_url: { url: `data:${mime};base64,${btoa(bin)}` } }] }], { json: true, label: "AI reading the deed" });
     try { return { file: deed.file_name, ...JSON.parse(String(out.content ?? "{}").replace(/^```json|```$/g, "").trim()) }; } catch { return { error: "Deed could not be read clearly." }; }
   }
   if (name === "get_cemetery") {
@@ -158,7 +159,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     ctx.fileReads = (ctx.fileReads ?? 0) + 1;
     const data = `data:${mime};base64,${b64(bytes)}`;
     const part = mime === "application/pdf" ? { type: "file", file: { filename: fileName, file_data: data } } : { type: "image_url", image_url: { url: data } };
-    const out = await chat(ctx.apiKey, [{ role: "user", content: [{ type: "text", text: `You are checking a document for a cemetery-plot brokerage. Question: ${clip(args?.question, 600)}\nAnswer exactly from what is visible. Quote names, plot/lot/space wording, dates, signatures, notary seals as written. Say clearly what is missing or unreadable. Max 200 words.` }, part] }]);
+    const out = await chat(ctx.apiKey, [{ role: "user", content: [{ type: "text", text: `You are checking a document for a cemetery-plot brokerage. Question: ${clip(args?.question, 600)}\nAnswer exactly from what is visible. Quote names, plot/lot/space wording, dates, signatures, notary seals as written. Say clearly what is missing or unreadable. Max 200 words.` }, part] }], { label: `AI checking a file: ${fileName}` });
     return { file: fileName, answer: clip(out.content, 2500) };
   }
   if (name === "cemetery_stock") {
@@ -183,8 +184,8 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
   return { error: `Unknown tool ${name}` };
 }
 
-export async function chat(apiKey: string, messages: any[], opts: { tools?: any[]; json?: boolean; model?: string } = {}) {
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+export async function chat(apiKey: string, messages: any[], opts: { tools?: any[]; json?: boolean; model?: string; label?: string } = {}) {
+  const r = await aiFetch(opts.label ?? "AI researching a record", "https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
     body: JSON.stringify({ model: opts.model ?? AGENT_MODEL, messages, ...(opts.tools ? { tools: opts.tools.map(t => ({ type: "function", function: t })) } : {}), ...(opts.json ? { response_format: { type: "json_object" } } : {}) }),
   });
@@ -193,11 +194,11 @@ export async function chat(apiKey: string, messages: any[], opts: { tools?: any[
 }
 
 /** Bounded tool loop: at most `maxSteps` model turns, then forces a final JSON answer. */
-export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSteps = 7, tools: readonly any[] = RECORD_TOOLS): Promise<{ answer: any; trace: { tool: string; args: unknown }[] }> {
+export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSteps = 7, tools: readonly any[] = RECORD_TOOLS, label = "AI researching a record"): Promise<{ answer: any; trace: { tool: string; args: unknown }[] }> {
   const messages: any[] = [{ role: "system", content: system }, { role: "user", content: task }];
   const trace: { tool: string; args: unknown }[] = [];
   for (let step = 0; step < maxSteps; step++) {
-    const msg = await chat(ctx.apiKey, messages, { tools: [...tools] });
+    const msg = await chat(ctx.apiKey, messages, { tools: [...tools], label: `${label} (step ${step + 1})` });
     messages.push({ role: "assistant", content: msg.content ?? "", ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
     if (!msg.tool_calls?.length) return { answer: parseJson(msg.content), trace };
     for (const tc of msg.tool_calls) {
@@ -208,7 +209,7 @@ export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSt
     }
   }
   messages.push({ role: "user", content: "Stop using tools. Give your final JSON answer now." });
-  const last = await chat(ctx.apiKey, messages, { json: true });
+  const last = await chat(ctx.apiKey, messages, { json: true, label: `${label} (final answer)` });
   return { answer: parseJson(last.content), trace };
 }
 
