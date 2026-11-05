@@ -815,9 +815,16 @@ const SellerDocuments = () => {
           <h1 className="mt-3 text-[30px] sm:text-[42px] leading-[1.1] font-semibold tracking-tight text-foreground">
             {firstName ? `${firstName}, your documents` : "Your documents"}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-            {packet?.broker_note || "Review and send the documents needed for your sale."}
+          <p className="mt-3 max-w-2xl text-sm sm:text-base text-foreground/90 leading-relaxed">
+            {packet?.cemetery
+              ? `Our team has put this list together for you by hand — these are the exact documents ${packet.cemetery} will need to complete the sale of your property, and we'll walk you through every one of them.`
+              : "Our team has put this list together for you by hand — these are the exact documents needed to complete the sale of your property, and we'll walk you through every one of them."}
           </p>
+          {packet?.broker_note && (
+            <p className="mt-3 max-w-2xl text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
+              {packet.broker_note}
+            </p>
+          )}
           {packet?.plot_description && (
             <div className="mt-6 inline-flex max-w-full items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
