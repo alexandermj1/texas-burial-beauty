@@ -209,7 +209,8 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       </div>
       {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
       {attention && <div className="border-l-2 border-primary pl-3 text-sm space-y-1"><p className="font-semibold text-foreground">{attention.priority} priority · {attention.task}</p><p className="text-muted-foreground">{attention.reason}</p><p className="text-xs text-muted-foreground">Where to check: {attention.evidence}</p></div>}
-      <AiVisuals visuals={a.payload?.visuals} />
+      {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}
+      <AiVisuals visuals={a.payload?.changes ? a.payload?.visuals?.filter((v) => v.kind !== "compare") : a.payload?.visuals} />
       {a.payload?.research && (
         <details className="text-xs bg-muted/40 rounded-lg p-2.5">
           <summary className="cursor-pointer text-muted-foreground">What the AI checked first ({a.payload.research.tools.length} lookups)</summary>
