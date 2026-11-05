@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import { openFileViewer } from "@/lib/fileViewer";
+import hillsidePhoto from "@/assets/cemetery_hillside_view.jpeg.asset.json";
 
 /**
  * One curated page per seller, linked from a single email. Every document we
@@ -787,7 +788,20 @@ const SellerDocuments = () => {
       </header>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7 sm:pt-10 pb-24">
-        <div className="mb-8 sm:mb-12 pb-8 sm:pb-10 border-b border-border">
+        <div className="mb-8 sm:mb-12 pb-8 sm:pb-10 border-b border-border grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_26rem] gap-6 lg:gap-12 items-center">
+          <figure className="order-first lg:order-last relative overflow-hidden rounded-xl border border-border shadow-sm aspect-[16/9] lg:aspect-[4/3]">
+            <img
+              src={hillsidePhoto.url}
+              alt="Quiet cemetery lawn beneath tall trees, with mountains in the distance"
+              className="absolute inset-0 h-full w-full object-cover object-[50%_60%]"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-foreground/35 via-transparent to-transparent" />
+            <figcaption className="absolute bottom-3 left-4 right-4 text-[10px] uppercase tracking-[0.22em] text-background/90">
+              We handle the paperwork with care
+            </figcaption>
+          </figure>
+          <div className="min-w-0">
           <Eyebrow>{packet?.cemetery || "Your property documents"}</Eyebrow>
           <h1 className="mt-3 text-[30px] sm:text-[42px] leading-[1.1] font-semibold tracking-tight text-foreground">
             {firstName ? `${firstName}, your documents` : "Your documents"}
@@ -806,6 +820,7 @@ const SellerDocuments = () => {
               </span>
             </div>
           )}
+          </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] gap-8 xl:gap-12 items-start">
           {/* ---------------------------------------------------------------- */}
