@@ -825,11 +825,6 @@ const SellerDocuments = () => {
               {packet.broker_note}
             </p>
           )}
-          {!packet?.broker_note && (
-            <p className="mt-3 max-w-2xl text-sm text-muted-foreground leading-relaxed">
-              Review and send the documents needed for your sale.
-            </p>
-          )}
           {packet?.plot_description && (
             <div className="mt-6 inline-flex max-w-full items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
