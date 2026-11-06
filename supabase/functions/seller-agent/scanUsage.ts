@@ -1,5 +1,5 @@
 export const CREDIT_EQUIVALENT = 0.3;
-export type ScanUsage = { estimated_credits: number | null; equivalent: number | null; conversion: number; calls: number; missing_calls: number };
+export type ScanUsage = { estimated_credits: number | null; equivalent: number | null; conversion: number; calls: number; missing_calls: number; input_tokens?: number; output_tokens?: number; token_calls?: number; current_call_pending?: boolean };
 type Tier = { cost: string; min: number; max?: number };
 type Rate = { tiers?: Tier[]; cache_read?: Rate; cache_write?: Rate };
 type Pricing = { input?: { text?: Rate; cache_read?: Rate; cache_write?: Rate }; output?: { text?: Rate } };
@@ -20,6 +20,9 @@ export function estimateUsage(pricing: Pricing | undefined, raw: unknown, anthro
   return Number.isFinite(cost) ? cost : null;
 }
 export class ScanMeter {
+  private input = 0;
+  private output = 0;
+  private tokenCalls = 0;
   private credits = 0;
   private calls = 0;
   private missing = 0;
@@ -28,16 +31,28 @@ export class ScanMeter {
     if (!saved) return;
     this.calls = saved.calls; this.missing = saved.missing_calls;
     this.credits = saved.estimated_credits ?? 0;
+    this.input = saved.input_tokens ?? 0; this.output = saved.output_tokens ?? 0; this.tokenCalls = saved.token_calls ?? 0;
   }
   observe(model: string, usage: unknown) {
     this.calls++;
+    const tokens = usageTokens(model, usage);
+    if (tokens) { this.input += tokens.input; this.output += tokens.output; this.tokenCalls++; }
     const cost = estimateUsage(this.pricing.get(model), usage, model.startsWith("anthropic/"));
     if (cost === null) this.missing++; else this.credits += cost;
   }
   snapshot(): ScanUsage {
     const credits = this.missing || !this.calls ? null : this.credits;
-    return { estimated_credits: credits, equivalent: credits === null ? null : credits * CREDIT_EQUIVALENT, conversion: CREDIT_EQUIVALENT, calls: this.calls, missing_calls: this.missing };
+    return { estimated_credits: credits, equivalent: credits === null ? null : credits * CREDIT_EQUIVALENT, conversion: CREDIT_EQUIVALENT, calls: this.calls, missing_calls: this.missing, input_tokens: this.input, output_tokens: this.output, token_calls: this.tokenCalls };
   }
+  live(model: string, usage?: unknown): ScanUsage {
+    const tokens = usageTokens(model, usage);
+    return { ...this.snapshot(), input_tokens: this.input + (tokens?.input ?? 0), output_tokens: this.output + (tokens?.output ?? 0), current_call_pending: true };
+  }
+}
+export function usageTokens(model: string, raw: unknown) {
+  const u = record(raw), input = number(u.input_tokens ?? u.prompt_tokens), output = number(u.output_tokens ?? u.completion_tokens);
+  if (input === null && output === null) return null;
+  return { input: (input ?? 0) + (model.startsWith("anthropic/") ? (number(u.cache_read_input_tokens) ?? 0) + (number(u.cache_creation_input_tokens) ?? 0) : 0), output: output ?? 0 };
 }
 export async function createScanMeter(listModels: () => Promise<{ workspace_models?: string; data: { id: string; pricing?: unknown }[] }>) {
   try {
