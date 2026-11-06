@@ -1,5 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import SellerDeedPreview from "./SellerDeedPreview";
+import StaffTaskNotice from "./ai/StaffTaskNotice";
 import { deedLocationMatch } from "@/lib/deedLocationMatch";
 import { deedOwnerMatch } from "@/lib/deedOwnerMatch";
 import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -34,7 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
 import { useAuth } from "@/hooks/useAuth";
 import { canUseAi } from "@/lib/aiAccess";
-import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, attentionIndex, prioritizeHumanAttention, type AttentionEntry, type AttentionAction } from "@/lib/humanAttention";
+import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, attentionIndex, selectedAttention, prioritizeHumanAttention, type AttentionEntry, type AttentionAction } from "@/lib/humanAttention";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
@@ -1760,6 +1761,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const sharedSellingLocation = (sharedLocationIsVerified ? sharedSavedLocation : sharedDeedLocation) || seller.plot_description || "Not provided";
 
     const headBlock = (<>
+            {humanQueueOn && aiOn && <StaffTaskNotice entry={selectedAttention(humanTasks, selectedRaw?.id, selected.id)} />}
             {kind !== "buyer" && (() => {
               const fmtMoney = (value: unknown) => {
                 const amount = Number(value);
@@ -1798,18 +1800,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               );
               return (
                 <>
-                {humanQueueOn && aiOn && humanTasks.get(selected.id)?.attention && (() => {
-                  const task = humanTasks.get(selected.id)!.attention;
-                  const why = cleanAttentionText(task.reason), where = cleanAttentionText(task.evidence);
-                  return (
-                    <section aria-label="What the AI needs from staff" className="mb-4 rounded-[20px] border border-[hsl(var(--status-attention-border))] bg-[hsl(var(--status-attention-soft))] px-5 py-4 sm:px-7">
-                      <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--status-attention-fg))]"><Bot className="h-3.5 w-3.5" />Staff needed · {task.priority} priority</p>
-                      <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">{cleanAttentionText(task.task)}</p>
-                      {why && <p className="mt-2 text-sm leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">Why: </span>{why}</p>}
-                      {where && <p className="mt-1 text-sm leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">Where to look: </span>{where}</p>}
-                    </section>
-                  );
-                })()}
                 <section aria-label="Seller overview" className="overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-[0_18px_50px_-32px_hsl(var(--foreground)/0.28)]">
                    <div className="grid gap-5 border-b border-border/70 bg-card px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] sm:items-start sm:px-7">
                     <div className="min-w-0">
@@ -3691,7 +3681,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
         {(() => {
           const renderRow = (s: Submission, i: number) => {
-            const isActive = selected?.id === s.id;
+            const isActive = selectedRaw?.id === s.id;
             const sKind = resolveKind(s.customer_kind, s.source);
 
             // Historical viewers are no longer surfaced — only live presence below.
@@ -3726,19 +3716,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             const isBuyer = sKind === "buyer";
             // Brand-new inquiries are washed in light blue so they jump straight out
             // of the list; the selected row still wins so you always know where you are.
-            const bgCls = isActive
-              ? "bg-primary/15"
-              : fresh
-                ? "bg-[hsl(var(--status-new-soft))] hover:bg-[hsl(var(--status-new-soft))]/85"
-                : needsReply
-                  // Buyers needing reply get a light minty sage tint; everyone else
-                  // keeps the urgent terracotta. This makes buyer cards instantly recognisable.
-                  ? isBuyer
-                    ? "bg-[hsl(var(--status-buyer))]/10 hover:bg-[hsl(var(--status-buyer))]/18"
-                    : "bg-[hsl(var(--status-reply-soft))] hover:bg-[hsl(var(--status-reply-soft))]/70"
-                  : beingWorked
-                    ? "bg-accent/10 hover:bg-accent/15"
-                    : stage.tint;
+            const bgCls = isActive ? "bg-primary/5" : "bg-background hover:bg-muted/35";
             // Fresh rows get a blue edge; a buyer awaiting reply keeps the coral edge.
             const edgeCls = isActive
               ? ""
@@ -3872,61 +3850,38 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${bgCls} ${edgeCls}`}
+                  className={`group relative w-full text-left px-4 py-4 border-b border-border/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${bgCls}`}
                 >
-                  {/* Stage rail — colour + fill height show how far along they are */}
-                  <span
-                    className="absolute left-1.5 top-2.5 bottom-2.5 w-[3px] rounded-full bg-border/60 overflow-hidden"
-                    title={`Step ${stage.step} of 8 · ${stage.label}`}
-                  >
-                    <span
-                      className={`absolute inset-x-0 bottom-0 rounded-full ${stage.bar}`}
-                      style={{ height: `${(stage.step / 8) * 100}%` }}
-                    />
-                  </span>
                   {isActive && <span className="absolute inset-y-0 left-0 w-[2px] bg-primary" />}
-                  <img
-                    src={getPlotImage(s.property_type || "", Number((s as any).plot_count ?? s.spaces) || 1)}
-                    alt=""
-                    className="w-11 h-11 rounded-xl object-cover bg-muted/40 shrink-0 mt-0.5 ring-1 ring-border/60"
-                  />
 
-                  <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="min-w-0 space-y-2.5">
                     {/* Line 1 — who, and where they are */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                      <div className="min-w-0 flex-1">
                         <p className={`text-[15px] leading-tight break-words ${fresh ? "font-bold text-foreground" : "font-semibold text-foreground"}`}>
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
-                        {needsReply && (
-                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer-soft))] text-[hsl(var(--status-buyer-fg))]" : "bg-muted text-muted-foreground"}`}>
-                            Reply
-                          </span>
-                        )}
+                        <p className="mt-1 text-xs text-muted-foreground break-words">{s.cemetery || "Cemetery not specified"}</p>
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
-                        {/* Buyers don't move through the seller pipeline — no stage pill. */}
-                        {sKind !== "buyer" && (
-                        <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${stage.cls}`}
-                          title={stage.at ? `${stage.label} · ${formatDate(stage.at)}` : stage.label}
-                        >
-                          <StageIcon className="w-2.5 h-2.5" strokeWidth={2.75} />
-                          {stage.label}
-                        </span>
-                        )}
                         <span className="text-[10px] text-muted-foreground tabular-nums" title={`Last interaction ${lastD.toLocaleString()}`}>
                           {lastLabel}
                         </span>
                       </div>
+                    </div>
+                    <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                      {!isBuyer && <span className="inline-flex items-center gap-1.5" title={stage.at ? formatDate(stage.at) : undefined}><StageIcon className="h-3 w-3" />{stage.label}</span>}
+                      {isBuyer && <span>Buyer</span>}
+                      {needsReply && <span className="inline-flex items-center gap-1 font-medium text-[hsl(var(--status-reply-fg))]"><Mail className="h-3 w-3" />Needs reply</span>}
+                      {chips.find(c => c.key === "money") && <span className="ml-auto tabular-nums" title={chips.find(c => c.key === "money")?.title}>{chips.find(c => c.key === "money")?.text}</span>}
                     </div>
 
                     {/* Line 2 — plain-language summary */}
                     {humanQueueOn && aiOn && humanTasks.get(s.id) && (() => {
                       const task = humanTasks.get(s.id)?.attention;
                       return task ? (
-                        <div role="note" aria-label="AI asks staff to step in" className="flex items-start gap-2 rounded-lg border-l-[3px] border-[hsl(var(--status-attention))] bg-[hsl(var(--status-attention-soft))] px-2.5 py-1.5">
+                        <div role="note" aria-label="AI asks staff to step in" className="flex items-start gap-2 rounded-md bg-[hsl(var(--status-attention-soft))] px-3 py-2">
                           <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[hsl(var(--status-attention-fg))]" />
                           <p className="min-w-0 text-xs leading-snug text-[hsl(var(--status-attention-fg))]">
                             <span className="font-semibold">Staff needed{task.priority === "urgent" || task.priority === "high" ? ` · ${task.priority}` : ""}</span>
@@ -3945,12 +3900,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       pending={aiPending.get(aiKey(s))?.label}
                       needsReplyAt={awaitingAll[s.id]}
                     />}
-                    <p className="text-xs text-muted-foreground break-words">{s.cemetery || "Cemetery not specified"}</p>
 
                     {/* Line 3 — quiet meta strip */}
                     {(chips.length > 0 || beingWorked || sKind !== "seller" || dupCount > 1) && (
                       <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                        {chips.filter(c => ["money", "custom", "plotmatch"].includes(c.key)).slice(0, 2).map(c => {
+                        {chips.filter(c => ["custom", "plotmatch"].includes(c.key)).slice(0, 2).map(c => {
                           const Icon = c.icon;
                           return (
                             <span
@@ -3964,7 +3918,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           );
                         })}
                         {chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).length > 0 && <span className="inline-flex items-center gap-1 text-muted-foreground" title={chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).map(c => c.title).join(" · ")}>{chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).map(c => { const Icon = c.icon; return <Icon key={c.key} className="h-3 w-3" />; })}</span>}
-                        {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
 
                         {dupCount > 1 && (
                           <span
@@ -3986,12 +3939,11 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     )}
                   </div>
-                  <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-transform ${needsReply && isBuyer ? "text-[hsl(var(--status-buyer))]/60" : "text-muted-foreground/30"} ${isMobile && isActive ? "rotate-90" : ""}`} />
                 </motion.div>
 
 
                 {isMobile && isActive && (
-                  <MobileInlineDetail submission={s} />
+                  <><StaffTaskNotice entry={humanQueueOn && aiOn ? humanTasks.get(s.id) : undefined} /><MobileInlineDetail submission={s} /></>
                 )}
               </div>
             );

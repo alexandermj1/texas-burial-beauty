@@ -5,13 +5,15 @@
 //     or a full review (new files/payments/contracts/paperwork, a lot changed, a suspected problem).
 // Guards: owner switch, single-flight lease, small batches, daily review cap, per-seller
 // email cap, quiet hours, and a circuit breaker that pauses on 402/403/repeated 429.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 import { isInternalCall } from "../_shared/internal-auth.ts";
 import { recordFingerprint } from "../_shared/recordFingerprint.ts";
 import { routeWake, replySendAt, inConversation, isQuietTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
 import { sellerWakeCandidates, sellerMailOutgoing } from "../_shared/sellerWakeCandidates.ts";
+import { legacySuggestionsNeedReview, replacedAutomationBlocker } from "../_shared/sellerBacklog.ts";
 
-const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-automation-secret" };
+import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
+const corsHeaders = { ...sdkCorsHeaders, "Access-Control-Allow-Headers": `${sdkCorsHeaders["Access-Control-Allow-Headers"]}, x-automation-secret` };
 const JOB = "seller-autopilot";
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,7 +41,7 @@ async function flagHuman(sub: any, task: string, reason = "The AI autopilot stop
 
 /** Steps the autopilot may carry out itself — each finishes entirely on the server with the staff code.
  *  Anything else (Documents-panel steps, opening dialogs) is handed to a person with instructions. */
-export const AUTO_RUN = new Set(["reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "change_listing_option", "send_document_request", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
+export const AUTO_RUN = new Set(["change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "change_listing_option", "send_document_request", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
 const STEP_LABEL = (t: string) => t.replace(/_/g, " ");
 
 async function execute(actionId: string) {
@@ -162,15 +164,19 @@ async function wake(mode: string, dailyReviews: number) {
     }
   };
   // Light metadata only: no three-day/global-message cap can hide an unanswered seller.
-  const [allSubs, allMail, memories] = await Promise.all([
+  const [allSubs, allMail, memories, proposals, automaticRuns] = await Promise.all([
     readPages("contact_submissions", "id,email,created_at,customer_kind,deleted_at,archived_at,closed_at,sold_at,ai_paused_at,ai_autopilot,reply_dismissed_at,ownership_answers"),
     readPages("email_messages", "id,matched_submission_id,from_email,to_email,received_at,deleted_at"),
     readPages("ai_record_memory", "submission_id,due_at", "submission_id"),
+    readPages("ai_agent_actions", "id,submission_id,action_type,status,deleted_at,reason,payload,run_id"),
+    readPages("ai_agent_runs", "id,trigger"),
   ]);
   const active = allSubs.filter(s => eligible(s, mode));
   const activeIds = new Set(active.map(s => s.id));
   const due = memories.filter(m => activeIds.has(m.submission_id) && m.due_at && Date.parse(m.due_at) <= Date.now()).sort((a,b) => a.due_at.localeCompare(b.due_at)).map(m => m.submission_id);
-  const ids = sellerWakeCandidates(active, allMail.filter(e => !e.deleted_at), due, new Set(memories.map(m => m.submission_id)));
+  const openProposals = proposals.filter(p => p.status === "proposed" && !p.deleted_at);
+  const ids = [...new Set([...sellerWakeCandidates(active, allMail.filter(e => !e.deleted_at), due, new Set(memories.map(m => m.submission_id))), ...openProposals.map(p => p.submission_id).filter(id => activeIds.has(id))])];
+  const autoIds = new Set(automaticRuns.filter(r => String(r.trigger).startsWith("autopilot:")).map(r => r.id));
   for (const sid of ids) {
     if (budget <= 0) break;
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", sid).maybeSingle();
@@ -178,14 +184,16 @@ async function wake(mode: string, dailyReviews: number) {
     const { count: held } = await db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "held");
     const { data: memory } = await db.from("ai_record_memory").select("*").eq("submission_id", sid).maybeSingle();
     if (memory?.last_route === "error" && Date.parse(memory.updated_at) > Date.now() - 2 * 3600_000) continue; // back off after a failed review
-    // Suggestions waiting on staff while the seller waits for an answer: ask a person rather than redrafting.
-    const { data: stale } = await db.from("ai_agent_actions").select("id").eq("submission_id", sid).eq("status", "proposed").is("deleted_at", null).neq("action_type", "flag_human").lt("created_at", new Date(Date.now() - 24 * 3600_000).toISOString()).limit(1);
-    if (!held && stale?.length && !(await humanOpen(sid))) {
-      await flagHuman(sub, "AI suggestions on this file have been waiting for approval for over a day — please approve or decline them so the seller isn't left waiting.");
-      out.push({ sid, route: "stale_approvals" }); continue;
+    const proposed = openProposals.filter(p => p.submission_id === sid);
+    const retired = proposed.filter(replacedAutomationBlocker);
+    if (retired.length) {
+      const { error } = await db.from("ai_agent_actions").update({ status: "superseded", decision_reason: "Owner requested a fresh autonomous review; this approval-only blocker is obsolete." }).in("id", retired.map(p => p.id)).eq("status", "proposed");
+      if (error) throw error;
     }
+    const legacy = legacySuggestionsNeedReview(proposed, autoIds, !!held) || retired.length > 0;
     const now = await recordFingerprint(db, sub);
-    const route = routeWake({ memory: memory as any, now, at: Date.now(), humanOpen: await humanOpen(sid) });
+    const blocked = await humanOpen(sid);
+    const route = legacy && !blocked ? { kind: "full" as const, changed: [], reason: "Reassess abandoned manual suggestions under owner-enabled autonomy; never send an old draft without reviewing it again" } : routeWake({ memory: memory as any, now, at: Date.now(), humanOpen: blocked });
     if (route.kind === "wait" || route.kind === "human") continue;
     if (held && route.kind === "checkback") continue;
     if (held) await db.from("ai_outbox").update({ status: "cancelled", status_reason: "File changed — redrafting" }).eq("submission_id", sid).eq("status", "held");

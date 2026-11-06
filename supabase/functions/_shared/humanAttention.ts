@@ -27,6 +27,9 @@ export const humanAttentionNote = (a: HumanAttention) =>
 
 export type AttentionAction = { id: string; submission_id: string; action_type: string; status: string; created_at: string; deleted_at?: string | null; payload?: { human_attention?: unknown } | null };
 export type AttentionEntry = { actionId: string; createdAt: string; attention: HumanAttention };
+/** Preserve the clicked task even when documents come from a stage-leading duplicate. */
+export const selectedAttention = (index: Map<string, AttentionEntry>, clickedId: string | undefined, documentId: string) =>
+  (clickedId ? index.get(clickedId) : undefined) ?? index.get(documentId);
 const ranks = { urgent: 4, high: 3, normal: 2, low: 1 };
 export function compareAttention(a: AttentionEntry, b: AttentionEntry): number {
   return ranks[b.attention.priority] - ranks[a.attention.priority] || b.attention.importance - a.attention.importance || a.createdAt.localeCompare(b.createdAt);
