@@ -367,12 +367,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [aiTrack, setAiTrack] = useState<Map<string, AiTracking>>(new Map());
   const loadAiTrack = useCallback(async () => {
     const [{ data: mem }, { data: ob }, { data: actions }] = await Promise.all([
-      supabase.from("ai_record_memory" as never).select("submission_id,due_at,waiting_for,summary,updated_at").limit(2000),
+      supabase.from("ai_record_memory" as never).select("submission_id,due_at,waiting_for,summary,next_if_silent,last_route,updated_at").limit(2000),
       supabase.from("ai_outbox" as never).select("submission_id,status,sent_at,send_at").in("status", ["sent", "held"]).order("created_at", { ascending: false }).limit(2000),
       supabase.from("ai_agent_actions").select("submission_id,action_type,executed_at").eq("status", "executed").is("deleted_at", null).order("executed_at", { ascending: false }).limit(2000),
     ]);
     const m = new Map<string, AiTracking>();
-    for (const r of (mem ?? []) as any[]) m.set(r.submission_id, { nextAt: r.due_at ?? undefined, doing: r.waiting_for || r.summary || undefined, reviewedAt: r.updated_at });
+    for (const r of (mem ?? []) as any[]) m.set(r.submission_id, { nextAt: r.due_at ?? undefined, doing: r.waiting_for || undefined, summary: r.summary || undefined, nextStep: r.next_if_silent || undefined, route: r.last_route, reviewedAt: r.updated_at });
     for (const o of (ob ?? []) as any[]) {
       const e = m.get(o.submission_id) ?? {};
       if (o.status === "sent" && o.sent_at && (!e.lastReply || o.sent_at > e.lastReply)) e.lastReply = o.sent_at;
@@ -3943,6 +3943,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       onToggle={() => toggleRecordAi(s.id, !(aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at))}
                       staffNeeded={!!(humanQueueOn && aiOn && humanTasks.get(s.id))}
                       pending={aiPending.get(aiKey(s))?.label}
+                      needsReplyAt={awaitingAll[s.id]}
                     />}
                     <p className="text-xs text-muted-foreground break-words">{s.cemetery || "Cemetery not specified"}</p>
 
