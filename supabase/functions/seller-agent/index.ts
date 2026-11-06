@@ -754,7 +754,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
-    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
+    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["extend_quote_deadline", "edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
     // An invalid family-tree edit or unknown cemetery is dropped rather than shown as approvable.
     const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
     if (dropped.size) { console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid)); d.actions = d.actions.filter((_, i) => !dropped.has(i)); previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i))); }

@@ -1,2 +1,3 @@
 - Gateway calls use _shared/aiRunLabel aiFetch with a plain-English label — why: readable run names in the AI activity log.
 - Manual Seller AI decisions use an allowlisted per-request model through the typed Gateway Responses SDK and labelRun; preserve research models and approval/execution gates and record model choices in run triggers/action payloads — why: attributable comparisons without changing safety or automatic behavior.
+- Seller quote deadline extensions update only quote_expires_at via a dedicated approved action; validate later future timestamps and block confirming replies until the extension is applied — why: extra time must persist without repricing or rewriting historical terms.
