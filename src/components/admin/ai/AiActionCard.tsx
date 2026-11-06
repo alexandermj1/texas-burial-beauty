@@ -14,7 +14,7 @@ import { HUMAN_ATTENTION_RELEASED, parseHumanAttention } from "@/lib/humanAttent
 import { Loader2, Check, X, Mail, StickyNote, UserRound, FileSignature, Link2, Users, DollarSign, FileText, PencilLine } from "lucide-react";
 
 export type AiAction = {
-  id: string; submission_id: string; action_type: string; status: string; reason: string | null;
+  id: string; run_id?: string | null; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
   payload?: { human_attention?: unknown; fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string; tree?: Record<string, unknown>; before_tree?: Record<string, unknown> | null } | null;
@@ -138,6 +138,7 @@ type Props = {
   onOpen?: (which: "quote" | "documents", action: AiAction) => void;
   onChanged: () => void;
   compact?: boolean;
+  prerequisites?: AiAction[];
 };
 
 /** Ids of actions that should show their visuals: a run's shared deed/compare visuals appear on only the first card that carries them. */
@@ -151,7 +152,7 @@ export function visualOwners(actions: { id: string; submission_id?: string | nul
   return owners;
 }
 
-export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenSubmission, onOpen, onChanged, compact, hideVisuals }: Props & { hideVisuals?: boolean }) {
+export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenSubmission, onOpen, onChanged, compact, hideVisuals, prerequisites = [] }: Props & { hideVisuals?: boolean }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [subject, setSubject] = useState(a.email_subject ?? "");
@@ -163,6 +164,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const pending = a.status === "proposed";
 
   const approve = async () => {
+    if (prerequisites.length) return;
     if (attention && !decisionReason.trim()) {
       toast({ title: "What did you find?", description: "Add the result of your check or call before resolving it." });
       return;
@@ -206,7 +208,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   };
 
   return (
-    <div className={`rounded-xl border border-indigo-500/30 bg-card ${compact ? "p-3" : "p-4 md:p-5"} space-y-2.5`}>
+    <div id={`ai-action-${a.id}`} className={`rounded-xl border border-indigo-500/30 bg-card ${compact ? "p-3" : "p-4 md:p-5"} space-y-2.5`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           {sellerName !== undefined && (
@@ -262,9 +264,13 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
       {pending && (
         <div className="space-y-2">
+          {prerequisites.length > 0 && <div className="border-l-2 border-destructive pl-3 text-sm text-foreground">
+            <p className="font-medium">Before sending this reply:</p>
+            {prerequisites.map(p => <a key={p.id} className="block text-primary underline underline-offset-2" href={`#ai-action-${p.id}`}>{AI_TYPE_META[p.action_type]?.approve ?? p.action_type.replace(/_/g, " ")}</a>)}
+          </div>}
           <Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder="Why accept or decline? (optional)" />
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={approve} disabled={busy} className="bg-indigo-600 hover:bg-indigo-700 text-primary-foreground">
+          <Button size="sm" onClick={approve} disabled={busy || prerequisites.length > 0} className="bg-indigo-600 hover:bg-indigo-700 text-primary-foreground">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />{meta.approve}</>}
           </Button>
           <Button size="sm" variant="outline" onClick={() => { setWhy(decisionReason); setDeclining((v) => !v); }} disabled={busy}><X className="w-4 h-4 mr-1" />Decline</Button>
