@@ -1,5 +1,5 @@
-// Owner-controlled rollout lock. Do not release without explicit approval.
-export const HUMAN_ATTENTION_RELEASED = false;
+// Owner-controlled rollout lock — released by the owner (Nov 2026) together with the seller autopilot.
+export const HUMAN_ATTENTION_RELEASED = true;
 export const HUMAN_ATTENTION_SETTING = "human_attention_queue";
 export const humanAttentionEnabled = (value: unknown, released: boolean = HUMAN_ATTENTION_RELEASED) => released && value === true;
 
