@@ -983,18 +983,8 @@ Deno.serve(async (req) => {
           const { count } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
           if (count) continue; // still has a current suggestion
         }
-        try {
-          const { count: live } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
-          // Every Needs-reply seller should carry a current suggestion: re-review if theirs went stale.
-          const r = await runForSubmission(db, apiKey, sid, body.model ? "manual" : live ? "sweep" : "refresh", undefined, body.model ?? DEFAULT_SELLER_MODEL);
-          if ((r as any).status === "done") processed++;
-          results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason, model: body.model, scan_usage: (r as any).scan_usage });
-        } catch (e) {
-          const status = (e as any).status;
-          results.push({ submission_id: sid, status: "error", error: String((e as Error).message).slice(0, 200) });
-          if (status === 402 || status === 403) break; // pause the whole sweep
-          processed++;
-        }
+        results.push({ submission_id: sid, status: "selected", model: body.model });
+        processed++;
       }
       return json({ ok: true, processed, results });
     }
