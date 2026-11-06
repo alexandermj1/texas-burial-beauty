@@ -29,10 +29,22 @@ async function pause(reason: string) {
 const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
-/** Put the record in front of a person (shows as a "needs a person" suggestion; autopilot then leaves it alone). */
-async function flagHuman(sub: any, task: string) {
-  await db.from("ai_agent_actions").insert({ submission_id: sub.id, action_type: "flag_human", status: "proposed", reason: task, note_body: task, confidence: 1, payload: { source: "autopilot" } });
+/** Put the record at the top of the staff list with a clear task (autopilot then leaves it alone). */
+async function flagHuman(sub: any, task: string, reason = "The AI autopilot stopped here so a person can take over.", priority: "urgent" | "high" | "normal" = "high") {
+  const attention = { priority, importance: priority === "urgent" ? 90 : priority === "high" ? 70 : 50, category: "human_task", task, reason, evidence: "AI notes and suggestions on this record" };
+  await db.from("ai_agent_actions").insert({ submission_id: sub.id, action_type: "flag_human", status: "proposed", reason: task, note_body: `Needs a person (${priority} priority): ${task}\n${reason}`, confidence: 1, payload: { source: "autopilot", human_attention: attention } });
   await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `AI autopilot asked for a person: ${task}`, author_name: "AI agent (autopilot)" });
+}
+
+/** Steps the autopilot may carry out itself — each finishes entirely on the server with the staff code.
+ *  Anything else (Documents-panel steps, opening dialogs) is handed to a person with instructions. */
+export const AUTO_RUN = new Set(["reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "change_listing_option", "send_document_request", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
+const STEP_LABEL = (t: string) => t.replace(/_/g, " ");
+
+async function execute(actionId: string) {
+  const res = await fetch(`${URL_}/functions/v1/seller-agent`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${KEY}`, apikey: KEY }, body: JSON.stringify({ action: "execute", action_id: actionId, autopilot: true }) });
+  const body = await res.json().catch(() => ({})) as any;
+  return { ok: res.ok && !body?.error, status: res.status, error: String(body?.error ?? (res.ok ? "" : res.status)) };
 }
 
 async function humanOpen(sid: string) {
@@ -62,22 +74,27 @@ async function sendDue(mode: string) {
     if ((newer ?? []).length) { await cancel("Our team already emailed since this was drafted"); continue; }
     if (await humanOpen(o.submission_id)) { await cancel("A person is handling this record"); continue; }
     if (await emailsToday(o.submission_id) >= MAX_EMAILS_PER_SELLER_DAY) { await db.from("ai_outbox").update({ send_at: new Date(Date.now() + 86400_000).toISOString() }).eq("id", o.id); continue; }
-    const res = await fetch(`${URL_}/functions/v1/gmail-action`, {
-      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${KEY}`, apikey: KEY },
-      body: JSON.stringify({ action: "send", to: sub.email, subject: act.email_subject || "Your cemetery property", body: act.email_body,
-        htmlBody: `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${esc(act.email_body ?? "")}</div>`,
-        ...(act.gmail_thread_id ? { threadId: act.gmail_thread_id } : {}), submissionId: sub.id, actorName: "AI agent (autopilot)" }),
-    });
-    const text = await res.text();
-    if (!res.ok || /"error"/.test(text)) {
-      await db.from("ai_outbox").update({ status: "failed", status_reason: `Email failed (${res.status}): ${text.slice(0, 200)}` }).eq("id", o.id);
-      if ([401, 402, 403, 429].includes(res.status)) await pause(`Email sending blocked (${res.status}).`);
-      out.push({ id: o.id, failed: res.status }); continue;
+    // Claim the row first so an overlapping run can never send it twice.
+    const { data: claimed } = await db.from("ai_outbox").update({ status: "sending" }).eq("id", o.id).eq("status", "held").select("id").maybeSingle();
+    if (!claimed) continue;
+    // Carry out the whole review in order: record/document changes, then notes, then the reply last.
+    const { data: siblings } = await db.from("ai_agent_actions").select("id,action_type,status,created_at").eq("run_id", act.run_id).eq("status", "proposed").is("deleted_at", null).order("created_at");
+    const rank = (t: string) => t === "reply_email" ? 2 : t === "add_note" ? 1 : 0;
+    const steps = (siblings ?? []).filter((x) => AUTO_RUN.has(x.action_type)).sort((x, y) => rank(x.action_type) - rank(y.action_type));
+    const done: string[] = [];
+    let failed: string | null = null;
+    for (const st of steps) {
+      const r = await execute(st.id);
+      if (!r.ok) { failed = `${STEP_LABEL(st.action_type)}: ${r.error.slice(0, 200)}`; break; }
+      done.push(st.action_type);
+    }
+    if (failed) {
+      await db.from("ai_outbox").update({ status: "failed", status_reason: `Stopped at ${failed}${done.length ? ` (already done: ${done.map(STEP_LABEL).join(", ")})` : ""}` }).eq("id", o.id);
+      await flagHuman(sub, `The AI couldn't finish its planned steps (${failed}). Please check the record and finish or correct it${done.includes("reply_email") ? "" : " — no reply has been sent to the seller yet"}.`, "An automatic step failed, so the autopilot stopped before doing anything further.");
+      out.push({ id: o.id, failed }); continue;
     }
     const now = new Date().toISOString();
-    await db.from("ai_outbox").update({ status: "sent", sent_at: now }).eq("id", o.id);
-    await db.from("ai_agent_actions").update({ status: "executed", decided_by_name: "AI autopilot", decided_at: now, executed_at: now }).eq("id", act.id);
-    await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Emailed ${String(sub.name ?? "the seller").split(" ")[0]}: ${act.reason}`, author_name: "AI agent (autopilot)" });
+    await db.from("ai_outbox").update({ status: "sent", sent_at: now, status_reason: done.map(STEP_LABEL).join(", ") || null }).eq("id", o.id);
     // Remember the file as it is now (our email is part of it) so the next visit doesn't treat it as new.
     const { data: mem } = await db.from("ai_record_memory").select("reminder_count,last_route").eq("submission_id", sub.id).maybeSingle();
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
@@ -92,19 +109,26 @@ async function callAgent(body: Record<string, unknown>) {
   return { status: res.status, body: await res.json().catch(() => ({})) as any };
 }
 
-/** After an autopilot review: hold its reply with a natural delay when nothing else needs a person first. */
+/** After an autopilot review: hold the review's steps with a natural delay, or hand them to a person. */
 async function queueReply(sub: any, runId: string) {
-  const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at").eq("run_id", runId).eq("status", "proposed");
-  const reply = (acts ?? []).find((a) => a.action_type === "reply_email");
-  if (!reply) return null;
-  const others = (acts ?? []).filter((a) => a.id !== reply.id && a.action_type !== "add_note");
-  if (others.length) return { held_for_staff: others.map((a) => a.action_type) };
+  const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at").eq("run_id", runId).eq("status", "proposed").order("created_at");
+  const list = acts ?? [];
+  if (!list.length || list.some((a) => a.action_type === "flag_human")) return list.length ? { handed_to_person: true } : null;
+  const manual = list.filter((a) => !AUTO_RUN.has(a.action_type));
+  if (manual.length) {
+    const names = manual.map((a) => STEP_LABEL(a.action_type)).join(", ");
+    await flagHuman(sub, `Approve the AI's ${names} on this record (it needs the Family tree & documents panel), then approve the rest of its suggestions.`, `The AI planned ${list.map((a) => STEP_LABEL(a.action_type)).join(", ")}; part of it can only be finished on screen, so nothing has been sent to the seller yet.`, "normal");
+    return { held_for_staff: names };
+  }
+  const reply = list.find((a) => a.action_type === "reply_email");
+  const primary = reply ?? list.find((a) => a.action_type !== "add_note");
+  if (!primary) { for (const n of list) await execute(n.id); return { notes_only: list.length }; }
   const { data: mail } = await db.from("email_messages").select("from_email,received_at").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(10);
   const seller = (mail ?? []).find((m) => !/texascemeterybrokers/i.test(m.from_email ?? ""));
   const oursBefore = seller ? (mail ?? []).find((m) => /texascemeterybrokers/i.test(m.from_email ?? "") && m.received_at <= seller.received_at) : null;
-  const words = String(reply.email_body ?? "").split(/\s+/).filter(Boolean).length;
+  const words = String(reply?.email_body ?? "").split(/\s+/).filter(Boolean).length;
   const at = replySendAt({ now: Date.now(), inConversation: inConversation(seller?.received_at ?? null, oursBefore?.received_at ?? null), words, rand: Math.random(), rand2: Math.random() });
-  await db.from("ai_outbox").insert({ submission_id: sub.id, action_id: reply.id, send_at: new Date(at).toISOString() });
+  await db.from("ai_outbox").insert({ submission_id: sub.id, action_id: primary.id, send_at: new Date(at).toISOString() });
   return { held_until: new Date(at).toISOString() };
 }
 
