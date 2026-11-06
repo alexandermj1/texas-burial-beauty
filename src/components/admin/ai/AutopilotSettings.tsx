@@ -8,14 +8,23 @@ import { Loader2, Power } from "lucide-react";
 
 type Mode = "off" | "selected" | "all";
 type LogEntry = { id: string; submission_id: string; seller: string; status: string; status_reason: string | null; send_at: string; sent_at: string | null; created_at: string; subject: string | null; what: string | null; kind: string | null };
+type ConsoleItem = { at: string; submission_id: string; seller: string; kind: string; text: string };
+const KIND: Record<string, { label: string; cls: string }> = {
+  send: { label: "Reply", cls: "bg-primary/10 text-primary" }, check: { label: "Check-in", cls: "bg-muted text-muted-foreground" },
+  review: { label: "Reviewed", cls: "bg-secondary text-secondary-foreground" }, running: { label: "Working", cls: "bg-primary/10 text-primary" },
+  sent: { label: "Emailed", cls: "bg-primary text-primary-foreground" }, cancelled: { label: "Held back", cls: "bg-muted text-muted-foreground" },
+  error: { label: "Problem", cls: "bg-destructive/10 text-destructive" }, flag: { label: "Staff", cls: "bg-[hsl(var(--status-attention-soft))] text-[hsl(var(--status-attention-fg))]" },
+};
 type Status = {
   settings: { mode: Mode; dailyReviews: number };
   state: { status: string; pause_reason: string | null; last_completed_at: string | null } | null;
   last24h: { reviews: number; sent: number; held: number };
   log?: LogEntry[]; last_sent_at?: string | null; last_review?: { created_at: string } | null;
+  upcoming?: ConsoleItem[]; activity?: ConsoleItem[]; can_control?: boolean;
 };
 
 const when = (iso?: string | null) => iso ? new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const STATUS_LABEL: Record<string, string> = { held: "Waiting to send", sending: "Sending", sent: "Sent", cancelled: "Not sent", failed: "Stopped — staff asked to check" };
 
 /** Owner switch for the Seller AI autopilot, plus a log of everything it sent or held back. */
@@ -53,10 +62,10 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
         </div>
         <label className="flex items-center gap-2 text-sm font-semibold">
           {on ? "On" : "Off"}
-          <Switch checked={on} disabled={busy} onCheckedChange={(v) => setMode(v ? "all" : "off")} aria-label="Seller AI autopilot on or off" />
+          <Switch checked={on} disabled={busy || !s.can_control} onCheckedChange={(v) => setMode(v ? "all" : "off")} aria-label="Seller AI autopilot on or off" />
         </label>
       </div>
-      {on && (
+      {on && s.can_control && (
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant={s.settings.mode === "all" ? "default" : "outline"} disabled={busy} onClick={() => setMode("all")}>All sellers</Button>
           <Button size="sm" variant={s.settings.mode === "selected" ? "default" : "outline"} disabled={busy} onClick={() => setMode("selected")}>Chosen sellers only</Button>
@@ -78,24 +87,39 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Last 24 hours</p><p className="font-semibold">{s.last24h.reviews ?? 0} reviews · {s.last24h.sent ?? 0} sent</p></div>
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Waiting to send</p><p className="font-semibold">{s.last24h.held ?? 0}</p></div>
       </div>
-      <div>
-        <p className="text-xs font-semibold mb-1">Reply log</p>
-        {!s.log?.length ? <p className="text-xs text-muted-foreground">Nothing sent yet.</p> : (
-          <ul className="divide-y divide-border rounded-lg border border-border max-h-80 overflow-y-auto">
-            {s.log.map((l) => (
-              <li key={l.id}>
-                <button type="button" onClick={() => onOpenSubmission?.(l.submission_id)} className="w-full text-left px-2.5 py-1.5 text-xs hover:bg-muted/50">
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="font-semibold truncate">{l.seller}</span>
-                    <span className={l.status === "sent" ? "text-primary font-medium" : l.status === "failed" ? "text-destructive" : "text-muted-foreground"}>{STATUS_LABEL[l.status] ?? l.status} · {when(l.sent_at ?? l.send_at)}</span>
-                  </span>
-                  <span className="block text-muted-foreground truncate">{l.subject ?? l.what ?? (l.kind ?? "").replace(/_/g, " ")}{l.status_reason ? ` — ${l.status_reason}` : ""}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Console title="Coming up next" empty="Nothing scheduled yet." items={s.upcoming ?? []} onOpen={onOpenSubmission} />
+        <Console title="Live activity" empty="No activity yet." items={s.activity ?? []} onOpen={onOpenSubmission} live />
       </div>
     </section>
+  );
+}
+
+function Console({ title, items, empty, onOpen, live }: { title: string; items: ConsoleItem[]; empty: string; onOpen?: (id: string) => void; live?: boolean }) {
+  return (
+    <div className="rounded-lg border border-border bg-background">
+      <p className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs font-semibold">
+        {live && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" aria-hidden />}{title}
+        <span className="ml-auto font-normal text-muted-foreground">{items.length}</span>
+      </p>
+      {!items.length ? <p className="px-3 py-3 text-xs text-muted-foreground">{empty}</p> : (
+        <ul className="max-h-96 divide-y divide-border overflow-y-auto">
+          {items.map((it, i) => {
+            const k = KIND[it.kind] ?? KIND.check;
+            return (
+              <li key={i}>
+                <button type="button" onClick={() => onOpen?.(it.submission_id)} className="grid w-full grid-cols-[4.5rem_1fr] gap-2 px-3 py-2 text-left text-xs hover:bg-muted/50">
+                  <span className="tabular-nums text-muted-foreground">{when(it.at)}</span>
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-1.5"><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${k.cls}`}>{k.label}</span><span className="truncate font-semibold">{it.seller}</span></span>
+                    <span className="mt-0.5 block text-muted-foreground line-clamp-2">{it.text}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

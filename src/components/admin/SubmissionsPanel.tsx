@@ -3404,6 +3404,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             >
               <FileSpreadsheet className="w-4 h-4" /> Price sheet
             </button>
+            {!buyerView && <AutopilotBar onOpenPanel={() => setAiOpen(true)} />}
 
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
@@ -3572,7 +3573,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
           </div>
         )}
-        {!buyerView && <AutopilotBar onOpenPanel={() => setAiOpen(true)} />}
         {(() => {
           // Total includes everyone in the view — sellers, buyers and general
           // forms alike — deduplicated by email. Every form gets classified as
