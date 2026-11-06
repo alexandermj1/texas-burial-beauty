@@ -41,6 +41,8 @@ import AddSubmissionDialog from "./AddSubmissionDialog";
 import PriceSheetDialog from "./PriceSheetDialog";
 import AiAgentPanel from "./AiAgentPanel";
 import AiRecordCard from "./ai/AiRecordCard";
+import AiScanCost from "./ai/AiScanCost";
+import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
 import { Bot } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
@@ -236,6 +238,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const { user } = useAuth();
   const aiOn = canUseAi(user?.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sellerScanCost, setSellerScanCost] = useState<{ id: string; usage: ScanUsage | null } | null>(null);
+  const receiveScanCost = useCallback((id: string, usage: ScanUsage | null) => setSellerScanCost({ id, usage }), []);
   // Focus mode: collapse the submissions list into a slide-over drawer so the
   // detail view gets the full width (submissions have grown a lot of content).
   const [listCollapsed, setListCollapsed] = useState<boolean>(() => {
@@ -1783,6 +1787,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                    <div className="grid gap-5 border-b border-border/70 bg-card px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] sm:items-start sm:px-7">
                     <div className="min-w-0">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Seller submission record</p>
+                      {aiOn && sellerScanCost?.id === selected.id && sellerScanCost.usage && <AiScanCost usage={sellerScanCost.usage} />}
                       <h3 className="mt-1 flex items-center gap-2 font-display text-2xl text-foreground sm:text-3xl">{selected.name || "Anonymous"}{(() => {
                         const owners = deedHighlightOwners?.id === selected.id && deedHighlightOwners.owners.length ? deedHighlightOwners.owners : selectedDeedOwners.length ? selectedDeedOwners : String(seller.deed_owner_names || "").split(/\n/).filter(Boolean);
                         const m = deedOwnerMatch(selected.name, owners);
@@ -3268,6 +3273,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {headBlock}
                 {aiOn && <AiRecordCard
                   submissionId={selected.id}
+                  onScanCost={receiveScanCost}
                   pausedAt={(selected as any).ai_paused_at ?? null}
                   customerProfileId={(selected as any).customer_profile_id ?? null}
                   onOpenQuote={(action) => {
