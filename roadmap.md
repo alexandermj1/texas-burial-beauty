@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Add detailed factual live seller-review activity, right-hand reported token totals and faster updates without extra inference; verify signed-in review and responsive display.
 - [x] Fixed stalled manual seller reviews with acknowledged research/tool checkpoints and a separate claimed decision request; selected model and approvals preserved, no automatic retries. Cinnamon Opus completed in 231s with five saved proposals; Sol then Astra completed and read back on AI TEST 2. 26 tests pass, preview clean; no customer emails/actions executed. Long reviews still take minutes; keep the review tab open. Recorded-credit feed and unavailable Sonnet remain earlier blockers.
 - [x] Red USD scan cost above seller name and in AI heading; picker shows standard input/output credit rates and Astra-relative token prices. Reproduced Glenda reply 409 (unapproved deadline), added shared dependency ordering and disabled-send links in record and queue. Desktop screenshots verified; 24 tests pass, build OK; phone overflow absent but phone record display not verified. No customer email or quote change.
 - [ ] Show Lovable recorded credits automatically — blocked: no documented app-readable recorded-cost feed in installed SDK/public API; estimates remain labelled.
