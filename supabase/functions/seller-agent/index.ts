@@ -12,7 +12,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 
-import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
+import { SELLER_MODELS, DEFAULT_SELLER_MODEL, AUTOPILOT_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
 import { sellerDecision } from "./decisionModel.ts";
 import { claimPhase } from "./reviewContinuation.ts";
 import { isInternalCall } from "../_shared/internal-auth.ts";
@@ -340,6 +340,7 @@ RULES FOR YOUR OUTPUT
 - Emails: plain text, following the tone rules, greeting "Dear <First Name>," and the standard sign-off. No markdown.
 - KEEP EVERY EXPLANATION SHORT AND PLAIN. Staff skim these on a busy panel:
   - stage_summary: one line, max 12 words, e.g. "Quote accepted, agreement signed, waiting on the deed."
+  - list_summary: ONE plain sentence (max 25 words) for the staff list saying where this seller is and what is happening now, including anything this review will do, e.g. "Agreement signed; deed received, waiting on the mailed POA from Mary before listing."
   - next_step: max 10 words, e.g. "Reply confirming we received the deed."
   - reasoning: 1-2 short sentences, plain words, no jargon, no restating the whole record.
   - each action's reason: one short sentence, e.g. "She asked where to send the deed — reply with the address."
@@ -353,7 +354,7 @@ RULES FOR YOUR OUTPUT
 - MEMORY (always): leave yourself a short note for the next time you look at this file, like a colleague's file note: where things stand, what we are waiting for and from whom, when it is reasonable to check back if nobody replies (check_back_days 1-14: e.g. 3 after a document request, 2 after a quote, 1 after a contract link, 5-7 when waiting on the cemetery or mailed originals), and what to do then if nothing has happened (e.g. "gentle reminder about the POA original; after 2 reminders ask staff to call"). Set suspect_problem true when something in the file looks wrong or unresolved that deserves a full re-check next time.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
 {"memory": {"summary": string (max 60 words), "waiting_for": string|null, "check_back_days": number, "next_if_silent": string, "suspect_problem": boolean, "escalate": boolean (catch-up visits only — true when what changed needs a full review)},
- "stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
+ "stage_summary": string, "list_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
  "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null, "tree": object|null (edit_family_tree only — the complete corrected FAMILY TREE)}]}`;
 
@@ -565,6 +566,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
   return {
     memory: { summary: clip(mem.summary, 500), waiting_for: mem.waiting_for ? clip(mem.waiting_for, 200) : null, check_back_days: clampCheckBackDays(mem.check_back_days), next_if_silent: clip(mem.next_if_silent, 300), suspect_problem: !!mem.suspect_problem, escalate: !!mem.escalate },
     stage_summary: String(obj.stage_summary ?? ""),
+    list_summary: clip(obj.list_summary, 300),
     next_step: String(obj.next_step ?? ""),
     reasoning: String(obj.reasoning ?? ""),
     confidence: Math.max(0, Math.min(1, Number(obj.confidence) || 0)),
@@ -860,6 +862,11 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
       }
     }
     await db.from("ai_agent_runs").update({ status: "done", review_checkpoint: null }).eq("id", run.id);
+    if (d.list_summary && !(auto && auto.mode !== "full" && d.memory.escalate)) {
+      // The AI has just read the whole file — its sentence replaces the old cheap-model summary line on the list (headline kept).
+      const head = String(sub.ai_summary ?? "").includes("||") ? String(sub.ai_summary).split("||")[0].trim() : "";
+      await db.from("contact_submissions").update({ ai_summary: `${head}||${d.list_summary}`, ai_summary_at: new Date().toISOString() }).eq("id", sub.id);
+    }
     if (!(auto && auto.mode !== "full" && d.memory.escalate)) await saveMemory(db, sub, run.id, d.memory, auto, trigger);
     return { status: "done", run_id: run.id, effort, model, scan_usage: meter.snapshot(), decision: d, escalate: !!(auto && auto.mode !== "full" && d.memory.escalate) };
   } catch (e) {
@@ -931,7 +938,7 @@ Deno.serve(async (req) => {
       const A = z.object({ submission_id: z.string().uuid(), mode: z.enum(["full", "catch_up", "checkback"]), changed: z.array(z.string()).max(20), reason: z.string().max(300) }).safeParse(raw);
       if (!A.success) return json({ error: A.error.flatten() }, 400);
       try {
-        return json(await runForSubmission(db, apiKey, A.data.submission_id, "autopilot", undefined, DEFAULT_SELLER_MODEL, undefined, undefined, { mode: A.data.mode, changed: A.data.changed as FpPart[], reason: A.data.reason }));
+        return json(await runForSubmission(db, apiKey, A.data.submission_id, "autopilot", undefined, AUTOPILOT_MODEL, undefined, undefined, { mode: A.data.mode, changed: A.data.changed as FpPart[], reason: A.data.reason }));
       } catch (e) {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
@@ -942,7 +949,9 @@ Deno.serve(async (req) => {
     // Reviews are staff-click only. Reject the retired automatic path before any model call.
     const cronTok = req.headers.get("x-agent-cron");
     if (cronTok) return json({ status: "skipped", reason: "Automatic seller reviews are disabled; staff must click review." });
-    const user = await staffUser(db, req);
+    // The unattended autopilot carries out its own suggestions through the exact same handler staff use.
+    const autoExec = raw?.action === "execute" && raw?.autopilot === true && isInternalCall(req);
+    const user = autoExec ? { id: null as string | null, name: "AI autopilot" } : await staffUser(db, req);
     if (!user) return json({ error: "Admin or staff only" }, 403);
     let body = parsed.data as any;
     let staffRequested = false;

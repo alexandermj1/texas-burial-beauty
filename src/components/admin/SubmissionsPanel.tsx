@@ -3895,7 +3895,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    {aiPending.has(aiKey(s)) && (() => {
+                    {aiPending.has(aiKey(s)) && !(humanQueueOn && aiOn && humanTasks.get(s.id)) && (() => {
                       const p = aiPending.get(aiKey(s))!;
                       const isFlag = p.type === "flag_human";
                       return (
@@ -3909,7 +3909,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {/* Line 2 — plain-language summary */}
                     {humanQueueOn && aiOn && humanTasks.get(s.id) && (() => {
                       const task = humanTasks.get(s.id)?.attention;
-                      return task ? <div className="text-xs leading-snug text-foreground border-l-2 border-primary pl-2 space-y-1"><p className="font-semibold">Needs a person · {task.priority}</p><p>{task.task}</p><p className="text-muted-foreground">{task.reason}</p></div> : null;
+                      return task ? (
+                        <div role="note" aria-label="AI asks staff to step in" className="rounded-lg border-2 border-[hsl(var(--status-attention-border))] bg-[hsl(var(--status-attention-soft))] text-[hsl(var(--status-attention-fg))] px-2.5 py-2 space-y-1">
+                          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--status-attention))] text-[hsl(var(--status-attention-fg))] px-2 py-0.5"><Bot className="w-3 h-3" />Staff needed</span>
+                            <span>{task.priority} priority</span>
+                          </p>
+                          <p className="text-xs font-semibold leading-snug"><span className="font-bold">What to do: </span>{task.task}</p>
+                          <p className="text-xs leading-snug"><span className="font-bold">Why: </span>{task.reason}</p>
+                          {task.evidence && <p className="text-[11px] leading-snug opacity-80"><span className="font-bold">Where to look: </span>{task.evidence}</p>}
+                        </div>
+                      ) : null;
                     })()}
                     {(() => {
                       const raw = summaryMap[s.id] || "";

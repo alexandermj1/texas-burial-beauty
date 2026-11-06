@@ -156,6 +156,11 @@
     --status-buyer-fg: 16 55% 26%;
     --status-buyer-border: 18 50% 82%;
 
+    --status-attention: 44 92% 48%;      /* bright ochre-yellow — AI asks a person to step in */
+    --status-attention-soft: 48 100% 90%;
+    --status-attention-fg: 32 85% 20%;
+    --status-attention-border: 44 85% 60%;
+
     --status-docs: 155 32% 38%;          /* moss — success/attachments */
     --status-docs-soft: 152 30% 92%;
     --status-docs-fg: 155 38% 22%;

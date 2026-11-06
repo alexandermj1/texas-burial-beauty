@@ -3,9 +3,11 @@ import { attentionIndex, humanAttentionEnabled, humanAttentionNote, parseHumanAt
 
 const attention: HumanAttention = { priority: "high", importance: 85, category: "check", task: "Check whether David's original deed arrived in the office.", reason: "The photo cannot confirm physical receipt.", evidence: "David's latest email and the original-receipt checklist." };
 const flag = (id: string, priority: HumanAttention["priority"] = "high", importance = 85): AttentionAction => ({ id: `action-${id}`, submission_id: id, action_type: "flag_human", status: "proposed", created_at: "2026-11-05T01:06:00Z", payload: { human_attention: { ...attention, priority, importance } } });
-describe("disabled human-attention rollout", () => {
-  it("cannot be activated by a setting while the owner release lock is off", () => {
-    expect(humanAttentionEnabled(true)).toBe(false);
+describe("human-attention rollout", () => {
+  it("is released by the owner, and still needs the setting switched on", () => {
+    expect(humanAttentionEnabled(true)).toBe(true);
+    expect(humanAttentionEnabled(false)).toBe(false);
+    expect(humanAttentionEnabled(true, false)).toBe(false);
   });
   it("requires release approval and an explicit boolean setting", () => {
     for (const value of [undefined, null, false, "true", {}, 1]) expect(humanAttentionEnabled(value, true)).toBe(false);

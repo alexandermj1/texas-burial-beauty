@@ -122,7 +122,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      <AutopilotSettings />
+      <AutopilotSettings onOpenSubmission={onOpenSubmission} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="font-display text-2xl text-foreground">AI Seller Agent</h2>
