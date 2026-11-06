@@ -1960,6 +1960,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
                   <h3 className="font-display text-xl text-foreground">{selected.name || "Anonymous"}</h3>
+                  {kind === "seller" && aiOn && sellerScanCost?.id === selected.id && sellerScanCost.usage && <AiScanCost usage={sellerScanCost.usage} />}
                   <p className="text-xs text-muted-foreground mt-1">
                     {[selected.property_type, selected.spaces ? `${selected.spaces} space${Number(selected.spaces) > 1 ? "s" : ""}` : null]
                       .filter(Boolean).join(" · ") || "—"} · {formatDate(selected.created_at)}
