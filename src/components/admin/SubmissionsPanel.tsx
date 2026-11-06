@@ -41,6 +41,7 @@ import AddSubmissionDialog from "./AddSubmissionDialog";
 import PriceSheetDialog from "./PriceSheetDialog";
 import AiAgentPanel from "./AiAgentPanel";
 import AutopilotBar from "./ai/AutopilotBar";
+import AiFeedStatus, { type AiTracking } from "./ai/AiFeedStatus";
 import { attentionHeadline, cleanAttentionText } from "@/lib/attentionText";
 import AiRecordCard from "./ai/AiRecordCard";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
@@ -287,8 +288,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // once we've actually emailed that buyer back.
   const [lastOutgoingMap, setLastOutgoingMap] = useState<Record<string, string>>({});
   // AI "where is this up to" summaries, keyed by submission id.
-  const [summaryMap, setSummaryMap] = useState<Record<string, string>>({});
-  const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
+
 
 
   // Map of submission_id -> { since: ISO of our outgoing promise email, phrase: matched snippet }
@@ -364,19 +364,27 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   }, [aiOn]);
   const [aiFirst, setAiFirst] = useState(false);
   // Autopilot per-record tags: last AI reply, next check-in and what it is waiting for.
-  const [aiTrack, setAiTrack] = useState<Map<string, { lastReply?: string; nextAt?: string; doing?: string; queuedAt?: string }>>(new Map());
+  const [aiTrack, setAiTrack] = useState<Map<string, AiTracking>>(new Map());
   const loadAiTrack = useCallback(async () => {
-    const [{ data: mem }, { data: ob }] = await Promise.all([
-      supabase.from("ai_record_memory" as never).select("submission_id,due_at,waiting_for,summary").limit(2000),
+    const [{ data: mem }, { data: ob }, { data: actions }] = await Promise.all([
+      supabase.from("ai_record_memory" as never).select("submission_id,due_at,waiting_for,summary,updated_at").limit(2000),
       supabase.from("ai_outbox" as never).select("submission_id,status,sent_at,send_at").in("status", ["sent", "held"]).order("created_at", { ascending: false }).limit(2000),
+      supabase.from("ai_agent_actions").select("submission_id,action_type,executed_at").eq("status", "executed").is("deleted_at", null).order("executed_at", { ascending: false }).limit(2000),
     ]);
-    const m = new Map<string, { lastReply?: string; nextAt?: string; doing?: string; queuedAt?: string }>();
-    for (const r of (mem ?? []) as any[]) m.set(r.submission_id, { nextAt: r.due_at ?? undefined, doing: r.waiting_for || r.summary || undefined });
+    const m = new Map<string, AiTracking>();
+    for (const r of (mem ?? []) as any[]) m.set(r.submission_id, { nextAt: r.due_at ?? undefined, doing: r.waiting_for || r.summary || undefined, reviewedAt: r.updated_at });
     for (const o of (ob ?? []) as any[]) {
       const e = m.get(o.submission_id) ?? {};
       if (o.status === "sent" && o.sent_at && (!e.lastReply || o.sent_at > e.lastReply)) e.lastReply = o.sent_at;
       if (o.status === "held" && !e.queuedAt) e.queuedAt = o.send_at;
       m.set(o.submission_id, e);
+    }
+    const labels: Record<string, string> = { reply_email: "Reply sent", add_note: "Staff note added", update_fields: "Record details updated", update_document_items: "Document checklist updated", fix_document_request: "Document request corrected", send_quote: "Quote sent", resend_quote_free_listing: "Quote resent", update_quote_spaces: "Quote spaces updated", extend_quote_deadline: "Quote deadline extended", send_listing_agreement: "Listing agreement sent", send_family_tree: "Family tree sent", send_document_request: "Document request sent", set_stage: "Stage updated", change_listing_option: "Listing option updated", resend_email: "Email resent" };
+    for (const action of actions ?? []) {
+      if (!action.executed_at) continue;
+      const e = m.get(action.submission_id) ?? {};
+      if (!e.actionAt) { e.actionAt = action.executed_at; e.action = labels[action.action_type] ?? `Completed: ${action.action_type.replace(/_/g, " ")}`; }
+      m.set(action.submission_id, e);
     }
     setAiTrack(m);
   }, []);
@@ -1313,28 +1321,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [expandedCemetery, setExpandedCemetery] = useState(false);
   const [editCemeteryInline, setEditCemeteryInline] = useState(false);
   const [reassignCemeteryOpen, setReassignCemeteryOpen] = useState(false);
-
-  // Show saved summaries; request one (cheap model, cached server-side) only for
-  // records that have never been summarised, each id at most once per session.
-  const summaryRequested = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    const seeded: Record<string, string> = {};
-    for (const s of submissions as any[]) if (s.ai_summary) seeded[s.id] = s.ai_summary;
-    setSummaryMap(prev => ({ ...seeded, ...prev }));
-    const missing = (submissions as any[])
-      .filter(s => !s.ai_summary && !s.deleted_at && !summaryRequested.current.has(s.id))
-      .slice(0, 12)
-      .map(s => s.id as string);
-    if (!missing.length) return;
-    missing.forEach(id => summaryRequested.current.add(id));
-    supabase.functions.invoke("summarize-submission", { body: { submissionIds: missing } })
-      .then(({ data }) => {
-        const got = (data as any)?.summaries;
-        if (got && typeof got === "object") setSummaryMap(prev => ({ ...prev, ...got }));
-      })
-      .catch(() => {});
-  }, [submissions]);
-
 
   // Duplicates are merged into one card, but paperwork/documents live on whichever
   // submission actually reached the furthest stage. Open that one so the requested
@@ -3878,7 +3864,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
             return (
               <div key={s.id}>
-                <motion.button
+                <motion.div role="button" tabIndex={0} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id); } }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: Math.min(i * 0.02, 0.2) }}
@@ -3886,7 +3872,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     if (isMobile && isActive) { setSelectedId(null); return; }
                     setSelectedId(s.id); setNotesDraft(s.admin_notes || ""); recordView(s.id);
                   }}
-                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 ${bgCls} ${edgeCls}`}
+                  className={`group relative w-full text-left pl-5 pr-4 py-3.5 border-b border-border/40 transition-colors flex items-start gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${bgCls} ${edgeCls}`}
                 >
                   {/* Stage rail — colour + fill height show how far along they are */}
                   <span
@@ -3908,21 +3894,18 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   <div className="flex-1 min-w-0 space-y-1.5">
                     {/* Line 1 — who, and where they are */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex items-center gap-2">
-                        <p className={`text-[15px] leading-tight truncate ${fresh ? "font-bold text-foreground" : "font-semibold text-foreground"}`}>
+                      <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                        <p className={`text-[15px] leading-tight break-words ${fresh ? "font-bold text-foreground" : "font-semibold text-foreground"}`}>
                           {s.name || "Anonymous"}
                         </p>
                         {fresh && <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--status-new))] shrink-0" title="New submission" />}
-                        {aiOn && aiPending.has(aiKey(s)) && (aiPending.get(aiKey(s))!.type === "flag_human"
-                          ? <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 shrink-0" title="The AI looked at this record and thinks a person should check it — open to see why"><Bot className="w-3 h-3" />Needs checking</span>
-                          : <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shrink-0" title="The AI has something ready on this record — open it to review"><Bot className="w-3 h-3" />AI can help</span>)}
                         {needsReply && (
-                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer))] text-white" : "bg-[hsl(var(--status-reply))] text-white"}`}>
+                          <span className={`text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded shrink-0 ${isBuyer ? "bg-[hsl(var(--status-buyer-soft))] text-[hsl(var(--status-buyer-fg))]" : "bg-muted text-muted-foreground"}`}>
                             Reply
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex flex-col items-end gap-1 shrink-0">
                         {/* Buyers don't move through the seller pipeline — no stage pill. */}
                         {sKind !== "buyer" && (
                         <span
@@ -3939,17 +3922,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    {aiPending.has(aiKey(s)) && !(humanQueueOn && aiOn && humanTasks.get(s.id)) && (() => {
-                      const p = aiPending.get(aiKey(s))!;
-                      const isFlag = p.type === "flag_human";
-                      return (
-                        <p className={`text-xs leading-snug flex items-center gap-1.5 ${isFlag ? "text-amber-700 dark:text-amber-300" : "text-emerald-700 dark:text-emerald-300"}`}>
-                          <Bot className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{isFlag ? `AI ${p.label} — open to see why` : `AI ${p.label} — open to review`}</span>
-                        </p>
-                      );
-                    })()}
-
                     {/* Line 2 — plain-language summary */}
                     {humanQueueOn && aiOn && humanTasks.get(s.id) && (() => {
                       const task = humanTasks.get(s.id)?.attention;
@@ -3963,61 +3935,26 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                       ) : null;
                     })()}
-                    {!isBuyer && (aiTrack.get(s.id) || aiCanControl) && (() => {
-                      const t = aiTrack.get(s.id) ?? {};
-                      const paused = aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at;
-                      const fmt = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-                      return (
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <Bot className="h-3 w-3 shrink-0" />
-                          <span className="min-w-0 truncate">
-                            {paused ? <span className="font-medium text-destructive">AI paused</span> : <>
-                              {(t as any).queuedAt ? `Replying ${fmt((t as any).queuedAt)}` : (t as any).lastReply ? `Replied ${fmt((t as any).lastReply)}` : "No AI reply yet"}
-                              {(t as any).nextAt && !(t as any).queuedAt && ` · next look ${fmt((t as any).nextAt)}`}
-                            </>}
-                          </span>
-                          {aiCanControl && (
-                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleRecordAi(s.id, !paused); }} title={paused ? "Let the Seller AI work on this record again" : "Stop the Seller AI working on this record"} aria-label={paused ? "Resume AI" : "Pause AI"} className="ml-auto grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
-                              {paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })()}
-                    {(() => {
-                      const raw = summaryMap[s.id] || "";
-                      const [headline, body] = raw.includes("||")
-                        ? [raw.split("||")[0].trim(), raw.split("||").slice(1).join("||").trim()]
-                        : ["", raw];
-                      const label = sourceLabel(s.source, s.inquiry_channel);
-                      return (
-                        <>
-                          {headline && needsReply && (
-                            <p className={`text-xs font-semibold leading-snug ${isBuyer ? "text-[hsl(var(--status-buyer))]" : "text-[hsl(var(--status-reply))]"}`}>
-                              {label && <span className="text-primary/80 font-medium">{label} · </span>}
-                              {headline}
-                            </p>
-                          )}
-                          {body && (
-                            <p className="text-xs text-muted-foreground leading-snug line-clamp-2">
-                              {(!headline || !needsReply) && label && <span className="text-primary/80">{label} · </span>}
-                              {body}
-                            </p>
-                          )}
-                          {!raw && <p className="text-xs text-muted-foreground/60 italic">Summarising…</p>}
-                        </>
-                      );
-                    })()}
+                    {!isBuyer && <AiFeedStatus
+                      track={aiTrack.get(s.id)}
+                      paused={aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at}
+                      archived={!!(s as any).archived_at}
+                      canControl={aiCanControl}
+                      onToggle={() => toggleRecordAi(s.id, !(aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at))}
+                      staffNeeded={!!(humanQueueOn && aiOn && humanTasks.get(s.id))}
+                      pending={aiPending.get(aiKey(s))?.label}
+                    />}
+                    <p className="text-xs text-muted-foreground break-words">{s.cemetery || "Cemetery not specified"}</p>
 
                     {/* Line 3 — quiet meta strip */}
                     {(chips.length > 0 || beingWorked || sKind !== "seller" || dupCount > 1) && (
                       <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                        {chips.map(c => {
+                        {chips.filter(c => ["money", "custom", "plotmatch"].includes(c.key)).slice(0, 2).map(c => {
                           const Icon = c.icon;
                           return (
                             <span
                               key={c.key}
-                              className={`inline-flex items-center gap-1 h-5 ${c.text ? "px-1.5" : "w-5 justify-center"} rounded-md border text-[10px] font-semibold tabular-nums max-w-[190px] ${c.tone}`}
+                              className="inline-flex items-center gap-1 text-[11px] font-medium tabular-nums min-w-0 max-w-full text-muted-foreground"
                               title={c.title}
                             >
                               <Icon className="w-2.5 h-2.5 shrink-0" strokeWidth={2.75} />
@@ -4025,8 +3962,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                             </span>
                           );
                         })}
+                        {chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).length > 0 && <span className="inline-flex items-center gap-1 text-muted-foreground" title={chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).map(c => c.title).join(" · ")}>{chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).map(c => { const Icon = c.icon; return <Icon key={c.key} className="h-3 w-3" />; })}</span>}
                         {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
-                        <BayerBadge inquiryChannel={s.inquiry_channel} size="xs" />
+
                         {dupCount > 1 && (
                           <span
                             className="inline-flex items-center h-5 px-1.5 rounded-md border border-border bg-muted/60 text-[10px] font-medium text-muted-foreground"
@@ -4048,7 +3986,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     )}
                   </div>
                   <ChevronRight className={`w-4 h-4 shrink-0 mt-1 transition-transform ${needsReply && isBuyer ? "text-[hsl(var(--status-buyer))]/60" : "text-muted-foreground/30"} ${isMobile && isActive ? "rotate-90" : ""}`} />
-                </motion.button>
+                </motion.div>
 
 
                 {isMobile && isActive && (

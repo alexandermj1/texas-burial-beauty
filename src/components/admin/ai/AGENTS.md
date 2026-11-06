@@ -1,0 +1,2 @@
+- Daily usage shares useSellerAiUsage's paginated saved-run query, grouped by UTC review-start day; stored equivalents are estimated USD, with incomplete telemetry marked partial — why: consistent totals without inference or invented billing.
+- Submission AI notes show saved execution labels separately from review timestamps, scheduled replies and next reviews; legacy summary generation is not called by the feed — why: distinguish completed work from proposals without spending tokens while browsing.

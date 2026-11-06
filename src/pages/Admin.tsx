@@ -21,6 +21,7 @@ import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
+import SellerAiUsage from "@/components/admin/ai/SellerAiUsage";
 import TexasCemeteriesPanel from "@/components/admin/TexasCemeteriesPanel";
 import CemeteryInfoCard from "@/components/admin/CemeteryInfoCard";
 import { deriveBayerStage, BAYER_STAGE_META } from "@/components/admin/BayerPipelinePanel";
@@ -527,6 +528,7 @@ const Admin = () => {
       <section className={`flex-1 ${focused ? "pt-3 md:pt-6 lg:pt-5 pb-10" : "pt-4 md:pt-28 lg:pt-8 pb-16"}`}>
         <div className="w-full px-3 sm:px-4 lg:px-8">
 
+          {!uiRestricted && user.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <SellerAiUsage />}
           {/* Header — full when not focused, compact when focused */}
           {focused ? (
             <>
