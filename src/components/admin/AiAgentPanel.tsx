@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, RefreshCw, BookOpen } from "lucide-react";
 import AiActionCard, { type AiAction as Action , visualOwners } from "./ai/AiActionCard";
+import AiReviewButton from "./ai/AiReviewButton";
+import type { SellerModel } from "../../../supabase/functions/seller-agent/models";
 
 type Sub = { id: string; name: string | null; cemetery: string | null; email: string | null };
 type View = "approve" | "human" | "done" | "playbook";
@@ -50,22 +52,22 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
     return data;
   };
 
-  const sweep = async () => {
+  const sweep = async (model: SellerModel) => {
     setBusy("sweep");
     try {
-      const r = await call({ action: "sweep", limit: 8 });
+      const r = await call({ action: "sweep", limit: 8, model });
       toast({ title: `Reviewed ${r?.processed ?? 0} sellers`, description: "New proposals are in the queue." });
       await load();
     } catch (e) { toast({ title: "Review failed", description: (e as Error).message, variant: "destructive" }); }
     setBusy(null);
   };
 
-  const runOne = async () => {
+  const runOne = async (model: SellerModel) => {
     const id = runId.trim();
     if (!id) return;
     setBusy("one");
     try {
-      const r = await call({ action: "run", submission_id: id });
+      const r = await call({ action: "run", submission_id: id, model });
       toast({ title: r?.status === "done" ? "Seller reviewed" : "Skipped", description: r?.reason ?? r?.decision?.next_step });
       setRunId("");
       await load();
@@ -108,13 +110,8 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Input value={runId} onChange={(e) => setRunId(e.target.value)} placeholder="Submission ID" className="w-64 h-9" />
-          <Button variant="outline" size="sm" onClick={runOne} disabled={busy === "one" || !runId.trim()}>
-            {busy === "one" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Review one seller"}
-          </Button>
-          <Button size="sm" onClick={sweep} disabled={busy === "sweep"}>
-            {busy === "sweep" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-            Review recent sellers
-          </Button>
+          <AiReviewButton label="Review one seller" onReview={runOne} busy={busy === "one"} disabled={!!busy || !runId.trim()} />
+          <AiReviewButton label="Review recent sellers" onReview={sweep} busy={busy === "sweep"} disabled={!!busy} />
         </div>
       </div>
 

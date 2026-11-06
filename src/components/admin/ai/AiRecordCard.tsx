@@ -6,8 +6,10 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
 import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
+import AiReviewButton from "./AiReviewButton";
+import { DEFAULT_SELLER_MODEL, reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
 
-type Run = { created_at: string; status: string; stage_summary: string | null; next_step: string | null; needs_human: boolean | null; error: string | null };
+type Run = { created_at: string; trigger: string; status: string; stage_summary: string | null; next_step: string | null; needs_human: boolean | null; error: string | null };
 
 type Props = {
   submissionId: string;
@@ -22,6 +24,8 @@ type Props = {
 export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh }: Props) {
   const { toast } = useToast();
   const [run, setRun] = useState<Run | null>(null);
+  const [reviews, setReviews] = useState<Run[]>([]);
+  const [model, setModel] = useState<SellerModel>(DEFAULT_SELLER_MODEL);
   const [actions, setActions] = useState<AiAction[]>([]);
   const [busy, setBusy] = useState(false);
   const [paused, setPaused] = useState(!!pausedAt);
@@ -31,12 +35,14 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
   const load = useCallback(async () => {
     const [{ data: r }, { data: a }, { data: ins }] = await Promise.all([
-      supabase.from("ai_agent_runs" as never).select("created_at,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("ai_agent_runs" as never).select("created_at,trigger,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).is("deleted_at", null).order("created_at", { ascending: false }).limit(6),
       supabase.from("ai_agent_actions" as never).select("*").eq("submission_id", submissionId).is("deleted_at", null).neq("status", "superseded").order("created_at", { ascending: false }).limit(30),
       supabase.from("customer_notes").select("body,author_name,created_at").eq("submission_id", submissionId).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
     ]);
     setSentInstructions((ins ?? []) as any);
-    setRun((r as unknown as Run) ?? null);
+    const recent = (r ?? []) as unknown as Run[];
+    setRun(recent[0] ?? null);
+    setReviews(recent);
     setActions((a ?? []) as unknown as AiAction[]);
   }, [submissionId]);
 
@@ -54,10 +60,11 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     return () => { clearTimeout(debounce); supabase.removeChannel(ch); };
   }, [submissionId, load]);
 
-  const review = async (instructionText?: string) => {
+  const review = async (instructionText?: string, selectedModel: SellerModel = model) => {
+    setModel(selectedModel);
     setBusy(true);
     try {
-      const r = await callSellerAgent({ action: "run", submission_id: submissionId, ...(instructionText ? { instruction: instructionText } : {}) });
+      const r = await callSellerAgent({ action: "run", submission_id: submissionId, model: selectedModel, ...(instructionText ? { instruction: instructionText } : {}) });
       if (r?.status !== "done") toast({ title: "AI skipped this seller", description: r?.reason });
       await load();
     } catch (e) { toast({ title: "AI review failed", description: (e as Error).message, variant: "destructive" }); }
@@ -99,7 +106,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           <div>
             <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">AI Agent</p>
             <p className="text-[11px] text-muted-foreground">
-              {paused ? "Paused for this seller" : run ? `Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
+              {paused ? "Paused for this seller" : run ? `${reviewModelLabel(run.trigger)} · Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
               {pending.length ? ` · ${pending.length} waiting for approval` : ""}
             </p>
           </div>
@@ -108,9 +115,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Switch checked={paused} onCheckedChange={togglePause} /> Pause AI
           </label>
-          <Button size="sm" variant="outline" onClick={() => review()} disabled={busy || paused} className="border-indigo-500/40 text-indigo-700 dark:text-indigo-300">
-            {busy ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}Review now
-          </Button>
+          <AiReviewButton onReview={chosen => review(undefined, chosen)} busy={busy} disabled={paused} />
         </div>
       </div>
 
@@ -121,6 +126,17 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         </div>
       )}
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
+      {reviews.length > 1 && <details className="border-t border-border pt-2">
+        <summary className="cursor-pointer text-xs text-muted-foreground">Recent model reviews</summary>
+        <ul className="mt-2 space-y-3">
+          {reviews.map(r => <li key={`${r.created_at}-${r.trigger}`} className="text-xs space-y-1">
+            <p className="font-medium text-foreground">{reviewModelLabel(r.trigger)} · {new Date(r.created_at).toLocaleString()} · {r.status}</p>
+            {r.stage_summary && <p>{r.stage_summary}</p>}
+            {r.next_step && <p className="text-muted-foreground">{r.next_step}</p>}
+            {r.error && <p className="text-destructive">{r.error}</p>}
+          </li>)}
+        </ul>
+      </details>}
 
       <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
       {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI only looks at this seller when you press Review now.</p>}

@@ -12,15 +12,15 @@ import { z } from "https://esm.sh/zod@3.23.8";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 
-const MODEL = "openai/gpt-6-astra";
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
+import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
+import { sellerDecision } from "./decisionModel.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional() }),
-  z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional() }),
+  z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional(), model: z.enum(SELLER_MODELS).optional() }),
+  z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional(), model: z.enum(SELLER_MODELS).optional() }),
   z.object({ action: z.literal("execute"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("feedback"), action_id: z.string().uuid(), kind: z.enum(["comment", "outcome"]), comment: z.string().trim().max(2000).optional(), correct: z.boolean().optional(), went_live: z.boolean().optional() }),
   z.object({ action: z.literal("reject"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
@@ -538,50 +538,8 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
   return { parts, names, refs };
 }
 
-async function callModel(apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: any[] = []) {
-  const res = await aiFetch("Seller AI — deciding next steps", GATEWAY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" },
-    body: JSON.stringify({
-      model: MODEL,
-      instructions,
-      input: [{ role: "user", content: media.length ? [{ type: "input_text", text: input }, ...media] : input }],
-      stream: true,
-      store: false,
-      // Same key for every seller so the fixed playbook instructions are reused from cache instead of re-written.
-      prompt_cache_key: "seller-agent-playbook",
-      reasoning: { effort },
-    }),
-  });
-  if (!res.ok || !res.body) {
-    const text = await res.text();
-    const err = new Error(`AI gateway ${res.status}: ${text.slice(0, 400)}`) as Error & { status?: number };
-    err.status = res.status;
-    throw err;
-  }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let buf = "", out = "", failed = "";
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    let idx;
-    while ((idx = buf.indexOf("\n")) >= 0) {
-      const line = buf.slice(0, idx).trim();
-      buf = buf.slice(idx + 1);
-      if (!line.startsWith("data:")) continue;
-      const data = line.slice(5).trim();
-      if (!data || data === "[DONE]") continue;
-      try {
-        const evt = JSON.parse(data);
-        if (evt.type === "response.output_text.delta") out += evt.delta ?? "";
-        if (evt.type === "response.failed" || evt.type === "error") failed = JSON.stringify(evt).slice(0, 400);
-      } catch { /* partial */ }
-    }
-  }
-  if (!out.trim()) throw new Error(failed ? `AI returned no answer: ${failed}` : "AI returned no answer");
-  return out;
+async function callModel(_apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: Parameters<typeof sellerDecision>[3] = [], model: SellerModel = DEFAULT_SELLER_MODEL) {
+  return sellerDecision(instructions, input, effort, media, model);
 }
 
 function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = false) {
@@ -708,7 +666,7 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
   return null;
 }
 
-async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string) {
+async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string, model: SellerModel = DEFAULT_SELLER_MODEL) {
   const { data: sub } = await db.from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
   if (!sub) return { status: "skipped", reason: "not found" };
   if (sub.deleted_at || sub.archived_at) return { status: "skipped", reason: "archived or deleted" };
@@ -744,7 +702,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   }
   // Context is built before the run row so a saved history summary never looks like a "new change" next time.
   const ctx = await buildContext(db, sub, lean ? apiKey : null);
-  const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger, playbook_version: playbook.version }).select("id").single();
+  const { data: run } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger: reviewTrigger(trigger, model), playbook_version: playbook.version }).select("id").single();
   try {
     const { allowed } = allowedActions(sub, ctx.contracts);
     const prep = await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger });
@@ -766,7 +724,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       return { status: "done", run_id: run!.id, effort: "triage", decision: { actions: [], ...prep.skip } };
     }
     const scans = prep.scans;
-    const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts);
+    const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts, model);
     const attentionEnabled = await attentionQueueEnabled(db);
     const d = parseDecision(raw, allowed, attentionEnabled);
     if (attentionEnabled) d.actions = d.actions.filter((a) => a.type !== "flag_human" || a.human_attention);
@@ -798,7 +756,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.human_attention ? humanAttentionNote(a.human_attention) : a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length && ai === 0 ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { model, ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length && ai === 0 ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (rows.length) {
       const { error: actionError } = await db.from("ai_agent_actions").insert(rows);
@@ -811,7 +769,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
         }
       }
     }
-    return { status: "done", run_id: run!.id, effort, decision: d };
+    return { status: "done", run_id: run!.id, effort, model, decision: d };
   } catch (e) {
     const msg = String((e as Error).message ?? e);
     await db.from("ai_agent_runs").update({ status: "error", error: msg.slice(0, 1000) }).eq("id", run!.id);
@@ -884,7 +842,7 @@ Deno.serve(async (req) => {
 
     if (body.action === "run") {
       try {
-        return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction));
+        return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction, body.model ?? DEFAULT_SELLER_MODEL));
       } catch (e) {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
@@ -980,7 +938,7 @@ Deno.serve(async (req) => {
         try {
           const { count: live } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
           // Every Needs-reply seller should carry a current suggestion: re-review if theirs went stale.
-          const r = await runForSubmission(db, apiKey, sid, live ? "sweep" : "refresh");
+          const r = await runForSubmission(db, apiKey, sid, body.model ? "manual" : live ? "sweep" : "refresh", undefined, body.model ?? DEFAULT_SELLER_MODEL);
           if ((r as any).status === "done") processed++;
           results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason });
         } catch (e) {
