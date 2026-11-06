@@ -4137,8 +4137,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   <p className={`text-sm truncate ${fresh ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{s.name || "Anonymous"}</p>
                                   {fresh && <span className="text-[9px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded-full bg-[hsl(var(--status-new))] text-white">New</span>}
-                                  {chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).length > 0 && <span className="inline-flex items-center gap-1 text-muted-foreground" title={chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).map(c => c.title).join(" · ")}>{chips.filter(c => !["money", "custom", "plotmatch"].includes(c.key)).map(c => { const Icon = c.icon; return <Icon key={c.key} className="h-3 w-3" />; })}</span>}
-                        {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
+                                  {sKind !== "seller" && <CustomerKindBadge kind={sKind} size="xs" />}
                                   {hasDocs(s) && (
                                     <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--status-docs-soft))] text-[hsl(var(--status-docs-fg))] border border-[hsl(var(--status-docs-border))]" title="Has attachments">
                                       <Paperclip className="w-3 h-3" />
