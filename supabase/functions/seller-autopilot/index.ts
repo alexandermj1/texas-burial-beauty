@@ -218,13 +218,28 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({})) as any;
   let allowed = isInternalCall(req) || (!!job.trigger_secret && req.headers.get("x-automation-secret") === job.trigger_secret);
   let adminName: string | null = null;
+  let canControl = false;
   if (!allowed || body?.op) {
     const tok = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u } = tok ? await db.auth.getUser(tok) : { data: { user: null } } as any;
-    if (u?.user) { const { data: role } = await db.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle(); allowed = !!role; if (role) adminName = u.user.email ?? "Admin"; }
+    if (u?.user) {
+      const { data: roles } = await db.from("user_roles").select("role").eq("user_id", u.user.id);
+      const rs = (roles ?? []).map((r: any) => r.role);
+      allowed = rs.includes("admin"); if (allowed) adminName = u.user.email ?? "Admin";
+      // Staff accounts (e.g. Cici) can watch results but never control the autopilot.
+      canControl = allowed && !rs.includes("staff");
+    }
     if (body?.op && !adminName) return json({ error: "Admins only" }, 403);
+    if (["set", "resume", "pause_record"].includes(body?.op) && !canControl) return json({ error: "Only the owners can control the Seller AI" }, 403);
   }
   if (!allowed) return json({ error: "Not allowed" }, 403);
+  if (body?.op === "pause_record") {
+    const sid = String(body.submission_id ?? "");
+    if (!/^[0-9a-f-]{36}$/i.test(sid)) return json({ error: "Bad record" }, 400);
+    await db.from("contact_submissions").update({ ai_paused_at: body.paused ? new Date().toISOString() : null }).eq("id", sid);
+    if (body.paused) await db.from("ai_outbox").update({ status: "cancelled", status_reason: `Paused by ${adminName}` }).eq("submission_id", sid).eq("status", "held");
+    return json({ ok: true, paused: !!body.paused });
+  }
   if (body?.op === "status" || body?.op === "set" || body?.op === "resume") {
     if (body.op === "set") {
       const mode = ["off", "selected", "all"].includes(body.mode) ? body.mode : "off";
@@ -251,7 +266,26 @@ Deno.serve(async (req) => {
     const am = new Map((acts ?? []).map((a: any) => [a.id, a]));
     const entries = (log ?? []).map((l) => ({ ...l, seller: nm.get(l.submission_id) ?? "Seller", subject: (am.get(l.action_id) as any)?.email_subject ?? null, what: (am.get(l.action_id) as any)?.reason ?? null, kind: (am.get(l.action_id) as any)?.action_type ?? null }));
     const lastSent = entries.find((e) => e.status === "sent")?.sent_at ?? null;
-    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held }, log: entries, last_sent_at: lastSent, last_review: lastRun ?? null });
+    // Running console: what's coming up next and what the AI recently did.
+    const nowIso2 = new Date().toISOString();
+    const [{ data: upMem }, { data: recentRuns }, { data: recentFlags }] = await Promise.all([
+      db.from("ai_record_memory").select("submission_id,due_at,waiting_for,next_if_silent,last_route").gte("due_at", nowIso2).order("due_at").limit(25),
+      db.from("ai_agent_runs").select("id,created_at,status,submission_id,stage_summary").like("trigger", "autopilot:%").order("created_at", { ascending: false }).limit(30),
+      db.from("ai_agent_actions").select("created_at,submission_id,reason").eq("action_type", "flag_human").order("created_at", { ascending: false }).limit(15),
+    ]);
+    const more = [...new Set([...(upMem ?? []), ...(recentRuns ?? []), ...(recentFlags ?? [])].map((r: any) => r.submission_id).filter((x: string) => x && !nm.has(x)))];
+    if (more.length) { const { data: n2 } = await db.from("contact_submissions").select("id,name,email,archived_at,ai_paused_at").in("id", more); for (const n of n2 ?? []) nm.set(n.id, n.name || n.email); }
+    const nameOf = (id: string) => nm.get(id) ?? "Seller";
+    const upcoming = [
+      ...entries.filter((e) => e.status === "held").map((e) => ({ at: e.send_at, submission_id: e.submission_id, seller: e.seller, kind: "send", text: `Send reply${e.subject ? `: “${e.subject}”` : ""}` })),
+      ...(upMem ?? []).map((m: any) => ({ at: m.due_at, submission_id: m.submission_id, seller: nameOf(m.submission_id), kind: "check", text: `Check back${m.waiting_for ? ` — waiting for ${m.waiting_for}` : ""}${m.next_if_silent ? `; if silent: ${m.next_if_silent}` : ""}` })),
+    ].sort((a, b) => String(a.at).localeCompare(String(b.at))).slice(0, 30);
+    const activity = [
+      ...(recentRuns ?? []).map((r: any) => ({ at: r.created_at, submission_id: r.submission_id, seller: nameOf(r.submission_id), kind: r.status === "done" ? "review" : r.status === "running" ? "running" : "error", text: r.status === "running" ? "Reviewing the record now" : r.stage_summary ? `Reviewed — ${r.stage_summary}` : `Review ${r.status}` })),
+      ...entries.filter((e) => e.status === "sent" || e.status === "cancelled" || e.status === "failed").map((e) => ({ at: e.sent_at ?? e.created_at, submission_id: e.submission_id, seller: e.seller, kind: e.status === "sent" ? "sent" : e.status === "failed" ? "error" : "cancelled", text: e.status === "sent" ? `Emailed${e.subject ? ` “${e.subject}”` : ""}` : `Reply not sent — ${e.status_reason ?? e.status}` })),
+      ...(recentFlags ?? []).map((f: any) => ({ at: f.created_at, submission_id: f.submission_id, seller: nameOf(f.submission_id), kind: "flag", text: `Asked staff: ${String(f.reason ?? "").slice(0, 160)}` })),
+    ].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 60);
+    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held }, log: entries, last_sent_at: lastSent, last_review: lastRun ?? null, upcoming, activity, can_control: canControl });
   }
   const s = await settings();
   if (s.mode === "off") return json({ status: "off" });
