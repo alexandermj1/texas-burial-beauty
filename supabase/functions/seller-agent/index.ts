@@ -733,7 +733,10 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     if (resume?.status === "research_running") {
       const currentStage = researchProgress(checkpoint.researchState);
       await db.from("ai_agent_runs").update({ stage_summary: currentStage, scan_usage: { ...meter.snapshot(), current_call_pending: true } }).eq("id", run.id);
-      const r = await researchRecord(db, apiKey, sub, ctx.focus, checkpoint.instruction, (m, usage) => meter.observe(m, usage), { state: checkpoint.researchState ?? undefined });
+      const r = await researchRecord(db, apiKey, sub, ctx.focus, checkpoint.instruction, (m, usage) => meter.observe(m, usage), { state: checkpoint.researchState ?? undefined, budgetMs: 70_000, onStep: async (st, checks) => {
+        const { error } = await db.from("ai_agent_runs").update({ stage_summary: `${researchProgress(st)} · ${checks} checks completed`, scan_usage: { ...meter.snapshot(), current_call_pending: true }, review_checkpoint: { ...checkpoint, researchState: st } }).eq("id", run.id);
+        if (error) throw new Error(error.message);
+      } });
       const next = { ...checkpoint, researchState: r.state, ...(r.complete ? { research: { tools: r.trace, text: r.text } } : {}) };
       const stage = r.complete ? decisionProgress(model) : `${researchProgress(r.state)} · ${r.trace.length} checks completed`;
       const { error } = await db.from("ai_agent_runs").update({ status: r.complete ? "decision_ready" : "research_ready", stage_summary: stage, scan_usage: meter.snapshot(), review_checkpoint: next }).eq("id", run.id);
