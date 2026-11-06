@@ -1978,6 +1978,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </div>
                   </div>
                 </section>
+                </>
               );
             })()}
             {/* Buyer header */}
