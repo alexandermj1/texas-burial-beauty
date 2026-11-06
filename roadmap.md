@@ -208,5 +208,5 @@
 - [x] Guides menu: replace the upside-down side label with a proper contents rail — "Also in the series" listing N°00 Planning a Funeral in Texas, N°02 Cemetery Plots for Sale, N°03 What a Plot Costs in Texas, then "All seven guides →"; cards now stretch to fill the panel so the dead space below is gone (panel 297px → 250px); verified desktop/mobile
 - [x] Buyer AI: check record first (prior contact, notes, phone) before drafting; target uncontacted buyers or new matches; auto emails wait for owner go-ahead
 - [x] Buyer AI auto replies ~20 min after inquiry (10-min sweep)
-- [ ] Seller AI autopilot (plan approved pending): adaptive check-backs, full rescan on any meaningful record change
-- [ ] Autopilot memory: change-only reviews from saved record memory; full review when much changed or a problem is suspected
+- [x] Seller AI autopilot: adaptive check-backs, full rescan on any meaningful record change
+- [x] Autopilot memory: change-only reviews from saved record memory; full review when much changed or a problem is suspected
