@@ -23,7 +23,7 @@ export type AiAction = {
 type AiChanges = {
   fields?: { label: string; before: string; after: string }[];
   rebuild?: string[]; untouched?: string[];
-  items?: { label: string; before: string; after: string | null; attach: string[]; note: string | null }[];
+  items?: { label: string; before: string; after: string | null; attach: string[]; detach?: string[]; note: string | null }[];
 };
 
 function ChangesView({ c }: { c: AiChanges }) {
@@ -60,6 +60,7 @@ function ChangesView({ c }: { c: AiChanges }) {
               <div className="text-xs text-muted-foreground">
                 {i.after ? <>Status: <span className="line-through">{i.before}</span> → <span className="font-medium text-foreground">{i.after}</span></> : `Status stays ${i.before}`}
                 {i.attach.length > 0 && <> · attach {i.attach.join(", ")}</>}
+                {(i.detach?.length ?? 0) > 0 && <> · remove {i.detach!.join(", ")}</>}
               </div>
               {i.note && <div className="text-xs text-muted-foreground italic">{i.note}</div>}
             </li>
