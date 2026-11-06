@@ -37,14 +37,18 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const [paused, setPaused] = useState(!!pausedAt);
   const [showHistory, setShowHistory] = useState(false);
   const [instruction, setInstruction] = useState("");
+  const [allRunsCost, setAllRunsCost] = useState<number | null>(null);
   const [sentInstructions, setSentInstructions] = useState<{ body: string; author_name: string | null; created_at: string }[]>([]);
 
   const load = useCallback(async () => {
-    const [{ data: r }, { data: a }, { data: ins }] = await Promise.all([
+    const [{ data: r }, { data: a }, { data: ins }, { data: costs }] = await Promise.all([
       supabase.from("ai_agent_runs" as never).select("created_at,trigger,decision_model,scan_usage,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).is("deleted_at", null).order("created_at", { ascending: false }).limit(6),
       supabase.from("ai_agent_actions" as never).select("*").eq("submission_id", submissionId).is("deleted_at", null).neq("status", "superseded").order("created_at", { ascending: false }).limit(30),
       supabase.from("customer_notes").select("body,author_name,created_at").eq("submission_id", submissionId).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
+      supabase.from("ai_agent_runs" as never).select("scan_usage").eq("submission_id", submissionId).is("deleted_at", null).not("scan_usage", "is", null).limit(1000),
     ]);
+    const total = ((costs ?? []) as { scan_usage: ScanUsage | null }[]).reduce((sum, c) => sum + (c.scan_usage?.equivalent ?? 0), 0);
+    setAllRunsCost(total > 0 ? total : null);
     setSentInstructions((ins ?? []) as any);
     const recent = (r ?? []) as unknown as Run[];
     setRun(recent[0] ?? null);
@@ -117,7 +121,10 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
               {paused ? "Paused for this seller" : run ? `${reviewModelLabel(run.trigger, run.decision_model)} · Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
               {pending.length ? ` · ${pending.length} waiting for approval` : ""}
             </p>
-            {run?.status === "done" && <AiScanCost usage={run.scan_usage} />}
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {run?.scan_usage?.equivalent != null && <AiScanCost usage={run.scan_usage} label="last run" />}
+              {allRunsCost != null && <AiScanCost total={allRunsCost} label="all runs" />}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
