@@ -1,6 +1,6 @@
 import { Bot, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cleanAttentionText } from "@/lib/attentionText";
+import { attentionHeadline, cleanAttentionText } from "@/lib/attentionText";
 
 export type AiTracking = { lastReply?: string; nextAt?: string; doing?: string; summary?: string; nextStep?: string; queuedAt?: string; action?: string; actionAt?: string; reviewedAt?: string; route?: string };
 const when = (at: string) => new Date(at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -19,7 +19,7 @@ export default function AiFeedStatus({ track, paused, archived, canControl, onTo
   const nextStep = cleanAttentionText(t.nextStep);
   return <div role="note" aria-label="Seller AI activity" className={`flex items-start gap-2 px-2.5 py-2 ${staffNeeded ? "text-muted-foreground" : "rounded-lg border-l-[3px] border-[hsl(var(--status-new))] bg-[hsl(var(--status-new-soft))] text-[hsl(var(--status-new-fg))]"}`}>
     <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-    <div className="min-w-0 flex-1 text-xs leading-relaxed space-y-0.5"><p className="font-medium break-words" title={t.actionAt ? when(t.actionAt) : t.reviewedAt ? when(t.reviewedAt) : undefined}>{action}</p>{summary && <p className="break-words opacity-90">Review outcome: {summary}</p>}{waiting && <p className="break-words opacity-80">Waiting for: {waiting}</p>}{!waiting && nextStep && <p className="break-words opacity-80">Next step: {nextStep}</p>}{t.reviewedAt && !summary && <p className="break-words opacity-80">No detailed outcome was saved; check the record’s AI notes.</p>}{t.lastReply && t.action !== "Reply sent" && <p className="text-[11px] opacity-80 break-words" title={when(t.lastReply)}>Last AI reply · {when(t.lastReply)}</p>}{next && <p className="text-[11px] opacity-80 break-words">{next}</p>}{followup && <p className="text-[11px] opacity-80 break-words">{followup}</p>}</div>
+    <div className="min-w-0 flex-1 text-xs leading-relaxed space-y-0.5"><p className="font-medium break-words" title={t.actionAt ? when(t.actionAt) : t.reviewedAt ? when(t.reviewedAt) : undefined}>{action}</p>{summary && <p className="break-words opacity-90" title={summary}>Found: {attentionHeadline(summary, 115)}</p>}{waiting && <p className="break-words opacity-80" title={waiting}>Waiting for: {attentionHeadline(waiting, 100)}</p>}{!waiting && nextStep && <p className="break-words opacity-80" title={nextStep}>Next step: {attentionHeadline(nextStep, 100)}</p>}{t.reviewedAt && !summary && <p className="break-words opacity-80">No detailed outcome saved · check AI notes</p>}{t.lastReply && t.action !== "Reply sent" && <p className="text-[11px] opacity-80 break-words" title={when(t.lastReply)}>Last AI reply · {when(t.lastReply)}</p>}{next && <p className="text-[11px] opacity-80 break-words">{next}</p>}{followup && <p className="text-[11px] opacity-80 break-words">{followup}</p>}</div>
     {canControl && !archived && <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0 rounded-md text-muted-foreground" onClick={e => { e.stopPropagation(); onToggle(); }} title={paused ? "Resume Seller AI" : "Pause Seller AI"} aria-label={paused ? "Resume AI" : "Pause AI"}>{paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}</Button>}
   </div>;
 }
