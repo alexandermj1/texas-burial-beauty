@@ -6,7 +6,7 @@
 //    seller quote pack (same shared HTML builder staff use), re-sending any earlier email,
 //    moving the pipeline stage, re-sending unsigned contract links and signed copies.
 // Every executor runs only after a staff member approves the action.
-import { runAgent, runAgentSlice, type ResearchState, RECORD_TOOLS, ADMIN_READ_TOOLS, parseJson } from "../_shared/recordAgent.ts";
+import { runAgent, runAgentSlice, runTool, type ResearchState, RECORD_TOOLS, ADMIN_READ_TOOLS, parseJson } from "../_shared/recordAgent.ts";
 import { buildListingOptionsBlock } from "../_shared/listingOptionsBlock.ts";
 import { suggestedNetPerSpace } from "../_shared/quoteFigures.ts";
 import { properCase, properFirstName } from "../_shared/properCase.ts";
@@ -35,13 +35,41 @@ Return ONLY JSON: {"facts":[{"fact":string,"source":string}] (max 25, each with 
 "answer_material":[string] (specific facts a reply to the seller's latest message would need)}`;
 
 /** Tool-using research pass (cheap fast model). Returns text for the decision prompt plus the trace for staff. */
-export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: string, instruction: string, onUsage?: (model: string, usage: unknown) => void, continuation?: { state?: ResearchState }) {
+// Plain database reads give the same output whether the model asks for them or not, so they are
+// loaded up front in parallel (no AI call, no extra round trips). The model keeps only the tools that
+// need judgment: opening files/deeds, cemetery prices, stock, nearby cemeteries and extra email pages.
+export const PREFETCHED_TOOLS = ["get_record", "get_notes", "get_files", "get_payments", "get_quote_history", "get_activity", "get_family_tree", "get_documents", "get_contracts"] as const;
+const RESEARCH_TOOLS = [...RECORD_TOOLS, ...ADMIN_READ_TOOLS].filter((t) => !(PREFETCHED_TOOLS as readonly string[]).includes(t.name) && t.name !== "get_emails");
+const PREFETCH_NOTE = `\nTHE FILE IS ALREADY LOADED: the task below contains the exact output of get_record, get_all_emails, get_notes, get_files, get_payments, get_quote_history, get_activity, get_family_tree, get_documents and get_contracts for this record. Treat it as if you had called those tools yourself. Do not ask for them again; call get_all_emails only if it says more emails remain. Use your tools to open the files/deeds that matter and for cemetery prices, stock or nearby cemeteries when relevant. Ask for everything you already know you need in ONE turn (several tool calls at once) rather than one tool per turn; when you have enough, give the final JSON straight away.`;
+
+async function prefetchFile(ctx: any, id: string) {
+  const fixed = await Promise.all(PREFETCHED_TOOLS.map((n) => runTool(ctx, n, { id }).catch((e) => ({ error: String(e?.message ?? e) }))));
+  const emails: any[] = []; let total = 0;
+  for (let off = 0; off < 75; off += 25) {
+    const r: any = await runTool(ctx, "get_all_emails", { id, offset: off, limit: 25 }).catch((e) => ({ error: String(e?.message ?? e) }));
+    total = r?.total ?? 0; emails.push(...(r?.emails ?? []));
+    if (!r?.emails?.length || emails.length >= total) break;
+  }
+  const blocks = PREFETCHED_TOOLS.map((n, i) => `### ${n}\n${JSON.stringify(fixed[i]).slice(0, 20000)}`);
+  blocks.splice(1, 0, `### get_all_emails (oldest first, ${emails.length} of ${total} loaded${emails.length < total ? ` — page further with offset ${emails.length}` : ", all of them"})\n${JSON.stringify(emails).slice(0, 60000)}`);
+  return blocks.join("\n\n");
+}
+
+export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: string, instruction: string, onUsage?: (model: string, usage: unknown) => void, continuation?: { state?: ResearchState; budgetMs?: number; onStep?: (state: ResearchState, checks: number) => Promise<void> }) {
   const { data: dir } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude,transfer_fee").is("deleted_at", null).limit(3000);
   const ctx = { db, apiKey, dir: dir ?? [], deedReads: 0, fileReads: 0, onUsage };
-  const task = `Seller record id: ${sub.id}\nSeller: ${sub.name} <${sub.email}>, cemetery: ${sub.cemetery ?? "?"}\n${instruction ? `STAFF INSTRUCTION FOR THIS REVIEW: ${instruction}\n` : ""}CURRENT SNAPSHOT:\n${focus}\n\nResearch this file now.`;
-  const result = continuation
-    ? await runAgentSlice(ctx, RESEARCH_SYS, task, continuation.state, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record")
-    : await runAgent(ctx, RESEARCH_SYS, task, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record");
+  const sys = RESEARCH_SYS + PREFETCH_NOTE, label = "Seller AI — researching the record";
+  const makeTask = async () => `Seller record id: ${sub.id}\nSeller: ${sub.name} <${sub.email}>, cemetery: ${sub.cemetery ?? "?"}\n${instruction ? `STAFF INSTRUCTION FOR THIS REVIEW: ${instruction}\n` : ""}CURRENT SNAPSHOT:\n${focus}\n\nLOADED FILE:\n${await prefetchFile(ctx, sub.id)}\n\nResearch this file now.`;
+  let result: any;
+  if (continuation) {
+    // Several acknowledged steps per request (each checkpointed via onStep) until the time budget is spent.
+    const started = Date.now(); let state = continuation.state;
+    do {
+      result = await runAgentSlice(ctx, sys, state ? "" : await makeTask(), state, 9, RESEARCH_TOOLS, label);
+      state = result.state;
+      if (!result.complete) await continuation.onStep?.(state!, result.trace.length);
+    } while (!result.complete && Date.now() - started < (continuation.budgetMs ?? 0));
+  } else result = await runAgent(ctx, sys, await makeTask(), 9, RESEARCH_TOOLS, label);
   const { answer, trace } = result;
   if ("complete" in result && !result.complete) return { complete: false, state: result.state, text: "", trace: trace.map(t => t.tool), mistakes: 0 };
   const a = answer && typeof answer === "object" ? answer : {};
@@ -52,7 +80,7 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
     `OPEN PROMISES:\n${list(a.open_promises).slice(0, 10).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
     `ANSWER MATERIAL:\n${list(a.answer_material).slice(0, 12).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
   ].join("\n\n");
-  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: trace.map((t) => t.tool), mistakes: list(a.mistakes).length };
+  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: ["loaded_file", ...trace.map((t: any) => t.tool)], mistakes: list(a.mistakes).length };
 }
 
 const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
