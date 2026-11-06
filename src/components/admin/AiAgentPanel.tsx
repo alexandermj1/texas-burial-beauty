@@ -8,6 +8,7 @@ import { Loader2, RefreshCw, BookOpen } from "lucide-react";
 import AiActionCard, { type AiAction as Action , visualOwners } from "./ai/AiActionCard";
 import AiReviewButton from "./ai/AiReviewButton";
 import AiScanCost from "./ai/AiScanCost";
+import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { sellerModelLabel } from "../../../supabase/functions/seller-agent/models";
 import type { SellerModel } from "../../../supabase/functions/seller-agent/models";
@@ -93,7 +94,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
   };
 
   const lists = useMemo(() => ({
-    approve: actions.filter((a) => a.status === "proposed" && a.action_type !== "flag_human"),
+    approve: orderSellerActions(actions.filter((a) => a.status === "proposed" && a.action_type !== "flag_human")),
     human: actions.filter((a) => a.status === "proposed" && a.action_type === "flag_human"),
     done: actions.filter((a) => !["proposed", "superseded"].includes(a.status)),
   }), [actions]);
@@ -146,7 +147,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
         <div className="space-y-3">
           {(() => { const own = visualOwners(shown); return shown.map((a) => {
             const s = subs[a.submission_id];
-            return <AiActionCard key={a.id} action={a} hideVisuals={!own.has(a.id)} sellerName={s?.name ?? null} sellerSub={`${s?.cemetery ?? ""}${s?.email ? ` · ${s.email}` : ""}`} onOpenSubmission={onOpenSubmission} onChanged={load} />;
+            return <AiActionCard key={a.id} action={a} prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} sellerName={s?.name ?? null} sellerSub={`${s?.cemetery ?? ""}${s?.email ? ` · ${s.email}` : ""}`} onOpenSubmission={onOpenSubmission} onChanged={load} />;
           }); })()}
         </div>
       )}

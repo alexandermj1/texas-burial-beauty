@@ -8,6 +8,7 @@ import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
 import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
 import AiReviewButton from "./AiReviewButton";
 import AiScanCost from "./AiScanCost";
+import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../../supabase/functions/seller-agent/scanUsage";
 import { reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
 
@@ -20,10 +21,11 @@ type Props = {
   onOpenQuote: (action?: AiAction) => void;
   onOpenDocuments: () => void;
   onRefresh?: () => void;
+  onScanCost?: (submissionId: string, usage: ScanUsage | null) => void;
 };
 
 /** The AI's workspace on one seller record — its status, pending suggestions, history and controls. */
-export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh }: Props) {
+export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh, onScanCost }: Props) {
   const { toast } = useToast();
   const [run, setRun] = useState<Run | null>(null);
   const [reviews, setReviews] = useState<Run[]>([]);
@@ -48,6 +50,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   }, [submissionId]);
 
   useEffect(() => { setPaused(!!pausedAt); load(); }, [submissionId, pausedAt, load]);
+  useEffect(() => { onScanCost?.(submissionId, run?.scan_usage ?? null); }, [submissionId, run?.scan_usage, onScanCost]);
 
   // Live: when anyone triggers a review, every admin viewing this record sees the suggestions immediately.
   useEffect(() => {
@@ -95,7 +98,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     }
   };
 
-  const pending = actions.filter((a) => a.status === "proposed");
+  const pending = orderSellerActions(actions.filter((a) => a.status === "proposed"));
   const history = actions.filter((a) => a.status !== "proposed");
 
   return (
@@ -143,7 +146,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
       {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI only looks at this seller when you press Review now.</p>}
       {(() => { const own = visualOwners(pending); return pending.map((a) => (
-        <AiActionCard key={a.id} action={a} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
+        <AiActionCard key={a.id} action={a} prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
       )); })()}
 
