@@ -15,6 +15,9 @@ import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
 import { sellerDecision } from "./decisionModel.ts";
 import { claimPhase } from "./reviewContinuation.ts";
+import { isInternalCall } from "../_shared/internal-auth.ts";
+import { recordFingerprint } from "../_shared/recordFingerprint.ts";
+import { clampCheckBackDays, PART_LABEL, type FpPart } from "../_shared/autopilotPolicy.ts";
 import { researchProgress, decisionProgress } from "./reviewProgress.ts";
 import { createScanMeter, type ScanMeter } from "./scanUsage.ts";
 import { listModels } from "npm:@lovable.dev/ai-gateway@0.1.11";
@@ -347,8 +350,10 @@ RULES FOR YOUR OUTPUT
   - Use visuals anywhere they make your point quicker to check: deed or POA checks, which file sits under which checklist item, quote figures vs what an email said, plot/space corrections, who must sign.
   - When the record and the evidence disagree or need checking, add {"kind":"compare","title":string,"rows":[{"label":string,"record":string,"evidence":string,"match":boolean}]} (max 8 rows).
 - FIX THE RECORD FROM EVIDENCE: whenever a compare row shows a record field that is blank or wrong and the deed/scan/seller email clearly shows the right value, ALSO propose update_fields with those values (e.g. space_numbers "3 & 4", plot_count "2", section, lawn, deed_owner_names, plot_description) and a note like "Filled in the space numbers (3 & 4) and plot count (2) from the deed." Include the compare visual on that action. Never change prices, stages or dates. If a document request has already gone out and the plot wording itself is wrong, use fix_document_request instead, with a compare visual (old wording vs the deed/email) and the deed scan so staff see exactly what is changing and why.
+- MEMORY (always): leave yourself a short note for the next time you look at this file, like a colleague's file note: where things stand, what we are waiting for and from whom, when it is reasonable to check back if nobody replies (check_back_days 1-14: e.g. 3 after a document request, 2 after a quote, 1 after a contract link, 5-7 when waiting on the cemetery or mailed originals), and what to do then if nothing has happened (e.g. "gentle reminder about the POA original; after 2 reminders ask staff to call"). Set suspect_problem true when something in the file looks wrong or unresolved that deserves a full re-check next time.
 - Return ONLY a JSON object, no code fences, with exactly these keys:
-{"stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
+{"memory": {"summary": string (max 60 words), "waiting_for": string|null, "check_back_days": number, "next_if_silent": string, "suspect_problem": boolean, "escalate": boolean (catch-up visits only — true when what changed needs a full review)},
+ "stage_summary": string, "next_step": string, "reasoning": string, "confidence": number, "needs_human": boolean, "human_reason": string|null,
  "visuals": array (may be empty),
  "actions": [{"type": string, "reason": string, "confidence": number, "subject": string|null, "body": string|null, "note": string|null, "fields": object|null, "items": array|null, "tree": object|null (edit_family_tree only — the complete corrected FAMILY TREE)}]}`;
 
@@ -477,7 +482,7 @@ async function preparePrompt(db: SupabaseClient, apiKey: string, sub: Sub, ctx: 
       try {
         const t = await callCheap(apiKey, TRIAGE_SYS, ctx.focus, meter);
         for (const x of Array.isArray(t.topics) ? t.topics : []) if (TOPICS.includes(x)) topics.add(x);
-        const automatic = !["manual", "refresh"].includes(o.trigger);
+        const automatic = !["manual", "refresh", "autopilot"].includes(o.trigger);
         if (automatic && !o.customerWaiting && t.needs_review === false) return { instructions: "", input: "", scans: noScans, skip: { stage_summary: String(t.stage_summary ?? "").slice(0, 120) || "No action needed", next_step: "No action needed" } };
       } catch { /* keyword topics only */ }
     }
@@ -556,7 +561,9 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
   const start = t.indexOf("{"), end = t.lastIndexOf("}");
   const obj = JSON.parse(t.slice(start, end + 1));
   const actions = Array.isArray(obj.actions) ? obj.actions : [];
+  const mem = obj.memory && typeof obj.memory === "object" ? obj.memory : {};
   return {
+    memory: { summary: clip(mem.summary, 500), waiting_for: mem.waiting_for ? clip(mem.waiting_for, 200) : null, check_back_days: clampCheckBackDays(mem.check_back_days), next_if_silent: clip(mem.next_if_silent, 300), suspect_problem: !!mem.suspect_problem, escalate: !!mem.escalate },
     stage_summary: String(obj.stage_summary ?? ""),
     next_step: String(obj.next_step ?? ""),
     reasoning: String(obj.reasoning ?? ""),
@@ -681,7 +688,29 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
   return null;
 }
 
-async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string, model: SellerModel = DEFAULT_SELLER_MODEL, ownerId?: string, resume?: any) {
+/** The AI's file note for next time + a fingerprint of the record as it saw it. */
+async function saveMemory(db: SupabaseClient, sub: Sub, runId: string, m: any, auto: AutoOpts | undefined, trigger: string) {
+  try {
+    const { data: prev } = await db.from("ai_record_memory").select("reminder_count,last_full_review_at,history,summary,updated_at").eq("submission_id", sub.id).maybeSingle();
+    const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
+    const fingerprint = await recordFingerprint(db, fresh ?? sub);
+    const now = new Date();
+    const full = !auto || auto.mode === "full";
+    const sellerReplied = auto?.changed.includes("seller_email");
+    const history = [...((prev?.history as any[]) ?? []), ...(prev?.summary ? [{ at: prev.updated_at, summary: prev.summary }] : [])].slice(-10);
+    await db.from("ai_record_memory").upsert({
+      submission_id: sub.id, summary: m.summary || "", waiting_for: m.waiting_for, next_if_silent: m.next_if_silent,
+      due_at: new Date(now.getTime() + m.check_back_days * 86400_000).toISOString(), suspect_problem: m.suspect_problem,
+      reminder_count: sellerReplied || !prev ? 0 : prev.reminder_count ?? 0,
+      fingerprint, last_full_review_at: full ? now.toISOString() : prev?.last_full_review_at ?? null,
+      last_run_id: runId, last_route: auto ? auto.mode : trigger, history, updated_at: now.toISOString(),
+    });
+  } catch (e) { console.warn("memory save failed", e); }
+}
+
+type AutoOpts = { mode: "full" | "catch_up" | "checkback"; changed: FpPart[]; reason: string };
+
+async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string, model: SellerModel = DEFAULT_SELLER_MODEL, ownerId?: string, resume?: any, auto?: AutoOpts) {
   const { data: sub } = await db.from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
   if (!sub) return { status: "skipped", reason: "not found" };
   if (sub.deleted_at || sub.archived_at) return { status: "skipped", reason: "archived or deleted" };
@@ -692,7 +721,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   // Cost control: skip automatic runs when nothing new has happened since the last run.
   const { data: lastRun } = await db.from("ai_agent_runs").select("created_at").eq("submission_id", sub.id).eq("status", "done").order("created_at", { ascending: false }).limit(1).maybeSingle();
   const { data: lastMsg } = await db.from("email_messages").select("received_at,from_email").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
-  if (trigger !== "manual" && trigger !== "refresh" && lastRun) {
+  if (trigger !== "manual" && trigger !== "refresh" && trigger !== "autopilot" && lastRun) {
     const { count: newNotes } = await db.from("customer_notes").select("id", { count: "exact", head: true }).eq("submission_id", sub.id).gt("created_at", lastRun.created_at).not("author_name", "ilike", "AI agent%");
     // Only a seller's email counts as new mail; our own outgoing replies (incl. approved AI replies) don't need a re-review.
     const { count: newInbound } = await db.from("email_messages").select("id", { count: "exact", head: true }).eq("matched_submission_id", sub.id).is("deleted_at", null).gt("received_at", lastRun.created_at).not("from_email", "ilike", "%texascemeterybrokers%");
@@ -744,8 +773,22 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       if (error) throw new Error(error.message);
       return { status: "pending", run_id: run.id, model, stage, scan_usage: meter.snapshot() };
     }
+    const quick = auto && auto.mode !== "full";
+    if (auto) {
+      const { data: mem } = await db.from("ai_record_memory").select("summary,waiting_for,next_if_silent,reminder_count,updated_at").eq("submission_id", sub.id).maybeSingle();
+      const changes = auto.changed.length ? auto.changed.map((c) => PART_LABEL[c]).join("; ") : "nothing";
+      prep.input = `AUTOPILOT VISIT (${auto.mode === "full" ? "full review" : auto.mode === "checkback" ? "check-back, nothing changed" : "catch-up on what changed"}) — no person is reviewing; your reply_email may be sent automatically after a natural delay.
+YOUR NOTE FROM LAST TIME (${mem?.updated_at ?? "none"}): ${mem?.summary || "(none)"}
+Waiting for: ${mem?.waiting_for || "-"} · Planned if silent: ${mem?.next_if_silent || "-"} · Reminders already sent: ${mem?.reminder_count ?? 0}
+CHANGED SINCE THEN: ${changes}
+${quick ? "Read the file below with your note in mind, focusing on what changed. Treat your note as a guide, NOT as truth: if anything changed contradicts it, a staff note gives new facts or instructions, or you are unsure, set memory.escalate true and propose no actions — a full review will follow. For a check-back with nothing changed, send at most one short, warm, non-pushy reminder about the single thing we are waiting for (never repeat a reminder sent in the last few days), or nothing if a reminder would not help. If staff have replied or handled it, propose nothing and just update memory." : "Do a complete review; use your note only as background."}
+
+` + prep.input;
+    }
     if (!prep.skip) {
-      if (!resume) {
+      if (quick) {
+        research = null;
+      } else if (!resume) {
         const r = await researchRecord(db, apiKey, sub, ctx.focus, instruction, (m, usage) => meter.observe(m, usage));
         research = { tools: r.trace, text: r.text };
       } else {
@@ -815,7 +858,8 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       }
     }
     await db.from("ai_agent_runs").update({ status: "done", review_checkpoint: null }).eq("id", run.id);
-    return { status: "done", run_id: run.id, effort, model, scan_usage: meter.snapshot(), decision: d };
+    if (!(auto && auto.mode !== "full" && d.memory.escalate)) await saveMemory(db, sub, run.id, d.memory, auto, trigger);
+    return { status: "done", run_id: run.id, effort, model, scan_usage: meter.snapshot(), decision: d, escalate: !!(auto && auto.mode !== "full" && d.memory.escalate) };
   } catch (e) {
     const msg = String((e as Error).message ?? e);
     await db.from("ai_agent_runs").update({ status: "error", error: msg.slice(0, 1000) }).eq("id", run.id);
@@ -878,7 +922,20 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "AI is not configured" }, 500);
 
-    const parsed = Body.safeParse(await req.json().catch(() => ({})));
+    const raw = await req.json().catch(() => ({}));
+    if (raw?.action === "autopilot_review") {
+      // Server-to-server only (seller-autopilot). Never reachable from a browser.
+      if (!isInternalCall(req)) return json({ error: "Internal only" }, 403);
+      const A = z.object({ submission_id: z.string().uuid(), mode: z.enum(["full", "catch_up", "checkback"]), changed: z.array(z.string()).max(20), reason: z.string().max(300) }).safeParse(raw);
+      if (!A.success) return json({ error: A.error.flatten() }, 400);
+      try {
+        return json(await runForSubmission(db, apiKey, A.data.submission_id, "autopilot", undefined, DEFAULT_SELLER_MODEL, undefined, undefined, { mode: A.data.mode, changed: A.data.changed as FpPart[], reason: A.data.reason }));
+      } catch (e) {
+        const status = (e as any).status;
+        return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
+      }
+    }
+    const parsed = Body.safeParse(raw);
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
     // Reviews are staff-click only. Reject the retired automatic path before any model call.
     const cronTok = req.headers.get("x-agent-cron");

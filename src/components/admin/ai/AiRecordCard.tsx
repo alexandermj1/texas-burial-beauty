@@ -10,6 +10,7 @@ import AiReviewButton from "./AiReviewButton";
 import AiScanCost from "./AiScanCost";
 import { runSellerReview, type ReviewProgress } from "@/lib/runSellerReview";
 import AiReviewProgress from "./AiReviewProgress";
+import AutopilotStrip from "./AutopilotStrip";
 import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../../supabase/functions/seller-agent/scanUsage";
 import { reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
@@ -141,6 +142,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           {run.next_step && <p className="text-indigo-800 dark:text-indigo-200"><span className="font-medium">Next step:</span> {run.next_step}</p>}
         </div>
       )}
+      <AutopilotStrip submissionId={submissionId} refreshKey={run?.created_at} />
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
       {reviewing && (progress ? <AiReviewProgress progress={progress} /> : <p role="status" className="text-sm text-muted-foreground">{run?.stage_summary || "Starting seller review"}</p>)}
       {reviews.length > 1 && <details className="border-t border-border pt-2">
@@ -157,7 +159,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       </details>}
 
       <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
-      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI only looks at this seller when you press Review now.</p>}
+      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI looks again when you press Review now, or by itself if autopilot is on.</p>}
       {(() => { const own = visualOwners(pending); return pending.map((a) => (
         <AiActionCard key={a.id} action={a} prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
