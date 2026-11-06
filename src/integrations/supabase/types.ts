@@ -456,6 +456,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_file_read_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          file_name: string | null
+          result: Json
+          submission_id: string | null
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          file_name?: string | null
+          result: Json
+          submission_id?: string | null
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          file_name?: string | null
+          result?: Json
+          submission_id?: string | null
+        }
+        Relationships: []
+      }
       ai_playbook: {
         Row: {
           change_note: string | null
@@ -486,6 +510,27 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           version?: number
+        }
+        Relationships: []
+      }
+      ai_research_cache: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          research: Json
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          research: Json
+          submission_id: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          research?: Json
+          submission_id?: string
         }
         Relationships: []
       }

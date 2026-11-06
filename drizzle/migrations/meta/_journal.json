@@ -127,6 +127,13 @@
       "when": 1793971785869,
       "tag": "0017_seller_review_checkpoints",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793984094245,
+      "tag": "0018_ai_read_caches",
+      "breakpoints": true
     }
   ]
 }
