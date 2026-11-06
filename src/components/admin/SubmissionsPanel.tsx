@@ -3895,7 +3895,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       </div>
                     </div>
 
-                    {aiPending.has(aiKey(s)) && (() => {
+                    {aiPending.has(aiKey(s)) && !(humanQueueOn && aiOn && humanTasks.get(s.id)) && (() => {
                       const p = aiPending.get(aiKey(s))!;
                       const isFlag = p.type === "flag_human";
                       return (
