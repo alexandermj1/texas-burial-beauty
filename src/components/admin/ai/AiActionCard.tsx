@@ -103,6 +103,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   update_quote_spaces: { label: "Correct quote spaces", Icon: DollarSign, approve: "Correct & send quote" },
   increase_quote_ten_percent: { label: "Revised quote · +10%", Icon: DollarSign, approve: "Send revised quote" },
   resend_expired_quote: { label: "Renew expired quote", Icon: DollarSign, approve: "Re-send quote" },
+  extend_quote_deadline: { label: "Extend quote deadline", Icon: DollarSign, approve: "Extend deadline" },
   send_quote: { label: "Send quote", Icon: DollarSign, approve: "Send quote" },
   resend_email: { label: "Re-send earlier email", Icon: Mail, approve: "Re-send email" },
   set_stage: { label: "Move pipeline stage", Icon: PencilLine, approve: "Move stage" },
