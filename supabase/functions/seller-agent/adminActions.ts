@@ -6,7 +6,7 @@
 //    seller quote pack (same shared HTML builder staff use), re-sending any earlier email,
 //    moving the pipeline stage, re-sending unsigned contract links and signed copies.
 // Every executor runs only after a staff member approves the action.
-import { runAgent, RECORD_TOOLS, ADMIN_READ_TOOLS, parseJson } from "../_shared/recordAgent.ts";
+import { runAgent, runAgentSlice, type ResearchState, RECORD_TOOLS, ADMIN_READ_TOOLS, parseJson } from "../_shared/recordAgent.ts";
 import { buildListingOptionsBlock } from "../_shared/listingOptionsBlock.ts";
 import { suggestedNetPerSpace } from "../_shared/quoteFigures.ts";
 import { properCase, properFirstName } from "../_shared/properCase.ts";
@@ -35,11 +35,15 @@ Return ONLY JSON: {"facts":[{"fact":string,"source":string}] (max 25, each with 
 "answer_material":[string] (specific facts a reply to the seller's latest message would need)}`;
 
 /** Tool-using research pass (cheap fast model). Returns text for the decision prompt plus the trace for staff. */
-export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: string, instruction: string, onUsage?: (model: string, usage: unknown) => void) {
+export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: string, instruction: string, onUsage?: (model: string, usage: unknown) => void, continuation?: { state?: ResearchState }) {
   const { data: dir } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude,transfer_fee").is("deleted_at", null).limit(3000);
   const ctx = { db, apiKey, dir: dir ?? [], deedReads: 0, fileReads: 0, onUsage };
   const task = `Seller record id: ${sub.id}\nSeller: ${sub.name} <${sub.email}>, cemetery: ${sub.cemetery ?? "?"}\n${instruction ? `STAFF INSTRUCTION FOR THIS REVIEW: ${instruction}\n` : ""}CURRENT SNAPSHOT:\n${focus}\n\nResearch this file now.`;
-  const { answer, trace } = await runAgent(ctx as any, RESEARCH_SYS, task, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record");
+  const result = continuation
+    ? await runAgentSlice(ctx, RESEARCH_SYS, task, continuation.state, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record")
+    : await runAgent(ctx, RESEARCH_SYS, task, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record");
+  const { answer, trace } = result;
+  if ("complete" in result && !result.complete) return { complete: false, state: result.state, text: "", trace: trace.map(t => t.tool), mistakes: 0 };
   const a = answer && typeof answer === "object" ? answer : {};
   const list = (x: unknown) => (Array.isArray(x) ? x : []);
   const text = [
@@ -48,7 +52,7 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
     `OPEN PROMISES:\n${list(a.open_promises).slice(0, 10).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
     `ANSWER MATERIAL:\n${list(a.answer_material).slice(0, 12).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
   ].join("\n\n");
-  return { text, trace: trace.map((t) => t.tool), mistakes: list(a.mistakes).length };
+  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: trace.map((t) => t.tool), mistakes: list(a.mistakes).length };
 }
 
 const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

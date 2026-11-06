@@ -195,6 +195,32 @@ export async function chat(apiKey: string, messages: any[], opts: { tools?: any[
   return result?.choices?.[0]?.message ?? {};
 }
 
+export type ResearchState = { messages: any[]; trace: { tool: string; args: unknown }[]; pending: any[]; step: number; deedReads: number; fileReads: number };
+/** One model turn OR one file/tool read per acknowledged request, never replaying an ambiguous call. */
+export async function runAgentSlice(ctx: ToolCtx, system: string, task: string, state?: ResearchState, maxSteps = 9, tools: readonly any[] = RECORD_TOOLS, label = "AI researching a record") {
+  const s: ResearchState = state ?? { messages: [{ role: "system", content: system }, { role: "user", content: task }], trace: [], pending: [], step: 0, deedReads: 0, fileReads: 0 };
+  ctx.deedReads = s.deedReads; ctx.fileReads = s.fileReads;
+  if (s.pending.length) {
+    const tc = s.pending.shift();
+    let args: any = {}; try { args = JSON.parse(tc.function?.arguments || "{}"); } catch { /* invalid tool input */ }
+    s.trace.push({ tool: tc.function?.name, args });
+    const result = await runTool(ctx, tc.function?.name, args);
+    s.messages.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(result).slice(0, 20000) });
+    s.deedReads = ctx.deedReads; s.fileReads = ctx.fileReads ?? 0;
+    return { complete: false, state: s, answer: null, trace: s.trace };
+  }
+  const final = s.step >= maxSteps;
+  if (final) s.messages.push({ role: "user", content: "Stop using tools. Give your final JSON answer now." });
+  const msg = await chat(ctx.apiKey, s.messages, { ...(final ? { json: true } : { tools: [...tools] }), label: `${label} (${final ? "final answer" : `step ${s.step + 1}`})`, onUsage: ctx.onUsage });
+  s.step++;
+  s.messages.push({ role: "assistant", content: msg.content ?? "", ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
+  s.pending = msg.tool_calls ?? [];
+  if (s.pending.length) return { complete: false, state: s, answer: null, trace: s.trace };
+  const answer = parseJson(msg.content);
+  if (!answer) throw new Error("Research did not return a complete result; no decision started.");
+  return { complete: true, state: s, answer, trace: s.trace };
+}
+
 /** Bounded tool loop: at most `maxSteps` model turns, then forces a final JSON answer. */
 export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSteps = 7, tools: readonly any[] = RECORD_TOOLS, label = "AI researching a record"): Promise<{ answer: any; trace: { tool: string; args: unknown }[] }> {
   const messages: any[] = [{ role: "system", content: system }, { role: "user", content: task }];
