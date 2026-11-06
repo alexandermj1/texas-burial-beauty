@@ -1107,6 +1107,14 @@ Deno.serve(async (req) => {
           if (chk.status === "conflict") throw new Error(`Deed check stopped this: ${chk.summary} Fix the deed owner names / plot wording, then approve again.`);
           const { data: fresh } = await db.from("contact_submissions").select("deed_owner_names,plot_description").eq("id", sub.id).maybeSingle();
           if (!String(fresh?.deed_owner_names ?? "").trim() || !String(fresh?.plot_description ?? "").trim()) throw new Error("Deed owner names and the exact plot wording must be filled in before the agreement or family tree goes out.");
+          // A tree saved earlier (e.g. by staff or an AI edit) is shown instead of the deed names — it must start from the same people.
+          const savedTree = ((sub.ownership_answers ?? {}) as Record<string, any>).v2;
+          if (!(sub.ownership_answers as any)?.sellerConfirmedAt && Array.isArray(savedTree?.deed) && savedTree.deed.length) {
+            const norm = (x: string) => x.toLowerCase().replace(/\b(and|or)\b|[^a-z ]/g, " ").split(/\s+/).filter((w) => w.length > 1).sort().join(" ");
+            const treeNames = norm(savedTree.deed.map((d: any) => String(d?.n ?? "")).join(" "));
+            if (treeNames !== norm(String(fresh?.deed_owner_names ?? ""))) throw new Error(`The family tree already saved on this record starts from "${savedTree.deed.map((d: any) => d?.n).join(", ")}", which doesn't match the deed owners "${fresh?.deed_owner_names}". Correct the family tree (or deed owner names) first, then approve again.`);
+          }
+          if (chk.status === "no_deed") await aiNote(`Couldn't read a deed on file before sending (${chk.summary}), so the family tree starts from the deed owner names on the record: ${fresh?.deed_owner_names}.`);
           if (chk.status === "filled") await aiNote(`Read the deed and filled in ${Object.keys(chk.patch ?? {}).map((k) => FIELD_LABEL[k] ?? k).join(" and ")}: ${chk.summary}`);
           else if (chk.status === "match") await aiNote(`Checked the deed against the record before sending — ${chk.summary}`);
         }
