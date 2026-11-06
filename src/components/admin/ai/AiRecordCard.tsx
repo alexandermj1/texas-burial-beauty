@@ -8,6 +8,7 @@ import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
 import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
 import AiReviewButton from "./AiReviewButton";
 import AiScanCost from "./AiScanCost";
+import { runSellerReview } from "@/lib/runSellerReview";
 import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../../supabase/functions/seller-agent/scanUsage";
 import { reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
@@ -31,6 +32,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const [reviews, setReviews] = useState<Run[]>([]);
   const [actions, setActions] = useState<AiAction[]>([]);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState("");
   const [paused, setPaused] = useState(!!pausedAt);
   const [showHistory, setShowHistory] = useState(false);
   const [instruction, setInstruction] = useState("");
@@ -67,11 +69,12 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const review = async (selectedModel: SellerModel, instructionText?: string) => {
     setBusy(true);
     try {
-      const r = await callSellerAgent({ action: "run", submission_id: submissionId, model: selectedModel, ...(instructionText ? { instruction: instructionText } : {}) });
+      const r = await runSellerReview(submissionId, selectedModel, instructionText, setProgress);
       if (r?.status !== "done") toast({ title: "AI skipped this seller", description: r?.reason });
       await load();
-    } catch (e) { toast({ title: "AI review failed", description: (e as Error).message, variant: "destructive" }); }
+    } catch (e) { toast({ title: "AI review failed", description: (e as Error).message, variant: "destructive" }); await load(); }
     setBusy(false);
+    setProgress("");
   };
 
   const togglePause = async (v: boolean) => {
@@ -130,6 +133,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         </div>
       )}
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
+      {busy && <p role="status" className="text-sm text-muted-foreground">{progress || "Starting seller review"}</p>}
       {reviews.length > 1 && <details className="border-t border-border pt-2">
         <summary className="cursor-pointer text-xs text-muted-foreground">Recent model reviews</summary>
         <ul className="mt-2 space-y-3">

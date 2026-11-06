@@ -8,6 +8,7 @@ import { Loader2, RefreshCw, BookOpen } from "lucide-react";
 import AiActionCard, { type AiAction as Action , visualOwners } from "./ai/AiActionCard";
 import AiReviewButton from "./ai/AiReviewButton";
 import AiScanCost from "./ai/AiScanCost";
+import { runSellerReview } from "@/lib/runSellerReview";
 import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { sellerModelLabel } from "../../../supabase/functions/seller-agent/models";
@@ -60,7 +61,13 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
   const sweep = async (model: SellerModel) => {
     setBusy("sweep");
     try {
-      const r = await call({ action: "sweep", limit: 8, model });
+      const selected = await call({ action: "sweep", limit: 8, model });
+      const results = [];
+      for (const seller of selected.results ?? []) {
+        const result = await runSellerReview(seller.submission_id, model);
+        results.push({ ...result, model });
+      }
+      const r = { processed: results.filter(x => x.status === "done").length, results };
       setScanResults((r?.results ?? []).filter((x: { status: string }) => x.status === "done"));
       toast({ title: `Reviewed ${r?.processed ?? 0} sellers`, description: "New proposals are in the queue." });
       await load();
@@ -73,7 +80,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
     if (!id) return;
     setBusy("one");
     try {
-      const r = await call({ action: "run", submission_id: id, model });
+      const r = await runSellerReview(id, model);
       setScanResults(r?.status === "done" ? [{ model, scan_usage: r.scan_usage }] : []);
       toast({ title: r?.status === "done" ? "Seller reviewed" : "Skipped", description: r?.reason ?? r?.decision?.next_step });
       setRunId("");
