@@ -15,6 +15,7 @@ import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
 import { sellerDecision } from "./decisionModel.ts";
 import { claimPhase } from "./reviewContinuation.ts";
+import { researchProgress, decisionProgress } from "./reviewProgress.ts";
 import { createScanMeter, type ScanMeter } from "./scanUsage.ts";
 import { listModels } from "npm:@lovable.dev/ai-gateway@0.1.11";
 import { canExtendQuote, extendedDeadline, saveQuoteExtension } from "./quoteDeadline.ts";
@@ -546,8 +547,8 @@ async function loadScans(db: SupabaseClient, sub: Sub) {
   return { parts, names, refs };
 }
 
-async function callModel(_apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: Parameters<typeof sellerDecision>[3] = [], model: SellerModel = DEFAULT_SELLER_MODEL, meter?: ScanMeter) {
-  return sellerDecision(instructions, input, effort, media, model, meter);
+async function callModel(_apiKey: string, instructions: string, input: string, effort: "low" | "medium" = "medium", media: Parameters<typeof sellerDecision>[3] = [], model: SellerModel = DEFAULT_SELLER_MODEL, meter?: ScanMeter, onProgress?: Parameters<typeof sellerDecision>[6]) {
+  return sellerDecision(instructions, input, effort, media, model, meter, onProgress);
 }
 
 function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = false) {
@@ -727,15 +728,17 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       const { parts: _parts, ...scanInfo } = prep.scans;
       const { error } = await db.from("ai_agent_runs").update({ status: "research_ready", stage_summary: "Checking seller file", scan_usage: meter.snapshot(), review_checkpoint: { ownerId, instruction, ctx, prep: { ...prep, scans: scanInfo }, recordUpdatedAt: sub.updated_at, researchState: null } }).eq("id", run.id);
       if (error) throw new Error(error.message);
-      return { status: "pending", run_id: run.id, model, stage: "Checking seller file" };
+      return { status: "pending", run_id: run.id, model, stage: "Seller details loaded — starting evidence checks", scan_usage: meter.snapshot() };
     }
     if (resume?.status === "research_running") {
+      const currentStage = researchProgress(checkpoint.researchState);
+      await db.from("ai_agent_runs").update({ stage_summary: currentStage, scan_usage: { ...meter.snapshot(), current_call_pending: true } }).eq("id", run.id);
       const r = await researchRecord(db, apiKey, sub, ctx.focus, checkpoint.instruction, (m, usage) => meter.observe(m, usage), { state: checkpoint.researchState ?? undefined });
       const next = { ...checkpoint, researchState: r.state, ...(r.complete ? { research: { tools: r.trace, text: r.text } } : {}) };
-      const stage = r.complete ? `Deciding next steps (${model})` : `Checking seller file (${r.trace.length} lookups)`;
+      const stage = r.complete ? decisionProgress(model) : `${researchProgress(r.state)} · ${r.trace.length} checks completed`;
       const { error } = await db.from("ai_agent_runs").update({ status: r.complete ? "decision_ready" : "research_ready", stage_summary: stage, scan_usage: meter.snapshot(), review_checkpoint: next }).eq("id", run.id);
       if (error) throw new Error(error.message);
-      return { status: "pending", run_id: run.id, model, stage };
+      return { status: "pending", run_id: run.id, model, stage, scan_usage: meter.snapshot() };
     }
     if (!prep.skip) {
       if (!resume) {
@@ -757,7 +760,12 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
       return { status: "done", run_id: run.id, effort: "triage", decision: { actions: [], ...prep.skip } };
     }
     const scans = prep.scans;
-    const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts, model, meter);
+    const publishProgress = async (characters: number, usage?: unknown) => {
+      await db.from("ai_agent_runs").update({ stage_summary: `${decisionProgress(model)}${characters ? ` · ${characters.toLocaleString()} answer characters received` : ""}`, scan_usage: meter.live(model, usage) }).eq("id", run.id);
+    };
+    await publishProgress(0);
+    const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts, model, meter, publishProgress);
+    await db.from("ai_agent_runs").update({ stage_summary: "Checking suggested actions against approval safeguards", scan_usage: meter.snapshot() }).eq("id", run.id);
     const attentionEnabled = await attentionQueueEnabled(db);
     const d = parseDecision(raw, allowed, attentionEnabled);
     if (attentionEnabled) d.actions = d.actions.filter((a) => a.type !== "flag_human" || a.human_attention);
