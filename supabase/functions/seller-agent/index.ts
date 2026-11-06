@@ -14,6 +14,7 @@ import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 
 import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
 import { sellerDecision } from "./decisionModel.ts";
+import { canExtendQuote, extendedDeadline, saveQuoteExtension } from "./quoteDeadline.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -205,6 +206,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
   const liveLink = la.find((c) => ["sent", "viewed"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()));
   const out = new Set(["reply_email", "add_note", "flag_human", "update_fields"]);
+  if (canExtendQuote(sub, signed)) out.add("extend_quote_deadline");
   // All customer-facing quote changes still require staff approval.
   if (accepted && !signed && !la.some((c) => ["sent", "viewed"].includes(c.status))) out.add("send_listing_agreement");
   if (accepted && !signed && liveLink) out.add("resend_signing_link");
@@ -235,6 +237,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - add_note: internal team note on the profile. Field: note.
 - flag_human: ONLY when a phone call is genuinely required (the seller asks to be called, or we must ring the cemetery for a new price/confirmation). Field: note = who to call and exactly what to ask. Everything else you solve yourself with the other actions. Always pair it with the reply_email/notes/record fixes you can do now (e.g. answer what you can and say a colleague will ring them).
 - update_fields: correct descriptive record fields ONLY from facts the seller or a document clearly states. Field: fields = object with keys from ${EDITABLE_FIELDS.join(", ")}. Never prices, stages, dates or names from guesses.
+- extend_quote_deadline: give an unaccepted quote more time when the seller asks or context warrants it, BEFORE or after expiry. Fields: fields = {quote_expires_at: exact ISO timestamp with timezone}. Pick a sensible later deadline covering the requested discussion/decision time, use Texas local time for the seller, and explain why. Approval saves only the expiry; prices, spaces, fees, terms, original quote email/buttons and quote_sent_at stay unchanged. Pair with reply_email confirming the specific new date; the extension MUST be approved before that reply is sent. Do not defer a routine extension to a person or say you cannot extend it. An expired quote needing a new pack can still use resend_expired_quote instead.
 - send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
@@ -595,6 +598,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
 }
 
 const FIELD_KEYS: Record<string, string[]> = {
+  extend_quote_deadline: ["quote_expires_at"],
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
   send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery"], send_document_request: ["greeting_name", "plot_description", "section", "lawn", "space_numbers"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
 };
@@ -622,6 +626,10 @@ function parseVisuals(v: unknown) {
 const DOC_KIND_LABEL: Record<string, string> = { listing_agreement: "Listing agreement", poa: "Power of attorney", affidavit_heirship: "Affidavit of heirship", spousal_consent: "Spousal consent" };
 /** What approving a change will do, worked out up front so staff can see it before approving. */
 async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
+  if (a.type === "extend_quote_deadline") {
+    const next = extendedDeadline(sub, a.fields?.quote_expires_at);
+    return { fields: [{ label: "quote deadline", before: String(sub.quote_expires_at ?? "10 days after quote sent"), after: next }] };
+  }
   if (a.type === "fix_document_request" || a.type === "update_fields" || a.type === "update_quote_spaces") {
     const fields = Object.entries(a.fields ?? {}).map(([k, v]) => ({ label: (FIELD_LABEL as any)[k] ?? k.replace(/_/g, " "), before: String(sub[k] ?? "").trim() || "(blank)", after: String(v) }))
       .filter((f) => f.before !== f.after);
@@ -746,7 +754,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
-    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
+    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["extend_quote_deadline", "edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
     // An invalid family-tree edit or unknown cemetery is dropped rather than shown as approvable.
     const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
     if (dropped.size) { console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid)); d.actions = d.actions.filter((_, i) => !dropped.has(i)); previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i))); }
@@ -1215,6 +1223,9 @@ Deno.serve(async (req) => {
           const n = Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1);
           const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), await deedReady(), { perSpace: increased, count: n, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
           await aiNote(`Sent ${first(sub)} a revised quote at $${increased.toLocaleString()} per space (10% above $${Number(sub.quote_amount).toLocaleString()}; $${r.total.toLocaleString()} for ${n}) and a separate email explaining it.`);
+        } else if (act.action_type === "extend_quote_deadline") {
+          const next = await saveQuoteExtension(db, sub, act.payload?.fields?.quote_expires_at);
+          await aiNote(`Extended ${first(sub)}'s quote deadline to ${new Date(next).toLocaleString("en-US", { timeZone: "America/Chicago", dateStyle: "long", timeStyle: "short" })} Texas time. Prices, spaces and listing terms stay unchanged. ${act.reason ?? ""}`);
         } else if (act.action_type === "resend_expired_quote") {
           if (!quoteExpired(sub) || !sub.email || !(Number(sub.quote_amount) > 0)) throw new Error("This quote is no longer expired or has no saved price. Review it manually.");
           const n = Math.max(1, Number(sub.plot_count ?? sub.spaces) || 1);
