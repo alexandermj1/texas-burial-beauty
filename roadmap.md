@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Current request
-- [ ] Fix Seller AI per-click model selection including instructions; enable available Opus 5.5 and report unavailable Sonnet 5.5 honestly; persist model and per-scan cost conversion at 0.3, verify alternating models without customer emails.
+- [x] Require explicit Seller AI model selection including instructions; Astra/Sol/Opus 5.5 deployed and signed-in alternating reviews verified on AI TEST 2, instruction Sol persists after reload; model plus scan estimates aggregate research/decision usage and credits × 0.3. Unsupported/missing model rejected without inference; no emails/actions executed; preview clean.
+- [ ] Enable requested Sonnet 5.5 — blocked: not present in verified workspace model catalog; no substitution made.
 - [x] Allow appropriate seller quote-deadline extensions before expiry via dedicated approved expiry-only action; active playbook v13 saved, handler deployed, 14 relevant tests pass. Signed-in AI TEST 3 proposed extension plus reply; approved only extension and read back saved note, email left unsent. Glenda's existing deadline and suggestions untouched.
 - [x] Enable Astra/Sol selection for manual Seller AI reviews and labelled recent review history; both completed through the signed-in UI on Alexander AI TEST 2, gateway logs confirm correct models, 32 tests pass and build clean. No customer emails sent; function deployed, frontend publication remains owner-controlled.
 - [x] Build disabled seller-AI human-attention queue: AI-chosen priority/importance, specific staff task/reason/evidence notes, record-ID top-of-list ordering and outcome-based resolution. Hard release lock false plus strict boolean setting; no activation, deployment, live settings or customer changes. 34 tests pass; signed-in admin unchanged with no page errors, build clean. Live task creation/resolution intentionally deferred until owner-authorized activation testing.
