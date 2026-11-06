@@ -86,9 +86,9 @@ const splitTakers = (s: string) => {
 /** "John Smith & Mary Smith" / "John and Mary Smith" → separate names (same as the current page). */
 const splitDeedNames = (raw?: string | null): string[] => {
   const source = String(raw ?? "").replace(/\s+/g, " ").trim();
-  const shared = source.match(/^([A-Za-z.'-]+)\s+(?:and|&)\s+([A-Za-z.'-]+)\s+([A-Za-z.'-]+)$/i);
+  const shared = source.match(/^([A-Za-z.'-]+)\s+(?:and|or|&)\s+([A-Za-z.'-]+)\s+([A-Za-z.'-]+)$/i);
   const normalized = shared ? `${shared[1]} ${shared[3]}, ${shared[2]} ${shared[3]}` : source;
-  return normalized.split(/\s*(?:,|;|\/|&|\band\b)\s*/i).map((s) => s.trim())
+  return normalized.split(/\s*(?:,|;|\/|&|\band\b|\bor\b)\s*/i).map((s) => s.trim())
     .filter((s) => s.length > 1 && !/^(unknown|n\/?a|none)$/i.test(s));
 };
 const blankTree = (names: string[], dead: Set<string>): Tree => ({
