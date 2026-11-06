@@ -1,6 +1,5 @@
-import type { MessagesRequest, ResponsesInputItem } from "npm:@lovable.dev/ai-gateway@0.1.11";
-type InputContent = Exclude<Extract<ResponsesInputItem, { content: unknown }>['content'], string>;
-type ClaudeContent = Exclude<MessagesRequest['messages'][number]['content'], string>;
+type InputContent = ({ type: "input_text"; text: string } | { type: "input_image"; image_url?: string | null } | { type: "input_file"; file_data?: string; filename?: string } )[];
+type ClaudeContent = ({ type: "text"; text: string } | { type: "image"; source: { type: "base64"; media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp"; data: string } } | { type: "document"; title: string; source: { type: "base64"; media_type: "application/pdf"; data: string } })[];
 export function claudeMedia(media: InputContent): ClaudeContent {
   return media.map(part => {
     if (part.type === "input_text") return { type: "text", text: part.text };
