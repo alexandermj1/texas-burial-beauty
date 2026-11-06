@@ -1,6 +1,6 @@
 import { pendingRecordChanges } from "../../supabase/functions/_shared/originalDocumentReceipt";
-type Action = { id: string; run_id?: string | null; submission_id: string; status: string; action_type: string };
-export function replyDependencies(actions: Action[], reply: Action): Action[] {
+type Action = { id: string; run_id?: string | null; submission_id: string; status: string; action_type: string; error?: string | null };
+export function replyDependencies<T extends Action>(actions: T[], reply: Action): T[] {
   if (reply.action_type !== "reply_email") return [];
   return actions.filter(a => a.submission_id === reply.submission_id && pendingRecordChanges([a], reply));
 }
