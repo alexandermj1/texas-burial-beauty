@@ -1,6 +1,9 @@
 # Roadmap
 
 ## Current request
+- [ ] Redesign left submission cards without plot thumbnails; show staff tasks on every selected record.
+- [ ] Re-review overlooked unanswered sellers and abandoned manual suggestions without bypassing genuine staff tasks.
+- [ ] Enable safe AI cemetery correction/creation with directory duplicate matching.
 - [x] Show compact saved AI findings/waiting-for/next-step notes and distinguish silent follow-ups from unanswered priority and staff ownership. Signed-in desktop/phone verified; 23 tests pass, preview clean. Deployed paginated unanswered-mail-first sweeps, matching-address fingerprints, pre-review snapshots and new-mail cancellation wake; limits/human gates preserved. No manual live sweep or test emails sent; next scheduled sweep completion not observed.
 - [x] Add Alexander's daily Seller AI token/estimated USD tally and per-review estimates in the control center from shared paginated saved usage; UTC days, seven-day history and partial telemetry labels. Signed-in totals/history/activity read back; 21 tests pass, preview clean.
 - [x] Remove old red list headlines/summaries and their browse-time inference, unify factual AI/staff notes, consolidate secondary tags to quiet icons; signed-in feed, control-center activity-to-record click and 390px layout verified without overflow. Existing control restrictions and automation behavior preserved; no customer email or settings changes during testing.
