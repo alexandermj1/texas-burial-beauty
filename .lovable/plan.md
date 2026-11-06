@@ -23,17 +23,25 @@ Every review ends with a short **check-back note** saved on the record:
 
 Staff can see this note and its date in the Seller AI box, and can change the date or cancel it.
 
-## 3. Cheap wake-ups (the main token saver)
-A background check runs every 10 minutes. It looks only at records whose check-back date has arrived or that received a new email, and it uses **no AI at all** to decide what to do:
+## 3. Cheap wake-ups that still adapt
+The note helps the AI pick up where it left off, but it never replaces the record itself. A background check runs every 10 minutes and compares the record with the saved fingerprint, piece by piece. **If anything meaningful has changed, it runs a full fresh review** and makes a new plan.
+
+**Always a full Sol review** (it reads the whole record again and treats the old note only as background):
+- **From the seller:** a new email, or a form they submitted or changed.
+- **Files:** any uploaded, removed or relinked file, including staff uploads.
+- **Money and signatures:** a contract signed, sent or voided; any payment or refund.
+- **Record changes:** a change to the stage, listing option, record fields, family tree or document request.
+- **Staff notes:** a note that contradicts the AI's last note, gives an instruction, or mentions a new fact.
+
+**Cheap paths, used only when they are safe:**
 
 | What changed since the note | What it does | Cost |
 |---|---|---|
-| Nothing, and the check-back date has arrived | Sends the follow-up already planned in the note, using a small template-based reminder written by the cheapest model from the note alone | about 1¢ |
-| Only a staff note | A cheap model reads the note and decides: "staff handled it, move the date", "staff asked AI to do X", or "needs a full review" | under 1¢ |
-| A new seller email, file, payment or signature | Full Sol review (with existing cached research and file reads) | as today |
+| Nothing at all, and the check-back date has arrived | The AI rereads only the latest summary and the plan, sends the planned reminder, then sets a new date. Before sending, it checks the record again so it doesn't reply to stale information. | about 1¢ |
+| Only a staff note, with no other change | A cheap model reads the note alongside the AI's last note. If the staff note just confirms progress, it moves the date. If it adds new information, contradicts the plan, or anything is uncertain, it moves up to a full review. | under 1¢ |
 | A person is handling the record (open human-attention task) | Does nothing until the task is resolved | 0 |
 
-The fingerprint is compared **piece by piece**, so the AI knows exactly what changed (for example, "only a note from Cici at 3pm"). It doesn't have to reread the whole file to find out.
+**When in doubt, it does a full review.** The cheap path never sends anything that depends on facts it hasn't seen. Separately, every active record gets a full review at least every 14 days, even if nothing seems to have changed, so nothing drifts unnoticed.
 
 ## 4. Safety limits
 - **One review at a time:** only one automatic review can run on a record at once (a lock in the database).
