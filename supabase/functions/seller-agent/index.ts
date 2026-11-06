@@ -691,11 +691,11 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
 }
 
 /** The AI's file note for next time + a fingerprint of the record as it saw it. */
-async function saveMemory(db: SupabaseClient, sub: Sub, runId: string, m: any, auto: AutoOpts | undefined, trigger: string) {
+async function saveMemory(db: SupabaseClient, sub: Sub, runId: string, m: any, auto: AutoOpts | undefined, trigger: string, reviewedFingerprint?: Awaited<ReturnType<typeof recordFingerprint>>) {
   try {
     const { data: prev } = await db.from("ai_record_memory").select("reminder_count,last_full_review_at,history,summary,updated_at").eq("submission_id", sub.id).maybeSingle();
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
-    const fingerprint = await recordFingerprint(db, fresh ?? sub);
+    const fingerprint = reviewedFingerprint ?? await recordFingerprint(db, fresh ?? sub);
     const now = new Date();
     const full = !auto || auto.mode === "full";
     const sellerReplied = auto?.changed.includes("seller_email");
@@ -749,6 +749,8 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   const meter = await createScanMeter(listModels);
   if (resume) meter.restore(resume.scan_usage);
   const checkpoint = resume?.review_checkpoint;
+  // Capture before loading the reviewed context: mail arriving during inference remains unreviewed.
+  const reviewedFingerprint = auto ? await recordFingerprint(db, sub) : undefined;
   const ctx = checkpoint?.ctx ?? await buildContext(db, sub, lean ? apiKey : null, meter);
   const run = resume ?? (await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger: reviewTrigger(trigger, model), decision_model: model, playbook_version: playbook.version }).select("id").single()).data;
   if (!run) throw new Error("Could not start review");
@@ -867,7 +869,7 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
       const head = String(sub.ai_summary ?? "").includes("||") ? String(sub.ai_summary).split("||")[0].trim() : "";
       await db.from("contact_submissions").update({ ai_summary: `${head}||${d.list_summary}`, ai_summary_at: new Date().toISOString() }).eq("id", sub.id);
     }
-    if (!(auto && auto.mode !== "full" && d.memory.escalate)) await saveMemory(db, sub, run.id, d.memory, auto, trigger);
+    if (!(auto && auto.mode !== "full" && d.memory.escalate)) await saveMemory(db, sub, run.id, d.memory, auto, trigger, reviewedFingerprint);
     return { status: "done", run_id: run.id, effort, model, scan_usage: meter.snapshot(), decision: d, escalate: !!(auto && auto.mode !== "full" && d.memory.escalate) };
   } catch (e) {
     const msg = String((e as Error).message ?? e);

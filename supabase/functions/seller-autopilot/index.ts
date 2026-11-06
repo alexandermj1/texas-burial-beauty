@@ -9,6 +9,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { isInternalCall } from "../_shared/internal-auth.ts";
 import { recordFingerprint } from "../_shared/recordFingerprint.ts";
 import { routeWake, replySendAt, inConversation, isQuietTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
+import { sellerWakeCandidates, sellerMailOutgoing } from "../_shared/sellerWakeCandidates.ts";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-automation-secret" };
 const JOB = "seller-autopilot";
@@ -75,8 +76,12 @@ async function sendDue(mode: string) {
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", o.submission_id).maybeSingle();
     if (!act || act.status !== "proposed") { await cancel("Suggestion already handled or replaced"); continue; }
     if (!eligible(sub, mode)) { await cancel("Record no longer on autopilot"); continue; }
-    const { data: newer } = await db.from("email_messages").select("id,from_email").eq("matched_submission_id", o.submission_id).is("deleted_at", null).gt("received_at", act.created_at).limit(5);
-    if ((newer ?? []).some((e) => !/texascemeterybrokers/i.test(e.from_email ?? ""))) { await cancel("Seller wrote again — a fresh reply will be drafted"); continue; }
+    const { data: newer } = await db.from("email_messages").select("id,from_email").eq("matched_submission_id", o.submission_id).is("deleted_at", null).gt("received_at", act.created_at);
+    if ((newer ?? []).some((e) => !sellerMailOutgoing(e.from_email))) {
+      await cancel("Seller wrote again — a fresh reply will be drafted");
+      await db.from("ai_record_memory").update({ fingerprint: null, due_at: new Date().toISOString() }).eq("submission_id", o.submission_id);
+      continue;
+    }
     if ((newer ?? []).length) { await cancel("Our team already emailed since this was drafted"); continue; }
     if (await humanOpen(o.submission_id)) { await cancel("A person is handling this record"); continue; }
     if (await emailsToday(o.submission_id) >= MAX_EMAILS_PER_SELLER_DAY) { await db.from("ai_outbox").update({ send_at: new Date(Date.now() + 86400_000).toISOString() }).eq("id", o.id); continue; }
@@ -102,9 +107,11 @@ async function sendDue(mode: string) {
     const now = new Date().toISOString();
     await db.from("ai_outbox").update({ status: "sent", sent_at: now, status_reason: done.map(STEP_LABEL).join(", ") || null }).eq("id", o.id);
     // Remember the file as it is now (our email is part of it) so the next visit doesn't treat it as new.
-    const { data: mem } = await db.from("ai_record_memory").select("reminder_count,last_route").eq("submission_id", sub.id).maybeSingle();
+    const { data: mem } = await db.from("ai_record_memory").select("reminder_count,last_route,fingerprint").eq("submission_id", sub.id).maybeSingle();
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
-    await db.from("ai_record_memory").update({ fingerprint: await recordFingerprint(db, fresh ?? sub), reminder_count: (mem?.reminder_count ?? 0) + (mem?.last_route === "checkback" ? 1 : 0) }).eq("submission_id", sub.id);
+    const after = await recordFingerprint(db, fresh ?? sub);
+    // Acknowledge our sent mail only; never swallow concurrent seller/evidence changes.
+    await db.from("ai_record_memory").update({ fingerprint: mem?.fingerprint ? { ...mem.fingerprint, our_email: after.our_email } : null, reminder_count: (mem?.reminder_count ?? 0) + (mem?.last_route === "checkback" ? 1 : 0) }).eq("submission_id", sub.id);
     out.push({ id: o.id, sent: true });
   }
   return out;
@@ -145,33 +152,35 @@ async function wake(mode: string, dailyReviews: number) {
   const { count: today } = await db.from("ai_agent_runs").select("id", { count: "exact", head: true }).like("trigger", "autopilot:%").gte("created_at", since);
   let budget = Math.min(MAX_REVIEWS_PER_RUN, dailyReviews - (today ?? 0));
   if (budget <= 0) return [{ skipped: "Daily review limit reached" }];
-  const ids = new Set<string>();
-  const { data: dueMem } = await db.from("ai_record_memory").select("submission_id").lte("due_at", new Date().toISOString()).order("due_at").limit(40);
-  for (const m of dueMem ?? []) ids.add(m.submission_id);
-  const { data: inbound } = await db.from("email_messages").select("matched_submission_id,from_email").not("matched_submission_id", "is", null).gte("received_at", new Date(Date.now() - 3 * 86400_000).toISOString()).is("deleted_at", null).order("received_at", { ascending: false }).limit(200);
-  for (const e of inbound ?? []) if (!/texascemeterybrokers/i.test(e.from_email ?? "")) ids.add(e.matched_submission_id!);
-  if (mode === "all") {
-    // Every active seller gets a first full review and a plan, a few at a time.
-    const { data: active } = await db.from("contact_submissions").select("id").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null).order("updated_at", { ascending: false }).limit(300);
-    const { data: known } = await db.from("ai_record_memory").select("submission_id").in("submission_id", (active ?? []).map((a) => a.id));
-    const has = new Set((known ?? []).map((k) => k.submission_id));
-    for (const a of active ?? []) if (!has.has(a.id)) ids.add(a.id);
-  }
-  if (mode === "selected") {
-    const { data: picked } = await db.from("contact_submissions").select("id").eq("ai_autopilot", true).is("deleted_at", null).limit(200);
-    for (const p of picked ?? []) ids.add(p.id);
-  }
-  let looked = 0;
+  const readPages = async (table: string, fields: string) => {
+    const rows: any[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const { data, error } = await db.from(table).select(fields).order("id").range(offset, offset + 499);
+      if (error) throw new Error(`Could not read ${table} for seller wake: ${error.message}`);
+      rows.push(...(data ?? []));
+      if ((data ?? []).length < 500) return rows;
+    }
+  };
+  // Light metadata only: no three-day/global-message cap can hide an unanswered seller.
+  const [allSubs, allMail, memories] = await Promise.all([
+    readPages("contact_submissions", "id,email,created_at,customer_kind,deleted_at,archived_at,closed_at,sold_at,ai_paused_at,ai_autopilot,reply_dismissed_at,ownership_answers"),
+    readPages("email_messages", "id,matched_submission_id,from_email,to_email,received_at,deleted_at"),
+    readPages("ai_record_memory", "id,submission_id,due_at"),
+  ]);
+  const active = allSubs.filter(s => eligible(s, mode));
+  const activeIds = new Set(active.map(s => s.id));
+  const due = memories.filter(m => activeIds.has(m.submission_id) && m.due_at && Date.parse(m.due_at) <= Date.now()).sort((a,b) => a.due_at.localeCompare(b.due_at)).map(m => m.submission_id);
+  const ids = sellerWakeCandidates(active, allMail.filter(e => !e.deleted_at), due, new Set(memories.map(m => m.submission_id)));
   for (const sid of ids) {
-    if (budget <= 0 || ++looked > 60) break;
+    if (budget <= 0) break;
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", sid).maybeSingle();
     if (!eligible(sub, mode)) continue;
     const { count: held } = await db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "held");
     const { data: memory } = await db.from("ai_record_memory").select("*").eq("submission_id", sid).maybeSingle();
     if (memory?.last_route === "error" && Date.parse(memory.updated_at) > Date.now() - 2 * 3600_000) continue; // back off after a failed review
     // Suggestions waiting on staff while the seller waits for an answer: ask a person rather than redrafting.
-    const { data: stale } = await db.from("ai_agent_actions").select("id").eq("submission_id", sid).eq("status", "proposed").neq("action_type", "flag_human").lt("created_at", new Date(Date.now() - 24 * 3600_000).toISOString()).limit(1);
-    if (stale?.length && !(await humanOpen(sid))) {
+    const { data: stale } = await db.from("ai_agent_actions").select("id").eq("submission_id", sid).eq("status", "proposed").is("deleted_at", null).neq("action_type", "flag_human").lt("created_at", new Date(Date.now() - 24 * 3600_000).toISOString()).limit(1);
+    if (!held && stale?.length && !(await humanOpen(sid))) {
       await flagHuman(sub, "AI suggestions on this file have been waiting for approval for over a day — please approve or decline them so the seller isn't left waiting.");
       out.push({ sid, route: "stale_approvals" }); continue;
     }
