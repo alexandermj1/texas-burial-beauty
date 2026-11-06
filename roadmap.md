@@ -210,3 +210,4 @@
 - [x] Buyer AI auto replies ~20 min after inquiry (10-min sweep)
 - [x] Seller AI autopilot: adaptive check-backs, full rescan on any meaningful record change
 - [x] Autopilot memory: change-only reviews from saved record memory; full review when much changed or a problem is suspected
+- [x] Switch seller autopilot fully on (all sellers, Sonnet 5): carries out its own server steps then replies with natural delay; Documents-panel steps/failures go to yellow "Staff needed" boxes at the top of the list; AI writes each record's list sentence; on/off switch + reply log on AI page. Trial on AI TEST 2 ran on Sonnet, note auto-applied, list sentence replaced.
