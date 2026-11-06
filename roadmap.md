@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Fix stalled manual seller reviews across Astra/Sol/Opus: checkpoint research and decision separately, preserve explicit model and approvals, verify a large-record review and model switching.
 - [x] Red USD scan cost above seller name and in AI heading; picker shows standard input/output credit rates and Astra-relative token prices. Reproduced Glenda reply 409 (unapproved deadline), added shared dependency ordering and disabled-send links in record and queue. Desktop screenshots verified; 24 tests pass, build OK; phone overflow absent but phone record display not verified. No customer email or quote change.
 - [ ] Show Lovable recorded credits automatically — blocked: no documented app-readable recorded-cost feed in installed SDK/public API; estimates remain labelled.
 - [x] Require explicit Seller AI model selection including instructions; Astra/Sol/Opus 5.5 deployed and signed-in alternating reviews verified on AI TEST 2, instruction Sol persists after reload; model plus scan estimates aggregate research/decision usage and credits × 0.3. Unsupported/missing model rejected without inference; no emails/actions executed; preview clean.

@@ -309,6 +309,7 @@ export type Database = {
           next_step: string | null
           playbook_version: number | null
           reasoning: string | null
+          review_checkpoint: Json | null
           scan_usage: Json | null
           stage_summary: string | null
           status: string
@@ -328,6 +329,7 @@ export type Database = {
           next_step?: string | null
           playbook_version?: number | null
           reasoning?: string | null
+          review_checkpoint?: Json | null
           scan_usage?: Json | null
           stage_summary?: string | null
           status?: string
@@ -347,6 +349,7 @@ export type Database = {
           next_step?: string | null
           playbook_version?: number | null
           reasoning?: string | null
+          review_checkpoint?: Json | null
           scan_usage?: Json | null
           stage_summary?: string | null
           status?: string
