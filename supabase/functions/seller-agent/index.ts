@@ -1464,7 +1464,8 @@ Deno.serve(async (req) => {
       await db.from("ai_agent_actions").update({ status: "proposed" }).in("id", openSiblings.map((x: any) => x.id)).eq("status", "superseded");
     }
     if (!error) {
-      const { error: feedbackError } = await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: sub.id, kind: "accepted", comment: body.reason || null, author_user_id: user.id, author_name: user.name });
+      // Autopilot runs have no staff author — only human approvals are recorded as decision feedback.
+      const { error: feedbackError } = user.id ? await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: sub.id, kind: "accepted", comment: body.reason || null, author_user_id: user.id, author_name: user.name }) : { error: null };
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }

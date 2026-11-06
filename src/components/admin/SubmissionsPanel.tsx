@@ -44,7 +44,7 @@ import AutopilotBar from "./ai/AutopilotBar";
 import AiRecordCard from "./ai/AiRecordCard";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
-import { Bot } from "lucide-react";
+import { Bot, Pause, Play } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
 import { BuyerWatchPanel, useBuyerWatch } from "./BuyerWatchPanel";
 
@@ -380,6 +380,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     setAiTrack(m);
   }, []);
   useEffect(() => { loadAiTrack(); const t = setInterval(loadAiTrack, 60000); return () => clearInterval(t); }, [loadAiTrack]);
+  const [aiCanControl, setAiCanControl] = useState(false);
+  const [aiPausedLocal, setAiPausedLocal] = useState<Record<string, boolean>>({});
+  useEffect(() => { supabase.functions.invoke("seller-autopilot", { body: { op: "status" } }).then(({ data }) => setAiCanControl(!!(data as any)?.can_control)).catch(() => {}); }, []);
+  const toggleRecordAi = async (id: string, paused: boolean) => {
+    setAiPausedLocal((m) => ({ ...m, [id]: paused }));
+    const { data, error } = await supabase.functions.invoke("seller-autopilot", { body: { op: "pause_record", submission_id: id, paused } });
+    if (error || (data as any)?.error) { setAiPausedLocal((m) => ({ ...m, [id]: !paused })); toast({ title: "Couldn't change the Seller AI for this record", variant: "destructive" }); }
+    else toast({ title: paused ? "Seller AI paused for this record" : "Seller AI resumed for this record" });
+  };
   useEffect(() => {
     loadAiPending();
     const t = setInterval(loadAiPending, 60000);
@@ -3404,6 +3413,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             >
               <FileSpreadsheet className="w-4 h-4" /> Price sheet
             </button>
+            {!buyerView && <AutopilotBar onOpenPanel={() => setAiOpen(true)} />}
 
             <div className="h-6 w-px bg-border/60 mx-1" />
             <button
@@ -3572,7 +3582,6 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
           </div>
         )}
-        {!buyerView && <AutopilotBar onOpenPanel={() => setAiOpen(true)} />}
         {(() => {
           // Total includes everyone in the view — sellers, buyers and general
           // forms alike — deduplicated by email. Every form gets classified as
@@ -3941,16 +3950,23 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </div>
                       ) : null;
                     })()}
-                    {!isBuyer && aiTrack.get(s.id) && (() => {
-                      const t = aiTrack.get(s.id)!;
+                    {!isBuyer && (aiTrack.get(s.id) || aiCanControl) && (() => {
+                      const t = aiTrack.get(s.id) ?? {};
+                      const paused = aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at;
                       const fmt = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
                       return (
                         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                           <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 text-primary px-2 py-0.5 font-semibold"><Bot className="w-3 h-3" />AI</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Last AI reply: {t.lastReply ? fmt(t.lastReply) : "none yet"}</span>
-                          {t.queuedAt && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">Reply sending {fmt(t.queuedAt)}</span>}
-                          {t.nextAt && <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Next look: {fmt(t.nextAt)}</span>}
-                          {t.doing && <span className="truncate max-w-full text-muted-foreground" title={t.doing}>Doing: {t.doing}</span>}
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Last AI reply: {(t as any).lastReply ? fmt((t as any).lastReply) : "none yet"}</span>
+                          {(t as any).queuedAt && !paused && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">Reply sending {fmt((t as any).queuedAt)}</span>}
+                          {(t as any).nextAt && !paused && <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Next look: {fmt((t as any).nextAt)}</span>}
+                          {paused && <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-semibold text-destructive">AI paused</span>}
+                          {!paused && (t as any).doing && <span className="truncate max-w-full text-muted-foreground" title={(t as any).doing}>Doing: {(t as any).doing}</span>}
+                          {aiCanControl && (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleRecordAi(s.id, !paused); }} title={paused ? "Let the Seller AI work on this record again" : "Stop the Seller AI working on this record"} className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-muted-foreground hover:text-foreground">
+                              {paused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}{paused ? "Resume AI" : "Pause AI"}
+                            </button>
+                          )}
                         </div>
                       );
                     })()}
