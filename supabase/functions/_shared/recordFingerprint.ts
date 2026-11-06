@@ -1,6 +1,6 @@
 // Compact per-part fingerprint of a seller record, built from plain database reads (no AI).
 // Lets the autopilot see exactly WHAT changed since the AI last looked.
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2.45.0";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { hashOf, type Fingerprint } from "./autopilotPolicy.ts";
 import { emailAddress, sellerMailOutgoing } from "./sellerWakeCandidates.ts";
 

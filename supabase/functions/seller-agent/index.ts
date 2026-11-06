@@ -7,10 +7,10 @@ import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges 
 // Playbook and proposes the next step (reply, internal note, or hand to a
 // human). Phase 1 runs in shadow/approval mode: nothing is sent to a customer
 // until a staff member approves the proposed action.
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.49.4";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 
 import { SELLER_MODELS, DEFAULT_SELLER_MODEL, AUTOPILOT_MODEL, reviewTrigger, type SellerModel } from "./models.ts";

@@ -5,14 +5,14 @@
 //     or a full review (new files/payments/contracts/paperwork, a lot changed, a suspected problem).
 // Guards: owner switch, single-flight lease, small batches, daily review cap, per-seller
 // email cap, quiet hours, and a circuit breaker that pauses on 402/403/repeated 429.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 import { isInternalCall } from "../_shared/internal-auth.ts";
 import { recordFingerprint } from "../_shared/recordFingerprint.ts";
 import { routeWake, replySendAt, inConversation, isQuietTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
 import { sellerWakeCandidates, sellerMailOutgoing } from "../_shared/sellerWakeCandidates.ts";
 import { legacySuggestionsNeedReview, replacedAutomationBlocker } from "../_shared/sellerBacklog.ts";
 
-import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 const corsHeaders = { ...sdkCorsHeaders, "Access-Control-Allow-Headers": `${sdkCorsHeaders["Access-Control-Allow-Headers"]}, x-automation-secret` };
 const JOB = "seller-autopilot";
 const URL_ = Deno.env.get("SUPABASE_URL")!;
