@@ -3,7 +3,8 @@ import { streamResponse, GatewayError, type ResponsesInputItem } from "npm:@lova
 import { labelRun } from "../_shared/aiRunLabel.ts";
 import { DEFAULT_SELLER_MODEL, sellerModelLabel, type SellerModel } from "./models.ts";
 
-export async function sellerDecision(instructions: string, input: string, effort: "low" | "medium", media: ResponsesInputItem[] extends never[] ? never : NonNullable<Extract<ResponsesInputItem, { role?: string }>['content']>[] = [], model: SellerModel = DEFAULT_SELLER_MODEL) {
+type InputContent = Exclude<Extract<ResponsesInputItem, { content: unknown }>['content'], string>;
+export async function sellerDecision(instructions: string, input: string, effort: "low" | "medium", media: InputContent = [], model: SellerModel = DEFAULT_SELLER_MODEL) {
   // Native Responses content comes from loadScans; keep its file/image/text shape unchanged.
   const content = media.length ? [{ type: "input_text" as const, text: input }, ...media] : input;
   const request = labelRun({ instructions, input: [{ role: "user" as const, content }], prompt_cache_key: "seller-agent-playbook", reasoning: { effort } }, `Seller AI — deciding next steps (${sellerModelLabel(model)})`);
