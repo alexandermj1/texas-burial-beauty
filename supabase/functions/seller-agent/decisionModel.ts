@@ -15,8 +15,12 @@ export async function sellerDecision(instructions: string, input: string, effort
   const content = media.length ? [{ type: "input_text" as const, text: input }, ...media] : input;
   const request = labelRun({ instructions, input: [{ role: "user" as const, content }], prompt_cache_key: "seller-agent-playbook", reasoning: { effort } }, `Seller AI — deciding next steps (${sellerModelLabel(model)})`);
   try {
-    if (model === "anthropic/claude-opus-5-5") {
-      const events = await streamMessage(labelRun({ model: "anthropic/claude-opus-5-5" as const, system: instructions, messages: [{ role: "user" as const, content: [{ type: "text" as const, text: input }, ...claudeMedia(media)] }], max_tokens: 16384, thinking: { type: "adaptive" as const }, output_config: { effort } }, `Seller AI — deciding next steps (${sellerModelLabel(model)})`), { maxRetries: 0 });
+    if (model === "anthropic/claude-opus-5-5" || model === "anthropic/claude-sonnet-5") {
+      const base = { system: instructions, messages: [{ role: "user" as const, content: [{ type: "text" as const, text: input }, ...claudeMedia(media)] }], max_tokens: 16384, thinking: { type: "adaptive" as const }, output_config: { effort } };
+      const label = `Seller AI — deciding next steps (${sellerModelLabel(model)})`;
+      const events = model === "anthropic/claude-sonnet-5"
+        ? await streamMessage(labelRun({ ...base, model: "anthropic/claude-sonnet-5" as const }, label), { maxRetries: 0 })
+        : await streamMessage(labelRun({ model: "anthropic/claude-opus-5-5" as const, system: instructions, messages: [{ role: "user" as const, content: [{ type: "text" as const, text: input }, ...claudeMedia(media)] }], max_tokens: 16384, thinking: { type: "adaptive" as const }, output_config: { effort } }, `Seller AI — deciding next steps (${sellerModelLabel(model)})`), { maxRetries: 0 });
       let out = "", usage: Record<string, unknown> = {}, finished = false;
       for await (const event of events) {
         if (event.type === "content_block_delta" && event.delta.type === "text_delta") out += event.delta.text;
@@ -24,13 +28,13 @@ export async function sellerDecision(instructions: string, input: string, effort
         if (event.type === "message_delta") {
           usage = { ...usage, ...event.usage };
           await report(out.length, usage, true);
-          if (event.delta.stop_reason && event.delta.stop_reason !== "end_turn") throw new Error(`Opus stopped with ${event.delta.stop_reason}; no actions saved.`);
+          if (event.delta.stop_reason && event.delta.stop_reason !== "end_turn") throw new Error(`${sellerModelLabel(model)} stopped with ${event.delta.stop_reason}; no actions saved.`);
         }
         if (event.type === "message_stop") finished = true;
         if (event.type === "content_block_delta" && event.delta.type === "text_delta") await report(out.length, usage);
       }
       meter?.observe(model, usage);
-      if (!finished || !out.trim()) throw new Error("Opus did not complete an answer; no actions saved.");
+      if (!finished || !out.trim()) throw new Error(`${sellerModelLabel(model)} did not complete an answer; no actions saved.`);
       return out;
     }
     const events = model === "openai/gpt-6.1-sol"
