@@ -216,7 +216,8 @@ export async function runAgentSlice(ctx: ToolCtx, system: string, task: string, 
   s.messages.push({ role: "assistant", content: msg.content ?? "", ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
   s.pending = msg.tool_calls ?? [];
   if (s.pending.length) return { complete: false, state: s, answer: null, trace: s.trace };
-  const answer = parseJson(msg.content);
+  // An unreadable final answer still carries the research text; hand it to the decision model rather than failing the scan.
+  const answer = parseJson(msg.content) ?? (String(msg.content ?? "").trim() ? { facts: [], mistakes: [], open_promises: [], answer_material: [], research_notes: String(msg.content).slice(0, 20000) } : null);
   if (!answer) throw new Error("Research did not return a complete result; no decision started.");
   return { complete: true, state: s, answer, trace: s.trace };
 }
@@ -241,7 +242,15 @@ export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSt
   return { answer: parseJson(last.content), trace };
 }
 
+/** Tolerant JSON reader for model answers: strips fences (including spaced ` ` ` fences) and repairs invalid escapes such as \' before giving up. */
 export function parseJson(s: unknown) {
-  const t = String(s ?? "").replace(/^[\s\S]*?```(?:json)?|```[\s\S]*$/g, "").trim() || String(s ?? "");
-  try { return JSON.parse(t); } catch { const m = String(s ?? "").match(/\{[\s\S]*\}/); try { return m ? JSON.parse(m[0]) : null; } catch { return null; } }
+  const raw = String(s ?? "");
+  const unfenced = raw.replace(/`\s?`\s?`(?:json)?/gi, "").trim();
+  const object = unfenced.match(/\{[\s\S]*\}/)?.[0];
+  const repair = (t: string) => t.replace(/\\(?!["\\/bfnrtu])/g, "");
+  for (const t of [unfenced, object, object && repair(object)]) {
+    if (!t) continue;
+    try { return JSON.parse(t); } catch { /* try next */ }
+  }
+  return null;
 }
