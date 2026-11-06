@@ -41,6 +41,7 @@ import AddSubmissionDialog from "./AddSubmissionDialog";
 import PriceSheetDialog from "./PriceSheetDialog";
 import AiAgentPanel from "./AiAgentPanel";
 import AutopilotBar from "./ai/AutopilotBar";
+import { attentionHeadline, cleanAttentionText } from "@/lib/attentionText";
 import AiRecordCard from "./ai/AiRecordCard";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
@@ -1810,6 +1811,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 </div>
               );
               return (
+                <>
+                {humanQueueOn && aiOn && humanTasks.get(selected.id)?.attention && (() => {
+                  const task = humanTasks.get(selected.id)!.attention;
+                  const why = cleanAttentionText(task.reason), where = cleanAttentionText(task.evidence);
+                  return (
+                    <section aria-label="What the AI needs from staff" className="mb-4 rounded-[20px] border border-[hsl(var(--status-attention-border))] bg-[hsl(var(--status-attention-soft))] px-5 py-4 sm:px-7">
+                      <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--status-attention-fg))]"><Bot className="h-3.5 w-3.5" />Staff needed · {task.priority} priority</p>
+                      <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">{cleanAttentionText(task.task)}</p>
+                      {why && <p className="mt-2 text-sm leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">Why: </span>{why}</p>}
+                      {where && <p className="mt-1 text-sm leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">Where to look: </span>{where}</p>}
+                    </section>
+                  );
+                })()}
                 <section aria-label="Seller overview" className="overflow-hidden rounded-[24px] border border-border/70 bg-card shadow-[0_18px_50px_-32px_hsl(var(--foreground)/0.28)]">
                    <div className="grid gap-5 border-b border-border/70 bg-card px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] sm:items-start sm:px-7">
                     <div className="min-w-0">
@@ -1964,6 +1978,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </div>
                   </div>
                 </section>
+                </>
               );
             })()}
             {/* Buyer header */}
@@ -3939,14 +3954,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {humanQueueOn && aiOn && humanTasks.get(s.id) && (() => {
                       const task = humanTasks.get(s.id)?.attention;
                       return task ? (
-                        <div role="note" aria-label="AI asks staff to step in" className="rounded-lg border-2 border-[hsl(var(--status-attention-border))] bg-[hsl(var(--status-attention-soft))] text-[hsl(var(--status-attention-fg))] px-2.5 py-2 space-y-1">
-                          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--status-attention))] text-[hsl(var(--status-attention-fg))] px-2 py-0.5"><Bot className="w-3 h-3" />Staff needed</span>
-                            <span>{task.priority} priority</span>
+                        <div role="note" aria-label="AI asks staff to step in" className="flex items-start gap-2 rounded-lg border-l-[3px] border-[hsl(var(--status-attention))] bg-[hsl(var(--status-attention-soft))] px-2.5 py-1.5">
+                          <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[hsl(var(--status-attention-fg))]" />
+                          <p className="min-w-0 text-xs leading-snug text-[hsl(var(--status-attention-fg))]">
+                            <span className="font-semibold">Staff needed{task.priority === "urgent" || task.priority === "high" ? ` · ${task.priority}` : ""}</span>
+                            <span className="block line-clamp-2 opacity-90">{attentionHeadline(task.task)}</span>
                           </p>
-                          <p className="text-xs font-semibold leading-snug"><span className="font-bold">What to do: </span>{task.task}</p>
-                          <p className="text-xs leading-snug"><span className="font-bold">Why: </span>{task.reason}</p>
-                          {task.evidence && <p className="text-[11px] leading-snug opacity-80"><span className="font-bold">Where to look: </span>{task.evidence}</p>}
                         </div>
                       ) : null;
                     })()}
@@ -3955,16 +3968,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       const paused = aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at;
                       const fmt = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
                       return (
-                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-                          <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 text-primary px-2 py-0.5 font-semibold"><Bot className="w-3 h-3" />AI</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Last AI reply: {(t as any).lastReply ? fmt((t as any).lastReply) : "none yet"}</span>
-                          {(t as any).queuedAt && !paused && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">Reply sending {fmt((t as any).queuedAt)}</span>}
-                          {(t as any).nextAt && !paused && <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Next look: {fmt((t as any).nextAt)}</span>}
-                          {paused && <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-semibold text-destructive">AI paused</span>}
-                          {!paused && (t as any).doing && <span className="truncate max-w-full text-muted-foreground" title={(t as any).doing}>Doing: {(t as any).doing}</span>}
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <Bot className="h-3 w-3 shrink-0" />
+                          <span className="min-w-0 truncate">
+                            {paused ? <span className="font-medium text-destructive">AI paused</span> : <>
+                              {(t as any).queuedAt ? `Replying ${fmt((t as any).queuedAt)}` : (t as any).lastReply ? `Replied ${fmt((t as any).lastReply)}` : "No AI reply yet"}
+                              {(t as any).nextAt && !(t as any).queuedAt && ` · next look ${fmt((t as any).nextAt)}`}
+                            </>}
+                          </span>
                           {aiCanControl && (
-                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleRecordAi(s.id, !paused); }} title={paused ? "Let the Seller AI work on this record again" : "Stop the Seller AI working on this record"} className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-muted-foreground hover:text-foreground">
-                              {paused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}{paused ? "Resume AI" : "Pause AI"}
+                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleRecordAi(s.id, !paused); }} title={paused ? "Let the Seller AI work on this record again" : "Stop the Seller AI working on this record"} aria-label={paused ? "Resume AI" : "Pause AI"} className="ml-auto grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
+                              {paused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
                             </button>
                           )}
                         </div>
