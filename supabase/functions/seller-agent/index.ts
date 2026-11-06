@@ -843,7 +843,18 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
     const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["extend_quote_deadline", "edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
     // An invalid family-tree edit or unknown cemetery is dropped rather than shown as approvable.
     const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
-    if (dropped.size) { console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid)); d.actions = d.actions.filter((_, i) => !dropped.has(i)); previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i))); }
+    if (dropped.size) {
+      console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid));
+      const blockedCemetery = d.actions.some((a,i) => a.type === "change_cemetery" && dropped.has(i));
+      d.actions = d.actions.filter((_, i) => !dropped.has(i));
+      previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i)));
+      if (blockedCemetery) {
+        // Never send a reply claiming a rejected cemetery correction happened.
+        d.actions = d.actions.filter(a => a.type !== "reply_email");
+        d.actions.push({ type: "flag_human", reason: "Verify the cemetery identity before changing this record or replying about the correction.", note: "Check the deed and seller email against our cemetery directory; the proposed cemetery could not be matched safely.", human_attention: { priority: "high", importance: 70, category: "uncertain", task: "Verify the cemetery identity before changing this record.", reason: "The registry check found an ambiguous, conflicting or insufficiently evidenced cemetery target.", evidence: "Deed, seller emails and cemetery directory; review the AI findings on this record." }, confidence: 1, subject: null, body: null, fields: null, items: null, tree: null });
+        previews.push(null);
+      }
+    }
     const rows = d.actions.map((a, ai) => ({
       run_id: run.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
       email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,

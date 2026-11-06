@@ -5,7 +5,7 @@ import { isUsableTree } from "./familyTree.ts";
 type Rec = Record<string, any>;
 
 /** Applied in the browser on the Documents panel, with the exact staff code. */
-export const CLIENT_OP_TYPES = ["edit_family_tree", "sync_checklist", "send_document_request", "prepare_listing_agreement", "change_cemetery", "edit_document_request"];
+export const CLIENT_OP_TYPES = ["edit_family_tree", "sync_checklist", "send_document_request", "prepare_listing_agreement", "edit_document_request"];
 
 /** Record/checklist changes that must be approved before a reply from the same review goes out. */
 export const RECORD_CHANGE_TYPES = ["update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "change_cemetery", "change_listing_option", "sync_checklist"];

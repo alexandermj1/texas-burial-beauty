@@ -3943,7 +3943,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
                 {isMobile && isActive && (
-                  <MobileInlineDetail submission={s} />
+                  <><StaffTaskNotice entry={humanQueueOn && aiOn ? humanTasks.get(s.id) : undefined} /><MobileInlineDetail submission={s} /></>
                 )}
               </div>
             );
