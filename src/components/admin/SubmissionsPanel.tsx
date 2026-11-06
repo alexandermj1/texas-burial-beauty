@@ -44,7 +44,7 @@ import AutopilotBar from "./ai/AutopilotBar";
 import AiRecordCard from "./ai/AiRecordCard";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
-import { Bot } from "lucide-react";
+import { Bot, Pause, Play } from "lucide-react";
 import { FileSpreadsheet } from "lucide-react";
 import { BuyerWatchPanel, useBuyerWatch } from "./BuyerWatchPanel";
 
