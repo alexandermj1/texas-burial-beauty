@@ -299,6 +299,7 @@ export type Database = {
         Row: {
           confidence: number | null
           created_at: string
+          decision_model: string | null
           deleted_at: string | null
           deleted_by: string | null
           error: string | null
@@ -308,6 +309,7 @@ export type Database = {
           next_step: string | null
           playbook_version: number | null
           reasoning: string | null
+          scan_usage: Json | null
           stage_summary: string | null
           status: string
           submission_id: string
@@ -316,6 +318,7 @@ export type Database = {
         Insert: {
           confidence?: number | null
           created_at?: string
+          decision_model?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           error?: string | null
@@ -325,6 +328,7 @@ export type Database = {
           next_step?: string | null
           playbook_version?: number | null
           reasoning?: string | null
+          scan_usage?: Json | null
           stage_summary?: string | null
           status?: string
           submission_id: string
@@ -333,6 +337,7 @@ export type Database = {
         Update: {
           confidence?: number | null
           created_at?: string
+          decision_model?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           error?: string | null
@@ -342,6 +347,7 @@ export type Database = {
           next_step?: string | null
           playbook_version?: number | null
           reasoning?: string | null
+          scan_usage?: Json | null
           stage_summary?: string | null
           status?: string
           submission_id?: string
