@@ -1,7 +1,7 @@
 export const CREDIT_EQUIVALENT = 0.3;
 export type ScanUsage = { estimated_credits: number | null; equivalent: number | null; conversion: number; calls: number; missing_calls: number };
 type Tier = { cost: string; min: number; max?: number };
-type Rate = { tiers?: Tier[] };
+type Rate = { tiers?: Tier[]; cache_read?: Rate; cache_write?: Rate };
 type Pricing = { input?: { text?: Rate; cache_read?: Rate; cache_write?: Rate }; output?: { text?: Rate } };
 const record = (v: unknown): Record<string, unknown> => v && typeof v === "object" ? v as Record<string, unknown> : {};
 const number = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
@@ -15,8 +15,8 @@ export function estimateUsage(pricing: Pricing | undefined, raw: unknown, anthro
   const rate = (r?: Rate) => { const t = r?.tiers?.filter(t => total >= t.min && (t.max === undefined || total < t.max)).at(-1); return t ? Number(t.cost) : NaN; };
   const cost = (anthropic ? input : Math.max(0, input - cached - written)) * rate(pricing.input?.text)
     + output * rate(pricing.output?.text)
-    + (cached ? cached * rate(pricing.input?.cache_read) : 0)
-    + (written ? written * rate(pricing.input?.cache_write) : 0);
+    + (cached ? cached * rate(pricing.input?.cache_read ?? pricing.input?.text?.cache_read) : 0)
+    + (written ? written * rate(pricing.input?.cache_write ?? pricing.input?.text?.cache_write) : 0);
   return Number.isFinite(cost) ? cost : null;
 }
 export class ScanMeter {

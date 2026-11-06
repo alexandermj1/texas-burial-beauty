@@ -17,6 +17,10 @@ it("never reports missing costs as zero", () => {
   expect(meter.snapshot().estimated_credits).toBeNull();
   expect(meter.snapshot().equivalent).toBeNull();
 });
+it("uses OpenAI nested cache-write prices and concrete token usage", () => {
+  const nested = { input: { text: { tiers: [{ min: 0, cost: "0.00004" }], cache_read: { tiers: [{ min: 0, cost: "0.000004" }] }, cache_write: { tiers: [{ min: 0, cost: "0.00005" }] } } }, output: { text: { tiers: [{ min: 0, cost: "0.0002" }] } } };
+  expect(estimateUsage(nested, { input_tokens: 17530, input_tokens_details: { cache_write_tokens: 17530, cached_tokens: 0 }, output_tokens: 268 })).toBeCloseTo(0.9301);
+});
 it("gives each scan an independent meter", () => {
   const a = new ScanMeter(new Map([["model", pricing]])), b = new ScanMeter(new Map([["model", pricing]]));
   a.observe("model", { input_tokens: 1000, output_tokens: 100 });
