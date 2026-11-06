@@ -6,11 +6,11 @@
 // Guards: owner switch, single-flight lease, small batches, daily review cap, per-seller
 // email cap, quiet hours, and a circuit breaker that pauses on 402/403/repeated 429.
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { isInternalCall } from "../_shared/internal-auth.ts";
 import { recordFingerprint } from "../_shared/recordFingerprint.ts";
 import { routeWake, replySendAt, inConversation, isQuietTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
 
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-automation-secret" };
 const JOB = "seller-autopilot";
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
