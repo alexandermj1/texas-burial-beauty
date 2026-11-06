@@ -56,11 +56,17 @@ async function emailsToday(sid: string) {
   const { count } = await db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "sent").gte("sent_at", since);
   return count ?? 0;
 }
-const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
 
 /** Phase 1 — send held replies that are due, if the file still supports them. */
 async function sendDue(mode: string) {
   const out: any[] = [];
+  // A run that died mid-send leaves its row "sending": never retry it blindly — hand it to a person.
+  const { data: stuck } = await db.from("ai_outbox").select("id,submission_id").eq("status", "sending").lt("send_at", new Date(Date.now() - 20 * 60_000).toISOString()).limit(10);
+  for (const st of stuck ?? []) {
+    await db.from("ai_outbox").update({ status: "failed", status_reason: "Interrupted while sending — check what reached the seller" }).eq("id", st.id);
+    const { data: sub } = await db.from("contact_submissions").select("id,customer_profile_id").eq("id", st.submission_id).maybeSingle();
+    if (sub) await flagHuman(sub, "An automatic AI step was interrupted part-way. Check the emails and notes to see what reached the seller, then finish it.", "The autopilot never repeats a step it can't confirm.");
+  }
   if (isQuietTime(Date.now())) return out;
   const { data: due } = await db.from("ai_outbox").select("*").eq("status", "held").lte("send_at", new Date().toISOString()).order("send_at").limit(MAX_SENDS_PER_RUN);
   for (const o of due ?? []) {
@@ -75,7 +81,7 @@ async function sendDue(mode: string) {
     if (await humanOpen(o.submission_id)) { await cancel("A person is handling this record"); continue; }
     if (await emailsToday(o.submission_id) >= MAX_EMAILS_PER_SELLER_DAY) { await db.from("ai_outbox").update({ send_at: new Date(Date.now() + 86400_000).toISOString() }).eq("id", o.id); continue; }
     // Claim the row first so an overlapping run can never send it twice.
-    const { data: claimed } = await db.from("ai_outbox").update({ status: "sending" }).eq("id", o.id).eq("status", "held").select("id").maybeSingle();
+    const { data: claimed } = await db.from("ai_outbox").update({ status: "sending", send_at: new Date().toISOString() }).eq("id", o.id).eq("status", "held").select("id").maybeSingle();
     if (!claimed) continue;
     // Carry out the whole review in order: record/document changes, then notes, then the reply last.
     const { data: siblings } = await db.from("ai_agent_actions").select("id,action_type,status,created_at").eq("run_id", act.run_id).eq("status", "proposed").is("deleted_at", null).order("created_at");
@@ -234,7 +240,18 @@ Deno.serve(async (req) => {
       db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("status", "sent").gte("sent_at", since),
       db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("status", "held"),
     ]);
-    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held } });
+    const { data: log } = await db.from("ai_outbox").select("id,submission_id,status,status_reason,send_at,sent_at,created_at,action_id").order("created_at", { ascending: false }).limit(40);
+    const sids = [...new Set((log ?? []).map((l) => l.submission_id))], aids = (log ?? []).map((l) => l.action_id);
+    const [{ data: names }, { data: acts }, { data: lastRun }] = await Promise.all([
+      sids.length ? db.from("contact_submissions").select("id,name,email").in("id", sids) : Promise.resolve({ data: [] as any[] }),
+      aids.length ? db.from("ai_agent_actions").select("id,action_type,email_subject,reason").in("id", aids) : Promise.resolve({ data: [] as any[] }),
+      db.from("ai_agent_runs").select("created_at,submission_id,stage_summary").like("trigger", "autopilot:%").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    ]);
+    const nm = new Map((names ?? []).map((n: any) => [n.id, n.name || n.email]));
+    const am = new Map((acts ?? []).map((a: any) => [a.id, a]));
+    const entries = (log ?? []).map((l) => ({ ...l, seller: nm.get(l.submission_id) ?? "Seller", subject: (am.get(l.action_id) as any)?.email_subject ?? null, what: (am.get(l.action_id) as any)?.reason ?? null, kind: (am.get(l.action_id) as any)?.action_type ?? null }));
+    const lastSent = entries.find((e) => e.status === "sent")?.sent_at ?? null;
+    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held }, log: entries, last_sent_at: lastSent, last_review: lastRun ?? null });
   }
   const s = await settings();
   if (s.mode === "off") return json({ status: "off" });
