@@ -40,6 +40,7 @@ import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 import PriceSheetDialog from "./PriceSheetDialog";
 import AiAgentPanel from "./AiAgentPanel";
+import AutopilotBar from "./ai/AutopilotBar";
 import AiRecordCard from "./ai/AiRecordCard";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { Dialog as AiDialog, DialogContent as AiDialogContent, DialogTitle as AiDialogTitle } from "@/components/ui/dialog";
@@ -361,6 +362,24 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     }
   }, [aiOn]);
   const [aiFirst, setAiFirst] = useState(false);
+  // Autopilot per-record tags: last AI reply, next check-in and what it is waiting for.
+  const [aiTrack, setAiTrack] = useState<Map<string, { lastReply?: string; nextAt?: string; doing?: string; queuedAt?: string }>>(new Map());
+  const loadAiTrack = useCallback(async () => {
+    const [{ data: mem }, { data: ob }] = await Promise.all([
+      supabase.from("ai_record_memory" as never).select("submission_id,due_at,waiting_for,summary").limit(2000),
+      supabase.from("ai_outbox" as never).select("submission_id,status,sent_at,send_at").in("status", ["sent", "held"]).order("created_at", { ascending: false }).limit(2000),
+    ]);
+    const m = new Map<string, { lastReply?: string; nextAt?: string; doing?: string; queuedAt?: string }>();
+    for (const r of (mem ?? []) as any[]) m.set(r.submission_id, { nextAt: r.due_at ?? undefined, doing: r.waiting_for || r.summary || undefined });
+    for (const o of (ob ?? []) as any[]) {
+      const e = m.get(o.submission_id) ?? {};
+      if (o.status === "sent" && o.sent_at && (!e.lastReply || o.sent_at > e.lastReply)) e.lastReply = o.sent_at;
+      if (o.status === "held" && !e.queuedAt) e.queuedAt = o.send_at;
+      m.set(o.submission_id, e);
+    }
+    setAiTrack(m);
+  }, []);
+  useEffect(() => { loadAiTrack(); const t = setInterval(loadAiTrack, 60000); return () => clearInterval(t); }, [loadAiTrack]);
   useEffect(() => {
     loadAiPending();
     const t = setInterval(loadAiPending, 60000);
@@ -3553,6 +3572,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             })()}
           </div>
         )}
+        {!buyerView && <AutopilotBar onOpenPanel={() => setAiOpen(true)} />}
         {(() => {
           // Total includes everyone in the view — sellers, buyers and general
           // forms alike — deduplicated by email. Every form gets classified as
@@ -3920,6 +3940,19 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {task.evidence && <p className="text-[11px] leading-snug opacity-80"><span className="font-bold">Where to look: </span>{task.evidence}</p>}
                         </div>
                       ) : null;
+                    })()}
+                    {!isBuyer && aiTrack.get(s.id) && (() => {
+                      const t = aiTrack.get(s.id)!;
+                      const fmt = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+                      return (
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 text-primary px-2 py-0.5 font-semibold"><Bot className="w-3 h-3" />AI</span>
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Last AI reply: {t.lastReply ? fmt(t.lastReply) : "none yet"}</span>
+                          {t.queuedAt && <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">Reply sending {fmt(t.queuedAt)}</span>}
+                          {t.nextAt && <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Next look: {fmt(t.nextAt)}</span>}
+                          {t.doing && <span className="truncate max-w-full text-muted-foreground" title={t.doing}>Doing: {t.doing}</span>}
+                        </div>
+                      );
                     })()}
                     {(() => {
                       const raw = summaryMap[s.id] || "";
