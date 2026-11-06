@@ -29,6 +29,12 @@ async function pause(reason: string) {
 const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
+/** Put the record in front of a person (shows as a "needs a person" suggestion; autopilot then leaves it alone). */
+async function flagHuman(sub: any, task: string) {
+  await db.from("ai_agent_actions").insert({ submission_id: sub.id, action_type: "flag_human", status: "proposed", reason: task, note_body: task, confidence: 1, payload: { source: "autopilot" } });
+  await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `AI autopilot asked for a person: ${task}`, author_name: "AI agent (autopilot)" });
+}
+
 async function humanOpen(sid: string) {
   const { count } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed").eq("action_type", "flag_human").is("deleted_at", null);
   return (count ?? 0) > 0;
@@ -114,6 +120,13 @@ async function wake(mode: string, dailyReviews: number) {
   for (const m of dueMem ?? []) ids.add(m.submission_id);
   const { data: inbound } = await db.from("email_messages").select("matched_submission_id,from_email").not("matched_submission_id", "is", null).gte("received_at", new Date(Date.now() - 3 * 86400_000).toISOString()).is("deleted_at", null).order("received_at", { ascending: false }).limit(200);
   for (const e of inbound ?? []) if (!/texascemeterybrokers/i.test(e.from_email ?? "")) ids.add(e.matched_submission_id!);
+  if (mode === "all") {
+    // Every active seller gets a first full review and a plan, a few at a time.
+    const { data: active } = await db.from("contact_submissions").select("id").is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("sold_at", null).order("updated_at", { ascending: false }).limit(300);
+    const { data: known } = await db.from("ai_record_memory").select("submission_id").in("submission_id", (active ?? []).map((a) => a.id));
+    const has = new Set((known ?? []).map((k) => k.submission_id));
+    for (const a of active ?? []) if (!has.has(a.id)) ids.add(a.id);
+  }
   if (mode === "selected") {
     const { data: picked } = await db.from("contact_submissions").select("id").eq("ai_autopilot", true).is("deleted_at", null).limit(200);
     for (const p of picked ?? []) ids.add(p.id);
@@ -125,13 +138,20 @@ async function wake(mode: string, dailyReviews: number) {
     if (!eligible(sub, mode)) continue;
     const { count: held } = await db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "held");
     const { data: memory } = await db.from("ai_record_memory").select("*").eq("submission_id", sid).maybeSingle();
+    if (memory?.last_route === "error" && Date.parse(memory.updated_at) > Date.now() - 2 * 3600_000) continue; // back off after a failed review
+    // Suggestions waiting on staff while the seller waits for an answer: ask a person rather than redrafting.
+    const { data: stale } = await db.from("ai_agent_actions").select("id").eq("submission_id", sid).eq("status", "proposed").neq("action_type", "flag_human").lt("created_at", new Date(Date.now() - 24 * 3600_000).toISOString()).limit(1);
+    if (stale?.length && !(await humanOpen(sid))) {
+      await flagHuman(sub, "AI suggestions on this file have been waiting for approval for over a day — please approve or decline them so the seller isn't left waiting.");
+      out.push({ sid, route: "stale_approvals" }); continue;
+    }
     const now = await recordFingerprint(db, sub);
     const route = routeWake({ memory: memory as any, now, at: Date.now(), humanOpen: await humanOpen(sid) });
     if (route.kind === "wait" || route.kind === "human") continue;
     if (held && route.kind === "checkback") continue;
     if (held) await db.from("ai_outbox").update({ status: "cancelled", status_reason: "File changed — redrafting" }).eq("submission_id", sid).eq("status", "held");
     if (route.kind === "escalate_reminders") {
-      await db.from("customer_notes").insert({ submission_id: sid, customer_profile_id: sub.customer_profile_id, body: `AI autopilot: ${MAX_REMINDERS} reminders sent with no reply about ${memory?.waiting_for ?? "the next step"} — please give ${String(sub.name ?? "them").split(" ")[0]} a call.`, author_name: "AI agent (autopilot)" });
+      await flagHuman(sub, `${MAX_REMINDERS} reminders sent with no reply about ${memory?.waiting_for ?? "the next step"} — please give ${String(sub.name ?? "them").split(" ")[0]} a call.`);
       await db.from("ai_record_memory").update({ due_at: new Date(Date.now() + 7 * 86400_000).toISOString(), last_route: "escalated" }).eq("submission_id", sid);
       out.push({ sid, route: route.kind }); continue;
     }
@@ -148,6 +168,13 @@ async function wake(mode: string, dailyReviews: number) {
       break;
     }
     await db.from("automation_job_state").update({ consecutive_rate_limits: 0 }).eq("job_name", JOB);
+    if (r.status !== 200) {
+      // Always leave a next step: retry later, and after repeated failures hand it to a person.
+      const fails = ((memory as any)?.history ?? []).filter((h: any) => h.error).length + 1;
+      await db.from("ai_record_memory").upsert({ submission_id: sid, summary: memory?.summary ?? "", fingerprint: memory?.fingerprint ?? null, last_route: "error", due_at: new Date(Date.now() + 2 * 3600_000).toISOString(), updated_at: new Date().toISOString(),
+        history: [...(((memory as any)?.history ?? []) as any[]), { at: new Date().toISOString(), error: String(r.body?.error ?? r.status).slice(0, 200) }].slice(-10) });
+      if (fails >= 3) await flagHuman(sub, `The AI couldn't finish reviewing this file ${fails} times (${String(r.body?.error ?? r.status).slice(0, 120)}) — please check it.`);
+    }
     const q = r.status === 200 && r.body?.run_id ? await queueReply(sub, r.body.run_id) : null;
     out.push({ sid, route: route.kind, reason: route.reason, status: r.status, error: r.body?.error, reply: q });
   }
