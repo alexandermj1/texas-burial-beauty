@@ -9,7 +9,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { isInternalCall } from "../_shared/internal-auth.ts";
 import { recordFingerprint } from "../_shared/recordFingerprint.ts";
-import { routeWake, replySendAt, inConversation, isQuietTime, nextAllowedTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
+import { routeWake, replySendAt, inConversation, isQuietTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
 
 const JOB = "seller-autopilot";
 const URL_ = Deno.env.get("SUPABASE_URL")!;
@@ -118,8 +118,9 @@ async function wake(mode: string, dailyReviews: number) {
     const { data: picked } = await db.from("contact_submissions").select("id").eq("ai_autopilot", true).is("deleted_at", null).limit(200);
     for (const p of picked ?? []) ids.add(p.id);
   }
+  let looked = 0;
   for (const sid of ids) {
-    if (budget <= 0) break;
+    if (budget <= 0 || ++looked > 60) break;
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", sid).maybeSingle();
     if (!eligible(sub, mode)) continue;
     const { count: held } = await db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "held");
