@@ -7,9 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
 import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
 import AiReviewButton from "./AiReviewButton";
-import { DEFAULT_SELLER_MODEL, reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
+import AiScanCost from "./AiScanCost";
+import type { ScanUsage } from "../../../../supabase/functions/seller-agent/scanUsage";
+import { reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
 
-type Run = { created_at: string; trigger: string; status: string; stage_summary: string | null; next_step: string | null; needs_human: boolean | null; error: string | null };
+type Run = { created_at: string; trigger: string; decision_model: string | null; scan_usage: ScanUsage | null; status: string; stage_summary: string | null; next_step: string | null; needs_human: boolean | null; error: string | null };
 
 type Props = {
   submissionId: string;
@@ -25,7 +27,6 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const { toast } = useToast();
   const [run, setRun] = useState<Run | null>(null);
   const [reviews, setReviews] = useState<Run[]>([]);
-  const [model, setModel] = useState<SellerModel>(DEFAULT_SELLER_MODEL);
   const [actions, setActions] = useState<AiAction[]>([]);
   const [busy, setBusy] = useState(false);
   const [paused, setPaused] = useState(!!pausedAt);
@@ -35,7 +36,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
   const load = useCallback(async () => {
     const [{ data: r }, { data: a }, { data: ins }] = await Promise.all([
-      supabase.from("ai_agent_runs" as never).select("created_at,trigger,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).is("deleted_at", null).order("created_at", { ascending: false }).limit(6),
+      supabase.from("ai_agent_runs" as never).select("created_at,trigger,decision_model,scan_usage,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).is("deleted_at", null).order("created_at", { ascending: false }).limit(6),
       supabase.from("ai_agent_actions" as never).select("*").eq("submission_id", submissionId).is("deleted_at", null).neq("status", "superseded").order("created_at", { ascending: false }).limit(30),
       supabase.from("customer_notes").select("body,author_name,created_at").eq("submission_id", submissionId).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
     ]);
@@ -60,8 +61,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     return () => { clearTimeout(debounce); supabase.removeChannel(ch); };
   }, [submissionId, load]);
 
-  const review = async (instructionText?: string, selectedModel: SellerModel = model) => {
-    setModel(selectedModel);
+  const review = async (selectedModel: SellerModel, instructionText?: string) => {
     setBusy(true);
     try {
       const r = await callSellerAgent({ action: "run", submission_id: submissionId, model: selectedModel, ...(instructionText ? { instruction: instructionText } : {}) });
@@ -78,7 +78,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     else onRefresh?.();
   };
 
-  const saveInstruction = async () => {
+  const saveInstruction = async (selectedModel: SellerModel) => {
     const text = instruction.trim();
     if (!text) return;
     const { data: u } = await supabase.auth.getUser();
@@ -91,7 +91,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     else {
       setInstruction("");
       toast({ title: "Instruction sent", description: "The AI is working on it now." });
-      if (!paused) await review(text); else await load();
+      if (!paused) await review(selectedModel, text); else await load();
     }
   };
 
@@ -106,16 +106,17 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           <div>
             <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">AI Agent</p>
             <p className="text-[11px] text-muted-foreground">
-              {paused ? "Paused for this seller" : run ? `${reviewModelLabel(run.trigger)} · Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
+              {paused ? "Paused for this seller" : run ? `${reviewModelLabel(run.trigger, run.decision_model)} · Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
               {pending.length ? ` · ${pending.length} waiting for approval` : ""}
             </p>
+            {run?.status === "done" && <AiScanCost usage={run.scan_usage} />}
           </div>
         </div>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Switch checked={paused} onCheckedChange={togglePause} /> Pause AI
           </label>
-          <AiReviewButton onReview={chosen => review(undefined, chosen)} busy={busy} disabled={paused} />
+          <AiReviewButton onReview={chosen => review(chosen)} busy={busy} disabled={paused} />
         </div>
       </div>
 
@@ -130,7 +131,8 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         <summary className="cursor-pointer text-xs text-muted-foreground">Recent model reviews</summary>
         <ul className="mt-2 space-y-3">
           {reviews.map(r => <li key={`${r.created_at}-${r.trigger}`} className="text-xs space-y-1">
-            <p className="font-medium text-foreground">{reviewModelLabel(r.trigger)} · {new Date(r.created_at).toLocaleString()} · {r.status}</p>
+            <p className="font-medium text-foreground">{reviewModelLabel(r.trigger, r.decision_model)} · {new Date(r.created_at).toLocaleString()} · {r.status}</p>
+            <AiScanCost usage={r.scan_usage} />
             {r.stage_summary && <p>{r.stage_summary}</p>}
             {r.next_step && <p className="text-muted-foreground">{r.next_step}</p>}
             {r.error && <p className="text-destructive">{r.error}</p>}
@@ -147,7 +149,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
       <div className="flex gap-2">
         <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={1} placeholder="Instruction for AI (e.g. hold until after the funeral)" className="min-h-9 text-sm bg-card" />
-        <Button size="sm" variant="outline" onClick={saveInstruction} disabled={!instruction.trim() || busy} className="border-indigo-500/40"><Send className="w-4 h-4" /></Button>
+        <AiReviewButton label="Send instruction" onReview={saveInstruction} disabled={!instruction.trim() || paused} busy={busy} />
       </div>
 
       {sentInstructions.length > 0 && (

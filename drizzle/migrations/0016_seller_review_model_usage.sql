@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_agent_runs ADD COLUMN IF NOT EXISTS decision_model text, ADD COLUMN IF NOT EXISTS scan_usage jsonb;

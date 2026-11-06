@@ -35,9 +35,9 @@ Return ONLY JSON: {"facts":[{"fact":string,"source":string}] (max 25, each with 
 "answer_material":[string] (specific facts a reply to the seller's latest message would need)}`;
 
 /** Tool-using research pass (cheap fast model). Returns text for the decision prompt plus the trace for staff. */
-export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: string, instruction: string) {
+export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: string, instruction: string, onUsage?: (model: string, usage: unknown) => void) {
   const { data: dir } = await db.from("texas_cemeteries").select("name,city,region,latitude,longitude,transfer_fee").is("deleted_at", null).limit(3000);
-  const ctx = { db, apiKey, dir: dir ?? [], deedReads: 0, fileReads: 0 };
+  const ctx = { db, apiKey, dir: dir ?? [], deedReads: 0, fileReads: 0, onUsage };
   const task = `Seller record id: ${sub.id}\nSeller: ${sub.name} <${sub.email}>, cemetery: ${sub.cemetery ?? "?"}\n${instruction ? `STAFF INSTRUCTION FOR THIS REVIEW: ${instruction}\n` : ""}CURRENT SNAPSHOT:\n${focus}\n\nResearch this file now.`;
   const { answer, trace } = await runAgent(ctx as any, RESEARCH_SYS, task, 9, [...RECORD_TOOLS, ...ADMIN_READ_TOOLS], "Seller AI — researching the record");
   const a = answer && typeof answer === "object" ? answer : {};
