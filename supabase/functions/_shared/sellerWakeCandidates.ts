@@ -18,7 +18,7 @@ export function sellerWakeCandidates(sellers: Seller[], emails: Mail[], due: str
   const unanswered = sellers.flatMap(s => {
     const mail = latest.get(s.id);
     let at = !mail ? s.created_at : !sellerMailOutgoing(mail.from_email) ? mail.received_at : null;
-    const treeAt = s.ownership_answers?.v2?.completed_at ?? s.ownership_answers?.completed_at;
+    const treeAt = s.ownership_answers?.sellerConfirmedAt;
     if (treeAt && (!mail || !sellerMailOutgoing(mail.from_email) || mail.received_at <= treeAt)) at = !at || treeAt > at ? treeAt : at;
     return at && (!s.reply_dismissed_at || at > s.reply_dismissed_at) ? [{ id: s.id, at }] : [];
   }).sort((a,b) => a.at.localeCompare(b.at));

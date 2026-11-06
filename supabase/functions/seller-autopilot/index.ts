@@ -152,10 +152,10 @@ async function wake(mode: string, dailyReviews: number) {
   const { count: today } = await db.from("ai_agent_runs").select("id", { count: "exact", head: true }).like("trigger", "autopilot:%").gte("created_at", since);
   let budget = Math.min(MAX_REVIEWS_PER_RUN, dailyReviews - (today ?? 0));
   if (budget <= 0) return [{ skipped: "Daily review limit reached" }];
-  const readPages = async (table: string, fields: string) => {
+  const readPages = async (table: string, fields: string, key = "id") => {
     const rows: any[] = [];
     for (let offset = 0; ; offset += 500) {
-      const { data, error } = await db.from(table).select(fields).order("id").range(offset, offset + 499);
+      const { data, error } = await db.from(table).select(fields).order(key).range(offset, offset + 499);
       if (error) throw new Error(`Could not read ${table} for seller wake: ${error.message}`);
       rows.push(...(data ?? []));
       if ((data ?? []).length < 500) return rows;
@@ -165,7 +165,7 @@ async function wake(mode: string, dailyReviews: number) {
   const [allSubs, allMail, memories] = await Promise.all([
     readPages("contact_submissions", "id,email,created_at,customer_kind,deleted_at,archived_at,closed_at,sold_at,ai_paused_at,ai_autopilot,reply_dismissed_at,ownership_answers"),
     readPages("email_messages", "id,matched_submission_id,from_email,to_email,received_at,deleted_at"),
-    readPages("ai_record_memory", "id,submission_id,due_at"),
+    readPages("ai_record_memory", "submission_id,due_at", "submission_id"),
   ]);
   const active = allSubs.filter(s => eligible(s, mode));
   const activeIds = new Set(active.map(s => s.id));

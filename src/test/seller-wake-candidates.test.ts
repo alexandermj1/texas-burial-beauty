@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { sellerWakeCandidates } from "../../supabase/functions/_shared/sellerWakeCandidates";
 const seller = (id: string) => ({ id, email: `${id}@example.com`, created_at: "2026-10-01T12:00:00Z" });
 describe("unanswered seller priority", () => {
+  it("prioritizes family-tree confirmation without a later reply", () => {
+    const s = { ...seller("waiting"), ownership_answers: { sellerConfirmedAt: "2026-11-06T12:00:00Z" } };
+    expect(sellerWakeCandidates([s], [{ from_email: "info@texascemeterybrokers.com", to_email: s.email, received_at: "2026-11-05T12:00:00Z" }], [], new Set([s.id]))).toEqual([s.id]);
+  });
   it("finds old unanswered mail ahead of routine check-backs despite outgoing traffic", () => {
     const sellers = [seller("waiting"), seller("routine")];
     const mail = [{ from_email: "waiting@example.com", received_at: "2026-10-03T12:00:00Z" }, { from_email: "info@texascemeterybrokers.com", to_email: "routine@example.com", received_at: "2026-11-06T12:00:00Z" }];
