@@ -103,6 +103,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
   const pending = orderSellerActions(actions.filter((a) => a.status === "proposed"));
   const history = actions.filter((a) => a.status !== "proposed");
+  const reviewing = busy || !!run && ["running", "research_ready", "research_running", "decision_ready", "deciding"].includes(run.status) && Date.now() - Date.parse(run.created_at) < 10 * 60_000;
 
   return (
     <section aria-label="AI Agent" className="rounded-2xl border border-indigo-500/40 bg-indigo-500/5 ring-1 ring-indigo-500/15 p-4 space-y-3">
@@ -122,7 +123,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Switch checked={paused} onCheckedChange={togglePause} /> Pause AI
           </label>
-          <AiReviewButton onReview={chosen => review(chosen)} busy={busy} disabled={paused} />
+          <AiReviewButton onReview={chosen => review(chosen)} busy={reviewing} disabled={paused} />
         </div>
       </div>
 
@@ -133,7 +134,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         </div>
       )}
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
-      {busy && <p role="status" className="text-sm text-muted-foreground">{progress || "Starting seller review"}</p>}
+      {reviewing && <p role="status" className="text-sm text-muted-foreground">{progress || run?.stage_summary || "Starting seller review"}</p>}
       {reviews.length > 1 && <details className="border-t border-border pt-2">
         <summary className="cursor-pointer text-xs text-muted-foreground">Recent model reviews</summary>
         <ul className="mt-2 space-y-3">
@@ -156,7 +157,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
       <div className="flex gap-2">
         <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={1} placeholder="Instruction for AI (e.g. hold until after the funeral)" className="min-h-9 text-sm bg-card" />
-        <AiReviewButton label="Send instruction" onReview={saveInstruction} disabled={!instruction.trim() || paused} busy={busy} />
+        <AiReviewButton label="Send instruction" onReview={saveInstruction} disabled={!instruction.trim() || paused} busy={reviewing} />
       </div>
 
       {sentInstructions.length > 0 && (
