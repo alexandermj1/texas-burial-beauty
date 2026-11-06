@@ -1,4 +1,4 @@
-import type { MessagesRequest, ResponsesInputItem } from "@lovable.dev/ai-gateway";
+import type { MessagesRequest, ResponsesInputItem } from "npm:@lovable.dev/ai-gateway@0.1.11";
 type InputContent = Exclude<Extract<ResponsesInputItem, { content: unknown }>['content'], string>;
 type ClaudeContent = Exclude<MessagesRequest['messages'][number]['content'], string>;
 export function claudeMedia(media: InputContent): ClaudeContent {

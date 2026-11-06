@@ -7,6 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, RefreshCw, BookOpen } from "lucide-react";
 import AiActionCard, { type AiAction as Action , visualOwners } from "./ai/AiActionCard";
 import AiReviewButton from "./ai/AiReviewButton";
+import AiScanCost from "./ai/AiScanCost";
+import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
+import { sellerModelLabel } from "../../../supabase/functions/seller-agent/models";
 import type { SellerModel } from "../../../supabase/functions/seller-agent/models";
 
 type Sub = { id: string; name: string | null; cemetery: string | null; email: string | null };
@@ -22,6 +25,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
   const [playbook, setPlaybook] = useState<{ version: number; content: string } | null>(null);
   const [pbDraft, setPbDraft] = useState("");
   const [runId, setRunId] = useState("");
+  const [scanResults, setScanResults] = useState<{ model: SellerModel; scan_usage?: ScanUsage | null }[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,6 +60,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
     setBusy("sweep");
     try {
       const r = await call({ action: "sweep", limit: 8, model });
+      setScanResults((r?.results ?? []).filter((x: { status: string }) => x.status === "done"));
       toast({ title: `Reviewed ${r?.processed ?? 0} sellers`, description: "New proposals are in the queue." });
       await load();
     } catch (e) { toast({ title: "Review failed", description: (e as Error).message, variant: "destructive" }); }
@@ -68,6 +73,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
     setBusy("one");
     try {
       const r = await call({ action: "run", submission_id: id, model });
+      setScanResults(r?.status === "done" ? [{ model, scan_usage: r.scan_usage }] : []);
       toast({ title: r?.status === "done" ? "Seller reviewed" : "Skipped", description: r?.reason ?? r?.decision?.next_step });
       setRunId("");
       await load();
@@ -115,6 +121,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
         </div>
       </div>
 
+      {scanResults.map((r, i) => <div key={i} className="space-y-1 border-b border-border pb-2"><p className="text-sm font-medium">{sellerModelLabel(r.model)}</p><AiScanCost usage={r.scan_usage} /></div>)}
       <div className="flex gap-1.5 flex-wrap">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setView(t.key)}

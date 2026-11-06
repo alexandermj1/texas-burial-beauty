@@ -1,5 +1,3 @@
-import { listModels } from "npm:@lovable.dev/ai-gateway@0.1.11";
-
 export const CREDIT_EQUIVALENT = 0.3;
 export type ScanUsage = { estimated_credits: number | null; equivalent: number | null; conversion: number; calls: number; missing_calls: number };
 type Tier = { cost: string; min: number; max?: number };
@@ -36,7 +34,7 @@ export class ScanMeter {
     return { estimated_credits: credits, equivalent: credits === null ? null : credits * CREDIT_EQUIVALENT, conversion: CREDIT_EQUIVALENT, calls: this.calls, missing_calls: this.missing };
   }
 }
-export async function createScanMeter() {
+export async function createScanMeter(listModels: () => Promise<{ workspace_models?: string; data: { id: string; pricing?: unknown }[] }>) {
   try {
     const catalog = await listModels();
     return new ScanMeter(new Map(catalog.workspace_models === "included" ? catalog.data.map(m => [m.id, m.pricing as Pricing]) : []));

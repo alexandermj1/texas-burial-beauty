@@ -15,6 +15,7 @@ import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
 import { sellerDecision } from "./decisionModel.ts";
 import { createScanMeter, type ScanMeter } from "./scanUsage.ts";
+import { listModels } from "npm:@lovable.dev/ai-gateway@0.1.11";
 import { canExtendQuote, extendedDeadline, saveQuoteExtension } from "./quoteDeadline.ts";
 
 const json = (data: unknown, status = 200) =>
@@ -711,7 +712,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
   }
   // Context is built before the run row so a saved history summary never looks like a "new change" next time.
-  const meter = await createScanMeter();
+  const meter = await createScanMeter(listModels);
   const ctx = await buildContext(db, sub, lean ? apiKey : null, meter);
   const { data: run, error: runError } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger: reviewTrigger(trigger, model), decision_model: model, playbook_version: playbook.version }).select("id").single();
   if (runError || !run) throw new Error(runError?.message ?? "Could not start review");
@@ -954,7 +955,7 @@ Deno.serve(async (req) => {
           // Every Needs-reply seller should carry a current suggestion: re-review if theirs went stale.
           const r = await runForSubmission(db, apiKey, sid, body.model ? "manual" : live ? "sweep" : "refresh", undefined, body.model ?? DEFAULT_SELLER_MODEL);
           if ((r as any).status === "done") processed++;
-          results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason, model, scan_usage: (r as any).scan_usage });
+          results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason, model: body.model, scan_usage: (r as any).scan_usage });
         } catch (e) {
           const status = (e as any).status;
           results.push({ submission_id: sid, status: "error", error: String((e as Error).message).slice(0, 200) });
