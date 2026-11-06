@@ -745,7 +745,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
         const { data: newest } = await db.from("email_messages").select("received_at").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
         if (sub.updated_at !== checkpoint.recordUpdatedAt || (newest && newest.received_at > run.created_at)) throw new Error("Seller file changed during review. Start a new review before using suggestions.");
         instruction = checkpoint.instruction;
-        prep.scans = await loadScans(db, sub);
+        prep.scans = checkpoint.prep.scans.names.length ? await loadScans(db, sub) : { parts: [], names: [], refs: [] };
       }
       if (research) prep.input += `\n\nVERIFIED RESEARCH (tools used: ${research.tools.join(", ")}):\n${research.text}`;
       const figs = allowedQuoteFigures(sub, higherQuote(sub));
