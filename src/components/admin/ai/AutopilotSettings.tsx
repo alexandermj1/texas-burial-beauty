@@ -96,6 +96,7 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Last 24 hours</p><p className="font-semibold">{s.last24h.reviews ?? 0} reviews · {s.last24h.sent ?? 0} sent</p></div>
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Waiting to send</p><p className="font-semibold">{s.last24h.held ?? 0}</p></div>
       </div>
+      <SellerAiUsage />
       <details className="border-y border-border py-3"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Daily usage · last seven days</summary><div className="pt-3"><SellerAiUsage history /></div></details>
       <div className="grid gap-3 lg:grid-cols-2">
         <Console title="Coming up next" empty="Nothing scheduled yet." items={s.upcoming ?? []} onOpen={onOpenSubmission} />

@@ -16,6 +16,8 @@ export function cleanAttentionText(raw: string | null | undefined): string {
 
 /** One short headline for the list card: the first clause of the task. */
 export function attentionHeadline(task: string, max = 80): string {
+  if (/couldn.t finish.*planned steps/i.test(task)) return "Check the AI’s unfinished changes";
+  if (/interrupted|stuck.*sending/i.test(task)) return "Check whether the seller received the reply";
   let t = cleanAttentionText(task).replace(/^(guidance needed|quote needed|needs a person[^:]*):\s*/i, (m) => m);
   t = t.split(/(?<=[.;])\s|\s\(1\)|:\s*\(1\)/)[0].replace(/[.;:]$/, "");
   return t.length > max ? t.slice(0, max).replace(/\s+\S*$/, "") + "…" : t;
