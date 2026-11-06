@@ -38,6 +38,7 @@ export async function prepareCemeteryCorrection(db: any, fields: Fields) {
 }
 
 export async function applyCemeteryCorrection(db: any, sub: any, fields: Fields, actionId: string, by: string, generate: (body: any)=>Promise<unknown>) {
+  if (fields.expected_cemetery!==undefined && String(sub.cemetery??"")!==fields.expected_cemetery && sub.cemetery!==fields.cemetery) throw new Error("The seller's cemetery changed since the proposal; review again");
   const plan = await prepareCemeteryCorrection(db, fields);
   let target: Entry;
   if ("existing" in plan) target=plan.existing;
@@ -48,7 +49,7 @@ export async function applyCemeteryCorrection(db: any, sub: any, fields: Fields,
       const retry=await prepareCemeteryCorrection(db,{...fields,create_if_missing:"false"});
       if (!("existing" in retry)) throw new Error("A cemetery profile was created concurrently; staff must verify it");
       target=retry.existing;
-    } else target=data;
+    } else { if (!data) throw new Error("New cemetery was not saved"); target=data; }
   }
   if (fields.expected_cemetery!==undefined && String(sub.cemetery??"")!==fields.expected_cemetery && sub.cemetery!==target.name) throw new Error("The seller's cemetery changed since the proposal; review again");
   if (sub.cemetery!==target.name || sub.cemetery_city!==target.city) {

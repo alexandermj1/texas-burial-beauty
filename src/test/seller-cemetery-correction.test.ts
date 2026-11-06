@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { correctionTarget } from "../../supabase/functions/seller-agent/cemeteryCorrection";
+import { describe, expect, it, vi } from "vitest";
+import { applyCemeteryCorrection, correctionTarget } from "../../supabase/functions/seller-agent/cemeteryCorrection";
 const rows=[{id:"a",name:"Forest Park Westheimer",city:"Houston"},{id:"b",name:"Restland Memorial Park",city:"Dallas"}];
 describe("seller cemetery correction",()=>{
   it("matches cemetery/park variants instead of creating duplicates",()=>{
@@ -18,5 +18,16 @@ describe("seller cemetery correction",()=>{
   it("blocks creation against retired and similar registry profiles",()=>{
     expect(()=>correctionTarget({cemetery:"Restland Cemetery",city:"Dallas"},[{...rows[1],deleted_at:"2026-11-06"}])).toThrow();
     expect(()=>correctionTarget({cemetery:"Forest Park East",city:"Houston",create_if_missing:"true",evidence:"Deed identifies this cemetery at the stated city"},rows)).toThrow();
+  });
+  it("retries unfinished unsigned documents even after the cemetery was saved, never changes signed copies", async()=>{
+    const old={id:"unsigned",kind:"poa",status:"draft",fill_data:{cemetery:"Wrong cemetery"}};
+    const signed={id:"signed",kind:"poa",status:"signed",signed_at:"2026-11-06",fill_data:{cemetery:"Wrong cemetery"}};
+    const db={from:(table:string)=>{
+      const q:any={select:()=>q,order:()=>q,eq:()=>q,is:()=>q,neq:()=>q,range:async()=>({data:rows,error:null}),then:(resolve:any)=>resolve({data:[old,signed],error:null})}; return q;
+    }};
+    const generate=vi.fn().mockResolvedValue({ok:true});
+    const result=await applyCemeteryCorrection(db,{id:"seller",cemetery:"Restland Memorial Park",cemetery_city:"Dallas"},{cemetery:"Restland Cemetery",city:"Dallas"},"action","AI",generate);
+    expect(result.rebuilt).toBe(1);
+    expect(generate).toHaveBeenCalledWith({submission_id:"seller",kind:"poa",overrides:{cemetery:"Restland Memorial Park",county_state:"Dallas, TX",county:"Dallas, TX",supersede_contract_id:"unsigned"}});
   });
 });
