@@ -1,7 +1,8 @@
 # Roadmap
 
 ## Current request
-- [ ] Put scan dollars prominently in red, compare model token rates in picker, diagnose Opus approval block and show required changes before email; verify without emailing customers. Recorded-credit integration needs a supported app-readable source.
+- [x] Red USD scan cost above seller name and in AI heading; picker shows standard input/output credit rates and Astra-relative token prices. Reproduced Glenda reply 409 (unapproved deadline), added shared dependency ordering and disabled-send links in record and queue. Desktop screenshots verified; 24 tests pass, build OK; phone overflow absent but phone record display not verified. No customer email or quote change.
+- [ ] Show Lovable recorded credits automatically — blocked: no documented app-readable recorded-cost feed in installed SDK/public API; estimates remain labelled.
 - [x] Require explicit Seller AI model selection including instructions; Astra/Sol/Opus 5.5 deployed and signed-in alternating reviews verified on AI TEST 2, instruction Sol persists after reload; model plus scan estimates aggregate research/decision usage and credits × 0.3. Unsupported/missing model rejected without inference; no emails/actions executed; preview clean.
 - [ ] Enable requested Sonnet 5.5 — blocked: not present in verified workspace model catalog; no substitution made.
 - [x] Allow appropriate seller quote-deadline extensions before expiry via dedicated approved expiry-only action; active playbook v13 saved, handler deployed, 14 relevant tests pass. Signed-in AI TEST 3 proposed extension plus reply; approved only extension and read back saved note, email left unsent. Glenda's existing deadline and suggestions untouched.
