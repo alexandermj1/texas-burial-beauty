@@ -12,6 +12,9 @@ describe("autopilot wake routing", () => {
   it("waits when nothing changed and the check-back isn't due", () => {
     expect(routeWake({ memory: mem({ due_at: new Date(now + 3600_000).toISOString() }), now: fp, at: now, humanOpen: false }).kind).toBe("wait");
   });
+  it("reviews a new unanswered email even when the silent follow-up is days away", () => {
+    expect(routeWake({ memory: mem({ due_at: "2026-11-13T18:00:00Z" }), now: { ...fp, seller_email: "unanswered" }, at: now, humanOpen: false }).kind).toBe("catch_up");
+  });
   it("checks back when due and nothing changed", () => {
     expect(routeWake({ memory: mem({ due_at: new Date(now - 1).toISOString() }), now: fp, at: now, humanOpen: false }).kind).toBe("checkback");
   });
