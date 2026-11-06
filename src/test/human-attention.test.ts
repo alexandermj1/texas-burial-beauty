@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attentionIndex, humanAttentionEnabled, humanAttentionNote, parseHumanAttention, prioritizeHumanAttention, withHumanAttentionPolicy, type AttentionAction, type HumanAttention } from "@/lib/humanAttention";
+import { selectedAttention, attentionIndex, humanAttentionEnabled, humanAttentionNote, parseHumanAttention, prioritizeHumanAttention, withHumanAttentionPolicy, type AttentionAction, type HumanAttention } from "@/lib/humanAttention";
 
 const attention: HumanAttention = { priority: "high", importance: 85, category: "check", task: "Check whether David's original deed arrived in the office.", reason: "The photo cannot confirm physical receipt.", evidence: "David's latest email and the original-receipt checklist." };
 const flag = (id: string, priority: HumanAttention["priority"] = "high", importance = 85): AttentionAction => ({ id: `action-${id}`, submission_id: id, action_type: "flag_human", status: "proposed", created_at: "2026-11-05T01:06:00Z", payload: { human_attention: { ...attention, priority, importance } } });
@@ -20,6 +20,10 @@ describe("human-attention rollout", () => {
   });
 });
 describe("human task judgments", () => {
+  it("keeps the clicked duplicate's task when details use its stage-leading sibling", () => {
+    const index = attentionIndex([flag("charles-intake"), flag("charles-documents", "normal")]);
+    expect(selectedAttention(index, "charles-intake", "charles-documents")?.actionId).toBe("action-charles-intake");
+  });
   it("retains an explicit task, reason and evidence without inferring urgency from low confidence", () => {
     expect(parseHumanAttention(attention)).toEqual(attention);
     expect(parseHumanAttention({ confidence: 0.1, needs_human: true })).toBeNull();
