@@ -6,6 +6,8 @@ export function cleanAttentionText(raw: string | null | undefined): string {
     .replace(/\b[\w-]*[0-9a-f]{6,}[\w-]*(\.\.\.|…)?[\w-]*\.(jpe?g|png|pdf|heic|webp|docx?)\b/gi, "a file")
     .replace(/\b[\w.-]+\.(jpe?g|png|pdf|heic|webp|docx?)\b/gi, "a file")
     .replace(/\(?\s*(note\s*)?\d{4}-\d{2}-\d{2}(T[\d:.]+Z?)?\s*\)?/gi, "")
+    .replace(/\b(file|photo|scan)\s+a file\b/gi, "$1")
+    .replace(/^\s*staff;\s*/i, "")
     .replace(/\s+([,.;:])/g, "$1")
     .replace(/\(\s*\)/g, "")
     .replace(/\s{2,}/g, " ")

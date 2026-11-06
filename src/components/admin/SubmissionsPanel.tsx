@@ -1818,7 +1818,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   return (
                     <section aria-label="What the AI needs from staff" className="mb-4 rounded-[20px] border border-[hsl(var(--status-attention-border))] bg-[hsl(var(--status-attention-soft))] px-5 py-4 sm:px-7">
                       <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--status-attention-fg))]"><Bot className="h-3.5 w-3.5" />Staff needed · {task.priority} priority</p>
-                      <p className="mt-2 font-display text-lg leading-snug text-foreground">{cleanAttentionText(task.task)}</p>
+                      <p className="mt-2 text-[15px] font-semibold leading-relaxed text-foreground">{cleanAttentionText(task.task)}</p>
                       {why && <p className="mt-2 text-sm leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">Why: </span>{why}</p>}
                       {where && <p className="mt-1 text-sm leading-relaxed text-muted-foreground"><span className="font-medium text-foreground">Where to look: </span>{where}</p>}
                     </section>
