@@ -157,7 +157,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
     `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
     `CONTRACTS (contract_id usable in resend_contract_link / email_signed_copy):\n${JSON.stringify((contracts.data ?? []).map(({ id, sign_token: _t, ...c }: any) => ({ contract_id: id, ...c })))}`,
-    `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, file_url, file_urls, notes, ...d }: any) => ({ ...d, files_attached: (file_urls?.length ?? 0) || (file_url ? 1 : 0), notes: clip(notes, 200) })))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
+    `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, file_url, file_urls, notes, ...d }: any) => ({ ...d, files_attached: (file_urls?.length ? file_urls : file_url ? [file_url] : []).map((u: string) => String(u).split("/").pop()), notes: clip(notes, 200) })))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
     `SELLER'S DOCUMENT PAGE (include in replies about downloads, uploads or outstanding documents ONLY if a document request has been sent): ${sub.documents_requested_at ? `https://www.texascemeterybrokers.com/documents?s=${sub.id}` : "Not yet available"}`,
     `EXAMPLE AVAILABLE PROPERTY LIST (not this seller's live listing): https://www.texascemeterybrokers.com/sample-listing-sheet.html`,
     `CEMETERY SECTION PRICES (our file, retail per space by lawn/section):\n${sectionPrices.length ? JSON.stringify(sectionPrices) : "(none on file)"}`,
@@ -261,7 +261,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
  - STARTER CANCELLATION FEE: quote whatever fee the seller's own quote email states (read it in the thread). Only if their quote email is not visible use the playbook figure.
  - Quotes: apart from send_quote, resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, a different garden/lawn (different area) or a different cemetery, an unverified retail/transfer fee, or a price change beyond the standard 10%: reply_email explaining honestly what we can offer now (the saved quote or the 10% increase) and add_note the details; flag_human only if the cemetery must be phoned for a price.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
-- update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], note?: short plain note}. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
+- update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], detach_files?: [names from that item's files_attached that are WRONG for it — wrong person, wrong document, unreadable, wrong cemetery/plot], note?: short plain note (required when detaching: why)}. Detaching only unlinks the file from that item; the file stays on record. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 D1 deed photos/scans are copies only: the original must physically arrive before listing paperwork is complete. A seller saying mailed is not receipt. For all original-required items attach the copy without setting received; physical receipt is logged by staff separately. Apply record/checklist updates before the reply that reports them done.
 - update_fields can correct ANY descriptive detail on the submission (seller name spelling, phone, property type, owner status, county/state, plot count, section/lawn/spaces, deed owner names, relationship, additional details, purchase info). Use the evidence (deed, emails, tree) and quote it in reason.
 - change_cemetery: the record is matched to the wrong cemetery. Fields: fields = {cemetery: the EXACT name from our cemetery registry (see CEMETERY SECTION PRICES / research get_cemetery)}. On approval the record is reassigned the same way as the Change cemetery button and unsigned prepared documents are rebuilt.
@@ -583,8 +583,9 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
           ? a.items.filter((i: any) => i && typeof i.id === "string").slice(0, 30).map((i: any) => ({
               id: String(i.id), state: DOC_STATES.includes(i.state) ? i.state : null,
               attach_file_ids: Array.isArray(i.attach_file_ids) ? i.attach_file_ids.map(String).slice(0, 6) : [],
+              detach_files: Array.isArray(i.detach_files) ? i.detach_files.map(String).slice(0, 6) : [],
               note: i.note ? String(i.note).slice(0, 300) : null,
-            })).filter((i: any) => i.state || i.attach_file_ids.length)
+            })).filter((i: any) => i.state || i.attach_file_ids.length || i.detach_files.length)
           : null,
       }))
       .filter((a: any) => a.type !== "update_document_items" || a.items?.length)
@@ -675,7 +676,7 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
     return { items: a.items.map((i: any) => { const r = (rows ?? []).find((x: any) => x.id === i.id); return {
       label: r ? `${r.label}${r.person_name ? ` — ${r.person_name}` : ""}` : (i.note ?? "Checklist item"),
       before: String(r?.status ?? "").replace(/_/g, " ") || "pending", after: i.state ? i.state.replace(/_/g, " ") : null,
-      attach: i.attach_file_ids.map((id: string) => fname.get(id) ?? "file"), note: i.note }; }) };
+      attach: i.attach_file_ids.map((id: string) => fname.get(id) ?? "file"), detach: i.detach_files ?? [], note: i.note }; }) };
   }
   return null;
 }
@@ -1153,7 +1154,7 @@ Deno.serve(async (req) => {
             ? `${first(sub)} sent us their ${FIELD_LABEL[k] ?? k}: ${v}.`
             : `Changed the ${FIELD_LABEL[k] ?? k} from ${before[k]} to ${v}.`).join(" "));
         } else if (act.action_type === "update_document_items") {
-          const items = (act.payload?.items ?? []) as { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[];
+          const items = (act.payload?.items ?? []) as { id: string; state: string | null; attach_file_ids: string[]; detach_files?: string[]; note: string | null }[];
           const { data: rows } = await db.from("submission_documents").select("id,doc_code,label,person_name,needs_notary,manual_override,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).in("id", items.map((i) => i.id));
           const done: string[] = [];
           for (const it of items) {
@@ -1167,6 +1168,16 @@ Deno.serve(async (req) => {
               if (patch.status === "received") patch.received_at = now;
             }
             const added: string[] = [];
+            const removed: string[] = [];
+            if (it.detach_files?.length) {
+              const cur: string[] = row.file_urls?.length ? [...row.file_urls] : row.file_url ? [row.file_url] : [];
+              const keep = cur.filter((u) => { const hit = it.detach_files!.includes(String(u).split("/").pop() ?? ""); if (hit) removed.push(String(u).split("/").pop()!); return !hit; });
+              if (removed.length) {
+                if (!it.note) throw new Error(`Say why ${removed.join(", ")} is wrong for ${row.label} before detaching it.`);
+                patch.file_urls = keep; patch.file_url = keep.at(-1) ?? null;
+                row.file_urls = keep;
+              }
+            }
             if (it.attach_file_ids.length && !sub.customer_profile_id) throw new Error("Cannot attach files without a linked customer profile.");
             if (it.attach_file_ids.length && sub.customer_profile_id) {
               const { data: files } = await db.from("customer_files").select("id,file_name,file_path,mime_type").eq("customer_profile_id", sub.customer_profile_id).in("id", it.attach_file_ids).is("deleted_at", null);
@@ -1187,7 +1198,7 @@ Deno.serve(async (req) => {
             if (e) throw new Error(e.message);
             const who = row.person_name ? ` for ${row.person_name}` : "";
             const stateWord: Record<string, string> = { received: "received", notarized: "notarised original received", not_needed: "not needed", needed: "still needed", issued: "issued" };
-            done.push(`${row.label}${who}${it.state ? ` marked ${stateWord[it.state]}` : ""}${added.length ? `${it.state ? "," : ""} attached ${added.join(", ")}` : ""}`);
+            done.push(`${row.label}${who}${it.state ? ` marked ${stateWord[it.state]}` : ""}${added.length ? `${it.state ? "," : ""} attached ${added.join(", ")}` : ""}${removed.length ? `, detached ${removed.join(", ")} (${it.note})` : ""}`);
           }
           if (!done.length) throw new Error("None of those checklist items could be updated");
           await aiNote(`Updated the document checklist: ${done.join("; ")}.`);
