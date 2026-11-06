@@ -8,7 +8,8 @@ import { Loader2, RefreshCw, BookOpen } from "lucide-react";
 import AiActionCard, { type AiAction as Action , visualOwners } from "./ai/AiActionCard";
 import AiReviewButton from "./ai/AiReviewButton";
 import AiScanCost from "./ai/AiScanCost";
-import { runSellerReview } from "@/lib/runSellerReview";
+import { runSellerReview, type ReviewProgress } from "@/lib/runSellerReview";
+import AiReviewProgress from "./ai/AiReviewProgress";
 import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { sellerModelLabel } from "../../../supabase/functions/seller-agent/models";
@@ -24,6 +25,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
   const [subs, setSubs] = useState<Record<string, Sub>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ReviewProgress | null>(null);
   const [playbook, setPlaybook] = useState<{ version: number; content: string } | null>(null);
   const [pbDraft, setPbDraft] = useState("");
   const [runId, setRunId] = useState("");
@@ -64,7 +66,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
       const selected = await call({ action: "sweep", limit: 8, model });
       const results = [];
       for (const seller of selected.results ?? []) {
-        const result = await runSellerReview(seller.submission_id, model);
+        const result = await runSellerReview(seller.submission_id, model, undefined, setProgress);
         results.push({ ...result, model });
       }
       const r = { processed: results.filter(x => x.status === "done").length, results };
@@ -73,6 +75,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
       await load();
     } catch (e) { toast({ title: "Review failed", description: (e as Error).message, variant: "destructive" }); }
     setBusy(null);
+    setProgress(null);
   };
 
   const runOne = async (model: SellerModel) => {
@@ -80,13 +83,14 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
     if (!id) return;
     setBusy("one");
     try {
-      const r = await runSellerReview(id, model);
+      const r = await runSellerReview(id, model, undefined, setProgress);
       setScanResults(r?.status === "done" ? [{ model, scan_usage: r.scan_usage }] : []);
       toast({ title: r?.status === "done" ? "Seller reviewed" : "Skipped", description: r?.reason ?? r?.decision?.next_step });
       setRunId("");
       await load();
     } catch (e) { toast({ title: "Review failed", description: (e as Error).message, variant: "destructive" }); }
     setBusy(null);
+    setProgress(null);
   };
 
   const savePlaybook = async () => {
@@ -129,6 +133,7 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
         </div>
       </div>
 
+      {progress && <AiReviewProgress progress={progress} />}
       {scanResults.map((r, i) => <div key={i} className="space-y-1 border-b border-border pb-2"><p className="text-sm font-medium">{sellerModelLabel(r.model)}</p><AiScanCost usage={r.scan_usage} /></div>)}
       <div className="flex gap-1.5 flex-wrap">
         {tabs.map((t) => (

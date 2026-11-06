@@ -8,7 +8,8 @@ import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
 import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
 import AiReviewButton from "./AiReviewButton";
 import AiScanCost from "./AiScanCost";
-import { runSellerReview } from "@/lib/runSellerReview";
+import { runSellerReview, type ReviewProgress } from "@/lib/runSellerReview";
+import AiReviewProgress from "./AiReviewProgress";
 import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../../supabase/functions/seller-agent/scanUsage";
 import { reviewModelLabel, type SellerModel } from "../../../../supabase/functions/seller-agent/models";
@@ -32,7 +33,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const [reviews, setReviews] = useState<Run[]>([]);
   const [actions, setActions] = useState<AiAction[]>([]);
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState("");
+  const [progress, setProgress] = useState<ReviewProgress | null>(null);
   const [paused, setPaused] = useState(!!pausedAt);
   const [showHistory, setShowHistory] = useState(false);
   const [instruction, setInstruction] = useState("");
@@ -74,7 +75,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       await load();
     } catch (e) { toast({ title: "AI review failed", description: (e as Error).message, variant: "destructive" }); await load(); }
     setBusy(false);
-    setProgress("");
+    setProgress(null);
   };
 
   const togglePause = async (v: boolean) => {
@@ -134,7 +135,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         </div>
       )}
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
-      {reviewing && <p role="status" className="text-sm text-muted-foreground">{progress || run?.stage_summary || "Starting seller review"}</p>}
+      {reviewing && (progress ? <AiReviewProgress progress={progress} /> : <p role="status" className="text-sm text-muted-foreground">{run?.stage_summary || "Starting seller review"}</p>)}
       {reviews.length > 1 && <details className="border-t border-border pt-2">
         <summary className="cursor-pointer text-xs text-muted-foreground">Recent model reviews</summary>
         <ul className="mt-2 space-y-3">
