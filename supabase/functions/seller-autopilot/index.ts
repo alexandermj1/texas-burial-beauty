@@ -158,13 +158,33 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const { data: job } = await db.from("automation_job_state").select("*").eq("job_name", JOB).maybeSingle();
   if (!job) return json({ error: "Job not set up" }, 500);
+  const body = await req.json().catch(() => ({})) as any;
   let allowed = isInternalCall(req) || (!!job.trigger_secret && req.headers.get("x-automation-secret") === job.trigger_secret);
-  if (!allowed) {
+  let adminName: string | null = null;
+  if (!allowed || body?.op) {
     const tok = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u } = tok ? await db.auth.getUser(tok) : { data: { user: null } } as any;
-    if (u?.user) { const { data: role } = await db.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle(); allowed = !!role; }
+    if (u?.user) { const { data: role } = await db.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle(); allowed = !!role; if (role) adminName = u.user.email ?? "Admin"; }
+    if (body?.op && !adminName) return json({ error: "Admins only" }, 403);
   }
   if (!allowed) return json({ error: "Not allowed" }, 403);
+  if (body?.op === "status" || body?.op === "set" || body?.op === "resume") {
+    if (body.op === "set") {
+      const mode = ["off", "selected", "all"].includes(body.mode) ? body.mode : "off";
+      const daily = Math.min(200, Math.max(1, Math.round(Number(body.daily_reviews) || 40)));
+      await db.from("ai_agent_settings").upsert({ key: "seller_autopilot", value: { mode, daily_reviews: daily }, updated_at: new Date().toISOString(), updated_by_name: adminName });
+      if (mode !== "off" && job.pause_reason === "Not switched on yet") await db.from("automation_job_state").update({ status: "active", pause_reason: null }).eq("job_name", JOB);
+    }
+    if (body.op === "resume") await db.from("automation_job_state").update({ status: "active", pause_reason: null, consecutive_rate_limits: 0 }).eq("job_name", JOB);
+    const since = new Date(Date.now() - 86400_000).toISOString();
+    const [{ data: st }, { count: reviews }, { count: sent }, { count: held }] = await Promise.all([
+      db.from("automation_job_state").select("status,pause_reason,last_completed_at").eq("job_name", JOB).maybeSingle(),
+      db.from("ai_agent_runs").select("id", { count: "exact", head: true }).like("trigger", "autopilot:%").gte("created_at", since),
+      db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("status", "sent").gte("sent_at", since),
+      db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("status", "held"),
+    ]);
+    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held } });
+  }
   const s = await settings();
   if (s.mode === "off") return json({ status: "off" });
   if (job.status === "paused") return json({ status: "paused", reason: job.pause_reason });
