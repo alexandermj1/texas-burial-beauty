@@ -480,6 +480,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_outbox: {
+        Row: {
+          action_id: string
+          created_at: string
+          id: string
+          send_at: string
+          sent_at: string | null
+          status: string
+          status_reason: string | null
+          submission_id: string
+        }
+        Insert: {
+          action_id: string
+          created_at?: string
+          id?: string
+          send_at: string
+          sent_at?: string | null
+          status?: string
+          status_reason?: string | null
+          submission_id: string
+        }
+        Update: {
+          action_id?: string
+          created_at?: string
+          id?: string
+          send_at?: string
+          sent_at?: string | null
+          status?: string
+          status_reason?: string | null
+          submission_id?: string
+        }
+        Relationships: []
+      }
       ai_playbook: {
         Row: {
           change_note: string | null
@@ -510,6 +543,54 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           version?: number
+        }
+        Relationships: []
+      }
+      ai_record_memory: {
+        Row: {
+          due_at: string | null
+          fingerprint: Json | null
+          history: Json
+          last_full_review_at: string | null
+          last_route: string | null
+          last_run_id: string | null
+          next_if_silent: string | null
+          reminder_count: number
+          submission_id: string
+          summary: string
+          suspect_problem: boolean
+          updated_at: string
+          waiting_for: string | null
+        }
+        Insert: {
+          due_at?: string | null
+          fingerprint?: Json | null
+          history?: Json
+          last_full_review_at?: string | null
+          last_route?: string | null
+          last_run_id?: string | null
+          next_if_silent?: string | null
+          reminder_count?: number
+          submission_id: string
+          summary?: string
+          suspect_problem?: boolean
+          updated_at?: string
+          waiting_for?: string | null
+        }
+        Update: {
+          due_at?: string | null
+          fingerprint?: Json | null
+          history?: Json
+          last_full_review_at?: string | null
+          last_route?: string | null
+          last_run_id?: string | null
+          next_if_silent?: string | null
+          reminder_count?: number
+          submission_id?: string
+          summary?: string
+          suspect_problem?: boolean
+          updated_at?: string
+          waiting_for?: string | null
         }
         Relationships: []
       }
@@ -1184,6 +1265,7 @@ export type Database = {
           acceptance_channel: string | null
           accepted_quote_amount: number | null
           admin_notes: string | null
+          ai_autopilot: boolean
           ai_history_summary: string | null
           ai_history_summary_through: string | null
           ai_paused_at: string | null
@@ -1312,6 +1394,7 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_autopilot?: boolean
           ai_history_summary?: string | null
           ai_history_summary_through?: string | null
           ai_paused_at?: string | null
@@ -1440,6 +1523,7 @@ export type Database = {
           acceptance_channel?: string | null
           accepted_quote_amount?: number | null
           admin_notes?: string | null
+          ai_autopilot?: boolean
           ai_history_summary?: string | null
           ai_history_summary_through?: string | null
           ai_paused_at?: string | null
