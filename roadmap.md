@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Fixed stalled manual seller reviews with acknowledged research/tool checkpoints and a separate claimed decision request; selected model and approvals preserved, no automatic retries. Cinnamon Opus completed in 231s with five saved proposals; Sol then Astra completed and read back on AI TEST 2. 26 tests pass, preview clean; no customer emails/actions executed. Long reviews still take minutes; keep the review tab open. Recorded-credit feed and unavailable Sonnet remain earlier blockers.
 - [x] Red USD scan cost above seller name and in AI heading; picker shows standard input/output credit rates and Astra-relative token prices. Reproduced Glenda reply 409 (unapproved deadline), added shared dependency ordering and disabled-send links in record and queue. Desktop screenshots verified; 24 tests pass, build OK; phone overflow absent but phone record display not verified. No customer email or quote change.
 - [ ] Show Lovable recorded credits automatically — blocked: no documented app-readable recorded-cost feed in installed SDK/public API; estimates remain labelled.
 - [x] Require explicit Seller AI model selection including instructions; Astra/Sol/Opus 5.5 deployed and signed-in alternating reviews verified on AI TEST 2, instruction Sol persists after reload; model plus scan estimates aggregate research/decision usage and credits × 0.3. Unsupported/missing model rejected without inference; no emails/actions executed; preview clean.

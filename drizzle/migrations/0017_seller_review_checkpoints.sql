@@ -1,0 +1,2 @@
+ALTER TABLE public.ai_agent_runs ADD COLUMN IF NOT EXISTS review_checkpoint jsonb;
+COMMENT ON COLUMN public.ai_agent_runs.review_checkpoint IS 'Staff-only explicit review continuation state; no automatic replay after unknown inference outcomes.';

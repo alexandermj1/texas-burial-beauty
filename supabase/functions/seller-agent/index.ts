@@ -14,6 +14,7 @@ import { DEFAULT_SELLER_PLAYBOOK } from "../_shared/sellerPlaybook.ts";
 
 import { SELLER_MODELS, DEFAULT_SELLER_MODEL, reviewTrigger, type SellerModel } from "./models.ts";
 import { sellerDecision } from "./decisionModel.ts";
+import { claimPhase } from "./reviewContinuation.ts";
 import { createScanMeter, type ScanMeter } from "./scanUsage.ts";
 import { listModels } from "npm:@lovable.dev/ai-gateway@0.1.11";
 import { canExtendQuote, extendedDeadline, saveQuoteExtension } from "./quoteDeadline.ts";
@@ -23,6 +24,7 @@ const json = (data: unknown, status = 200) =>
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional(), model: z.enum(SELLER_MODELS) }),
+  z.object({ action: z.literal("continue_review"), run_id: z.string().uuid(), model: z.enum(SELLER_MODELS) }),
   z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional(), model: z.enum(SELLER_MODELS) }),
   z.object({ action: z.literal("execute"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("feedback"), action_id: z.string().uuid(), kind: z.enum(["comment", "outcome"]), comment: z.string().trim().max(2000).optional(), correct: z.boolean().optional(), went_live: z.boolean().optional() }),
@@ -677,7 +679,7 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
   return null;
 }
 
-async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string, model: SellerModel = DEFAULT_SELLER_MODEL) {
+async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId: string, trigger: string, staffInstruction?: string, model: SellerModel = DEFAULT_SELLER_MODEL, ownerId?: string, resume?: any) {
   const { data: sub } = await db.from("contact_submissions").select("*").eq("id", submissionId).maybeSingle();
   if (!sub) return { status: "skipped", reason: "not found" };
   if (sub.deleted_at || sub.archived_at) return { status: "skipped", reason: "archived or deleted" };
@@ -711,30 +713,48 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const { data: inote } = await db.from("customer_notes").select("body,created_at").eq("submission_id", sub.id).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (inote && (!lastRun || inote.created_at > lastRun.created_at)) instruction = String(inote.body).replace(/^Instruction for AI:\s*/i, "");
   }
-  // Context is built before the run row so a saved history summary never looks like a "new change" next time.
   const meter = await createScanMeter(listModels);
-  const ctx = await buildContext(db, sub, lean ? apiKey : null, meter);
-  const { data: run, error: runError } = await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger: reviewTrigger(trigger, model), decision_model: model, playbook_version: playbook.version }).select("id").single();
-  if (runError || !run) throw new Error(runError?.message ?? "Could not start review");
+  if (resume) meter.restore(resume.scan_usage);
+  const checkpoint = resume?.review_checkpoint;
+  const ctx = checkpoint?.ctx ?? await buildContext(db, sub, lean ? apiKey : null, meter);
+  const run = resume ?? (await db.from("ai_agent_runs").insert({ submission_id: sub.id, trigger: reviewTrigger(trigger, model), decision_model: model, playbook_version: playbook.version }).select("id").single()).data;
+  if (!run) throw new Error("Could not start review");
   try {
     const { allowed } = allowedActions(sub, ctx.contracts);
-    const prep = await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger }, meter);
-    let research: { tools: string[]; text: string } | null = null;
+    const prep = checkpoint?.prep ?? await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger }, meter);
+    let research: { tools: string[]; text: string } | null = checkpoint?.research ?? null;
+    if (!resume && !prep.skip && ownerId) {
+      const { parts: _parts, ...scanInfo } = prep.scans;
+      const { error } = await db.from("ai_agent_runs").update({ status: "research_ready", stage_summary: "Checking seller file", scan_usage: meter.snapshot(), review_checkpoint: { ownerId, instruction, ctx, prep: { ...prep, scans: scanInfo }, recordUpdatedAt: sub.updated_at, researchState: null } }).eq("id", run.id);
+      if (error) throw new Error(error.message);
+      return { status: "pending", run_id: run.id, model, stage: "Checking seller file" };
+    }
+    if (resume?.status === "research_running") {
+      const r = await researchRecord(db, apiKey, sub, ctx.focus, checkpoint.instruction, (m, usage) => meter.observe(m, usage), { state: checkpoint.researchState ?? undefined });
+      const next = { ...checkpoint, researchState: r.state, ...(r.complete ? { research: { tools: r.trace, text: r.text } } : {}) };
+      const stage = r.complete ? `Deciding next steps (${model})` : `Checking seller file (${r.trace.length} lookups)`;
+      const { error } = await db.from("ai_agent_runs").update({ status: r.complete ? "decision_ready" : "research_ready", stage_summary: stage, scan_usage: meter.snapshot(), review_checkpoint: next }).eq("id", run.id);
+      if (error) throw new Error(error.message);
+      return { status: "pending", run_id: run.id, model, stage };
+    }
     if (!prep.skip) {
-      // Admin-grade research pass: reads the whole file with tools before the decision.
-      try {
-        const r = await researchRecord(db, apiKey, sub, ctx.focus, instruction, (model, usage) => meter.observe(model, usage));
-        research = { tools: r.trace, text: r.text.slice(0, 6000) };
-        prep.input += `\n\nVERIFIED RESEARCH (tools used: ${r.trace.join(", ") || "none"}):\n${r.text}`;
-        await db.from("ai_agent_runs").update({ stage_summary: `Researched file (${r.trace.length} lookups)` }).eq("id", run!.id);
-      } catch (e) { console.warn("research pass failed", e); prep.input += "\n\nVERIFIED RESEARCH: unavailable for this review — rely on the file above."; }
+      if (!resume) {
+        const r = await researchRecord(db, apiKey, sub, ctx.focus, instruction, (m, usage) => meter.observe(m, usage));
+        research = { tools: r.trace, text: r.text };
+      } else {
+        const { data: newest } = await db.from("email_messages").select("received_at").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(1).maybeSingle();
+        if (sub.updated_at !== checkpoint.recordUpdatedAt || (newest && newest.received_at > run.created_at)) throw new Error("Seller file changed during review. Start a new review before using suggestions.");
+        instruction = checkpoint.instruction;
+        prep.scans = checkpoint.prep.scans.names.length ? await loadScans(db, sub) : { parts: [], names: [], refs: [] };
+      }
+      if (research) prep.input += `\n\nVERIFIED RESEARCH (tools used: ${research.tools.join(", ")}):\n${research.text}`;
       const figs = allowedQuoteFigures(sub, higherQuote(sub));
       prep.input += `\n\nALLOWED QUOTE FIGURES (per space, excl. transfer fee): ${figs.size ? [...figs].map(([v, why]) => `$${v} (${why})`).join("; ") : "none — never send a quote"}`;
       prep.input += `\nALLOWED NOW: ${[...allowed].join(", ")}`;
     }
     if (prep.skip) {
-      await db.from("ai_agent_runs").update({ status: "done", stage_summary: prep.skip.stage_summary, next_step: prep.skip.next_step || "No action needed", reasoning: "Quick check: nothing new needs doing on this file.", confidence: 1, needs_human: false }).eq("id", run!.id);
-      return { status: "done", run_id: run!.id, effort: "triage", decision: { actions: [], ...prep.skip } };
+      await db.from("ai_agent_runs").update({ status: "done", stage_summary: prep.skip.stage_summary, next_step: prep.skip.next_step || "No action needed", reasoning: "Quick check: nothing new needs doing on this file.", confidence: 1, needs_human: false }).eq("id", run.id);
+      return { status: "done", run_id: run.id, effort: "triage", decision: { actions: [], ...prep.skip } };
     }
     const scans = prep.scans;
     const raw = await callModel(apiKey, prep.instructions, prep.input, instruction ? "medium" : effort, scans.parts, model, meter);
@@ -750,9 +770,9 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     // Staff only handle phone calls now; a call flag sits alongside the AI's own actions.
     const needsHuman = d.actions.some((a) => a.type === "flag_human");
     await db.from("ai_agent_runs").update({
-      status: "done", stage_summary: d.stage_summary, next_step: d.next_step, reasoning: d.reasoning,
+      stage_summary: d.stage_summary, next_step: d.next_step, reasoning: d.reasoning,
       confidence: d.confidence, needs_human: needsHuman, human_reason: d.human_reason,
-    }).eq("id", run!.id);
+    }).eq("id", run.id);
 
     // Supersede older undecided proposals for this seller so the queue stays current.
     await db.from("ai_agent_actions").update({ status: "superseded" }).eq("submission_id", sub.id).eq("status", "proposed");
@@ -764,7 +784,7 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
     const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
     if (dropped.size) { console.warn("dropped invalid AI actions", previews.filter((p: any) => p?.invalid)); d.actions = d.actions.filter((_, i) => !dropped.has(i)); previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i))); }
     const rows = d.actions.map((a, ai) => ({
-      run_id: run!.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
+      run_id: run.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
       email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.human_attention ? humanAttentionNote(a.human_attention) : a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
@@ -782,10 +802,11 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
         }
       }
     }
+    await db.from("ai_agent_runs").update({ status: "done", review_checkpoint: null }).eq("id", run.id);
     return { status: "done", run_id: run.id, effort, model, scan_usage: meter.snapshot(), decision: d };
   } catch (e) {
     const msg = String((e as Error).message ?? e);
-    await db.from("ai_agent_runs").update({ status: "error", error: msg.slice(0, 1000) }).eq("id", run!.id);
+    await db.from("ai_agent_runs").update({ status: "error", error: msg.slice(0, 1000) }).eq("id", run.id);
     throw e;
   } finally {
     await db.from("ai_agent_runs").update({ scan_usage: meter.snapshot() }).eq("id", run.id);
@@ -857,11 +878,23 @@ Deno.serve(async (req) => {
 
     if (body.action === "run") {
       try {
-        return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction, body.model ?? DEFAULT_SELLER_MODEL));
+        return json(await runForSubmission(db, apiKey, body.submission_id, body.trigger ?? "manual", body.instruction, body.model, user.id));
       } catch (e) {
         const status = (e as any).status;
         return json({ error: String((e as Error).message) }, status === 402 || status === 403 || status === 429 ? status : 500);
       }
+    }
+
+    if (body.action === "continue_review") {
+      const { data: saved } = await db.from("ai_agent_runs").select("*").eq("id", body.run_id).is("deleted_at", null).maybeSingle();
+      if (!saved || saved.review_checkpoint?.ownerId !== user.id) return json({ error: "Review not available for this staff account" }, 403);
+      if (saved.decision_model !== body.model) return json({ error: "The selected model must stay unchanged within this review" }, 409);
+      const phase = claimPhase(saved.status);
+      if (!phase) return json({ error: "This review step is already running or stopped. No automatic retry was made." }, 409);
+      const { data: claimed, error } = await db.from("ai_agent_runs").update({ status: phase }).eq("id", saved.id).eq("status", saved.status).select("*").maybeSingle();
+      if (error || !claimed) return json({ error: "Review step already claimed; stopped without repeating it" }, 409);
+      try { return json(await runForSubmission(db, apiKey, saved.submission_id, "manual", saved.review_checkpoint.instruction, body.model, user.id, claimed)); }
+      catch (e) { return json({ error: String((e as Error).message) }, (e as any).status || 500); }
     }
 
     if (body.action === "compare") {
@@ -950,18 +983,8 @@ Deno.serve(async (req) => {
           const { count } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
           if (count) continue; // still has a current suggestion
         }
-        try {
-          const { count: live } = await db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("submission_id", sid).eq("status", "proposed");
-          // Every Needs-reply seller should carry a current suggestion: re-review if theirs went stale.
-          const r = await runForSubmission(db, apiKey, sid, body.model ? "manual" : live ? "sweep" : "refresh", undefined, body.model ?? DEFAULT_SELLER_MODEL);
-          if ((r as any).status === "done") processed++;
-          results.push({ submission_id: sid, status: (r as any).status, reason: (r as any).reason, model: body.model, scan_usage: (r as any).scan_usage });
-        } catch (e) {
-          const status = (e as any).status;
-          results.push({ submission_id: sid, status: "error", error: String((e as Error).message).slice(0, 200) });
-          if (status === 402 || status === 403) break; // pause the whole sweep
-          processed++;
-        }
+        results.push({ submission_id: sid, status: "selected", model: body.model });
+        processed++;
       }
       return json({ ok: true, processed, results });
     }

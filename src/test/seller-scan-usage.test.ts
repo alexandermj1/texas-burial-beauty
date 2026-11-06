@@ -26,6 +26,16 @@ it("gives each scan an independent meter", () => {
   a.observe("model", { input_tokens: 1000, output_tokens: 100 });
   expect(a.snapshot().calls).toBe(1); expect(b.snapshot().calls).toBe(0);
 });
+it("carries credits across acknowledged research and decision requests", () => {
+  const first = new ScanMeter(new Map([["model", pricing]]));
+  first.observe("model", { input_tokens: 1000, output_tokens: 100 });
+  const next = new ScanMeter(new Map([["model", pricing]]));
+  next.restore(first.snapshot());
+  next.observe("model", { input_tokens: 1000, output_tokens: 100 });
+  expect(next.snapshot().calls).toBe(2);
+  expect(next.snapshot().estimated_credits).toBeCloseTo(0.048);
+  expect(next.snapshot().equivalent).toBeCloseTo(0.0144);
+});
 it("preserves both the PDF deed and image scan when selecting Opus", () => {
   expect(claudeMedia([{ type: "input_file", filename: "deed.pdf", file_data: "data:application/pdf;base64,YQ==" }, { type: "input_image", image_url: "data:image/jpeg;base64,Yg==" }])).toEqual([{ type: "document", title: "deed.pdf", source: { type: "base64", media_type: "application/pdf", data: "YQ==" } }, { type: "image", source: { type: "base64", media_type: "image/jpeg", data: "Yg==" } }]);
   expect(() => claudeMedia([{ type: "input_image", image_url: "data:image/heic;base64,Yg==" }])).toThrow();

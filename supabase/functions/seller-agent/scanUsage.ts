@@ -24,6 +24,11 @@ export class ScanMeter {
   private calls = 0;
   private missing = 0;
   constructor(private pricing: Map<string, Pricing>) {}
+  restore(saved?: ScanUsage | null) {
+    if (!saved) return;
+    this.calls = saved.calls; this.missing = saved.missing_calls;
+    this.credits = saved.estimated_credits ?? 0;
+  }
   observe(model: string, usage: unknown) {
     this.calls++;
     const cost = estimateUsage(this.pricing.get(model), usage, model.startsWith("anthropic/"));

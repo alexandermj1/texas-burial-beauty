@@ -1,0 +1,1 @@
+- Manual seller reviews checkpoint one acknowledged research/tool step per request, then separately claim the originally selected decision model; unknown outcomes never replay automatically — why: long records must not exhaust one request lifetime or duplicate billed inference.
