@@ -10,6 +10,7 @@ import AiReviewButton from "./ai/AiReviewButton";
 import AiScanCost from "./ai/AiScanCost";
 import { runSellerReview, type ReviewProgress } from "@/lib/runSellerReview";
 import AiReviewProgress from "./ai/AiReviewProgress";
+import AutopilotSettings from "./ai/AutopilotSettings";
 import { orderSellerActions, replyDependencies } from "@/lib/sellerActionDependencies";
 import type { ScanUsage } from "../../../supabase/functions/seller-agent/scanUsage";
 import { sellerModelLabel } from "../../../supabase/functions/seller-agent/models";
@@ -121,10 +122,11 @@ export default function AiAgentPanel({ onOpenSubmission }: { onOpenSubmission?: 
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
+      <AutopilotSettings />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="font-display text-2xl text-foreground">AI Seller Agent</h2>
-          <p className="text-sm text-muted-foreground">Sellers only. Nothing is sent to a customer until someone approves it.</p>
+          <p className="text-sm text-muted-foreground">Sellers only. Without autopilot, nothing is sent to a customer until someone approves it.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Input value={runId} onChange={(e) => setRunId(e.target.value)} placeholder="Submission ID" className="w-64 h-9" />
