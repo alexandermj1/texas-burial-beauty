@@ -33,7 +33,7 @@ export const ADMIN_READ_TOOLS = [
   { name: "nearby_cemeteries", description: "Cemeteries in our file within N miles (default 25) of a cemetery, nearest first, with how many active seller records each has.", parameters: { type: "object", properties: { cemetery: { type: "string" }, miles: { type: "number" } }, required: ["cemetery"] } },
 ] as const;
 
-export type ToolCtx = { db: any; apiKey: string; dir: any[]; deedReads: number; fileReads?: number };
+export type ToolCtx = { db: any; apiKey: string; dir: any[]; deedReads: number; fileReads?: number; onUsage?: (model: string, usage: unknown) => void };
 const US = /texascemeterybrokers|bayercemeterybrokers/i;
 const b64 = (bytes: Uint8Array) => { let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(bin); };
 const miles = (a: any, b: any) => { const r = (x: number) => x * Math.PI / 180; const dLat = r(b.latitude - a.latitude), dLng = r(b.longitude - a.longitude); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.latitude)) * Math.cos(r(b.latitude)) * Math.sin(dLng / 2) ** 2; return 3958.8 * 2 * Math.asin(Math.sqrt(h)); };
@@ -184,13 +184,15 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
   return { error: `Unknown tool ${name}` };
 }
 
-export async function chat(apiKey: string, messages: any[], opts: { tools?: any[]; json?: boolean; model?: string; label?: string } = {}) {
+export async function chat(apiKey: string, messages: any[], opts: { tools?: any[]; json?: boolean; model?: string; label?: string; onUsage?: (model: string, usage: unknown) => void } = {}) {
   const r = await aiFetch(opts.label ?? "AI researching a record", "https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
     body: JSON.stringify({ model: opts.model ?? AGENT_MODEL, messages, ...(opts.tools ? { tools: opts.tools.map(t => ({ type: "function", function: t })) } : {}), ...(opts.json ? { response_format: { type: "json_object" } } : {}) }),
   });
   if (!r.ok) throw Object.assign(new Error(`AI ${r.status}: ${(await r.text()).slice(0, 200)}`), { status: r.status });
-  return (await r.json())?.choices?.[0]?.message ?? {};
+  const result = await r.json();
+  opts.onUsage?.(result.model ?? opts.model ?? AGENT_MODEL, result.usage);
+  return result?.choices?.[0]?.message ?? {};
 }
 
 /** Bounded tool loop: at most `maxSteps` model turns, then forces a final JSON answer. */
@@ -198,7 +200,7 @@ export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSt
   const messages: any[] = [{ role: "system", content: system }, { role: "user", content: task }];
   const trace: { tool: string; args: unknown }[] = [];
   for (let step = 0; step < maxSteps; step++) {
-    const msg = await chat(ctx.apiKey, messages, { tools: [...tools], label: `${label} (step ${step + 1})` });
+    const msg = await chat(ctx.apiKey, messages, { tools: [...tools], label: `${label} (step ${step + 1})`, onUsage: ctx.onUsage });
     messages.push({ role: "assistant", content: msg.content ?? "", ...(msg.tool_calls ? { tool_calls: msg.tool_calls } : {}) });
     if (!msg.tool_calls?.length) return { answer: parseJson(msg.content), trace };
     for (const tc of msg.tool_calls) {
@@ -209,7 +211,7 @@ export async function runAgent(ctx: ToolCtx, system: string, task: string, maxSt
     }
   }
   messages.push({ role: "user", content: "Stop using tools. Give your final JSON answer now." });
-  const last = await chat(ctx.apiKey, messages, { json: true, label: `${label} (final answer)` });
+  const last = await chat(ctx.apiKey, messages, { json: true, label: `${label} (final answer)`, onUsage: ctx.onUsage });
   return { answer: parseJson(last.content), trace };
 }
 
