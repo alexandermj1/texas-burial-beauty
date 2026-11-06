@@ -80,7 +80,7 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
     `OPEN PROMISES:\n${list(a.open_promises).slice(0, 10).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
     `ANSWER MATERIAL:\n${list(a.answer_material).slice(0, 12).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
   ].join("\n\n");
-  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: trace.map((t) => t.tool), mistakes: list(a.mistakes).length };
+  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: ["loaded_file", ...trace.map((t: any) => t.tool)], mistakes: list(a.mistakes).length };
 }
 
 const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
