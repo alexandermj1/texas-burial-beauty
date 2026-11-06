@@ -3821,7 +3821,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             }
 
             const customTag = String((s as any).custom_tag || "").trim();
-            if (customTag) {
+            const buyerStageLabel = isBuyer && ["Ready to buy", "Pre-need", "Just browsing", "Plots sent", "Waiting on inventory"].includes(customTag) ? customTag : null;
+            if (customTag && !buyerStageLabel) {
               chips.push({
                 key: "custom",
                 icon: Sparkles,
@@ -3875,7 +3876,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         <span className="submission-stage-number flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-[10px] tabular-nums">{stage.step}</span>
                         <StageIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /><span>{stage.label}</span>
                       </span>}
-                      {isBuyer && <span className="submission-buyer inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-semibold leading-snug"><Users aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />Buyer</span>}
+                      {isBuyer && <span className="submission-buyer inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-semibold leading-snug"><Users aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />{buyerStageLabel ? `Buyer · ${buyerStageLabel}` : "Buyer"}</span>}
                       {needsReply && <span className="submission-needs-reply inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-semibold leading-snug"><Mail aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />Needs reply</span>}
                       {chips.find(c => c.key === "money") && <span className="ml-auto text-[11px] text-muted-foreground tabular-nums" title={chips.find(c => c.key === "money")?.title}>{chips.find(c => c.key === "money")?.text}</span>}
                     </div>
