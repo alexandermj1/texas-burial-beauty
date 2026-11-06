@@ -428,6 +428,27 @@
 
   /* Seller workspace actions inherit the current pipeline stage. Primary
      actions carry the stage colour; supporting actions use its quiet tint. */
+  .submission-stage {
+    --feed-stage: var(--pipeline-slate);
+    --feed-stage-soft: var(--pipeline-slate-soft);
+    --feed-stage-fg: var(--pipeline-slate-fg);
+    --feed-stage-border: var(--pipeline-slate-border);
+    background: hsl(var(--feed-stage-soft));
+    color: hsl(var(--feed-stage-fg));
+    border-color: hsl(var(--feed-stage-border));
+  }
+  .submission-stage[data-stage-tone="amber"] { --feed-stage: var(--pipeline-amber); --feed-stage-soft: var(--pipeline-amber-soft); --feed-stage-fg: var(--pipeline-amber-fg); --feed-stage-border: var(--pipeline-amber-border); }
+  .submission-stage[data-stage-tone="purple"] { --feed-stage: var(--pipeline-purple); --feed-stage-soft: var(--pipeline-purple-soft); --feed-stage-fg: var(--pipeline-purple-fg); --feed-stage-border: var(--pipeline-purple-border); }
+  .submission-stage[data-stage-tone="green"] { --feed-stage: var(--pipeline-green); --feed-stage-soft: var(--pipeline-green-soft); --feed-stage-fg: var(--pipeline-green-fg); --feed-stage-border: var(--pipeline-green-border); }
+  .submission-stage[data-stage-tone="indigo"] { --feed-stage: var(--pipeline-indigo); --feed-stage-soft: var(--pipeline-indigo-soft); --feed-stage-fg: var(--pipeline-indigo-fg); --feed-stage-border: var(--pipeline-indigo-border); }
+  .submission-stage[data-stage-tone="teal"] { --feed-stage: var(--pipeline-teal); --feed-stage-soft: var(--pipeline-teal-soft); --feed-stage-fg: var(--pipeline-teal-fg); --feed-stage-border: var(--pipeline-teal-border); }
+  .submission-stage[data-stage-tone="sky"] { --feed-stage: var(--pipeline-sky); --feed-stage-soft: var(--pipeline-sky-soft); --feed-stage-fg: var(--pipeline-sky-fg); --feed-stage-border: var(--pipeline-sky-border); }
+  .submission-stage[data-stage-tone="cyan"] { --feed-stage: var(--pipeline-cyan); --feed-stage-soft: var(--pipeline-cyan-soft); --feed-stage-fg: var(--pipeline-cyan-fg); --feed-stage-border: var(--pipeline-cyan-border); }
+  .submission-stage[data-stage-tone="emerald"] { --feed-stage: var(--pipeline-emerald); --feed-stage-soft: var(--pipeline-emerald-soft); --feed-stage-fg: var(--pipeline-emerald-fg); --feed-stage-border: var(--pipeline-emerald-border); }
+  .submission-stage-number { background: hsl(var(--feed-stage) / .16); color: hsl(var(--feed-stage-fg)); }
+  .submission-buyer { background: hsl(var(--status-new-soft)); color: hsl(var(--status-new-fg)); border-color: hsl(var(--status-new-border)); }
+  .submission-needs-reply { background: hsl(var(--status-reply-soft)); color: hsl(var(--status-reply-fg)); border-color: hsl(var(--status-reply-border)); }
+
   .seller-stage-profile button:not(.text-destructive):not(.text-amber-700),
   .seller-stage-profile [role="button"]:not(.text-destructive):not(.text-amber-700) {
     border-color: hsl(var(--seller-stage-border));
