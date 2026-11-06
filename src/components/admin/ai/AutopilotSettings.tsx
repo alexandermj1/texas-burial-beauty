@@ -5,10 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Power } from "lucide-react";
+import SellerAiUsage from "./SellerAiUsage";
+import { useSellerAiUsage } from "@/hooks/useSellerAiUsage";
+import { usageDollars } from "@/lib/sellerDailyUsage";
+import { cleanAttentionText } from "@/lib/attentionText";
 
 type Mode = "off" | "selected" | "all";
 type LogEntry = { id: string; submission_id: string; seller: string; status: string; status_reason: string | null; send_at: string; sent_at: string | null; created_at: string; subject: string | null; what: string | null; kind: string | null };
-type ConsoleItem = { at: string; submission_id: string; seller: string; kind: string; text: string };
+type ConsoleItem = { at: string; submission_id: string; seller: string; kind: string; text: string; cost?: number | null; tokens?: number; partial?: boolean };
 const KIND: Record<string, { label: string; cls: string }> = {
   send: { label: "Reply", cls: "bg-primary/10 text-primary" }, check: { label: "Check-in", cls: "bg-muted text-muted-foreground" },
   review: { label: "Reviewed", cls: "bg-secondary text-secondary-foreground" }, running: { label: "Working", cls: "bg-primary/10 text-primary" },
@@ -30,6 +34,7 @@ const STATUS_LABEL: Record<string, string> = { held: "Waiting to send", sending:
 /** Owner switch for the Seller AI autopilot, plus a log of everything it sent or held back. */
 export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmission?: (id: string) => void }) {
   const { toast } = useToast();
+  const { data: usage } = useSellerAiUsage();
   const [s, setS] = useState<Status | null>(null);
   const [daily, setDaily] = useState("40");
   const [busy, setBusy] = useState(false);
@@ -52,13 +57,17 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
   const on = s.settings.mode !== "off";
   const paused = s.state?.status === "paused" && on;
   const setMode = (mode: Mode) => call({ op: "set", mode, daily_reviews: Number(daily) });
+  const activity = (s.activity ?? []).map(item => {
+    const run = usage?.runs.find(r => r.submission_id === item.submission_id && r.created_at === item.at);
+    return ["review", "running", "error"].includes(item.kind) && run ? { ...item, cost: run.scan_usage?.equivalent ?? null, tokens: (run.scan_usage?.input_tokens ?? 0) + (run.scan_usage?.output_tokens ?? 0), partial: run.scan_usage?.equivalent == null || !["done", "error"].includes(run.status) } : item;
+  });
 
   return (
-    <section aria-label="Seller AI autopilot" className="rounded-xl border border-border bg-card p-3 space-y-3">
+    <section aria-label="Seller AI autopilot" className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold flex items-center gap-2"><Power className="w-4 h-4" />Seller AI autopilot {busy && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}</p>
-          <p className="text-xs text-muted-foreground">Uses Sonnet 5. Replies with a natural delay (Texas daytime only), carries out its own steps, checks back when sellers go quiet and puts records that need a person at the top of the list.</p>
+          <p className="text-lg font-semibold flex items-center gap-2"><Power className="w-4 h-4" />Seller AI control center {busy && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}</p>
+          <p className="text-xs text-muted-foreground mt-1">Sonnet 5 · {paused ? "Paused" : on ? "Automatic seller follow-up active" : "Automatic seller follow-up off"}</p>
         </div>
         <label className="flex items-center gap-2 text-sm font-semibold">
           {on ? "On" : "Off"}
@@ -87,9 +96,10 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Last 24 hours</p><p className="font-semibold">{s.last24h.reviews ?? 0} reviews · {s.last24h.sent ?? 0} sent</p></div>
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Waiting to send</p><p className="font-semibold">{s.last24h.held ?? 0}</p></div>
       </div>
+      <details className="border-y border-border py-3"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Daily usage · last seven days</summary><div className="pt-3"><SellerAiUsage history /></div></details>
       <div className="grid gap-3 lg:grid-cols-2">
         <Console title="Coming up next" empty="Nothing scheduled yet." items={s.upcoming ?? []} onOpen={onOpenSubmission} />
-        <Console title="Live activity" empty="No activity yet." items={s.activity ?? []} onOpen={onOpenSubmission} live />
+        <Console title="Live activity" empty="No activity yet." items={activity} onOpen={onOpenSubmission} live />
       </div>
     </section>
   );
@@ -108,13 +118,14 @@ function Console({ title, items, empty, onOpen, live }: { title: string; items: 
             const k = KIND[it.kind] ?? KIND.check;
             return (
               <li key={i}>
-                <button type="button" onClick={() => onOpen?.(it.submission_id)} className="grid w-full grid-cols-[4.5rem_1fr] gap-2 px-3 py-2 text-left text-xs hover:bg-muted/50">
+                <Button type="button" variant="ghost" onClick={() => onOpen?.(it.submission_id)} className="grid h-auto w-full grid-cols-[5.5rem_1fr] items-start gap-3 rounded-none px-3 py-3 text-left text-xs font-normal whitespace-normal">
                   <span className="tabular-nums text-muted-foreground">{when(it.at)}</span>
                   <span className="min-w-0">
-                    <span className="flex items-center gap-1.5"><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${k.cls}`}>{k.label}</span><span className="truncate font-semibold">{it.seller}</span></span>
-                    <span className="mt-0.5 block text-muted-foreground line-clamp-2">{it.text}</span>
+                    <span className="flex flex-wrap items-center gap-1.5"><span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${k.cls}`}>{k.label}</span><span className="break-words font-semibold">{it.seller}</span></span>
+                    <span className="mt-1 block text-muted-foreground break-words">{cleanAttentionText(it.text)}</span>
+                    {it.tokens !== undefined && <span className="mt-1.5 block text-[10px] tabular-nums text-primary">{it.tokens.toLocaleString()} tokens · {it.cost == null ? "Estimate unavailable" : `${usageDollars(it.cost)} USD estimated`}{it.partial && " · partial"}</span>}
                   </span>
-                </button>
+                </Button>
               </li>
             );
           })}
