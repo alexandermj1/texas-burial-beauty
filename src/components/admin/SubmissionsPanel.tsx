@@ -3821,7 +3821,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             }
 
             const customTag = String((s as any).custom_tag || "").trim();
-            if (customTag) {
+            const buyerStageLabel = isBuyer && ["Ready to buy", "Pre-need", "Just browsing", "Plots sent", "Waiting on inventory"].includes(customTag) ? customTag : null;
+            if (customTag && !buyerStageLabel) {
               chips.push({
                 key: "custom",
                 icon: Sparkles,
@@ -3870,11 +3871,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                      {!isBuyer && <span className="inline-flex items-center gap-1.5" title={stage.at ? formatDate(stage.at) : undefined}><StageIcon className="h-3 w-3" />{stage.label}</span>}
-                      {isBuyer && <span>Buyer</span>}
-                      {needsReply && <span className="inline-flex items-center gap-1 font-medium text-[hsl(var(--status-reply-fg))]"><Mail className="h-3 w-3" />Needs reply</span>}
-                      {chips.find(c => c.key === "money") && <span className="ml-auto tabular-nums" title={chips.find(c => c.key === "money")?.title}>{chips.find(c => c.key === "money")?.text}</span>}
+                    <div className="flex items-center flex-wrap gap-2 text-xs">
+                      {!isBuyer && <span className="submission-stage inline-flex max-w-full items-center gap-2 rounded-md border py-1 pl-1 pr-2.5 font-semibold leading-snug" data-stage-tone={stage.accent} aria-label={`Seller stage ${stage.step}: ${stage.label}`} title={stage.at ? `${stage.label} · ${formatDate(stage.at)}` : stage.label}>
+                        <span className="submission-stage-number flex h-5 w-5 shrink-0 items-center justify-center rounded-sm text-[10px] tabular-nums">{stage.step}</span>
+                        <StageIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /><span>{stage.label}</span>
+                      </span>}
+                      {isBuyer && <span className="submission-buyer inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-semibold leading-snug"><Users aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />{buyerStageLabel ? `Buyer · ${buyerStageLabel}` : "Buyer"}</span>}
+                      {needsReply && <span className="submission-needs-reply inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-semibold leading-snug"><Mail aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />Needs reply</span>}
+                      {chips.find(c => c.key === "money") && <span className="ml-auto text-[11px] text-muted-foreground tabular-nums" title={chips.find(c => c.key === "money")?.title}>{chips.find(c => c.key === "money")?.text}</span>}
                     </div>
 
                     {/* Line 2 — plain-language summary */}
