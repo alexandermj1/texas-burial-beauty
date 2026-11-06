@@ -6,7 +6,7 @@
 //    seller quote pack (same shared HTML builder staff use), re-sending any earlier email,
 //    moving the pipeline stage, re-sending unsigned contract links and signed copies.
 // Every executor runs only after a staff member approves the action.
-import { runAgent, runAgentSlice, runTool, type ResearchState, RECORD_TOOLS, ADMIN_READ_TOOLS, parseJson } from "../_shared/recordAgent.ts";
+import { runAgent, runAgentSlice, runTool, sha256, type ResearchState, RECORD_TOOLS, ADMIN_READ_TOOLS, parseJson } from "../_shared/recordAgent.ts";
 import { buildListingOptionsBlock } from "../_shared/listingOptionsBlock.ts";
 import { suggestedNetPerSpace } from "../_shared/quoteFigures.ts";
 import { properCase, properFirstName } from "../_shared/properCase.ts";
@@ -61,6 +61,15 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
   const sys = RESEARCH_SYS + PREFETCH_NOTE, label = "Seller AI — researching the record";
   const makeTask = async () => `Seller record id: ${sub.id}\nSeller: ${sub.name} <${sub.email}>, cemetery: ${sub.cemetery ?? "?"}\n${instruction ? `STAFF INSTRUCTION FOR THIS REVIEW: ${instruction}\n` : ""}CURRENT SNAPSHOT:\n${focus}\n\nLOADED FILE:\n${await prefetchFile(ctx, sub.id)}\n\nResearch this file now.`;
   let result: any;
+  // Same research instructions + identical loaded file => reuse the finished research instead of re-reading it.
+  const fingerprintOf = async (task: string) => sha256(`v1\n${sys}\n${task}`);
+  if (!continuation?.state) {
+    const task = await makeTask(), fp = await fingerprintOf(task);
+    const { data: hit } = await db.from("ai_research_cache").select("research").eq("fingerprint", fp).eq("submission_id", sub.id).maybeSingle();
+    if (hit?.research?.text) return { complete: true, state: undefined, text: hit.research.text, trace: ["loaded_file", "reused_research"], mistakes: Number(hit.research.mistakes) || 0, reused: true };
+    if (continuation) continuation.state = (await runAgentSlice(ctx, sys, task, undefined, 0, RESEARCH_TOOLS, label).catch(() => null))?.state ?? undefined;
+    if (!continuation) { result = await runAgent(ctx, sys, task, 9, RESEARCH_TOOLS, label); return finish(result, fp); }
+  }
   if (continuation) {
     // Several acknowledged steps per request (each checkpointed via onStep) until the time budget is spent.
     const started = Date.now(); let state = continuation.state;
