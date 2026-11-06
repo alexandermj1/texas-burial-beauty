@@ -67,8 +67,8 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
     const task = await makeTask(), fp = await fingerprintOf(task);
     const { data: hit } = await db.from("ai_research_cache").select("research").eq("fingerprint", fp).eq("submission_id", sub.id).maybeSingle();
     if (hit?.research?.text) return { complete: true, state: undefined, text: hit.research.text, trace: ["loaded_file", "reused_research"], mistakes: Number(hit.research.mistakes) || 0, reused: true };
-    if (continuation) continuation.state = (await runAgentSlice(ctx, sys, task, undefined, 0, RESEARCH_TOOLS, label).catch(() => null))?.state ?? undefined;
-    if (!continuation) { result = await runAgent(ctx, sys, task, 9, RESEARCH_TOOLS, label); return finish(result, fp); }
+    if (continuation) continuation.state = { messages: [{ role: "system", content: sys }, { role: "user", content: task }], trace: [], pending: [], step: 0, deedReads: 0, fileReads: 0 };
+    else { result = await runAgent(ctx, sys, task, 9, RESEARCH_TOOLS, label); return finish(result, fp); }
   }
   if (continuation) {
     // Several acknowledged steps per request (each checkpointed via onStep) until the time budget is spent.
@@ -78,7 +78,9 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
       state = result.state;
       if (!result.complete) await continuation.onStep?.(state!, result.trace.length);
     } while (!result.complete && Date.now() - started < (continuation.budgetMs ?? 0));
-  } else result = await runAgent(ctx, sys, await makeTask(), 9, RESEARCH_TOOLS, label);
+  }
+  return finish(result, await fingerprintOf(String(result.state?.messages?.[1]?.content ?? "")));
+  async function finish(result: any, fp: string) {
   const { answer, trace } = result;
   if ("complete" in result && !result.complete) return { complete: false, state: result.state, text: "", trace: trace.map(t => t.tool), mistakes: 0 };
   const a = answer && typeof answer === "object" ? answer : {};
@@ -89,7 +91,10 @@ export async function researchRecord(db: any, apiKey: string, sub: Sub, focus: s
     `OPEN PROMISES:\n${list(a.open_promises).slice(0, 10).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
     `ANSWER MATERIAL:\n${list(a.answer_material).slice(0, 12).map((p: any) => `- ${p}`).join("\n") || "(none)"}`,
   ].join("\n\n");
-  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: ["loaded_file", ...trace.map((t: any) => t.tool)], mistakes: list(a.mistakes).length };
+  const mistakes = list(a.mistakes).length;
+  if (answer && typeof answer === "object") await db.from("ai_research_cache").upsert({ fingerprint: fp, submission_id: sub.id, research: { text, mistakes } });
+  return { complete: true, state: "state" in result ? result.state : undefined, text, trace: ["loaded_file", ...trace.map((t: any) => t.tool)], mistakes };
+  }
 }
 
 const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
