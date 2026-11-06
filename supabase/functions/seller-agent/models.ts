@@ -1,6 +1,6 @@
 export const SELLER_MODELS = ["openai/gpt-6-astra", "openai/gpt-6.1-sol", "anthropic/claude-opus-5-5"] as const;
 export type SellerModel = typeof SELLER_MODELS[number];
-export const DEFAULT_SELLER_MODEL: SellerModel = "openai/gpt-6-astra";
+export const DEFAULT_SELLER_MODEL: SellerModel = "openai/gpt-6.1-sol";
 export function sellerModelLabel(model: SellerModel) {
   return model === "openai/gpt-6.1-sol" ? "Sol" : model === "anthropic/claude-opus-5-5" ? "Opus 5.5" : "Astra";
 }
