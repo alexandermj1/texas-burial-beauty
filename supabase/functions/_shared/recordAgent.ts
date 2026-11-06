@@ -35,6 +35,15 @@ export const ADMIN_READ_TOOLS = [
 
 export type ToolCtx = { db: any; apiKey: string; dir: any[]; deedReads: number; fileReads?: number; onUsage?: (model: string, usage: unknown) => void };
 const US = /texascemeterybrokers|bayercemeterybrokers/i;
+export const sha256 = async (t: string) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))).map((b) => b.toString(16).padStart(2, "0")).join("");
+/** Files are immutable per stored path, so a vision read of the same file with the same prompt is reused across reviews. */
+async function cachedRead(db: any, key: string): Promise<any | null> {
+  const { data } = await db.from("ai_file_read_cache").select("result").eq("cache_key", key).maybeSingle();
+  return data?.result ?? null;
+}
+async function saveRead(db: any, key: string, submissionId: string, fileName: string, result: unknown) {
+  await db.from("ai_file_read_cache").upsert({ cache_key: key, submission_id: submissionId, file_name: fileName, result });
+}
 const b64 = (bytes: Uint8Array) => { let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(bin); };
 const miles = (a: any, b: any) => { const r = (x: number) => x * Math.PI / 180; const dLat = r(b.latitude - a.latitude), dLng = r(b.longitude - a.longitude); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.latitude)) * Math.cos(r(b.latitude)) * Math.sin(dLng / 2) ** 2; return 3958.8 * 2 * Math.asin(Math.sqrt(h)); };
 async function emailOr(db: any, id: string) {
@@ -83,6 +92,9 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     const score = (f: any) => /(deed|certificate|sepulture|ownership|interment right|title)/i.test(`${f.document_type} ${f.extracted_summary} ${f.file_name}`) ? 1 : 0;
     const deed = files.filter(isImg).sort((a: any, b: any) => score(b) - score(a))[0];
     if (!deed) return { error: "No deed image on file.", files: files.map((f: any) => f.file_name) };
+    const deedKey = `deed:v1:${deed.id}:${deed.file_path}`;
+    const hit = await cachedRead(db, deedKey);
+    if (hit) return { ...hit, reused_earlier_read: true };
     ctx.deedReads++;
     const dl = await db.storage.from("customer-files").download(deed.file_path); if (dl.error) return { error: "Could not open the deed file." };
     const bytes = new Uint8Array(await dl.data.arrayBuffer());
@@ -91,7 +103,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     const out = await chat(ctx.apiKey, [{ role: "user", content: [
       { type: "text", text: `Read this cemetery deed exactly. Return JSON only: {"cemetery":string,"section_or_lawn":string,"spaces":[{"label":"as written","lot":string,"space":string}],"interments_per_space":string|null,"notes":string}. List every grave/space/crypt/niche separately. Never invent; say what is unreadable in notes. Do not include owner names or addresses.` },
       { type: "image_url", image_url: { url: `data:${mime};base64,${btoa(bin)}` } }] }], { json: true, label: "AI reading the deed", onUsage: ctx.onUsage });
-    try { return { file: deed.file_name, ...JSON.parse(String(out.content ?? "{}").replace(/^```json|```$/g, "").trim()) }; } catch { return { error: "Deed could not be read clearly." }; }
+    try { const res = { file: deed.file_name, ...JSON.parse(String(out.content ?? "{}").replace(/^```json|```$/g, "").trim()) }; await saveRead(db, deedKey, id, deed.file_name, res); return res; } catch { return { error: "Deed could not be read clearly." }; }
   }
   if (name === "get_cemetery") {
     const c = resolveBuyerCemetery(String(args?.name ?? ""), ctx.dir, null);
@@ -152,6 +164,9 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     } else if (!path || !path.startsWith(`${id}/`)) return { error: "Give a file_id from get_files or a checklist path from get_documents for this record." };
     if (!mime) mime = /\.pdf$/i.test(fileName) ? "application/pdf" : /\.png$/i.test(fileName) ? "image/png" : /\.webp$/i.test(fileName) ? "image/webp" : "image/jpeg";
     if (!/^(image\/(jpe?g|png|webp)|application\/pdf)$/i.test(mime)) return { error: `Can't read ${mime} files.` };
+    const fileKey = `file:v1:${bucket}:${path}:${await sha256(String(clip(args?.question, 600)))}`;
+    const hit = await cachedRead(db, fileKey);
+    if (hit) return { ...hit, reused_earlier_read: true };
     const dl = await db.storage.from(bucket).download(path);
     if (dl.error || !dl.data) return { error: "Could not open the file." };
     const bytes = new Uint8Array(await dl.data.arrayBuffer());
@@ -160,7 +175,9 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     const data = `data:${mime};base64,${b64(bytes)}`;
     const part = mime === "application/pdf" ? { type: "file", file: { filename: fileName, file_data: data } } : { type: "image_url", image_url: { url: data } };
     const out = await chat(ctx.apiKey, [{ role: "user", content: [{ type: "text", text: `You are checking a document for a cemetery-plot brokerage. Question: ${clip(args?.question, 600)}\nAnswer exactly from what is visible. Quote names, plot/lot/space wording, dates, signatures, notary seals as written. Say clearly what is missing or unreadable. Max 200 words.` }, part] }], { label: `AI checking a file: ${fileName}`, onUsage: ctx.onUsage });
-    return { file: fileName, answer: clip(out.content, 2500) };
+    const res = { file: fileName, answer: clip(out.content, 2500) };
+    if (out.content) await saveRead(db, fileKey, id, fileName, res);
+    return res;
   }
   if (name === "cemetery_stock") {
     const c = resolveBuyerCemetery(String(args?.cemetery ?? ""), ctx.dir, null);
