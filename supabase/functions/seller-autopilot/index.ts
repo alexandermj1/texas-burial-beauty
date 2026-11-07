@@ -150,7 +150,7 @@ async function queueReply(sub: any, runId: string) {
 }
 
 /** Phase 2 — wake records with a new seller email or a due check-back. */
-async function wake(mode: string, dailyReviews: number) {
+async function wake(mode: string, dailyReviews: number, quoteTasksOnly = false) {
   const out: any[] = [];
   const since = new Date(Date.now() - 86400_000).toISOString();
   const { count: today } = await db.from("ai_agent_runs").select("id", { count: "exact", head: true }).like("trigger", "autopilot:%").gte("created_at", since);
@@ -185,12 +185,13 @@ async function wake(mode: string, dailyReviews: number) {
     const quoteRows = sellerQuoteBacklog(allSubs, profiles.filter(p => !p.deleted_at), files.filter(f => !f.deleted_at), documents.filter(d => !d.deleted_at)).filter(s => activeIds.has(s.id));
     for (const sub of quoteRows) {
       const existing = proposals.filter(p => p.submission_id === sub.id && p.action_type === "flag_human" && p.status === "proposed" && !p.deleted_at);
-      if (existing.some(p => parseHumanAttention(p.payload?.human_attention) && !replacedAutomationBlocker(p))) continue;
+      if (existing.some(p => parseHumanAttention(p.payload?.human_attention) && /quote|valuation/i.test(p.payload?.human_attention?.task ?? "") && !replacedAutomationBlocker(p))) continue;
       const task = `Quote needed: Cici, review the attachments for ${sub.name || "this seller"}${sub.cemetery ? ` at ${sub.cemetery}` : ""}, check the deed and prepare their valuation. If the deed is missing or unreadable, request a clear copy first.`;
       await flagHuman(sub, task, "No quote has been sent. Our acknowledgement does not finish the valuation; this remains staff work even when our email is the latest reply.");
       out.push({ sid: sub.id, quote_task: true });
     }
   }
+  if (quoteTasksOnly) return out;
   if (budget <= 0) return [...out, { skipped: "Daily review limit reached; quote tasks still checked" }];
   const due = memories.filter(m => activeIds.has(m.submission_id) && m.due_at && Date.parse(m.due_at) <= Date.now()).sort((a,b) => a.due_at.localeCompare(b.due_at)).map(m => m.submission_id);
   const openProposals = proposals.filter(p => p.status === "proposed" && !p.deleted_at);
@@ -266,9 +267,14 @@ Deno.serve(async (req) => {
       canControl = allowed && !rs.includes("staff");
     }
     if (body?.op && !adminName) return json({ error: "Admins only" }, 403);
-    if (["set", "resume", "pause_record"].includes(body?.op) && !canControl) return json({ error: "Only the owners can control the Seller AI" }, 403);
+    if (["set", "resume", "pause_record", "scan_quote_tasks"].includes(body?.op) && !canControl) return json({ error: "Only the owners can control the Seller AI" }, 403);
   }
   if (!allowed) return json({ error: "Not allowed" }, 403);
+  if (body?.op === "scan_quote_tasks") {
+    const config = await settings();
+    if (config.mode === "off") return json({ status: "skipped", reason: "Seller AI is off" });
+    return json({ status: "ok", tasks: await wake(config.mode, config.dailyReviews, true) });
+  }
   if (body?.op === "pause_record") {
     const sid = String(body.submission_id ?? "");
     if (!/^[0-9a-f-]{36}$/i.test(sid)) return json({ error: "Bad record" }, 400);
