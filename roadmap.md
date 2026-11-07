@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Keep attachment-backed quote tasks visible independently of latest-email direction and daily AI review limits; verify Cici's existing staff task view.
 - [x] Corrected Ileana Billington's double-depth lawn-crypt exclusion, paginated cemetery directory, removed own-cemetery ten-option cap and required every own-cemetery option chosen or explained. Named-cemetery buyers receive no unsolicited alternatives (including tool/send checks). Deployed buyer-agent; authenticated live Jeanette preview returns six own-cemetery burial options including Ileana's Sec 412-E, no alternatives; 33 tests pass. Existing sent emails untouched; no model draft or customer email sent during verification.
 - [x] Redesigned text-led neutral submission cards without plot thumbnails/stage rails/pill clutter; selected-record task identity stays separate from shared document identity. Charles and Gerald banners verified signed-in at 1117px; mobile card/task checked at 390px, preview clean.
 - [x] Deployed paginated abandoned-manual-proposal takeover; only obsolete approval blockers supersede, genuine tasks/held plans protected. Live bounded sweep completed with fresh Charles Reeder and Anne Irby reviews; remaining records continue under existing daily/batch limits, not claimed fully cleared.
