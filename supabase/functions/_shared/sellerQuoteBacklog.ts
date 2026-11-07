@@ -1,4 +1,4 @@
-import { buildAttachmentIndex } from "../../../src/lib/submissionAttachments.ts";
+import { buildAttachmentIndex } from "./submissionAttachments.ts";
 import { hasSellerAttachments, sellerStage } from "../seller-agent/pipeline.ts";
 
 export function sellerQuoteBacklog(submissions: any[], profiles: any[], files: any[], documents: any[]): any[] {
