@@ -154,6 +154,15 @@ export async function sendQuotePack(db: any, m: Mail, callInternal: (name: strin
     ownership_answers: { ...answers, autopilot: { ...(answers.autopilot ?? {}), preparedAt: now.toISOString(), deedOwnerNames: deedNames, netPerPlot: o.perSpace, plotCount: o.count, authorizedMinTotal: total, transferFee: fee || null, plotDescription } },
   }).eq("id", sub.id);
   if (saveErr) throw new Error(saveErr.message);
+  // Refresh prepared unsigned agreements before sending the corrected quote;
+  // signed copies and their fee-template version remain historical evidence.
+  const { data: agreements, error: agreementError } = await db.from("contracts").select("id,status,fill_data,signed_at,notarized_at,completed_at").eq("submission_id", sub.id).eq("kind", "listing_agreement").is("deleted_at", null).neq("status", "void");
+  if (agreementError) throw new Error(agreementError.message);
+  for (const c of agreements ?? []) {
+    if (c.signed_at || c.notarized_at || c.completed_at || ["signed", "notarized", "completed"].includes(c.status)) continue;
+    const fd = c.fill_data ?? {};
+    await callInternal("generate-contract", { submission_id: sub.id, kind: "listing_agreement", overrides: { ...fd, cemetery: sub.cemetery, plot_description: plotDescription, plot_count: o.count, authorized_min_per_plot: o.perSpace, authorized_min_total: total, supersede_contract_id: c.id } });
+  }
   const first = properFirstName(sub.name) || "there";
   const sig = `Best regards,<br><br>${esc(o.adminName)}<br>Cemetery Salesperson<br>Texas Cemetery Brokers<br>www.texascemeterybrokers.com`;
   const html = `<div data-tcb-email="quote" data-tcb-sent-by="ai"></div><p style="${P}">Dear ${esc(first)},</p>${o.intro?.trim() ? `<p style="${P}">${esc(o.intro.trim()).replace(/\n/g, "<br>")}</p>` : ""}${block}<p style="${P}">${sig}</p>`;
