@@ -1,5 +1,5 @@
 import { buildAttachmentIndex } from "./submissionAttachments.ts";
-import { hasSellerAttachments, sellerStage } from "../seller-agent/pipeline.ts";
+import { hasSellerAttachments, sellerStage } from "./sellerPipeline.ts";
 
 export function sellerQuoteBacklog(submissions: any[], profiles: any[], files: any[], documents: any[]): any[] {
   const attachments = buildAttachmentIndex(submissions, profiles, files, documents);
