@@ -347,7 +347,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     setAiPending(m);
     // Separate record-ID map: a newer AI reply or another test record with the
     // same email must never conceal the specific file needing a human.
-    if (HUMAN_ATTENTION_RELEASED && aiOn) {
+    if (HUMAN_ATTENTION_RELEASED) {
       const { data: setting, error: settingError } = await supabase.from("ai_agent_settings").select("value").eq("key", HUMAN_ATTENTION_SETTING).maybeSingle();
       const enabled = !settingError && humanAttentionEnabled(setting?.value);
       setHumanQueueOn(enabled);
@@ -1228,7 +1228,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const baseline = buyerView
       ? [...matches].sort(byCemetery)
       : [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
-    const ordered = prioritizeHumanAttention(baseline, humanTasks, humanQueueOn && aiOn && !buyerView && !archivedView);
+    const ordered = prioritizeHumanAttention(baseline, humanTasks, humanQueueOn && !buyerView && !archivedView);
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.
@@ -1761,7 +1761,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const sharedSellingLocation = (sharedLocationIsVerified ? sharedSavedLocation : sharedDeedLocation) || seller.plot_description || "Not provided";
 
     const headBlock = (<>
-            {humanQueueOn && aiOn && <StaffTaskNotice entry={selectedAttention(humanTasks, selectedRaw?.id, selected.id)} />}
+            {humanQueueOn && <StaffTaskNotice entry={selectedAttention(humanTasks, selectedRaw?.id, selected.id)} />}
             {kind !== "buyer" && (() => {
               const fmtMoney = (value: unknown) => {
                 const amount = Number(value);
@@ -3882,7 +3882,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     </div>
 
                     {/* Line 2 — plain-language summary */}
-                    {humanQueueOn && aiOn && humanTasks.get(s.id) && (() => {
+                    {humanQueueOn && humanTasks.get(s.id) && (() => {
                       const task = humanTasks.get(s.id)?.attention;
                       return task ? (
                         <div role="note" aria-label="AI asks staff to step in" className="flex items-start gap-2 rounded-md bg-[hsl(var(--status-attention-soft))] px-3 py-2">
@@ -3900,7 +3900,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                       archived={!!(s as any).archived_at}
                       canControl={aiCanControl}
                       onToggle={() => toggleRecordAi(s.id, !(aiPausedLocal[s.id] ?? !!(s as any).ai_paused_at))}
-                      staffNeeded={!!(humanQueueOn && aiOn && humanTasks.get(s.id))}
+                      staffNeeded={!!(humanQueueOn && humanTasks.get(s.id))}
                       pending={aiPending.get(aiKey(s))?.label}
                       needsReplyAt={awaitingAll[s.id]}
                     />}
@@ -3947,7 +3947,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
 
                 {isMobile && isActive && (
-                  <><StaffTaskNotice entry={humanQueueOn && aiOn ? humanTasks.get(s.id) : undefined} /><MobileInlineDetail submission={s} /></>
+                  <><StaffTaskNotice entry={humanQueueOn ? humanTasks.get(s.id) : undefined} /><MobileInlineDetail submission={s} /></>
                 )}
               </div>
             );

@@ -10,6 +10,8 @@ import { isInternalCall } from "../_shared/internal-auth.ts";
 import { recordFingerprint } from "../_shared/recordFingerprint.ts";
 import { routeWake, replySendAt, inConversation, isQuietTime, MAX_REMINDERS } from "../_shared/autopilotPolicy.ts";
 import { sellerWakeCandidates, sellerMailOutgoing } from "../_shared/sellerWakeCandidates.ts";
+import { sellerQuoteBacklog } from "../_shared/sellerQuoteBacklog.ts";
+import { humanAttentionEnabled, parseHumanAttention } from "../_shared/humanAttention.ts";
 import { legacySuggestionsNeedReview, replacedAutomationBlocker } from "../_shared/sellerBacklog.ts";
 
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
@@ -153,7 +155,7 @@ async function wake(mode: string, dailyReviews: number) {
   const since = new Date(Date.now() - 86400_000).toISOString();
   const { count: today } = await db.from("ai_agent_runs").select("id", { count: "exact", head: true }).like("trigger", "autopilot:%").gte("created_at", since);
   let budget = Math.min(MAX_REVIEWS_PER_RUN, dailyReviews - (today ?? 0));
-  if (budget <= 0) return [{ skipped: "Daily review limit reached" }];
+  budget = Math.max(0, budget); // Quote-task surfacing costs no inference and must still run at the cap.
   const readPages = async (table: string, fields: string, key = "id") => {
     const rows: any[] = [];
     for (let offset = 0; ; offset += 500) {
@@ -164,15 +166,32 @@ async function wake(mode: string, dailyReviews: number) {
     }
   };
   // Light metadata only: no three-day/global-message cap can hide an unanswered seller.
-  const [allSubs, allMail, memories, proposals, automaticRuns] = await Promise.all([
-    readPages("contact_submissions", "id,email,created_at,customer_kind,deleted_at,archived_at,closed_at,sold_at,ai_paused_at,ai_autopilot,reply_dismissed_at,ownership_answers"),
+  const [allSubs, allMail, memories, proposals, automaticRuns, profiles, files, documents, attentionSetting] = await Promise.all([
+    readPages("contact_submissions", "id,name,email,created_at,customer_kind,source,customer_profile_id,cemetery,section,lawn,seller_attachments,quote_sent_at,quote_response,la_signed_at,documents_requested_at,documents_completed_at,deleted_at,archived_at,closed_at,sold_at,ai_paused_at,ai_autopilot,reply_dismissed_at,ownership_answers"),
     readPages("email_messages", "id,matched_submission_id,from_email,to_email,received_at,deleted_at"),
     readPages("ai_record_memory", "submission_id,due_at", "submission_id"),
     readPages("ai_agent_actions", "id,submission_id,action_type,status,deleted_at,reason,payload,run_id"),
     readPages("ai_agent_runs", "id,trigger"),
+    readPages("customer_profiles", "id,primary_email,alt_emails,deleted_at"),
+    readPages("customer_files", "id,customer_profile_id,deleted_at"),
+    readPages("submission_documents", "id,submission_id,file_url,file_urls,deleted_at"),
+    db.from("ai_agent_settings").select("value").eq("key", "human_attention_queue").maybeSingle(),
   ]);
   const active = allSubs.filter(s => eligible(s, mode));
   const activeIds = new Set(active.map(s => s.id));
+  // Staff work is not the same as an unanswered email. Surface the attachment/quote
+  // stage even when we already acknowledged it, without spending an AI review.
+  if (humanAttentionEnabled(attentionSetting.data?.value)) {
+    const quoteRows = sellerQuoteBacklog(allSubs, profiles.filter(p => !p.deleted_at), files.filter(f => !f.deleted_at), documents.filter(d => !d.deleted_at)).filter(s => activeIds.has(s.id));
+    for (const sub of quoteRows) {
+      const existing = proposals.filter(p => p.submission_id === sub.id && p.action_type === "flag_human" && p.status === "proposed" && !p.deleted_at);
+      if (existing.some(p => parseHumanAttention(p.payload?.human_attention) && !replacedAutomationBlocker(p))) continue;
+      const task = `Quote needed: Cici, review the attachments for ${sub.name || "this seller"}${sub.cemetery ? ` at ${sub.cemetery}` : ""}, check the deed and prepare their valuation. If the deed is missing or unreadable, request a clear copy first.`;
+      await flagHuman(sub, task, "No quote has been sent. Our acknowledgement does not finish the valuation; this remains staff work even when our email is the latest reply.");
+      out.push({ sid: sub.id, quote_task: true });
+    }
+  }
+  if (budget <= 0) return [...out, { skipped: "Daily review limit reached; quote tasks still checked" }];
   const due = memories.filter(m => activeIds.has(m.submission_id) && m.due_at && Date.parse(m.due_at) <= Date.now()).sort((a,b) => a.due_at.localeCompare(b.due_at)).map(m => m.submission_id);
   const openProposals = proposals.filter(p => p.status === "proposed" && !p.deleted_at);
   const ids = [...new Set([...sellerWakeCandidates(active, allMail.filter(e => !e.deleted_at), due, new Set(memories.map(m => m.submission_id))), ...openProposals.map(p => p.submission_id).filter(id => activeIds.has(id))])];
