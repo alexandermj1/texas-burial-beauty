@@ -1,3 +1,4 @@
+import { paidListingOption, requestedLowerQuote } from "./quoteCorrectionPolicy.ts";
 import { aiFetch } from "../_shared/aiRunLabel.ts";
 import { applyCemeteryCorrection, prepareCemeteryCorrection } from "./cemeteryCorrection.ts";
 import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
@@ -127,8 +128,8 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     why_these_documents_are_needed: answers.requestExplanation?.text ?? null,
   };
 
-  const emailList = (emails.data ?? []).reverse().map((e) => ({
-    ...(String(e.from_email).toLowerCase().includes("texascemeterybrokers") ? { email_id: e.id } : {}),
+  const emailList = [...(emails.data ?? [])].reverse().map((e) => ({
+    email_id: e.id,
     when: e.received_at,
     from: String(e.from_email).toLowerCase().includes("texascemeterybrokers") ? "US (TCB)" : "SELLER",
     subject: e.subject,
@@ -212,7 +213,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   const answers = (sub.ownership_answers ?? {}) as Record<string, any>;
   const la = contracts.filter((c) => c.kind === "listing_agreement" && c.status !== "void");
   const signed = !!sub.la_signed_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status));
-  const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
+  const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0 || !!sub.listing_paid_at;
   const liveLink = la.find((c) => ["sent", "viewed"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()));
   const out = new Set(["reply_email", "add_note", "flag_human", "update_fields"]);
   if (canExtendQuote(sub, signed)) out.add("extend_quote_deadline");
@@ -225,7 +226,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   if (sub.quote_sent_at && !accepted && !signed && quoteExpired(sub)) out.add("resend_expired_quote");
-  if (!accepted && !signed && allowedQuoteFigures(sub, null).size) out.add("send_quote");
+  if (!accepted && !signed && !sub.listing_paid_at && allowedQuoteFigures(sub, null).size) out.add("send_quote");
   out.add("resend_email"); out.add("set_stage");
   if (contracts.some((c) => ["sent", "viewed", "draft"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()))) out.add("resend_contract_link");
   if (contracts.some((c) => ["signed", "notarized", "completed"].includes(c.status))) out.add("email_signed_copy");
@@ -252,7 +253,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - resend_family_tree: re-emails the family tree link when it was sent but not completed. body = optional short follow-up email sent first (thank them, explain briefly why we need it). Do not also write a reply_email.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with its listing fee waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to use the existing explicitly waived Starter option (never the current paid Starter button); we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the explicitly waived option in your original quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this for fee waivers.
-- send_quote: send (or re-send) the seller their quote pack — the SAME branded quote email with live listing-option buttons that staff send. Fields: fields = {per_space (digits, MUST be one of ALLOWED QUOTE FIGURES), spaces (digits), plot_description?}; body = optional short separate explanation email (with greeting and sign-off) sent right after it in the same thread (leave empty if not needed). Use when a quote was never sent, the seller lost it, or staff ask. Never invent a figure.
+- send_quote: send (or re-send) the seller their quote pack — the SAME branded quote email with live listing-option buttons that staff send. Fields: fields = {per_space (digits, an ALLOWED QUOTE FIGURE OR an explicitly requested LOWER per-space price), spaces (digits), plot_description?, requested_price_email_id?}; body = optional short separate explanation email (with greeting and sign-off) sent right after it in the same thread (leave empty if not needed). Use when a quote was never sent, the seller lost it, staff ask, or the seller explicitly asks to LOWER the existing unaccepted/unsigned quote. For a reduction include requested_price_email_id from their latest email, which must explicitly state the lower per-plot/space figure. Never confuse a total with per-space price. Correct/verify cemetery and plot fields FIRST, then send ONE corrected quote pack; do not also resend the old quote or add reply_email. Mention that they can select/pay Featured in the quote, never activate it before payment. Never invent a figure.
 - resend_email: re-send one of OUR earlier emails exactly as it went (same HTML, links, buttons) in its thread. Fields: fields = {email_id (from the EMAIL THREAD [email_id ...] tags)}; body = optional one- or two-sentence intro shown above it (no sign-off); subject optional. Use when the seller can't find something we sent.
 - set_stage: move the Texas pipeline stage like the stage buttons. Fields: fields = {stage: one of ${TEXAS_STAGES.join(" | ")}}. Only when the record clearly shows the stage is wrong.
 - resend_contract_link: re-email the still-valid signing link for ANY unsigned contract (listing agreement, POA, affidavit, spousal consent). Fields: fields = {contract_id}.
@@ -263,13 +264,13 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
  - resend_expired_quote: ONLY when the seller's unaccepted quote has EXPIRED (ALLOWED NOW) and they want to go ahead, ask about it, or ask for more time. Same price per space, same spaces — nothing changes except a fresh 10-day window. Field: body = a SHORT friendly intro shown above the quote — one or two sentences, NO greeting and NO sign-off (the quote email adds both) (e.g. "Your earlier quote has expired, so we've renewed it at the same figures for another ten days."). On approval it re-sends the quote pack with a fresh 10-day window, with body shown as the intro. Never pair it with reply_email. Use this for expired quotes.
  - PRICE DISPUTES / FEE QUESTIONS: answer them yourself with reply_email from the SAVED QUOTE FIGURES (quote_amount = per space excluding the transfer fee, plot count, transfer_fee_amount charged once and paid from the sale, separate 15% buyer fee paid by the buyer) and the quote email actually sent in the thread. Explain calmly how the numbers fit together and correct any misunderstanding. If an earlier email from us gave a different figure, acknowledge it honestly and say which figure is current. Do not invent a new price; if they want more, use increase_quote_ten_percent when allowed.
  - STARTER CANCELLATION FEE: quote whatever fee the seller's own quote email states (read it in the thread). Only if their quote email is not visible use the playbook figure.
- - Quotes: apart from send_quote, resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, a different garden/lawn (different area) or a different cemetery, an unverified retail/transfer fee, or a price change beyond the standard 10%: reply_email explaining honestly what we can offer now (the saved quote or the 10% increase) and add_note the details; flag_human only if the cemetery must be phoned for a price.
+ - Quotes: apart from send_quote, resend_quote_free_listing, update_quote_spaces, increase_quote_ten_percent and resend_expired_quote you NEVER send or propose quotes or valuations. New valuations, an unverified retail/transfer fee, or a price INCREASE beyond the standard 10%: reply_email explaining honestly what we can offer now (the saved quote or the 10% increase) and add_note the details; flag_human only if the cemetery must be phoned for a price.
 - fix_document_request: ONLY for wrong PROPERTY DETAILS on a document request that has already gone out (wrong section, lot, space numbers or plot wording). Fields: fields = {plot_description (required, the full corrected "locations being sold" wording), section?, lawn?, space_numbers?}; subject + body = a short email telling the seller it has been corrected and their documents page is updated (do not ask them to re-do anything already signed). On approval it saves the corrected location everywhere, rebuilds every unsigned prepared document (POA, affidavit etc.) so the live documents page shows the new wording, and emails the seller. Signed documents are never changed. Only propose this when the DEED SCAN and/or the email record clearly support the correction — quote the evidence in reason.
 - update_document_items: work the document checklist exactly like staff do on the Documents panel. Field: items = array of {id (the item id from DOCUMENT REQUEST ITEMS), state?: one of ${DOC_STATES.join(" | ")}, attach_file_ids?: [ids from FILES ON FILE], detach_files?: [names from that item's files_attached that are WRONG for it — wrong person, wrong document, unreadable, wrong cemetery/plot], note?: short plain note (required when detaching: why)}. Detaching only unlinks the file from that item; the file stays on record. Use it to tick items received when the seller has sent them (check the file/scan actually is that document, for that person), attach the seller's emailed file to the right item, mark notarized when a notarised original is confirmed, or mark not_needed when the rules/staff note clearly say so. Items that need a wet-ink notarised original (needs_notary) are only "received"/"notarized" once staff notes confirm the original arrived — a photo alone means attach the file but leave the state. Pair with a short reply_email thanking them / saying what's still outstanding when they are waiting.
 D1 deed photos/scans are copies only: the original must physically arrive before listing paperwork is complete. A seller saying mailed is not receipt. For all original-required items attach the copy without setting received; physical receipt is logged by staff separately. Apply record/checklist updates before the reply that reports them done.
 - update_fields can correct ANY descriptive detail on the submission (seller name spelling, phone, property type, owner status, county/state, plot count, section/lawn/spaces, deed owner names, relationship, additional details, purchase info). Use the evidence (deed, emails, tree) and quote it in reason.
 - change_cemetery: correct a blank/wrong cemetery using deed, seller emails or staff evidence. Fields = {cemetery, city?, evidence, create_if_missing?: "true", address?}. Search our registry thoroughly, including Cemetery/Memorial Park variants and location, before choosing. The server resolves the whole registry and rejects ambiguity, city contradictions and possible duplicates. Only when genuinely missing, pass create_if_missing="true" with an evidenced city and source evidence; never invent prices, fees, sections or contacts. Execution preserves original wording/history, rebuilds unsigned prepared documents and leaves signed copies untouched before any same-review reply.
-- change_listing_option: set the listing option like the Starter/Pro/Featured/Set Your Own Price buttons. Fields: fields = {tier: one of ${LISTING_TIERS.join(" | ")}}. Only with a clear reason (the seller chose/asked for a different option, a staff note agreed it, or the record shows the wrong one) — quote it in reason. It does not take a payment or mark the quote accepted.
+- change_listing_option: ONLY correct an option to match a verified completed LIVE payment for that exact tier (not pending, test, refunded or another tier). A request to choose Featured is NOT payment: send the quote with its payment buttons instead, leaving the active tier unchanged. Set the listing option like the Starter/Pro/Featured/Set Your Own Price buttons. Fields: fields = {tier: one of ${LISTING_TIERS.join(" | ")}}. Only with a clear reason (the seller chose/asked for a different option, a staff note agreed it, or the record shows the wrong one) — quote it in reason. It does not take a payment or mark the quote accepted.
 - prepare_listing_agreement: prepare (generate & fill) the listing agreement PDF from the accepted quote WITHOUT emailing it. Agreements are normally created automatically after payment, so use this only when one is genuinely missing.
 - edit_family_tree: correct the family tree itself. The document request is generated by our software FROM the tree, so this is THE way to fix a wrong document request caused by the family: a misspelt name, a missing/extra relative (cousin, grandchild, sibling), wrong living/deceased, wrong spouse or will answer. Field: tree = the COMPLETE corrected FAMILY TREE JSON (same shape as FAMILY TREE below: keep every existing id, keep everything you are not changing exactly as it is, give new people a new short unique id; maps like spouse/will/poa/noKids are keyed by person id, signerSpouse/signerPoa/contacts by "first last" lowercase name key — rename those keys too when a name changes). On approval the tree is saved (previous version kept in history), the checklist re-syncs from the rules engine and prepared POAs/affidavits are rebuilt. Always prefer this over edit_document_request when the request is wrong because of the tree, so the tree and request never disagree. If you are NOT sure what the right answer is, do not guess: reply_email asking the family the specific question first.
 - sync_checklist: re-run the rules engine and refresh the checklist from the current tree (like the Sync checklist button). Use when the checklist is out of date with the tree.
@@ -434,7 +435,7 @@ function keywordTopics(sub: Sub, text: string) {
   if (/listing|listed|website|where can i|market|advertis/.test(t)) out.add("listing");
   if (/cash|buy (it|them|the plots?) (yourself|directly)|purchase (it |them )?directly|outright/.test(t)) out.add("cash");
   // Stage-based: the chapters for the step the seller is on are always included.
-  const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0;
+  const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0 || !!sub.listing_paid_at;
   // Quote/tier chapters are always included once a quote exists (tier and fee mismatches matter at every later stage).
   if (sub.quote_sent_at) out.add("quote");
   if (accepted && !sub.la_signed_at) out.add("signing");
@@ -617,7 +618,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
 const FIELD_KEYS: Record<string, string[]> = {
   extend_quote_deadline: ["quote_expires_at"],
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
-  send_quote: ["per_space", "spaces", "plot_description"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery", "city", "evidence", "create_if_missing", "address"], send_document_request: ["greeting_name", "plot_description", "section", "lawn", "space_numbers"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
+  send_quote: ["per_space", "spaces", "plot_description", "requested_price_email_id"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery", "city", "evidence", "create_if_missing", "address"], send_document_request: ["greeting_name", "plot_description", "section", "lawn", "space_numbers"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
 };
 
 function parseTree(t: unknown) {
@@ -670,7 +671,11 @@ async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
     a.tree = v.tree;
     return { fields: treeDiff((sub.ownership_answers ?? {}).v2, v.tree) };
   }
-  if (a.type === "change_listing_option") return { fields: [{ label: "listing option", before: String(sub.listing_tier ?? sub.listing_option ?? "(none)"), after: String(a.fields.tier) }] };
+  if (a.type === "change_listing_option") {
+    const { data: payments, error } = await db.from("payment_transactions").select("kind,status,environment,paid_at,refunded_at,refund_amount_cents,dispute_status,metadata").eq("submission_id", sub.id).is("deleted_at", null);
+    if (error || !paidListingOption(String(a.fields.tier), payments ?? [])) throw new Error("This listing option has not been paid for in live payments.");
+    return { fields: [{ label: "listing option", before: String(sub.listing_tier ?? sub.listing_option ?? "(none)"), after: String(a.fields.tier) }] };
+  }
   if (a.type === "change_cemetery") {
     const plan = await prepareCemeteryCorrection(db, a.fields);
     const target = "existing" in plan ? plan.existing : plan.create;
@@ -840,7 +845,7 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
-    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["extend_quote_deadline", "edit_family_tree", "change_cemetery"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
+    const previews = await Promise.all(d.actions.map((a) => changePreview(db, sub, a).catch((e) => ["extend_quote_deadline", "edit_family_tree", "change_cemetery", "change_listing_option"].includes(a.type) ? { invalid: String((e as Error).message) } : null)));
     // An invalid family-tree edit or unknown cemetery is dropped rather than shown as approvable.
     const dropped = new Set(previews.map((p, i) => (p as any)?.invalid ? i : -1).filter((i) => i >= 0));
     if (dropped.size) {
@@ -850,7 +855,7 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
       previews.splice(0, previews.length, ...previews.filter((_, i) => !dropped.has(i)));
       if (blockedCemetery) {
         // Never send a reply claiming a rejected cemetery correction happened.
-        d.actions = d.actions.filter(a => a.type !== "reply_email");
+        d.actions = d.actions.filter(a => !["reply_email", "send_quote", "update_quote_spaces", "resend_expired_quote", "increase_quote_ten_percent"].includes(a.type));
         d.actions.push({ type: "flag_human", reason: "Verify the cemetery identity before changing this record or replying about the correction.", note: "Check the deed and seller email against our cemetery directory; the proposed cemetery could not be matched safely.", human_attention: { priority: "high", importance: 70, category: "uncertain", task: "Verify the cemetery identity before changing this record.", reason: "The registry check found an ambiguous, conflicting or insufficiently evidenced cemetery target.", evidence: "Deed, seller emails and cemetery directory; review the AI findings on this record." }, confidence: 1, subject: null, body: null, fields: null, items: null, tree: null });
         previews.push(null);
       }
@@ -1368,10 +1373,19 @@ Deno.serve(async (req) => {
           const f = (act.payload?.fields ?? {}) as Record<string, string>;
           const per = Math.round(Number(f.per_space)), n = Math.round(Number(f.spaces));
           const figs = allowedQuoteFigures(sub, higherQuote(sub));
-          if (!figs.has(per)) throw new Error(`$${per} per space isn't an approved figure for this record (allowed: ${[...figs.keys()].map((v) => `$${v}`).join(", ") || "none"}). Send it from the quote screen instead.`);
+          let lowerRequested = false;
+          if (f.requested_price_email_id) {
+            const { data: latest } = await db.from("email_messages").select("id,from_email,body_text,received_at").eq("matched_submission_id", sub.id).is("deleted_at", null).not("from_email", "ilike", "%texascemeterybrokers%").order("received_at", { ascending: false }).limit(1).maybeSingle();
+            lowerRequested = requestedLowerQuote(sub, f, latest ?? {});
+          }
+          if (!figs.has(per) && !lowerRequested) throw new Error(`$${per} per space isn't an approved figure for this record (allowed: ${[...figs.keys()].map((v) => `$${v}`).join(", ") || "none"}). Send it from the quote screen instead.`);
           if (!(n >= 1 && n <= 20)) throw new Error("Number of spaces missing");
-          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), await deedReady(), { perSpace: per, count: n, plotDescription: f.plot_description, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
-          await aiNote(`Sent ${first(sub)} their quote: ${n} space${n === 1 ? "" : "s"} at $${per.toLocaleString()} per space ($${r.total.toLocaleString()}), ${figs.get(per)}.`);
+          const { data: dependencies } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
+          if (pendingBefore(dependencies ?? [], act)) throw new Error("Apply this review's cemetery and plot corrections before sending the quote.");
+          const checked = await deedReady();
+          if (!String(checked.cemetery ?? "").trim() || /^(your cemetery|unknown|n\/?a)$/i.test(checked.cemetery)) throw new Error("Verify the cemetery before sending the quote.");
+          const r = await sendQuotePack(db, mail, (n2, b) => callInternal(url, n2, b), checked, { perSpace: per, count: n, plotDescription: f.plot_description, explanation: act.email_body, threadId: act.gmail_thread_id, adminName: user.name });
+          await aiNote(`Sent ${first(sub)} their quote: ${n} space${n === 1 ? "" : "s"} at $${per.toLocaleString()} per space ($${r.total.toLocaleString()}), ${lowerRequested ? "seller-requested lower price" : figs.get(per)}.`);
         } else if (act.action_type === "resend_email") {
           const id = String(act.payload?.fields?.email_id ?? "");
           const r = await resendEarlierEmail(db, mail, sub, id, act.email_body, act.email_subject);
@@ -1401,6 +1415,7 @@ Deno.serve(async (req) => {
         } else if (act.action_type === "change_listing_option") {
           const tier = String(act.payload?.fields?.tier ?? "");
           if (!(LISTING_TIERS as readonly string[]).includes(tier)) throw new Error("Unknown listing option");
+          await changePreview(db, sub, { type: "change_listing_option", fields: { tier } });
           const before = sub.listing_tier ?? sub.listing_option ?? "none";
           const { error: e } = await db.from("contact_submissions").update({ listing_tier: tier, listing_option: tier }).eq("id", sub.id);
           if (e) throw new Error(e.message);
