@@ -13,6 +13,7 @@ import cremationNicheImg from "@/assets/property-types/cremation-niche.png";
 import familyEstateImg from "@/assets/property-types/family-estate.png";
 import veteransGardenImg from "@/assets/property-types/veterans-garden.png";
 import Seo from "@/components/Seo";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 /* ─── Data ────────────────────────────────────────────────────── */
 
@@ -301,6 +302,7 @@ const Section1 = () => {
     <div ref={ref} className="relative pt-2 pb-8 md:pt-4 md:pb-12">
       <FloatingLeaves />
       <div className="container mx-auto px-6 max-w-7xl">
+        <EmmaEditorialPassage topic="types" />
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
           <motion.div style={{ y: imgY }} className="lg:col-span-5 relative flex justify-center">
             <motion.span style={{ y: numY }} className="absolute -top-4 -left-4 text-[10rem] md:text-[13rem] font-display font-bold text-foreground/[0.03] leading-none select-none pointer-events-none">01</motion.span>
@@ -613,7 +615,7 @@ const PropertyTypes = () => {
       <Navbar forceScrolled />
 
       {/* Editorial opener — light, continuous, flows straight into the first spread */}
-      <section className="relative pt-24 md:pt-28 pb-2 md:pb-4 bg-background">
+      <section ref={heroRef} className="relative pt-24 md:pt-28 pb-2 md:pb-4 bg-background">
         {/* layered warm washes — bleed past the section so there's no seam */}
         <div className="absolute -inset-x-0 -top-10 -bottom-32 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.18),transparent_55%)] pointer-events-none" />
         <div className="absolute -inset-x-0 -top-10 -bottom-32 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.16),transparent_55%)] pointer-events-none" />

@@ -3,12 +3,14 @@ import { ArrowRight, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GUIDE_CEMETERY_FEATURES } from "@/components/guides/GuideCemeteryGallery";
 import { RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 export function PlotWorthLocalContext() {
   return <section id="local-context" className="scroll-mt-28 border-t border-border py-10 md:py-14">
     <p className="text-xs font-medium text-primary mb-3">Your cemetery, in context</p>
     <h2 className="font-display text-3xl md:text-4xl leading-tight mb-5">A local market. A specific resting place.</h2>
     <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-4xl mb-8">The calculator starts with your cemetery. These guides help you understand the grounds, property types and sections behind that name. Photography gives useful context, but cannot confirm the position or value of your own spaces.</p>
+    <EmmaEditorialPassage topic="demand" />
     <div className="space-y-9 md:space-y-12">
       {GUIDE_CEMETERY_FEATURES.slice(0, 3).map((cemetery) => <figure key={cemetery.slug}>
         <Link to={`/cemeteries/${cemetery.slug}`} className="group block overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">

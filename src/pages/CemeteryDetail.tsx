@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { CemeteryEditorialNote } from "@/components/guides/EmmaEditorialPassage";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import { bayCemeteries } from "@/data/cemeteries";
@@ -694,6 +695,7 @@ const CemeteryDetail = () => {
         </div>
       </section>
 
+      <CemeteryEditorialNote name={cemetery.name} />
       <Footer />
     </div>
   );

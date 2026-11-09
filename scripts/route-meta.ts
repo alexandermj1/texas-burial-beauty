@@ -62,6 +62,12 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Guides and family resources for buying and selling cemetery plots, niches and crypts across Texas — pricing, transfers and paperwork explained.",
   },
   {
+    path: "/guides/what-does-a-cemetery-broker-do",
+    title: "What Does a Cemetery Broker Do? | Texas Family Guide",
+    description: "How a cemetery broker helps families buy and sell plots, checks ownership, finds buyers and coordinates paperwork—and how that differs from a funeral director.",
+    type: "article",
+  },
+  {
     path: "/preneed-cemetery-plots-texas",
     title: "Preneed Cemetery Plots in Texas | Buy Before You Need To",
     description:

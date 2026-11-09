@@ -34,6 +34,7 @@ const CemeteryDirectory = lazy(() => import("./pages/CemeteryDirectory"));
 const CemeteryDetail = lazy(() => import("./pages/CemeteryDetail"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Guides = lazy(() => import("./pages/Guides"));
+const GuideCemeteryBroker = lazy(() => import("./pages/GuideCemeteryBroker"));
 const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
 const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
 const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
@@ -102,6 +103,7 @@ const App = () => (
                 <Route path="/cemeteries/:slug" element={<CemeteryDetail />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/guides" element={<Guides />} />
+                <Route path="/guides/what-does-a-cemetery-broker-do" element={<GuideCemeteryBroker />} />
                 <Route path="/sell-cemetery-plot-texas" element={<GuideSellingCemeteryPlot />} />
                 <Route path="/cemetery-plots-for-sale-texas" element={<GuideBuyingCemeteryPlot />} />
                 <Route path="/cemetery-plot-cost-texas" element={<GuideCemeteryPlotCost />} />

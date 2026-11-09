@@ -8,6 +8,7 @@ import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirec
 import TransferIllustratedNavigation from "@/components/guides/TransferIllustratedNavigation";
 import { Button } from "@/components/ui/button";
 import { TRANSFER_GUIDE_SEO } from "@/data/publicSeoUpgrades";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
 import palmFan from "@/assets/flowers/palm-fan-clean.png.asset.json";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
@@ -53,7 +54,7 @@ const jsonLd: Record<string, unknown>[] = [
     headline: "How to transfer your cemetery plot in Texas",
     description: TRANSFER_GUIDE_SEO.description,
     mainEntityOfPage: FULL, url: FULL, inLanguage: "en-US",
-    dateModified: "2026-10-17",
+    dateModified: "2026-11-09",
     author: { "@type": "Organization", name: "Texas Cemetery Brokers", url: `${SITE}/` },
     publisher: { "@type": "Organization", name: "Texas Cemetery Brokers", url: `${SITE}/` },
     about: ["Texas cemetery plot inheritance", "Cemetery plot transfer", "Right of sepulture", "Texas heirship", "Recorded cemetery transfer fees", "Texas cemetery addresses"],
@@ -160,6 +161,8 @@ const GuideCemeteryTransferProcess = () => (
             <div className="border-t border-border bg-secondary/30 p-6 md:border-l md:border-t-0"><Building2 className="h-6 w-6 text-primary"/><p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">The cemetery holds</p><p className="mt-2 font-display text-xl text-foreground">The controlling ownership record</p></div>
           </div>
         </Section>
+
+        <EmmaEditorialPassage topic="paperwork" />
 
         <Section id="planning-deeds" eyebrow="Fewer names, simpler paperwork" title={<>Plan the deed <span className="italic text-primary">before you buy.</span></>}>
           <p>It is also our advice that, when purchasing cemetery plots, families put the fewest number of people on the deed as possible, or get separate deeds for separate plots. This way, when it comes to a transfer, there are fewer signers and the transfer is more likely to go through at the cemetery without requiring additional paperwork.</p>

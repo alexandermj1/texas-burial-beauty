@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
 import BuyerWizard from "@/components/BuyerWizard";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 const BuyProperty = () => {
   return (
@@ -153,6 +154,7 @@ const BuyProperty = () => {
             <Link to="/cemetery-plot-cost-texas" className="text-primary font-medium hover:underline">Texas cemetery plot costs →</Link>
             <Link to="/cemeteries" className="text-primary font-medium hover:underline">Browse the cemetery directory →</Link>
           </div>
+          <EmmaEditorialPassage topic="buyerChecks" />
         </div>
       </section>
     </div>
