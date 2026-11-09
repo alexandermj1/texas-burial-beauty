@@ -13,6 +13,9 @@ import { sellerWakeCandidates, sellerMailOutgoing } from "../_shared/sellerWakeC
 import { sellerQuoteBacklog } from "../_shared/sellerQuoteBacklog.ts";
 import { humanAttentionEnabled, parseHumanAttention } from "../_shared/humanAttention.ts";
 import { legacySuggestionsNeedReview, replacedAutomationBlocker } from "../_shared/sellerBacklog.ts";
+import { shouldAttemptCreditRecovery } from "../_shared/autopilotRecovery.ts";
+import { labelRun } from "../_shared/aiRunLabel.ts";
+import { GatewayError, generateResponse } from "npm:@lovable.dev/ai-gateway@0.1.11";
 
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 const corsHeaders = { ...sdkCorsHeaders, "Access-Control-Allow-Headers": `${sdkCorsHeaders["Access-Control-Allow-Headers"]}, x-automation-secret` };
@@ -31,6 +34,18 @@ async function settings() {
 async function pause(reason: string) {
   await db.from("automation_job_state").update({ status: "paused", pause_reason: reason, updated_at: new Date().toISOString() }).eq("job_name", JOB);
 }
+
+/** A minimal, record-free gateway request proves that billing access is restored before any seller work resumes. */
+async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; error?: string }> {
+  try {
+    await generateResponse(labelRun({ model: "openai/gpt-6-astra" as const, input: "Reply OK." }, "Seller AI — checking restored credit access"), { maxRetries: 0 });
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof GatewayError) return { ok: false, status: e.httpStatus, error: e.message.slice(0, 200) };
+    return { ok: false, error: String((e as Error).message).slice(0, 200) };
+  }
+}
+
 const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
@@ -331,7 +346,15 @@ Deno.serve(async (req) => {
   }
   const s = await settings();
   if (s.mode === "off") return json({ status: "off" });
-  if (job.status === "paused") return json({ status: "paused", reason: job.pause_reason });
+  let recovered = false;
+  if (job.status === "paused") {
+    if (!shouldAttemptCreditRecovery(job)) return json({ status: "paused", reason: job.pause_reason });
+    const check = await creditAccessRestored();
+    if (!check.ok) return json({ status: "paused", reason: job.pause_reason, credit_recovery: "Waiting for AI access; will check again on the next scheduled sweep" });
+    const { error } = await db.from("automation_job_state").update({ status: "active", pause_reason: null, consecutive_rate_limits: 0, updated_at: new Date().toISOString() }).eq("job_name", JOB).eq("status", "paused");
+    if (error) return json({ error: error.message }, 500);
+    recovered = true;
+  }
   const nowIso = new Date().toISOString();
   const { data: lease } = await db.from("automation_job_state").update({ lease_until: new Date(Date.now() + 8 * 60_000).toISOString(), last_started_at: nowIso, locked_by: crypto.randomUUID() })
     .eq("job_name", JOB).or(`lease_until.is.null,lease_until.lt.${nowIso}`).select("locked_by").maybeSingle();
@@ -339,7 +362,7 @@ Deno.serve(async (req) => {
   try {
     const sent = await sendDue(s.mode);
     const woke = await wake(s.mode, s.dailyReviews);
-    return json({ status: "ok", sent, woke });
+    return json({ status: "ok", recovered, sent, woke });
   } catch (e) {
     return json({ error: String((e as Error).message) }, 500);
   } finally {
