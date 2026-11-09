@@ -126,6 +126,8 @@ const AboutSeoSection = () => {
               Every transaction is handled in partnership with Bayer Cemetery Brokers, a licensed California brokerage.
               We've quietly closed thousands of cemetery property transfers since 1996 — and we'd be honored to help with yours.
             </p>
+            <p data-simon-review data-emma-editorial="broker-role">A cemetery broker works for families buying or selling property within a cemetery—not selling the cemetery itself. The cemetery maintains the grounds and its ownership records; the funeral director handles the service. Texas Cemetery Brokers helps bring the buyer and seller together, checks the ownership and organizes the transfer paperwork.</p>
+            <p><Link to="/guides/what-does-a-cemetery-broker-do" className="text-primary underline underline-offset-4">What a cemetery broker actually does →</Link></p>
 
             <div className="flex flex-wrap gap-3 pt-4">
               <Link

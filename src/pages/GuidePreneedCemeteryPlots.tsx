@@ -13,6 +13,7 @@ import houstonPhoto from "@/assets/houston-skyline.png.asset.json";
 import austinPhoto from "@/assets/austin-skyline.webp.asset.json";
 import sanAntonioPhoto from "@/assets/san-antonio-riverwalk.webp.asset.json";
 import Footer from "@/components/Footer";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
@@ -317,9 +318,10 @@ const GuidePreneedCemeteryPlots = () => {
     {/* ARTICLE BODY */}
     <article className="py-16">
       <div className="container mx-auto px-6 max-w-5xl">
-        <p className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
-          Almost nobody plans to buy cemetery property. Most families we meet are doing it in the two days after a death, in an office, with a price list in front of them and no idea whether the number they are being shown is reasonable. It is the single most expensive decision people make while least able to make it. Buying preneed — before the property is needed — turns that around completely: you choose the cemetery, walk the section, compare what is genuinely available, and pay today's price rather than whatever the price list says in ten years. And because cemetery property in Texas can legally be resold by its owner, preneed buyers have a second market to shop in, one the cemetery office will never mention.
+        <p data-simon-review data-emma-editorial="planning" className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
+          Buying ahead gives a family time to choose calmly, visit the places that interest them and involve the people they want in the decision. Buying after a loss is different: grief may arrive alongside funeral costs, medical bills and travel arrangements. Texas Cemetery Brokers helps families in either situation, but having those conversations earlier can spare loved ones an urgent decision later. A resale space is another option to compare, subject to the cemetery’s ownership and transfer requirements.
         </p>
+        <EmmaEditorialPassage topic="planning" />
 
         <div className="relative rounded-3xl p-8 md:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/5 border border-primary/15 overflow-hidden my-12">
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-accent/15 blur-2xl" />

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ArrowRight, Plus } from "lucide-react";
 import MortuarySheetShowcase from "@/components/MortuarySheetShowcase";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -318,6 +319,7 @@ const SellProperty = () => {
 
 
       {/* FAQs — editorial accordion */}
+      <div className="container mx-auto max-w-6xl px-6"><EmmaEditorialPassage topic="emotions" /></div>
       <FaqSection faqs={faqs} />
 
       {/* CTA */}

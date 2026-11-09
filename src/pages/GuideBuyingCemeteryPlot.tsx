@@ -8,6 +8,7 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
 import PreneedBlock from "@/components/PreneedBlock";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 
 
@@ -286,6 +287,7 @@ const GuideBuyingCemeteryPlot = () => (
         </Section>
 
         <GuideBuyerForm source="buying_guide_wizard" inquiryChannel="texas_buying_guide" />
+        <EmmaEditorialPassage topic="buyerChecks" />
 
         <Section id="savings" eyebrow="The honest reason resale costs less" title="Why cemetery plots cost less through a broker">
           <p>If you searched for a <strong>cheap or affordable cemetery plot</strong>, here's the honest reason resale costs less: cemeteries sell new plots at today's retail price, which rises almost every year. A family who bought years ago — or who is selling an inherited or unneeded plot — is usually willing to sell below that current price. You get the identical property for less, and the savings come from the market, not from cutting any corner.</p>

@@ -770,6 +770,10 @@ const GuidePlanningFuneralTexas = () => {
               </Section>
 
               <GuideBuyerForm source="funeral_planning_guide_wizard" inquiryChannel="texas_funeral_planning_guide" />
+              <section data-emma-editorial="urgent-buying" className="my-10 border-y border-border py-8">
+                <h2 data-simon-review className="mb-4 font-display text-3xl text-foreground">A resting place without pressure</h2>
+                <p data-simon-review className="text-base leading-relaxed text-muted-foreground">After a death, everything can feel raw, and a large financial decision arrives at one of the hardest moments. Families do not need a hard sell. They need clear options, the full purchase costs and someone checking the cemetery’s requirements. Texas Cemetery Brokers helps compare suitable resale spaces and coordinate the transfer as quickly as the cemetery and completed paperwork allow.</p>
+              </section>
 
               <Cta
                 heading="Need a burial plot?"

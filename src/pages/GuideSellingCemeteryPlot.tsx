@@ -7,6 +7,7 @@ import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
+import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 
 const TEXAS_REGIONS = [
@@ -374,6 +375,7 @@ const GuideSellingCemeteryPlot = () => (
         </section>
 
         {/* H2: Value factors */}
+        <EmmaEditorialPassage topic="sellerChecks" />
         <section id="value" className="scroll-mt-24 mt-20">
           <Eyebrow>Chapter 02 · Valuation</Eyebrow>
           <h2 className="font-display text-3xl md:text-4xl text-foreground mb-5 leading-tight">What affects your plot's <span className="italic text-primary">value</span></h2>

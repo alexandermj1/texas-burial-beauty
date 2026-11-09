@@ -8,6 +8,7 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
 import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
+import { emmaMetroNotes } from "@/data/emmaEditorial";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
 import dallasPhoto from "@/assets/dallas-skyline.png.asset.json";
@@ -590,6 +591,7 @@ const CityPlotsPage = () => {
         </section>
       </article>
 
+      {emmaMetroNotes[data.slug] && <section data-emma-editorial="metro" className="border-t border-border py-10 md:py-14"><div className="container mx-auto max-w-5xl px-6"><h2 data-simon-review className="mb-5 font-display text-3xl leading-tight text-foreground">{emmaMetroNotes[data.slug].title}</h2><p data-simon-review className="text-base leading-relaxed text-muted-foreground">{emmaMetroNotes[data.slug].text}</p><Link to="/guides/what-does-a-cemetery-broker-do" className="mt-5 inline-block text-sm text-primary underline underline-offset-4">What a cemetery broker handles for the family</Link></div></section>}
       <Footer />
     </div>
   );
