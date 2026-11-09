@@ -121,13 +121,13 @@ Deno.serve(async (req) => {
   try {
     const g = await gather(day);
     const input = `Briefing date: ${day}\n\nPREVIOUS BRIEFING CARRY-OVER (${g.previous?.briefing_date ?? "none"}):\n${g.previous?.summary_text ?? "None — this is the first briefing."}\n\nTODAY'S RECORDS:\n${g.text}`;
-    const res: any = await generateMessage({ model: "anthropic/claude-sonnet-5", system: SYSTEM, max_tokens: 8000, messages: [{ role: "user", content: input }] } as any);
+    const res: any = await generateMessage({ model: "anthropic/claude-sonnet-5", system: SYSTEM, max_tokens: 12000, messages: [{ role: "user", content: input }] } as any);
     const out = (res.content ?? []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("");
     const [htmlPart, carry = ""] = out.split("===CARRY===");
     const html = render(day, htmlPart.replace(/```html|```/g, "").trim(), practice);
     const nice = new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
     await sendGmail(to, `Daily briefing — ${nice}${practice ? " (practice)" : ""}`, html);
-    await db.from("daily_briefings").insert({ briefing_date: day, recipients: to, is_practice: practice, summary_text: carry.trim(), html, stats: g.stats });
+    await db.from("daily_briefings").insert({ briefing_date: day, recipients: to, is_practice: practice, summary_text: (carry.trim() || htmlPart.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")).slice(0, 6000), html, stats: g.stats });
     return json({ ok: true, day, to, stats: g.stats });
   } catch (e) {
     console.error(e); return json({ ok: false, error: String((e as Error)?.message ?? e) }, 500);
