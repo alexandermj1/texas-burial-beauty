@@ -46,7 +46,8 @@ async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; e
   }
 }
 
-const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
+import { isSellerRecord } from "../_shared/sellerKind.ts";
+const isSeller = (s: any) => isSellerRecord(s);
 import { groupActivity } from "./activity.ts";
 const AUTOPILOT_ON_SINCE = "2026-11-06T22:00:00Z";
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
@@ -132,7 +133,9 @@ async function sendDue(mode: string) {
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
     const after = await recordFingerprint(db, fresh ?? sub);
     // Acknowledge our sent mail only; never swallow concurrent seller/evidence changes.
-    await db.from("ai_record_memory").update({ fingerprint: mem?.fingerprint ? { ...mem.fingerprint, our_email: after.our_email } : null, reminder_count: (mem?.reminder_count ?? 0) + (mem?.last_route === "checkback" ? 1 : 0) }).eq("submission_id", sub.id);
+    await db.from("ai_record_memory").update({ fingerprint: mem?.fingerprint ? { ...mem.fingerprint, our_email: after.our_email,
+      // The AI's own executed steps change these parts; accept them so its own work never wakes another review (the Clemente loop).
+      ...(done.some((d) => d !== "reply_email") ? { record: after.record, documents: after.documents, family_tree: after.family_tree } : {}) } : null, reminder_count: (mem?.reminder_count ?? 0) + (mem?.last_route === "checkback" ? 1 : 0) }).eq("submission_id", sub.id);
     out.push({ id: o.id, sent: true });
   }
   return out;
