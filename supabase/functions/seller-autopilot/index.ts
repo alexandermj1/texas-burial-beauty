@@ -342,8 +342,8 @@ Deno.serve(async (req) => {
     const nowIso2 = new Date().toISOString();
     const [{ data: upMem }, { data: recentRuns }, { data: recentFlags }] = await Promise.all([
       db.from("ai_record_memory").select("submission_id,due_at,waiting_for,next_if_silent,last_route").gte("due_at", nowIso2).order("due_at").limit(25),
-      db.from("ai_agent_runs").select("id,created_at,status,submission_id,stage_summary").like("trigger", "autopilot:%").order("created_at", { ascending: false }).limit(30),
-      db.from("ai_agent_actions").select("created_at,submission_id,reason").eq("action_type", "flag_human").order("created_at", { ascending: false }).limit(15),
+      db.from("ai_agent_runs").select("id,created_at,status,submission_id,stage_summary").like("trigger", "autopilot:%").order("created_at", { ascending: false }).limit(80),
+      db.from("ai_agent_actions").select("created_at,submission_id,reason,run_id").eq("action_type", "flag_human").order("created_at", { ascending: false }).limit(15),
     ]);
     const more = [...new Set([...(upMem ?? []), ...(recentRuns ?? []), ...(recentFlags ?? [])].map((r: any) => r.submission_id).filter((x: string) => x && !nm.has(x)))];
     if (more.length) { const { data: n2 } = await db.from("contact_submissions").select("id,name,email,archived_at,ai_paused_at").in("id", more); for (const n of n2 ?? []) nm.set(n.id, n.name || n.email); }
