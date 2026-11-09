@@ -1507,7 +1507,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         const locSkip = deedFile && f !== deedFile;
         const src = f.file_name || "document";
         const list = Array.isArray(ex.owners) ? ex.owners : [];
-        list.forEach((n: any) => { if (typeof n === "string" && n.trim()) owners.add(n.trim()); });
+        // Only the deed/certificate decides who owns the plot — county searches, wills and POAs list other people.
+        if (!deedFile || deedRank(f) === 0) list.forEach((n: any) => { if (typeof n === "string" && n.trim()) owners.add(n.trim()); });
         pushFact("Owner(s) on record", ex.owners, src);
         pushFact("Previous owner(s)", ex.previous_owners, src);
         pushFact("Purchaser", ex.purchaser, src);
@@ -1808,14 +1809,14 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                         const owners = deedHighlightOwners?.id === selected.id && deedHighlightOwners.owners.length ? deedHighlightOwners.owners : selectedDeedOwners.length ? selectedDeedOwners : String(seller.deed_owner_names || "").split(/\n/).filter(Boolean);
                         const m = deedOwnerMatch(selected.name, owners);
                         if (!m) return null;
-                        const tip = m.tone === "green" ? (m.others.length ? "Named on the deed, with others" : "The only owner named on the deed") : "Not named on the deed";
-                        return <span title={tip} className="shrink-0"><CheckCircle aria-label={tip} className="h-5 w-5" style={{ color: m.tone === "green" ? "hsl(var(--status-docs))" : "hsl(var(--destructive))" }} /></span>;
+                        const tip = m.tone === "green" ? "The only owner named on the deed" : m.tone === "orange" ? "Named on the deed, with others" : "Not named on the deed";
+                        return <span title={tip} className="shrink-0"><CheckCircle aria-label={tip} className="h-5 w-5" style={{ color: m.tone === "green" ? "hsl(var(--status-docs))" : m.tone === "orange" ? "hsl(var(--status-quote))" : "hsl(var(--destructive))" }} /></span>;
                       })()}</h3>
                       {(() => {
                         const owners = deedHighlightOwners?.id === selected.id && deedHighlightOwners.owners.length ? deedHighlightOwners.owners : selectedDeedOwners.length ? selectedDeedOwners : String(seller.deed_owner_names || "").split(/\n/).filter(Boolean);
                         const m = deedOwnerMatch(selected.name, owners);
                         if (!m || !m.others.length) return null;
-                        return <p className="mt-1 text-xs text-muted-foreground">{m.tone === "green" ? "Also on the deed: " : "Deed is in the name of: "}<span className="font-medium text-foreground">{m.others.join(", ")}</span></p>;
+                        return <p className="mt-1 text-xs text-muted-foreground">{m.tone !== "red" ? "Also on the deed: " : "Deed is in the name of: "}<span className="font-medium text-foreground">{m.others.join(", ")}</span></p>;
                       })()}
                        <p className="mt-2 text-xs text-muted-foreground">Submitted {formatDate(selected.created_at)}{sellerStage ? ` · ${sellerStages[sellerStage - 1]?.label}` : ""}</p>
                        <div className="mt-4 flex flex-wrap items-center gap-2">

@@ -29,5 +29,5 @@ export function deedOwnerMatch(person: string | null | undefined, owners: string
   const mine = people.filter(isMe);
   const others = people.filter(o => !isMe(o));
   if (!mine.length) return { tone: "red", others: people };
-  return { tone: "green", others };
+  return { tone: others.length ? "orange" : "green", others };
 }
