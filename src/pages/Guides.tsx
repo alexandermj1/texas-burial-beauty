@@ -58,6 +58,16 @@ interface Guide {
 
 export const guides: Guide[] = [
   {
+    slug: "guides/what-does-a-cemetery-broker-do",
+    issue: "Issue N°07", num: "07",
+    kicker: "The Brokerage Edition",
+    title: "What Does a Cemetery Broker", titleAccent: "Actually Do?",
+    dek: "The daily work behind a plot sale: finding buyers, checking ownership, organizing signatures and helping families make an informed decision.",
+    status: "live", meta: "5 chapters · 6 min read",
+    panel: "bg-primary", panelInk: "text-primary-foreground", rule: "bg-primary-foreground/40",
+    hero: FLORAL.hibiscus, accent: FOLIAGE.palm,
+  },
+  {
     slug: "what-is-my-cemetery-plot-worth-texas",
     issue: "Issue N°06",
     num: "06",
@@ -311,7 +321,7 @@ const Guides = () => {
               </p>
             </div>
             <p className="hidden lg:block text-xs tracking-[0.18em] uppercase text-[hsl(28_20%_25%)]/60 max-w-xs text-right">
-              Seven complete editions · swipe through to read →
+              Eight complete editions · swipe through to read →
             </p>
           </motion.div>
         </div>

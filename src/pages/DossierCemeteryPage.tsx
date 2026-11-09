@@ -5,6 +5,7 @@ import { Phone, MapPin, ArrowRight, X } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { CemeteryEditorialNote } from "@/components/guides/EmmaEditorialPassage";
 import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import CemeteryLocationMap from "@/components/cemetery/CemeteryLocationMap";
@@ -868,6 +869,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       </div>
       <div className="lg:hidden h-[64px]" aria-hidden />
 
+      <CemeteryEditorialNote name={cemetery.name} />
       <Footer />
 
       {/* Lightbox */}
