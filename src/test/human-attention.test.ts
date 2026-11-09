@@ -3,6 +3,7 @@ import { selectedAttention, attentionIndex, humanAttentionEnabled, humanAttentio
 
 const attention: HumanAttention = { priority: "high", importance: 85, category: "check", task: "Check whether David's original deed arrived in the office.", reason: "The photo cannot confirm physical receipt.", evidence: "David's latest email and the original-receipt checklist." };
 const flag = (id: string, priority: HumanAttention["priority"] = "high", importance = 85): AttentionAction => ({ id: `action-${id}`, submission_id: id, action_type: "flag_human", status: "proposed", created_at: "2026-11-05T01:06:00Z", payload: { human_attention: { ...attention, priority, importance } } });
+const quoteFlag = (id: string): AttentionAction => ({ ...flag(id, "urgent", 100), payload: { human_attention: { ...attention, task: "Quote needed: Cici, review the deed and prepare the valuation.", priority: "urgent", importance: 100 } } });
 describe("human-attention rollout", () => {
   it("is released by the owner, and still needs the setting switched on", () => {
     expect(humanAttentionEnabled(true)).toBe(true);
@@ -41,6 +42,14 @@ describe("human task judgments", () => {
     const rows = [{ id: "reply" }, { id: "david" }, { id: "deadline" }, { id: "other-check" }, { id: "ordinary" }];
     const index = attentionIndex([flag("david", "high", 85), flag("deadline", "urgent", 90), flag("other-check", "high", 95)]);
     expect(prioritizeHumanAttention(rows, index, true).map(s => s.id)).toEqual(["deadline", "other-check", "david", "reply", "ordinary"]);
+  });
+  it("labels every quote-preparation task low importance even when an older flag was urgent", () => {
+    expect(parseHumanAttention(quoteFlag("quote").payload?.human_attention)).toMatchObject({ priority: "low", importance: 10 });
+  });
+  it("places quote preparation behind every other staff-needed task, including other low-priority checks", () => {
+    const rows = [{ id: "ordinary" }, { id: "quote" }, { id: "low-check" }, { id: "david" }];
+    const index = attentionIndex([quoteFlag("quote"), flag("low-check", "low", 0), flag("david", "high", 85)]);
+    expect(prioritizeHumanAttention(rows, index, true).map(s => s.id)).toEqual(["david", "low-check", "quote", "ordinary"]);
   });
   it("does not hide a human task behind a newer sibling reply", () => {
     expect(attentionIndex([flag("david"), { ...flag("david"), id: "reply", action_type: "reply_email", created_at: "2026-11-05T02:00:00Z" }]).get("david")?.actionId).toBe("action-david");

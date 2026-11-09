@@ -11,6 +11,8 @@ export type HumanAttention = {
   reason: string;
   evidence: string;
 };
+export const QUOTE_TASK_IMPORTANCE = 10;
+export const isQuoteNeededAttention = (a: Pick<HumanAttention, "task">) => /^quote needed\s*:/i.test(a.task.trim());
 const text = (v: unknown, max: number) => typeof v === "string" ? v.trim().slice(0, max) : "";
 export function parseHumanAttention(value: unknown): HumanAttention | null {
   if (!value || typeof value !== "object") return null;
@@ -20,7 +22,8 @@ export function parseHumanAttention(value: unknown): HumanAttention | null {
   if (typeof v.importance !== "number" || !Number.isFinite(v.importance) || v.importance < 0 || v.importance > 100) return null;
   const task = text(v.task, 1000), reason = text(v.reason, 1000), evidence = text(v.evidence, 1000);
   if (!task || !reason || !evidence) return null;
-  return { priority: v.priority as HumanAttention["priority"], category: v.category as HumanAttention["category"], importance: Math.round(v.importance), task, reason, evidence };
+  const parsed = { priority: v.priority as HumanAttention["priority"], category: v.category as HumanAttention["category"], importance: Math.round(v.importance), task, reason, evidence };
+  return isQuoteNeededAttention(parsed) ? { ...parsed, priority: "low" as const, importance: Math.min(parsed.importance, QUOTE_TASK_IMPORTANCE) } : parsed;
 }
 export const humanAttentionNote = (a: HumanAttention) =>
   `Needs a person (${a.priority} priority): ${a.task}\n${a.reason}\nWhere to check: ${a.evidence}`;
@@ -31,8 +34,9 @@ export type AttentionEntry = { actionId: string; createdAt: string; attention: H
 export const selectedAttention = (index: Map<string, AttentionEntry>, clickedId: string | undefined, documentId: string) =>
   (clickedId ? index.get(clickedId) : undefined) ?? index.get(documentId);
 const ranks = { urgent: 4, high: 3, normal: 2, low: 1 };
+const quoteGroup = (entry: AttentionEntry) => isQuoteNeededAttention(entry.attention) ? 0 : 1;
 export function compareAttention(a: AttentionEntry, b: AttentionEntry): number {
-  return ranks[b.attention.priority] - ranks[a.attention.priority] || b.attention.importance - a.attention.importance || a.createdAt.localeCompare(b.createdAt);
+  return quoteGroup(b) - quoteGroup(a) || ranks[b.attention.priority] - ranks[a.attention.priority] || b.attention.importance - a.attention.importance || a.createdAt.localeCompare(b.createdAt);
 }
 export function attentionIndex(actions: AttentionAction[]): Map<string, AttentionEntry> {
   const out = new Map<string, AttentionEntry>();
