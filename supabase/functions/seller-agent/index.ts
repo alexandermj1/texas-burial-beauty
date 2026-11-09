@@ -56,11 +56,8 @@ const clip = (v: unknown, n: number) => {
 const stripQuoted = (t: string) => t.replace(/\nOn .{5,160}wrote:[\s\S]*$/, "").replace(/(^|\n)>.*(?=\n|$)/g, "");
 
 /** Seller-only guard: buyers, general enquiries and partners never reach the AI. */
-const isSeller = (s: Sub) => {
-  const kind = String(s.customer_kind ?? "").toLowerCase();
-  if (kind.includes("buyer") || kind.includes("general") || kind.includes("partner")) return false;
-  return s.source === "seller_quote" || (s.source === "contact" && !!s.quote_sent_at) || kind.includes("seller");
-};
+import { isSellerRecord } from "../_shared/sellerKind.ts";
+const isSeller = (s: Sub) => isSellerRecord(s);
 
 const AI_HIDDEN_USER_IDS = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f", "fcb3b678-3ac9-4207-83fe-86fb7952ae41"]);
 

@@ -46,7 +46,8 @@ async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; e
   }
 }
 
-const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
+import { isSellerRecord } from "../_shared/sellerKind.ts";
+const isSeller = (s: any) => isSellerRecord(s);
 import { groupActivity } from "./activity.ts";
 const AUTOPILOT_ON_SINCE = "2026-11-06T22:00:00Z";
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
