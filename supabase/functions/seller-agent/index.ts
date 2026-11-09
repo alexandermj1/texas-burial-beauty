@@ -192,7 +192,7 @@ import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQ
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
 const FIELD_LABEL: Record<string, string> = { name: "seller name", property_type: "property type", deed_owners_status: "owner status", ownership_type: "ownership type", state: "county / state", spaces: "spaces", plot_count: "number of plots", details: "additional details", purchase_info: "purchase information", phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
-const EDITABLE_FIELDS = ["name", "phone", "section", "lawn", "space_numbers", "deed_owner_names", "deed_owners_status", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count", "spaces", "property_type", "ownership_type", "state", "details", "purchase_info"];
+const EDITABLE_FIELDS = ["name", "email", "phone", "section", "lawn", "space_numbers", "deed_owner_names", "deed_owners_status", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count", "spaces", "property_type", "ownership_type", "state", "details", "purchase_info"];
 // The quote stores the authorised sale price per space excluding one transfer fee.
 // Match the admin quote ceiling: buyer pays 115% of (price + transfer fee).
 function higherQuote(sub: Sub) {
@@ -227,6 +227,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   out.add("resend_email"); out.add("set_stage");
   if (contracts.some((c) => ["sent", "viewed", "draft"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()))) out.add("resend_contract_link");
   if (contracts.some((c) => ["signed", "notarized", "completed"].includes(c.status))) out.add("email_signed_copy");
+  if (la.some((c) => c.signed_at && !c.countersigned_at)) out.add("countersign_contract");
   if (sub.documents_requested_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status)) || sub.la_signed_at) out.add("edit_document_request");
   for (const t of parityAllowed(sub, contracts)) out.add(t);
   return { allowed: out, liveLink };
@@ -243,7 +244,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - reply_email: plain-text reply in the seller's thread. Fields: subject, body.
 - add_note: internal team note on the profile. Field: note.
 - flag_human: ONLY when a phone call is genuinely required (the seller asks to be called, or we must ring the cemetery for a new price/confirmation). Field: note = who to call and exactly what to ask. Everything else you solve yourself with the other actions. Always pair it with the reply_email/notes/record fixes you can do now (e.g. answer what you can and say a colleague will ring them).
-- update_fields: correct descriptive record fields ONLY from facts the seller or a document clearly states. Field: fields = object with keys from ${EDITABLE_FIELDS.join(", ")}. Never prices, stages, dates or names from guesses.
+- update_fields: correct descriptive record fields ONLY from facts the seller or a document clearly states. Change "email" only when the seller asks us to use a new address (the old one stays on their profile). Field: fields = object with keys from ${EDITABLE_FIELDS.join(", ")}. Never prices, stages, dates or names from guesses.
 - extend_quote_deadline: give an unaccepted quote more time when the seller asks or context warrants it, BEFORE or after expiry. Fields: fields = {quote_expires_at: exact ISO timestamp with timezone}. Pick a sensible later deadline covering the requested discussion/decision time, use Texas local time for the seller, and explain why. Approval saves only the expiry; prices, spaces, fees, terms, original quote email/buttons and quote_sent_at stay unchanged. Pair with reply_email confirming the specific new date; the extension MUST be approved before that reply is sent. Do not defer a routine extension to a person or say you cannot extend it. An expired quote needing a new pack can still use resend_expired_quote instead.
 - send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
 - resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
@@ -253,6 +254,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - send_quote: send (or re-send) the seller their quote pack — the SAME branded quote email with live listing-option buttons that staff send. Fields: fields = {per_space (digits, an ALLOWED QUOTE FIGURE OR an explicitly requested LOWER per-space price), spaces (digits), plot_description?, requested_price_email_id?}; body = optional short separate explanation email (with greeting and sign-off) sent right after it in the same thread (leave empty if not needed). Use when a quote was never sent, the seller lost it, staff ask, or the seller explicitly asks to LOWER the existing unaccepted/unsigned quote. For a reduction include requested_price_email_id from their latest email, which must explicitly state the lower per-plot/space figure. Never confuse a total with per-space price. Correct/verify cemetery and plot fields FIRST, then send ONE corrected quote pack; do not also resend the old quote or add reply_email. Mention that they can select/pay Featured in the quote, never activate it before payment. Never invent a figure.
 - resend_email: re-send one of OUR earlier emails exactly as it went (same HTML, links, buttons) in its thread. Fields: fields = {email_id (from the EMAIL THREAD [email_id ...] tags)}; body = optional one- or two-sentence intro shown above it (no sign-off); subject optional. Use when the seller can't find something we sent.
 - set_stage: move the Texas pipeline stage like the stage buttons. Fields: fields = {stage: one of ${TEXAS_STAGES.join(" | ")}}. Only when the record clearly shows the stage is wrong.
+- countersign_contract: countersign a listing agreement the seller has signed but we haven't countersigned yet, with the broker's saved signature; the seller is emailed the fully signed copy. Fields: fields = {contract_id}.
 - resend_contract_link: re-email the still-valid signing link for ANY unsigned contract (listing agreement, POA, affidavit, spousal consent). Fields: fields = {contract_id}.
 - email_signed_copy: email the seller a copy of a contract they already signed. Fields: fields = {contract_id}.
 - edit_document_request: change the document request the way staff do on the Documents panel — add/remove/rename items, add a POA or joint POA, change the name on a POA, add an affidavit, rebuild for different plots. Field: note = the exact instruction (e.g. "Add a limited POA for Mary Smith; remove the marriage certificate for John"). On approval the Documents panel opens with it applied through the normal rules engine so staff can check and send. Pair with reply_email only after it is applied — do not promise it is done.
@@ -604,7 +606,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
       .filter((a: any) => a.type !== "send_quote" || (Number(a.fields?.per_space) > 0 && Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20))
       .filter((a: any) => a.type !== "resend_email" || /^[0-9a-f-]{36}$/i.test(String(a.fields?.email_id ?? "")))
       .filter((a: any) => a.type !== "set_stage" || TEXAS_STAGES.includes(String(a.fields?.stage)))
-      .filter((a: any) => !["resend_contract_link", "email_signed_copy"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
+      .filter((a: any) => !["resend_contract_link", "email_signed_copy", "countersign_contract"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
       .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5))
       .filter((a: any) => a.type !== "edit_family_tree" || a.tree)
       .filter((a: any) => a.type !== "change_listing_option" || (LISTING_TIERS as readonly string[]).includes(String(a.fields?.tier)))
@@ -615,7 +617,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
 const FIELD_KEYS: Record<string, string[]> = {
   extend_quote_deadline: ["quote_expires_at"],
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
-  send_quote: ["per_space", "spaces", "plot_description", "requested_price_email_id"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery", "city", "evidence", "create_if_missing", "address"], send_document_request: ["greeting_name", "plot_description", "section", "lawn", "space_numbers"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"],
+  send_quote: ["per_space", "spaces", "plot_description", "requested_price_email_id"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery", "city", "evidence", "create_if_missing", "address"], send_document_request: ["greeting_name", "plot_description", "section", "lawn", "space_numbers"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"], countersign_contract: ["contract_id"],
 };
 
 function parseTree(t: unknown) {
@@ -859,7 +861,7 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
     }
     const rows = d.actions.map((a, ai) => ({
       run_id: run.id, submission_id: sub.id, action_type: a.type, reason: a.reason, confidence: a.confidence,
-      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,
+      email_to: ["reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "send_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "countersign_contract", "resend_family_tree", "send_document_request"].includes(a.type) ? sub.email : null,
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.human_attention ? humanAttentionNote(a.human_attention) : a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
@@ -1236,6 +1238,18 @@ Deno.serve(async (req) => {
           const fields = (act.payload?.fields ?? {}) as Record<string, string>;
           const patch = Object.fromEntries(Object.entries(fields).filter(([k]) => EDITABLE_FIELDS.includes(k)));
           if (!Object.keys(patch).length) throw new Error("No valid fields to update");
+          if ("email" in patch) {
+            const next = String(patch.email ?? "").trim().toLowerCase();
+            if (!/^[a-z0-9._%+'-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(next)) throw new Error(`"${patch.email}" is not a valid email address`);
+            patch.email = next;
+            // Keep the old address on the customer profile so earlier and future mail from it still matches this seller.
+            const old = String(sub.email ?? "").trim().toLowerCase();
+            if (sub.customer_profile_id && old && old !== next) {
+              const { data: prof } = await db.from("customer_profiles").select("alt_emails").eq("id", sub.customer_profile_id).maybeSingle();
+              const alts = [...new Set([...((prof?.alt_emails ?? []) as string[]), old])];
+              await db.from("customer_profiles").update({ alt_emails: alts, primary_email: next }).eq("id", sub.customer_profile_id);
+            }
+          }
           const before = Object.fromEntries(Object.keys(patch).map((k) => [k, sub[k] ?? "—"]));
           const { error: e } = await db.from("contact_submissions").update(patch).eq("id", sub.id);
           if (e) throw new Error(e.message);
@@ -1414,6 +1428,15 @@ Deno.serve(async (req) => {
             const t = await res.text();
             if (!res.ok || /"error"/.test(t)) throw new Error(`Signed copy not sent (${res.status}): ${t.slice(0, 200)}`);
             await aiNote(`Emailed ${first(sub)} a copy of their signed ${contractLabel(c)}.`);
+          }
+        } else if (act.action_type === "countersign_contract") {
+          const cid = String(act.payload?.fields?.contract_id ?? "");
+          const { data: c } = await db.from("contracts").select("id,kind,signed_at,countersigned_at,submission_id").eq("id", cid).is("deleted_at", null).maybeSingle();
+          if (!c || c.submission_id !== sub.id) throw new Error("That contract isn't on this record.");
+          if (c.kind !== "listing_agreement" || !c.signed_at) throw new Error("Only a listing agreement the seller has signed can be countersigned.");
+          if (!c.countersigned_at) {
+            await callInternal(url, "sign-contract", { action: "countersign", contract_id: c.id, broker_saved_signature: true });
+            await aiNote(`Countersigned ${first(sub)}'s listing agreement with the broker's saved signature and emailed them the fully signed copy.`);
           }
         } else if (act.action_type === "change_listing_option") {
           const tier = String(act.payload?.fields?.tier ?? "");

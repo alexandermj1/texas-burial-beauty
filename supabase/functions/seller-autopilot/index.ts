@@ -61,7 +61,7 @@ async function flagHuman(sub: any, task: string, reason = "The AI autopilot stop
 
 /** Steps the autopilot may carry out itself — each finishes entirely on the server with the staff code.
  *  Anything else (Documents-panel steps, opening dialogs) is handed to a person with instructions. */
-export const AUTO_RUN = new Set(["change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "change_listing_option", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
+export const AUTO_RUN = new Set(["change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "countersign_contract", "change_listing_option", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
 const STEP_LABEL = (t: string) => t.replace(/_/g, " ");
 
 async function execute(actionId: string) {
@@ -147,15 +147,38 @@ async function callAgent(body: Record<string, unknown>) {
 }
 
 /** After an autopilot review: hold the review's steps with a natural delay, or hand them to a person. */
+const RECORD_ONLY = new Set(["add_note", "update_fields", "set_stage", "extend_quote_deadline", "change_cemetery", "countersign_contract"]);
+const PAPERWORK_LABEL: Record<string, string> = { edit_document_request: "document request change", edit_family_tree: "family tree update", sync_checklist: "checklist re-sync", send_document_request: "document request email", prepare_listing_agreement: "listing agreement preparation" };
+/** Carry out a review's record-only steps now, and accept them into memory so they don't wake another review. */
+async function runRecordSteps(sub: any, list: { id: string; action_type: string }[]) {
+  const done: string[] = [];
+  for (const a of list.filter((x) => RECORD_ONLY.has(x.action_type)).sort((x, y) => (x.action_type === "add_note" ? 1 : 0) - (y.action_type === "add_note" ? 1 : 0))) {
+    const r = await execute(a.id);
+    if (r.ok) done.push(a.action_type);
+  }
+  if (done.some((d) => d !== "add_note")) {
+    const { data: mem } = await db.from("ai_record_memory").select("fingerprint").eq("submission_id", sub.id).maybeSingle();
+    const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
+    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts } }).eq("submission_id", sub.id); }
+  }
+  return done;
+}
+
 async function queueReply(sub: any, runId: string) {
   const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at").eq("run_id", runId).eq("status", "proposed").order("created_at");
   const list = acts ?? [];
-  if (!list.length || list.some((a) => a.action_type === "flag_human")) return list.length ? { handed_to_person: true } : null;
-  const manual = list.filter((a) => !AUTO_RUN.has(a.action_type));
-  if (manual.length) {
-    const names = manual.map((a) => STEP_LABEL(a.action_type)).join(", ");
-    await flagHuman(sub, `Approve the AI's ${names} on this record (it needs the Family tree & documents panel), then approve the rest of its suggestions.`, `The AI planned ${list.map((a) => STEP_LABEL(a.action_type)).join(", ")}; part of it can only be finished on screen, so nothing has been sent to the seller yet.`, "normal");
-    return { held_for_staff: names };
+  if (!list.length) return null;
+  const manual = list.filter((a) => !AUTO_RUN.has(a.action_type) && a.action_type !== "flag_human");
+  const flagged = list.some((a) => a.action_type === "flag_human");
+  if (flagged || manual.length) {
+    // Do everything that doesn't depend on the person now; only the reply/sends wait, ready for one-click approval.
+    const done = await runRecordSteps(sub, list);
+    if (flagged) return { handed_to_person: true, done };
+    const names = manual.map((a) => PAPERWORK_LABEL[a.action_type] ?? STEP_LABEL(a.action_type)).join(" and ");
+    const ready = list.some((a) => a.action_type === "reply_email") ? " The AI's email explaining it to the seller is written and ready" : "";
+    await flagHuman(sub, `Paperwork approval only: approve the AI's ${names} in the Family tree & documents panel.${ready}${done.length ? `; its other changes (${done.map(STEP_LABEL).join(", ")}) are already done.` : "."}`,
+      `Only this paperwork step needs the panel open; approving it there carries out the rest of the AI's plan.`, "normal");
+    return { held_for_staff: names, done };
   }
   const reply = list.find((a) => a.action_type === "reply_email");
   const primary = reply ?? list.find((a) => a.action_type !== "add_note");

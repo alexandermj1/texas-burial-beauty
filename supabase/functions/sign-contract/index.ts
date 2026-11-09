@@ -10,6 +10,7 @@
 //                                                → admin (JWT required) stamps broker
 //                                                  signature; emails fully-executed copy
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { isInternalCall } from '../_shared/internal-auth.ts';
 import { PDFDocument, StandardFonts, rgb, PDFPage, PDFFont, PDFImage } from 'npm:pdf-lib@1.17.1';
 import {
   buildFilledPdf,
@@ -637,10 +638,19 @@ Deno.serve(async (req) => {
 
     // ================= COUNTERSIGN: admin stamps broker signature =================
     if (action === 'countersign') {
-      const { contract_id, countersigner_name, countersigner_signature } = body;
+      let { contract_id, countersigner_name, countersigner_signature } = body;
       const authHeader = req.headers.get('Authorization') ?? '';
-      const asUser = createClient(SUPABASE_URL, SERVICE_KEY, { global: { headers: { Authorization: authHeader } } });
-      const { data: userData } = await asUser.auth.getUser();
+      let userData: { user: { id: string } | null } | null = null;
+      if (body.broker_saved_signature === true && isInternalCall(req)) {
+        // Seller AI: reuse the broker's most recent countersignature (same name, image and user) — never invent one.
+        const { data: prev } = await svc.from('contracts').select('countersigned_by,countersigner_name,countersigner_signature').not('countersigned_at', 'is', null).not('countersigner_signature', 'is', null).order('countersigned_at', { ascending: false }).limit(1).maybeSingle();
+        if (!prev?.countersigned_by) return new Response(JSON.stringify({ error: 'no_saved_broker_signature' }), { status: 409, headers: corsHeaders });
+        countersigner_name = prev.countersigner_name; countersigner_signature = prev.countersigner_signature;
+        userData = { user: { id: prev.countersigned_by } };
+      } else {
+        const asUser = createClient(SUPABASE_URL, SERVICE_KEY, { global: { headers: { Authorization: authHeader } } });
+        userData = (await asUser.auth.getUser()).data;
+      }
       if (!userData?.user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
 
       if (!contract_id || !countersigner_name || !countersigner_signature) {
