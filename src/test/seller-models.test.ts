@@ -15,9 +15,9 @@ it("records each chosen model independently for comparison", () => {
   expect(reviewTrigger("manual", "anthropic/claude-opus-5-5")).toBe("manual:opus 5.5");
   expect(reviewModelLabel("manual:astra", "openai/gpt-6.1-sol")).toBe("Sol");
   expect(reviewModelLabel("staff_request")).toBe("Model not recorded");
-});it("runs the unattended autopilot on Sonnet 5", async () => {
+});it("runs the unattended autopilot on Sol", async () => {
   const { AUTOPILOT_MODEL } = await import("../../supabase/functions/seller-agent/models");
-  expect(AUTOPILOT_MODEL).toBe("anthropic/claude-sonnet-5");
-  expect(reviewTrigger("autopilot", AUTOPILOT_MODEL)).toBe("autopilot:sonnet 5");
+  expect(AUTOPILOT_MODEL).toBe("openai/gpt-6.1-sol");
+  expect(reviewTrigger("autopilot", AUTOPILOT_MODEL)).toBe("autopilot:sol");
   expect(reviewModelLabel("autopilot:sonnet 5")).toBe("Sonnet 5");
 });
