@@ -14,7 +14,8 @@ import { sellerQuoteBacklog } from "../_shared/sellerQuoteBacklog.ts";
 import { humanAttentionEnabled, parseHumanAttention } from "../_shared/humanAttention.ts";
 import { legacySuggestionsNeedReview, replacedAutomationBlocker } from "../_shared/sellerBacklog.ts";
 import { shouldAttemptCreditRecovery } from "../_shared/autopilotRecovery.ts";
-import { aiFetch } from "../_shared/aiRunLabel.ts";
+import { labelRun } from "../_shared/aiRunLabel.ts";
+import { GatewayError, generateResponse } from "npm:@lovable.dev/ai-gateway@0.1.11";
 
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 const corsHeaders = { ...sdkCorsHeaders, "Access-Control-Allow-Headers": `${sdkCorsHeaders["Access-Control-Allow-Headers"]}, x-automation-secret` };
@@ -36,17 +37,11 @@ async function pause(reason: string) {
 
 /** A minimal, record-free gateway request proves that billing access is restored before any seller work resumes. */
 async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; error?: string }> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) return { ok: false, status: 500, error: "AI is not configured" };
   try {
-    const res = await aiFetch("Seller AI — checking restored credit access", "https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "google/gemini-3.1-flash-lite", messages: [{ role: "user", content: "Reply OK." }], max_tokens: 1 }),
-    });
-    const text = await res.text();
-    return res.ok ? { ok: true } : { ok: false, status: res.status, error: text.slice(0, 200) };
+    await generateResponse(labelRun({ model: "openai/gpt-6-astra" as const, input: "Reply OK." }, "Seller AI — checking restored credit access"), { maxRetries: 0 });
+    return { ok: true };
   } catch (e) {
+    if (e instanceof GatewayError) return { ok: false, status: e.httpStatus, error: e.message.slice(0, 200) };
     return { ok: false, error: String((e as Error).message).slice(0, 200) };
   }
 }
@@ -351,7 +346,15 @@ Deno.serve(async (req) => {
   }
   const s = await settings();
   if (s.mode === "off") return json({ status: "off" });
-  if (job.status === "paused") return json({ status: "paused", reason: job.pause_reason });
+  let recovered = false;
+  if (job.status === "paused") {
+    if (!shouldAttemptCreditRecovery(job)) return json({ status: "paused", reason: job.pause_reason });
+    const check = await creditAccessRestored();
+    if (!check.ok) return json({ status: "paused", reason: job.pause_reason, credit_recovery: "Waiting for AI access; will check again on the next scheduled sweep" });
+    const { error } = await db.from("automation_job_state").update({ status: "active", pause_reason: null, consecutive_rate_limits: 0, updated_at: new Date().toISOString() }).eq("job_name", JOB).eq("status", "paused");
+    if (error) return json({ error: error.message }, 500);
+    recovered = true;
+  }
   const nowIso = new Date().toISOString();
   const { data: lease } = await db.from("automation_job_state").update({ lease_until: new Date(Date.now() + 8 * 60_000).toISOString(), last_started_at: nowIso, locked_by: crypto.randomUUID() })
     .eq("job_name", JOB).or(`lease_until.is.null,lease_until.lt.${nowIso}`).select("locked_by").maybeSingle();
@@ -359,7 +362,7 @@ Deno.serve(async (req) => {
   try {
     const sent = await sendDue(s.mode);
     const woke = await wake(s.mode, s.dailyReviews);
-    return json({ status: "ok", sent, woke });
+    return json({ status: "ok", recovered, sent, woke });
   } catch (e) {
     return json({ error: String((e as Error).message) }, 500);
   } finally {
