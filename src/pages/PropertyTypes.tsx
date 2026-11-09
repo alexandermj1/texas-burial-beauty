@@ -615,7 +615,7 @@ const PropertyTypes = () => {
       <Navbar forceScrolled />
 
       {/* Editorial opener — light, continuous, flows straight into the first spread */}
-      <section className="relative pt-24 md:pt-28 pb-2 md:pb-4 bg-background">
+      <section ref={heroRef} className="relative pt-24 md:pt-28 pb-2 md:pb-4 bg-background">
         {/* layered warm washes — bleed past the section so there's no seam */}
         <div className="absolute -inset-x-0 -top-10 -bottom-32 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.18),transparent_55%)] pointer-events-none" />
         <div className="absolute -inset-x-0 -top-10 -bottom-32 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--accent)/0.16),transparent_55%)] pointer-events-none" />

@@ -13,7 +13,6 @@ import { MotionConfig } from "framer-motion";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
 import { Button } from "@/components/ui/button";
 import { COST_GUIDE_SEO } from "@/data/publicSeoUpgrades";
-import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 
 
@@ -235,7 +234,7 @@ const GuideCemeteryPlotCost = () => (
 
       <Section id="resale" icon={TrendingUp} eyebrow="The secondary market" title="Why resale plots are priced below retail">
         <p data-simon-review data-emma-editorial="resale">A cemetery’s quoted retail list price is not necessarily what a buyer will pay for a comparable purchase. Cemeteries may offer financing, bundle spaces or provide promotional incentives. A private seller competes with all of those offers, not just the number on the price board.</p>
-        <p data-simon-review>A secondary-market property has to offer genuine value. A buyer might want a particular location that the cemetery no longer has available, but many families also want to spend less. A realistic resale valuation looks at current demand, comparable offers and the full cost of the transfer, rather than simply copying the cemetery’s list price. There is no fixed discount for every property.</p>
+        <p data-simon-review data-emma-editorial="resale-value">A secondary-market property has to offer genuine value. A buyer might want a particular location that the cemetery no longer has available, but many families also want to spend less. A realistic resale valuation looks at current demand, comparable offers and the full cost of the transfer, rather than simply copying the cemetery’s list price. There is no fixed discount for every property.</p>
         <div className="not-prose my-8 p-7 md:p-9 rounded-xl bg-primary/5 border border-border/60">
           <p className="text-[10px] uppercase tracking-[0.26em] text-muted-foreground mb-3">Market trend</p>
           <p className="font-display text-2xl md:text-3xl text-foreground leading-snug mb-4">
