@@ -67,7 +67,7 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-lg font-semibold flex items-center gap-2"><Power className="w-4 h-4" />Seller AI control center {busy && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}</p>
-          <p className="text-xs text-muted-foreground mt-1">Sonnet 5 · {paused ? "Paused" : on ? "Automatic seller follow-up active" : "Automatic seller follow-up off"}</p>
+          <p className="text-xs text-muted-foreground mt-1">Sol · {paused ? "Paused" : on ? "Automatic seller follow-up active" : "Automatic seller follow-up off"}</p>
         </div>
         <label className="flex items-center gap-2 text-sm font-semibold">
           {on ? "On" : "Off"}

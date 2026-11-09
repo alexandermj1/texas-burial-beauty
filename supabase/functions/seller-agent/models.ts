@@ -2,7 +2,7 @@ export const SELLER_MODELS = ["openai/gpt-6-astra", "openai/gpt-6.1-sol", "anthr
 export type SellerModel = typeof SELLER_MODELS[number];
 export const DEFAULT_SELLER_MODEL: SellerModel = "openai/gpt-6.1-sol";
 /** Model the unattended autopilot uses for its reviews and replies (owner choice). */
-export const AUTOPILOT_MODEL: SellerModel = "anthropic/claude-sonnet-5";
+export const AUTOPILOT_MODEL: SellerModel = "openai/gpt-6.1-sol";
 export function sellerModelLabel(model: SellerModel) {
   return model === "openai/gpt-6.1-sol" ? "Sol" : model === "anthropic/claude-opus-5-5" ? "Opus 5.5" : model === "anthropic/claude-sonnet-5" ? "Sonnet 5" : "Astra";
 }
