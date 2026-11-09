@@ -12,7 +12,13 @@ import { cleanAttentionText } from "@/lib/attentionText";
 
 type Mode = "off" | "selected" | "all";
 type LogEntry = { id: string; submission_id: string; seller: string; status: string; status_reason: string | null; send_at: string; sent_at: string | null; created_at: string; subject: string | null; what: string | null; kind: string | null };
-type ConsoleItem = { at: string; submission_id: string; seller: string; kind: string; text: string; cost?: number | null; tokens?: number; partial?: boolean };
+type Outcome = { label: string; tone: "email" | "change" | "staff" | "draft" | "held" | "problem" | "none" };
+type ConsoleItem = { at: string; submission_id: string; seller: string; kind: string; text: string; outcomes?: Outcome[]; run_ids?: string[]; cost?: number | null; tokens?: number; partial?: boolean };
+type Totals = { since: string; emails_sent: number; record_changes: number; records_to_staff: number; reviews: number; records_reviewed: number };
+const TONE: Record<Outcome["tone"], string> = {
+  email: "bg-primary text-primary-foreground", change: "bg-secondary text-secondary-foreground", staff: "bg-[hsl(var(--status-attention-soft))] text-[hsl(var(--status-attention-fg))]",
+  draft: "bg-muted text-foreground", held: "bg-muted text-muted-foreground", problem: "bg-destructive/10 text-destructive", none: "bg-muted text-muted-foreground",
+};
 const KIND: Record<string, { label: string; cls: string }> = {
   send: { label: "Reply", cls: "bg-primary/10 text-primary" }, check: { label: "Check-in", cls: "bg-muted text-muted-foreground" },
   review: { label: "Reviewed", cls: "bg-secondary text-secondary-foreground" }, running: { label: "Working", cls: "bg-primary/10 text-primary" },
@@ -24,7 +30,7 @@ type Status = {
   state: { status: string; pause_reason: string | null; last_completed_at: string | null } | null;
   last24h: { reviews: number; sent: number; held: number };
   log?: LogEntry[]; last_sent_at?: string | null; last_review?: { created_at: string } | null;
-  upcoming?: ConsoleItem[]; activity?: ConsoleItem[]; can_control?: boolean;
+  upcoming?: ConsoleItem[]; activity?: ConsoleItem[]; totals?: Totals; can_control?: boolean;
 };
 
 const when = (iso?: string | null) => iso ? new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
@@ -58,9 +64,12 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
   const paused = s.state?.status === "paused" && on;
   const setMode = (mode: Mode) => call({ op: "set", mode, daily_reviews: Number(daily) });
   const activity = (s.activity ?? []).map(item => {
-    const run = usage?.runs.find(r => r.submission_id === item.submission_id && r.created_at === item.at);
-    return ["review", "running", "error"].includes(item.kind) && run ? { ...item, cost: run.scan_usage?.equivalent ?? null, tokens: (run.scan_usage?.input_tokens ?? 0) + (run.scan_usage?.output_tokens ?? 0), partial: run.scan_usage?.equivalent == null || !["done", "error"].includes(run.status) } : item;
+    const runs = usage?.runs.filter(r => item.run_ids?.includes(r.id)) ?? [];
+    if (!runs.length) return item;
+    const cost = runs.every(r => r.scan_usage?.equivalent != null) ? runs.reduce((n, r) => n + (r.scan_usage?.equivalent ?? 0), 0) : null;
+    return { ...item, cost, tokens: runs.reduce((n, r) => n + (r.scan_usage?.input_tokens ?? 0) + (r.scan_usage?.output_tokens ?? 0), 0), partial: cost == null || runs.some(r => !["done", "error"].includes(r.status)) };
   });
+  const t = s.totals;
 
   return (
     <section aria-label="Seller AI autopilot" className="space-y-5">
@@ -96,6 +105,17 @@ export default function AutopilotSettings({ onOpenSubmission }: { onOpenSubmissi
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Last 24 hours</p><p className="font-semibold">{s.last24h.reviews ?? 0} reviews · {s.last24h.sent ?? 0} sent</p></div>
         <div className="rounded-lg bg-muted/50 p-2"><p className="text-muted-foreground">Waiting to send</p><p className="font-semibold">{s.last24h.held ?? 0}</p></div>
       </div>
+      {t && (
+        <div className="rounded-lg border border-border p-3 text-xs">
+          <p className="font-semibold">Since autopilot was switched on ({when(t.since)}) — without an admin</p>
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div><p className="text-muted-foreground">Emails sent</p><p className="text-base font-semibold tabular-nums">{t.emails_sent}</p></div>
+            <div><p className="text-muted-foreground">Record changes</p><p className="text-base font-semibold tabular-nums">{t.record_changes}</p></div>
+            <div><p className="text-muted-foreground">Records passed to staff</p><p className="text-base font-semibold tabular-nums">{t.records_to_staff}</p></div>
+            <div><p className="text-muted-foreground">Reviews</p><p className="text-base font-semibold tabular-nums">{t.reviews} <span className="text-xs font-normal text-muted-foreground">on {t.records_reviewed} sellers</span></p></div>
+          </div>
+        </div>
+      )}
       <SellerAiUsage />
       <details className="border-y border-border py-3"><summary className="cursor-pointer text-xs font-medium text-muted-foreground">Daily usage · last seven days</summary><div className="pt-3"><SellerAiUsage history /></div></details>
       <div className="grid gap-3 lg:grid-cols-2">
@@ -123,7 +143,8 @@ function Console({ title, items, empty, onOpen, live }: { title: string; items: 
                   <span className="tabular-nums text-muted-foreground">{when(it.at)}</span>
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-1.5"><span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${k.cls}`}>{k.label}</span><span className="break-words font-semibold">{it.seller}</span></span>
-                    <span className="mt-1 block text-muted-foreground break-words">{cleanAttentionText(it.text)}</span>
+                    {it.text && <span className="mt-1 block text-muted-foreground break-words">{cleanAttentionText(it.text)}</span>}
+                    {!!it.outcomes?.length && <span className="mt-1.5 flex flex-wrap gap-1">{it.outcomes.map((o, j) => <span key={j} className={`rounded px-1.5 py-0.5 text-[10px] font-medium break-words ${TONE[o.tone]}`}>{cleanAttentionText(o.label)}</span>)}</span>}
                     {it.tokens !== undefined && <span className="mt-1.5 block text-[10px] tabular-nums text-primary">{it.tokens.toLocaleString()} tokens · {it.cost == null ? "Estimate unavailable" : `${usageDollars(it.cost)} USD estimated`}{it.partial && " · partial"}</span>}
                   </span>
                 </Button>
