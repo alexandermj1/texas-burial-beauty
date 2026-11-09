@@ -13,3 +13,8 @@ it("says plainly when a review emailed nothing and changed nothing", () => {
   const out = groupActivity({ nameOf, runs: [{ id: "a", created_at: "2026-11-09T10:00:00Z", status: "done", submission_id: "s1" }], actions: [], outbox: [], flags: [] });
   expect(out[0].outcomes[0].label).toBe("No email sent · no changes made");
 });
+it("shows a seller passed to staff once, not once per flag", () => {
+  const f = { submission_id: "s1", reason: "Quote needed" };
+  const out = groupActivity({ nameOf, runs: [], actions: [], outbox: [], flags: [{ ...f, created_at: "2026-11-09T10:00:00Z" }, { ...f, created_at: "2026-11-09T10:05:00Z" }] });
+  expect(out).toHaveLength(1);
+});

@@ -40,7 +40,8 @@ export function groupActivity(input: {
   }
   const near = (sid: string, at: string) => items.filter(i => i.submission_id === sid).sort((a, b) => Math.abs(Date.parse(a.at) - Date.parse(at)) - Math.abs(Date.parse(b.at) - Date.parse(at)))[0];
   for (const f of input.flags) {
-    const it = (f.run_id && byRun.get(f.run_id)) || null;
+    const close = near(f.submission_id, f.created_at);
+    const it = (f.run_id && byRun.get(f.run_id)) || (close && Math.abs(Date.parse(close.at) - Date.parse(f.created_at)) < SCAN_GAP_MS ? close : null);
     const label = `Asked staff: ${String(f.reason ?? "").slice(0, 140)}`;
     if (it) it.outcomes.push({ label, tone: "staff" });
     else items.push({ at: f.created_at, submission_id: f.submission_id, seller: input.nameOf(f.submission_id), kind: "flag", text: "Passed to staff", outcomes: [{ label, tone: "staff" }], run_ids: [] });
