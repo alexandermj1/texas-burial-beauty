@@ -35,7 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { openFileViewer } from "@/lib/fileViewer";
 import { useAuth } from "@/hooks/useAuth";
 import { canUseAi } from "@/lib/aiAccess";
-import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, attentionIndex, selectedAttention, prioritizeHumanAttention, type AttentionEntry, type AttentionAction } from "@/lib/humanAttention";
+import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, attentionIndex, selectedAttention, prioritizeHumanAttention, isQuoteNeededAttention, type AttentionEntry, type AttentionAction } from "@/lib/humanAttention";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
@@ -3884,11 +3884,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                     {/* Line 2 — plain-language summary */}
                     {humanQueueOn && humanTasks.get(s.id) && (() => {
                       const task = humanTasks.get(s.id)?.attention;
+                      const quote = task ? isQuoteNeededAttention(task) : false;
                       return task ? (
-                        <div role="note" aria-label="AI asks staff to step in" className="flex items-start gap-2 rounded-md bg-[hsl(var(--status-attention-soft))] px-3 py-2">
-                          <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[hsl(var(--status-attention-fg))]" />
-                          <p className="min-w-0 text-xs leading-snug text-[hsl(var(--status-attention-fg))]">
-                            <span className="font-semibold">Staff needed{task.priority === "urgent" || task.priority === "high" ? ` · ${task.priority}` : ""}</span>
+                        <div role="note" aria-label="AI asks staff to step in" className={`flex items-start gap-2 rounded-md px-3 py-2 ${quote ? "bg-[hsl(var(--status-quote-soft))]" : "bg-[hsl(var(--status-attention-soft))]"}`}>
+                          <Bot className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${quote ? "text-[hsl(var(--status-quote-fg))]" : "text-[hsl(var(--status-attention-fg))]"}`} />
+                          <p className={`min-w-0 text-xs leading-snug ${quote ? "text-[hsl(var(--status-quote-fg))]" : "text-[hsl(var(--status-attention-fg))]"}`}>
+                            <span className="font-semibold">Staff needed{quote ? " · Quote · low" : task.priority === "urgent" || task.priority === "high" ? ` · ${task.priority}` : ""}</span>
                             <span className="block line-clamp-2 opacity-90">{attentionHeadline(task.task)}</span>
                           </p>
                         </div>

@@ -50,8 +50,8 @@ const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_ki
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
 /** Put the record at the top of the staff list with a clear task (autopilot then leaves it alone). */
-async function flagHuman(sub: any, task: string, reason = "The AI autopilot stopped here so a person can take over.", priority: "urgent" | "high" | "normal" = "high") {
-  const attention = { priority, importance: priority === "urgent" ? 90 : priority === "high" ? 70 : 50, category: "human_task", task, reason, evidence: "AI notes and suggestions on this record" };
+async function flagHuman(sub: any, task: string, reason = "The AI autopilot stopped here so a person can take over.", priority: "urgent" | "high" | "normal" | "low" = "high") {
+  const attention = { priority, importance: priority === "urgent" ? 90 : priority === "high" ? 70 : priority === "normal" ? 50 : 10, category: "human_task", task, reason, evidence: "AI notes and suggestions on this record" };
   await db.from("ai_agent_actions").insert({ submission_id: sub.id, action_type: "flag_human", status: "proposed", reason: task, note_body: `Needs a person (${priority} priority): ${task}\n${reason}`, confidence: 1, payload: { source: "autopilot", human_attention: attention } });
   await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `AI autopilot asked for a person: ${task}`, author_name: "AI agent (autopilot)" });
 }
@@ -202,7 +202,7 @@ async function wake(mode: string, dailyReviews: number, quoteTasksOnly = false) 
       const existing = proposals.filter(p => p.submission_id === sub.id && p.action_type === "flag_human" && p.status === "proposed" && !p.deleted_at);
       if (existing.some(p => parseHumanAttention(p.payload?.human_attention) && /quote|valuation/i.test(p.payload?.human_attention?.task ?? "") && !replacedAutomationBlocker(p))) continue;
       const task = `Quote needed: Cici, review the attachments for ${sub.name || "this seller"}${sub.cemetery ? ` at ${sub.cemetery}` : ""}, check the deed and prepare their valuation. If the deed is missing or unreadable, request a clear copy first.`;
-      await flagHuman(sub, task, "No quote has been sent. Our acknowledgement does not finish the valuation; this remains staff work even when our email is the latest reply.");
+      await flagHuman(sub, task, "No quote has been sent. Our acknowledgement does not finish the valuation; this remains staff work even when our email is the latest reply.", "low");
       out.push({ sid: sub.id, quote_task: true });
     }
   }
