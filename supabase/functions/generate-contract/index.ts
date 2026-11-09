@@ -8,6 +8,7 @@ import { buildAffidavitPdf, buildSpousalConsentPdf, buildJointPoaPdf } from '../
 import { contactFor, nameKey } from '../_shared/questionnaire-contacts.ts';
 import { formatPlotDescription } from '../_shared/plot-description.ts';
 import { isInternalCall } from '../_shared/internal-auth.ts';
+import { correctedAgreementEmail } from '../_shared/agreementContactCorrection.ts';
 
 
 const KINDS = ['listing_agreement', 'poa', 'affidavit_heirship', 'spousal_consent'] as const;
@@ -59,6 +60,26 @@ Deno.serve(async (req) => {
     const { data: sub, error: subErr } = await svc
       .from('contact_submissions').select('*').eq('id', submission_id).maybeSingle();
     if (subErr || !sub) throw subErr ?? new Error('submission not found');
+
+    // Contact-only repair bypasses all quote/roster recomputation: preserve the exact agreement the seller reviewed.
+    if (overrides.contact_email_only === true) {
+      if (!internal) {
+        const { data: roles } = await svc.from('user_roles').select('role').eq('user_id', userData.user?.id);
+        if (!(roles ?? []).some(r => ['admin', 'staff'].includes(r.role))) throw new Error('Staff only');
+      }
+      if (kind !== 'listing_agreement' || !/^[0-9a-f-]{36}$/i.test(String(overrides.contract_id ?? ''))) throw new Error('An existing listing agreement is required');
+      const { data: c, error: ce } = await svc.from('contracts').select('*').eq('id', overrides.contract_id).eq('submission_id', submission_id).is('deleted_at', null).maybeSingle();
+      if (ce || !c) throw new Error('Agreement not found');
+      const fill = correctedAgreementEmail(c, sub.email);
+      const template = await fetchTemplate(svc, 'listing_agreement', fill.listing_pricing_version === 'current');
+      const pdf = await buildFilledPdf(template, 'listing_agreement', fill as FillData);
+      const path = `${submission_id}/listing-agreement-contact-${crypto.randomUUID()}.pdf`;
+      const { error: upload } = await svc.storage.from('contracts').upload(path, pdf, { contentType: 'application/pdf' });
+      if (upload) throw upload;
+      const { data: updated, error: update } = await svc.from('contracts').update({ fill_data: fill, filled_pdf_path: path }).eq('id', c.id).is('signed_at', null).is('countersigned_at', null).is('notarized_at', null).is('completed_at', null).in('status', ['draft', 'sent', 'viewed']).eq('filled_pdf_path', c.filled_pdf_path).select('id,fill_data,status,sign_token').maybeSingle();
+      if (update || !updated) throw new Error('Agreement changed during correction; stopped without overwriting it');
+      return new Response(JSON.stringify({ ok: true, contract_id: updated.id, contract: { id: updated.id, status: updated.status, fill_data: updated.fill_data }, pdf_path: path, contact_corrected: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Merge duplicate submissions by email: the selected row (visible "primary"
     // after dedup) may be missing the quote we sent on a sibling row. Fill any
