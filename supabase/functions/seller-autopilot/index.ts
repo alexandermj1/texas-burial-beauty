@@ -13,6 +13,8 @@ import { sellerWakeCandidates, sellerMailOutgoing } from "../_shared/sellerWakeC
 import { sellerQuoteBacklog } from "../_shared/sellerQuoteBacklog.ts";
 import { humanAttentionEnabled, parseHumanAttention } from "../_shared/humanAttention.ts";
 import { legacySuggestionsNeedReview, replacedAutomationBlocker } from "../_shared/sellerBacklog.ts";
+import { shouldAttemptCreditRecovery } from "../_shared/autopilotRecovery.ts";
+import { aiFetch } from "../_shared/aiRunLabel.ts";
 
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 const corsHeaders = { ...sdkCorsHeaders, "Access-Control-Allow-Headers": `${sdkCorsHeaders["Access-Control-Allow-Headers"]}, x-automation-secret` };
