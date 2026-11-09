@@ -2019,6 +2019,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_briefings: {
+        Row: {
+          briefing_date: string
+          created_at: string
+          html: string | null
+          id: string
+          is_practice: boolean
+          recipients: string[]
+          stats: Json | null
+          summary_text: string | null
+        }
+        Insert: {
+          briefing_date: string
+          created_at?: string
+          html?: string | null
+          id?: string
+          is_practice?: boolean
+          recipients?: string[]
+          stats?: Json | null
+          summary_text?: string | null
+        }
+        Update: {
+          briefing_date?: string
+          created_at?: string
+          html?: string | null
+          id?: string
+          is_practice?: boolean
+          recipients?: string[]
+          stats?: Json | null
+          summary_text?: string | null
+        }
+        Relationships: []
+      }
       email_messages: {
         Row: {
           ai_analyzed_at: string | null
