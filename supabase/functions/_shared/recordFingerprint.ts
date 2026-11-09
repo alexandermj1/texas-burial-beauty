@@ -4,7 +4,9 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2.119.0";
 import { hashOf, type Fingerprint } from "./autopilotPolicy.ts";
 import { emailAddress, sellerMailOutgoing } from "./sellerWakeCandidates.ts";
 
-const VOLATILE = new Set(["updated_at", "ownership_answers", "ai_paused_at", "ai_autopilot", "last_viewed_at", "viewed_at"]);
+const VOLATILE = new Set(["updated_at", "ownership_answers", "ai_paused_at", "ai_autopilot", "last_viewed_at", "viewed_at",
+  // Written by the AI itself after a review: they must never look like new seller activity.
+  "ai_summary", "ai_summary_at", "ai_summary_key", "ai_history_summary", "ai_history_summary_through"]);
 
 export async function recordFingerprint(db: SupabaseClient, sub: Record<string, any>): Promise<Fingerprint> {
   const id = sub.id;

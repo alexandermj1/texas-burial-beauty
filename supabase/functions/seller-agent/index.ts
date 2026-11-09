@@ -930,6 +930,12 @@ const PACKET_GUIDE = `You fill in the three fields on our "Check the request" sc
 - page_note: OPTIONAL note at the top of their document page. Leave "" when nothing special. Otherwise one or two sentences of practical guidance, e.g. "Please sign the power of attorney in front of a notary, not beforehand, then post the original to the address below."
 Follow the playbook tone. Never mention prices, fees you are unsure of, legal advice, or anything not in the record. Return ONLY JSON {"greeting_name": string, "email_note": string, "page_note": string, "reason": string (one short sentence for staff)}.`;
 
+/** apikey to pair with the caller's Authorization: the autopilot authenticates with the system key, so the anon key would conflict. */
+function mailApiKey(req: Request) {
+  const auth = req.headers.get("authorization") ?? "";
+  return isInternalCall(req) ? (req.headers.get("apikey") ?? auth.replace(/^Bearer\s+/i, "")) : (Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+}
+
 /** Call another edge function as the system — the same functions staff buttons call. */
 async function callInternal(url: string, name: string, body: unknown): Promise<Record<string, any>> {
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -1157,7 +1163,7 @@ Deno.serve(async (req) => {
       if (!act.email_body || !sub.email) return json({ error: "Email body or recipient missing" }, 400);
       const res = await fetch(`${url}/functions/v1/gmail-action`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
+        headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: mailApiKey(req) },
         body: JSON.stringify({
           action: "send", to: sub.email, subject: act.email_subject || "Your cemetery property", body: act.email_body,
           htmlBody: `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${act.email_body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`,
@@ -1183,7 +1189,7 @@ Deno.serve(async (req) => {
       const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
       if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
-      const mail = { url, auth: req.headers.get("authorization")!, anon: Deno.env.get("SUPABASE_ANON_KEY") ?? "", actor: `AI agent (approved by ${user.name})` };
+      const mail = { url, auth: req.headers.get("authorization")!, anon: mailApiKey(req), actor: `AI agent (approved by ${user.name})` };
       // Same as staff: the quote is only sent once the deed owners and plot wording are confirmed from the deed,
       // because the agreement and the start of the family tree are generated from them.
       const deedReady = async (patch: Record<string, unknown> = {}) => {
@@ -1313,7 +1319,7 @@ Deno.serve(async (req) => {
           // 3) Tell the seller in their thread.
           const res = await fetch(`${url}/functions/v1/gmail-action`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
+            headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: mailApiKey(req) },
             body: JSON.stringify({
               action: "send", to: sub.email, subject: act.email_subject || "Your document request has been updated", body: act.email_body,
               htmlBody: `<div data-tcb-email="ai_agent" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#2d2a26;">${act.email_body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</div>`,
@@ -1337,7 +1343,7 @@ Deno.serve(async (req) => {
           if (e) throw new Error(e.message);
           const res = await fetch(`${url}/functions/v1/gmail-action`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" },
+            headers: { "Content-Type": "application/json", Authorization: req.headers.get("authorization")!, apikey: mailApiKey(req) },
             body: JSON.stringify({ action: "send", to: sub.email, subject: act.email_subject || (q.subject?.startsWith("Re:") ? q.subject : `Re: ${q.subject}`), body: `${act.email_body}\n\n${q.body_html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}`, htmlBody: html,
               ...((q.gmail_thread_id ?? act.gmail_thread_id) ? { threadId: q.gmail_thread_id ?? act.gmail_thread_id } : {}), submissionId: sub.id, actorName: `AI agent (approved by ${user.name})` }),
           });
