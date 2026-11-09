@@ -33,6 +33,24 @@ async function settings() {
 async function pause(reason: string) {
   await db.from("automation_job_state").update({ status: "paused", pause_reason: reason, updated_at: new Date().toISOString() }).eq("job_name", JOB);
 }
+
+/** A minimal, record-free gateway request proves that billing access is restored before any seller work resumes. */
+async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; error?: string }> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) return { ok: false, status: 500, error: "AI is not configured" };
+  try {
+    const res = await aiFetch("Seller AI — checking restored credit access", "https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-3.1-flash-lite", messages: [{ role: "user", content: "Reply OK." }], max_tokens: 1 }),
+    });
+    const text = await res.text();
+    return res.ok ? { ok: true } : { ok: false, status: res.status, error: text.slice(0, 200) };
+  } catch (e) {
+    return { ok: false, error: String((e as Error).message).slice(0, 200) };
+  }
+}
+
 const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
