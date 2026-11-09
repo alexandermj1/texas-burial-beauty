@@ -47,6 +47,8 @@ async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; e
 }
 
 const isSeller = (s: any) => !/buyer|general|partner/i.test(String(s.customer_kind ?? ""));
+import { groupActivity } from "./activity.ts";
+const AUTOPILOT_ON_SINCE = "2026-11-06T22:00:00Z";
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
 /** Put the record at the top of the staff list with a clear task (autopilot then leaves it alone). */
@@ -263,6 +265,19 @@ async function wake(mode: string, dailyReviews: number, quoteTasksOnly = false) 
   return out;
 }
 
+async function autopilotTotals() {
+  const head = { count: "exact" as const, head: true };
+  const [sent, changes, flagged, reviews] = await Promise.all([
+    db.from("ai_outbox").select("id", head).eq("status", "sent"),
+    db.from("ai_agent_actions").select("id", head).eq("status", "executed").eq("decided_by_name", "AI autopilot").not("action_type", "in", "(reply_email,flag_human)"),
+    db.from("ai_agent_actions").select("submission_id").eq("action_type", "flag_human").is("deleted_at", null).is("decided_by_user_id", null).gte("created_at", AUTOPILOT_ON_SINCE),
+    db.from("ai_agent_runs").select("submission_id").like("trigger", "autopilot:%"),
+  ]);
+  return { since: AUTOPILOT_ON_SINCE, emails_sent: sent.count ?? 0, record_changes: changes.count ?? 0,
+    records_to_staff: new Set((flagged.data ?? []).map((f: any) => f.submission_id)).size,
+    reviews: (reviews.data ?? []).length, records_reviewed: new Set((reviews.data ?? []).map((r: any) => r.submission_id)).size };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const { data: job } = await db.from("automation_job_state").select("*").eq("job_name", JOB).maybeSingle();
@@ -337,12 +352,12 @@ Deno.serve(async (req) => {
       ...entries.filter((e) => e.status === "held").map((e) => ({ at: e.send_at, submission_id: e.submission_id, seller: e.seller, kind: "send", text: `Send reply${e.subject ? `: “${e.subject}”` : ""}` })),
       ...(upMem ?? []).map((m: any) => ({ at: m.due_at, submission_id: m.submission_id, seller: nameOf(m.submission_id), kind: "check", text: `Check back${m.waiting_for ? ` — waiting for ${m.waiting_for}` : ""}${m.next_if_silent ? `; if silent: ${m.next_if_silent}` : ""}` })),
     ].sort((a, b) => String(a.at).localeCompare(String(b.at))).slice(0, 30);
-    const activity = [
-      ...(recentRuns ?? []).map((r: any) => ({ at: r.created_at, submission_id: r.submission_id, seller: nameOf(r.submission_id), kind: r.status === "done" ? "review" : r.status === "running" ? "running" : "error", text: r.status === "running" ? "Reviewing the record now" : r.stage_summary ? `Reviewed — ${r.stage_summary}` : `Review ${r.status}` })),
-      ...entries.filter((e) => e.status === "sent" || e.status === "cancelled" || e.status === "failed").map((e) => ({ at: e.sent_at ?? e.created_at, submission_id: e.submission_id, seller: e.seller, kind: e.status === "sent" ? "sent" : e.status === "failed" ? "error" : "cancelled", text: e.status === "sent" ? `Emailed${e.subject ? ` “${e.subject}”` : ""}` : `Reply not sent — ${e.status_reason ?? e.status}` })),
-      ...(recentFlags ?? []).map((f: any) => ({ at: f.created_at, submission_id: f.submission_id, seller: nameOf(f.submission_id), kind: "flag", text: `Asked staff: ${String(f.reason ?? "").slice(0, 160)}` })),
-    ].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 60);
-    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held }, log: entries, last_sent_at: lastSent, last_review: lastRun ?? null, upcoming, activity, can_control: canControl });
+    // One line per seller per scan: catch-up + escalated full review (or several models) merge into one entry.
+    const runIds = (recentRuns ?? []).map((r: any) => r.id);
+    const { data: runActs } = runIds.length ? await db.from("ai_agent_actions").select("run_id,action_type,status,decided_by_name,email_subject").in("run_id", runIds) : { data: [] as any[] };
+    const activity = groupActivity({ runs: recentRuns ?? [], actions: runActs ?? [], outbox: entries, flags: recentFlags ?? [], nameOf }).slice(0, 40);
+    const totals = await autopilotTotals();
+    return json({ settings: await settings(), state: st, last24h: { reviews, sent, held }, log: entries, last_sent_at: lastSent, last_review: lastRun ?? null, upcoming, activity, totals, can_control: canControl });
   }
   const s = await settings();
   if (s.mode === "off") return json({ status: "off" });
