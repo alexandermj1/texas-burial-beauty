@@ -25,3 +25,6 @@ verify_jwt = false
 [functions.plot-value-estimator]
 verify_jwt = false
 
+
+[functions.daily-briefing]
+verify_jwt = false
