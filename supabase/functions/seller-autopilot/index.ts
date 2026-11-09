@@ -49,6 +49,7 @@ async function creditAccessRestored(): Promise<{ ok: boolean; status?: number; e
 import { isSellerRecord } from "../_shared/sellerKind.ts";
 const isSeller = (s: any) => isSellerRecord(s);
 import { groupActivity } from "./activity.ts";
+import { SELLER_EMAIL_ACTIONS, SELLER_RECORD_ACTIONS } from "../_shared/sellerAutopilotState.ts";
 const AUTOPILOT_ON_SINCE = "2026-11-06T22:00:00Z";
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
@@ -147,7 +148,7 @@ async function callAgent(body: Record<string, unknown>) {
 }
 
 /** After an autopilot review: hold the review's steps with a natural delay, or hand them to a person. */
-const RECORD_ONLY = new Set(["add_note", "update_fields", "set_stage", "extend_quote_deadline", "change_cemetery", "countersign_contract"]);
+const RECORD_ONLY = SELLER_RECORD_ACTIONS;
 const PAPERWORK_LABEL: Record<string, string> = { edit_document_request: "document request change", edit_family_tree: "family tree update", sync_checklist: "checklist re-sync", send_document_request: "document request email", prepare_listing_agreement: "listing agreement preparation" };
 /** Carry out a review's record-only steps now, and accept them into memory so they don't wake another review. */
 async function runRecordSteps(sub: any, list: { id: string; action_type: string }[]) {
@@ -155,11 +156,15 @@ async function runRecordSteps(sub: any, list: { id: string; action_type: string 
   for (const a of list.filter((x) => RECORD_ONLY.has(x.action_type)).sort((x, y) => (x.action_type === "add_note" ? 1 : 0) - (y.action_type === "add_note" ? 1 : 0))) {
     const r = await execute(a.id);
     if (r.ok) done.push(a.action_type);
+    else {
+      await flagHuman(sub, `The AI could not finish ${STEP_LABEL(a.action_type)}: ${r.error.slice(0, 180)}. Check this step before sending its reply.`, "Other completed changes are retained; no confirmation reply has been sent.");
+      return done;
+    }
   }
   if (done.some((d) => d !== "add_note")) {
     const { data: mem } = await db.from("ai_record_memory").select("fingerprint").eq("submission_id", sub.id).maybeSingle();
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
-    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts } }).eq("submission_id", sub.id); }
+    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts, documents: after.documents } }).eq("submission_id", sub.id); }
   }
   return done;
 }
@@ -170,9 +175,10 @@ async function queueReply(sub: any, runId: string) {
   if (!list.length) return null;
   const manual = list.filter((a) => !AUTO_RUN.has(a.action_type) && a.action_type !== "flag_human");
   const flagged = list.some((a) => a.action_type === "flag_human");
+  const done = await runRecordSteps(sub, list);
+  if (!flagged && await humanOpen(sub.id)) return { handed_to_person: true, done };
   if (flagged || manual.length) {
     // Do everything that doesn't depend on the person now; only the reply/sends wait, ready for one-click approval.
-    const done = await runRecordSteps(sub, list);
     if (flagged) return { handed_to_person: true, done };
     const names = manual.map((a) => PAPERWORK_LABEL[a.action_type] ?? STEP_LABEL(a.action_type)).join(" and ");
     const ready = list.some((a) => a.action_type === "reply_email") ? " The AI's email explaining it to the seller is written and ready" : "";
@@ -181,13 +187,13 @@ async function queueReply(sub: any, runId: string) {
     return { held_for_staff: names, done };
   }
   const reply = list.find((a) => a.action_type === "reply_email");
-  const primary = reply ?? list.find((a) => a.action_type !== "add_note");
+  const primary = reply ?? list.find((a) => !RECORD_ONLY.has(a.action_type));
   if (!primary) { for (const n of list) await execute(n.id); return { notes_only: list.length }; }
   const { data: mail } = await db.from("email_messages").select("from_email,received_at").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(10);
   const seller = (mail ?? []).find((m) => !/texascemeterybrokers/i.test(m.from_email ?? ""));
   const oursBefore = seller ? (mail ?? []).find((m) => /texascemeterybrokers/i.test(m.from_email ?? "") && m.received_at <= seller.received_at) : null;
   const words = String(reply?.email_body ?? "").split(/\s+/).filter(Boolean).length;
-  const at = replySendAt({ now: Date.now(), inConversation: inConversation(seller?.received_at ?? null, oursBefore?.received_at ?? null), words, rand: Math.random(), rand2: Math.random() });
+  const at = replySendAt({ now: Date.now(), receivedAt: seller ? Date.parse(seller.received_at) : undefined, inConversation: inConversation(seller?.received_at ?? null, oursBefore?.received_at ?? null), words, rand: Math.random(), rand2: Math.random() });
   await db.from("ai_outbox").insert({ submission_id: sub.id, action_id: primary.id, send_at: new Date(at).toISOString() });
   return { held_until: new Date(at).toISOString() };
 }
@@ -294,8 +300,8 @@ async function wake(mode: string, dailyReviews: number, quoteTasksOnly = false) 
 async function autopilotTotals() {
   const head = { count: "exact" as const, head: true };
   const [sent, changes, flagged, reviews] = await Promise.all([
-    db.from("ai_outbox").select("id", head).eq("status", "sent"),
-    db.from("ai_agent_actions").select("id", head).eq("status", "executed").eq("decided_by_name", "AI autopilot").not("action_type", "in", "(reply_email,flag_human)"),
+    db.from("ai_agent_actions").select("id", head).eq("status", "executed").eq("decided_by_name", "AI autopilot").in("action_type", [...SELLER_EMAIL_ACTIONS]).gte("executed_at", AUTOPILOT_ON_SINCE),
+    db.from("ai_agent_actions").select("id", head).eq("status", "executed").eq("decided_by_name", "AI autopilot").in("action_type", [...SELLER_RECORD_ACTIONS]).gte("executed_at", AUTOPILOT_ON_SINCE),
     db.from("ai_agent_actions").select("submission_id").eq("action_type", "flag_human").is("deleted_at", null).is("decided_by_user_id", null).gte("created_at", AUTOPILOT_ON_SINCE),
     db.from("ai_agent_runs").select("submission_id").like("trigger", "autopilot:%"),
   ]);
@@ -350,7 +356,7 @@ Deno.serve(async (req) => {
     const [{ data: st }, { count: reviews }, { count: sent }, { count: held }] = await Promise.all([
       db.from("automation_job_state").select("status,pause_reason,last_completed_at").eq("job_name", JOB).maybeSingle(),
       db.from("ai_agent_runs").select("id", { count: "exact", head: true }).like("trigger", "autopilot:%").gte("created_at", since),
-      db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("status", "sent").gte("sent_at", since),
+      db.from("ai_agent_actions").select("id", { count: "exact", head: true }).eq("status", "executed").eq("decided_by_name", "AI autopilot").in("action_type", [...SELLER_EMAIL_ACTIONS]).gte("executed_at", since),
       db.from("ai_outbox").select("id", { count: "exact", head: true }).eq("status", "held"),
     ]);
     const { data: log } = await db.from("ai_outbox").select("id,submission_id,status,status_reason,send_at,sent_at,created_at,action_id").order("created_at", { ascending: false }).limit(40);

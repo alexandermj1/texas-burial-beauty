@@ -84,10 +84,10 @@ export function nextAllowedTime(ms: number, rand: number): number {
 }
 
 /** When an AI reply should go out. Conversation = we wrote to them shortly before their latest email. */
-export function replySendAt(o: { now: number; inConversation: boolean; words: number; rand: number; rand2?: number }): number {
-  const base = o.inConversation ? 3 + 6 * o.rand : 8 + 17 * o.rand;
-  const longPad = Math.min(10, Math.max(0, o.words) / 80);
-  const t = o.now + Math.round((base + longPad) * 60_000);
+export function replySendAt(o: { now: number; receivedAt?: number; inConversation: boolean; words: number; rand: number; rand2?: number }): number {
+  const base = 5 + 4 * Math.max(0, Math.min(1, o.rand));
+  const received = Number.isFinite(o.receivedAt) ? Math.min(o.receivedAt as number, o.now) : o.now;
+  const t = Math.max(o.now, received + Math.round(base * 60_000));
   return nextAllowedTime(t, o.rand2 ?? o.rand);
 }
 export function inConversation(lastSellerAt: string | null, lastOursBeforeSellerAt: string | null) {

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { sellerAutopilotOn } from "../../../../supabase/functions/_shared/sellerAutopilotState";
 
 type Memory = { summary: string; waiting_for: string | null; next_if_silent: string | null; due_at: string | null; reminder_count: number; last_route: string | null };
 type Held = { id: string; send_at: string };
@@ -13,14 +14,18 @@ export default function AutopilotStrip({ submissionId, refreshKey }: { submissio
   const [on, setOn] = useState(false);
   const [mem, setMem] = useState<Memory | null>(null);
   const [held, setHeld] = useState<Held | null>(null);
+  const [mode, setMode] = useState("off");
 
   const load = useCallback(async () => {
-    const [{ data: sub }, { data: m }, { data: h }] = await Promise.all([
-      supabase.from("contact_submissions").select("ai_autopilot").eq("id", submissionId).maybeSingle(),
+    const [{ data: sub }, { data: m }, { data: h }, { data: config }] = await Promise.all([
+      supabase.from("contact_submissions").select("ai_autopilot,ai_paused_at").eq("id", submissionId).maybeSingle(),
       supabase.from("ai_record_memory").select("summary,waiting_for,next_if_silent,due_at,reminder_count,last_route").eq("submission_id", submissionId).maybeSingle(),
       supabase.from("ai_outbox").select("id,send_at").eq("submission_id", submissionId).eq("status", "held").order("send_at").limit(1).maybeSingle(),
+      supabase.from("ai_agent_settings").select("value").eq("key", "seller_autopilot").maybeSingle(),
     ]);
-    setOn(!!(sub as any)?.ai_autopilot);
+    const currentMode = String((config?.value as Record<string, unknown> | undefined)?.mode ?? "off");
+    setMode(currentMode);
+    setOn(sellerAutopilotOn(currentMode, !!sub?.ai_autopilot, sub?.ai_paused_at ?? null));
     setMem((m as Memory) ?? null);
     setHeld((h as Held) ?? null);
   }, [submissionId]);
@@ -28,7 +33,9 @@ export default function AutopilotStrip({ submissionId, refreshKey }: { submissio
 
   const toggle = async (v: boolean) => {
     setOn(v);
-    const { error } = await supabase.from("contact_submissions").update({ ai_autopilot: v } as never).eq("id", submissionId);
+    const { error } = mode === "all"
+      ? await supabase.functions.invoke("seller-autopilot", { body: { op: "pause_record", submission_id: submissionId, paused: !v } })
+      : await supabase.from("contact_submissions").update({ ai_autopilot: v } as never).eq("id", submissionId);
     if (error) { setOn(!v); toast({ title: "Couldn't update", description: error.message, variant: "destructive" }); }
   };
   const cancelHeld = async () => {

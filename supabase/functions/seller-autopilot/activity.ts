@@ -1,4 +1,5 @@
 /** Live-activity grouping: one entry per seller per scan with plain outcomes (emailed, changed, asked staff). */
+import { SELLER_EMAIL_ACTIONS } from "../_shared/sellerAutopilotState.ts";
 export type Outcome = { label: string; tone: "email" | "change" | "staff" | "draft" | "held" | "problem" | "none" };
 export type ActivityItem = { at: string; submission_id: string; seller: string; kind: string; text: string; outcomes: Outcome[]; run_ids: string[] };
 const SCAN_GAP_MS = 30 * 60_000;
@@ -13,7 +14,7 @@ export const changeLabel = (t: string) => CHANGE_LABEL[t] ?? t.replace(/_/g, " "
 export function groupActivity(input: {
   runs: { id: string; created_at: string; status: string; submission_id: string; stage_summary?: string | null }[];
   actions: { run_id: string; action_type: string; status: string; decided_by_name?: string | null; email_subject?: string | null }[];
-  outbox: { submission_id: string; status: string; status_reason?: string | null; sent_at?: string | null; created_at: string; subject?: string | null; seller: string }[];
+  outbox: { submission_id: string; kind?: string | null; status: string; status_reason?: string | null; sent_at?: string | null; created_at: string; subject?: string | null; seller: string }[];
   flags: { created_at: string; submission_id: string; reason?: string | null; run_id?: string | null }[];
   nameOf: (id: string) => string;
 }): ActivityItem[] {
@@ -48,6 +49,7 @@ export function groupActivity(input: {
   }
   for (const e of input.outbox) {
     if (!["sent", "cancelled", "failed"].includes(e.status)) continue;
+    if (e.kind && !SELLER_EMAIL_ACTIONS.has(e.kind)) continue; // record-only queue jobs are not emails
     const at = e.sent_at ?? e.created_at;
     const label = e.status === "sent" ? `Emailed the seller${e.subject ? `: “${e.subject}”` : ""}` : e.status === "failed" ? `Email stopped — ${e.status_reason ?? "failed"}` : `Draft reply not sent — ${e.status_reason ?? "cancelled"}`;
     const tone: Outcome["tone"] = e.status === "sent" ? "email" : e.status === "failed" ? "problem" : "held";

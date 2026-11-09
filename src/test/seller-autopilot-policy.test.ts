@@ -42,22 +42,23 @@ describe("autopilot wake routing", () => {
 });
 
 describe("natural reply timing", () => {
-  it("new email: 8–25 minutes", () => {
-    expect(replySendAt({ now, inConversation: false, words: 0, rand: 0 }) - now).toBe(8 * 60_000);
-    expect(replySendAt({ now, inConversation: false, words: 0, rand: 1 }) - now).toBe(25 * 60_000);
+  it("seller reply varies five to nine minutes around seven", () => {
+    expect(replySendAt({ now, inConversation: false, words: 0, rand: 0 }) - now).toBe(5 * 60_000);
+    expect(replySendAt({ now, inConversation: false, words: 0, rand: 1 }) - now).toBe(9 * 60_000);
+    expect(replySendAt({ now, inConversation: false, words: 0, rand: 0.5 }) - now).toBe(7 * 60_000);
   });
-  it("in a conversation: 3–9 minutes", () => {
-    expect(replySendAt({ now, inConversation: true, words: 0, rand: 0 }) - now).toBe(3 * 60_000);
+  it("conversation uses the same five to nine minute seller timing", () => {
+    expect(replySendAt({ now, inConversation: true, words: 0, rand: 0 }) - now).toBe(5 * 60_000);
     expect(replySendAt({ now, inConversation: true, words: 0, rand: 1 }) - now).toBe(9 * 60_000);
   });
-  it("long replies wait longer, capped at 10 extra minutes", () => {
-    expect(replySendAt({ now, inConversation: false, words: 400, rand: 0 }) - now).toBe(13 * 60_000);
-    expect(replySendAt({ now, inConversation: false, words: 5000, rand: 0 }) - now).toBe(18 * 60_000);
+  it("delay starts at incoming mail rather than the completed review", () => {
+    expect(replySendAt({ now, receivedAt: now - 4 * 60_000, inConversation: false, words: 400, rand: 0.5 }) - now).toBe(3 * 60_000);
+    expect(replySendAt({ now, receivedAt: now - 20 * 60_000, inConversation: false, words: 5000, rand: 0.5 })).toBe(now);
   });
   it("never sends at night or on Sunday (Texas time)", () => {
     expect(isQuietTime(Date.parse("2026-11-11T04:00:00Z"))).toBe(true); // 10pm Tue
     expect(isQuietTime(Date.parse("2026-11-15T18:00:00Z"))).toBe(true); // Sunday noon
-    const late = Date.parse("2026-11-11T02:50:00Z"); // 8:50pm Tue
+    const late = Date.parse("2026-11-11T02:55:00Z"); // 8:55pm Tue
     const at = replySendAt({ now: late, inConversation: false, words: 0, rand: 1, rand2: 0 });
     expect(new Date(at).toISOString()).toBe("2026-11-11T13:30:00.000Z"); // 7:30am Wed
   });

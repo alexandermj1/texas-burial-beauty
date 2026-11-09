@@ -12,8 +12,9 @@ export async function sellerDecision(instructions: string, input: string, effort
     if (onProgress && (force || Date.now() - lastUpdate >= 1500)) { lastUpdate = Date.now(); await onProgress(characters, usage); }
   };
   // Native Responses content comes from loadScans; keep its file/image/text shape unchanged.
-  const content = media.length ? [{ type: "input_text" as const, text: input }, ...media] : input;
-  const request = labelRun({ instructions, input: [{ role: "user" as const, content }], prompt_cache_key: "seller-agent-playbook", reasoning: { effort } }, `Seller AI — deciding next steps (${sellerModelLabel(model)})`);
+  const jsonInput = `${input}\n\nReturn a JSON object only. Numeric fields such as importance must be JSON numbers, never written-out words.`;
+  const content = media.length ? [{ type: "input_text" as const, text: jsonInput }, ...media] : jsonInput;
+  const request = labelRun({ instructions, input: [{ role: "user" as const, content }], text: { format: { type: "json_object" as const } }, prompt_cache_key: "seller-agent-playbook", reasoning: { effort } }, `Seller AI — deciding next steps (${sellerModelLabel(model)})`);
   try {
     if (model === "anthropic/claude-opus-5-5" || model === "anthropic/claude-sonnet-5") {
       const base = { system: instructions, messages: [{ role: "user" as const, content: [{ type: "text" as const, text: input }, ...claudeMedia(media)] }], max_tokens: 16384, thinking: { type: "adaptive" as const }, output_config: { effort } };

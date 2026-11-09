@@ -1,4 +1,5 @@
 import { paidListingOption, requestedLowerQuote } from "./quoteCorrectionPolicy.ts";
+import { sellerDecisionJson } from "../_shared/sellerDecisionJson.ts";
 import { aiFetch } from "../_shared/aiRunLabel.ts";
 import { applyCemeteryCorrection, prepareCemeteryCorrection } from "./cemeteryCorrection.ts";
 import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
@@ -255,7 +256,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - resend_email: re-send one of OUR earlier emails exactly as it went (same HTML, links, buttons) in its thread. Fields: fields = {email_id (from the EMAIL THREAD [email_id ...] tags)}; body = optional one- or two-sentence intro shown above it (no sign-off); subject optional. Use when the seller can't find something we sent.
 - set_stage: move the Texas pipeline stage like the stage buttons. Fields: fields = {stage: one of ${TEXAS_STAGES.join(" | ")}}. Only when the record clearly shows the stage is wrong.
 - countersign_contract: countersign a listing agreement the seller has signed but we haven't countersigned yet, with the broker's saved signature; the seller is emailed the fully signed copy. Fields: fields = {contract_id}.
-- resend_contract_link: re-email the still-valid signing link for ANY unsigned contract (listing agreement, POA, affidavit, spousal consent). Fields: fields = {contract_id}.
+- resend_contract_link: re-email the still-valid signing link for ANY unsigned contract (listing agreement, POA, affidavit, spousal consent). For an unsigned listing agreement, first correct its email to the current seller contact email if different, preserving every other agreement field and paid terms. Fields: fields = {contract_id}. Use this to fix a stale agreement email; it does not require staff.
 - email_signed_copy: email the seller a copy of a contract they already signed. Fields: fields = {contract_id}.
 - edit_document_request: change the document request the way staff do on the Documents panel — add/remove/rename items, add a POA or joint POA, change the name on a POA, add an affidavit, rebuild for different plots. Field: note = the exact instruction (e.g. "Add a limited POA for Mary Smith; remove the marriage certificate for John"). On approval the Documents panel opens with it applied through the normal rules engine so staff can check and send. Pair with reply_email only after it is applied — do not promise it is done.
 - update_quote_spaces: quote corrections when the seller, the deed scan or the record shows the quote has the wrong spaces in the SAME section/lawn/garden — add/remove/swap spaces, or the count/space numbers were copied wrongly (e.g. quote for 1 space but the deed/record shows spaces 3 & 4). Spaces in the same area are valued at the same per-space price, so the total scales with the count. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and SENDS the corrected quote pack (same price per space × new count); body = optional separate explanation email. Put a one-line summary in reason (e.g. "Corrects to spaces 3 & 4: 2 × $7,600 = $15,200"). May be combined with increase_quote_ten_percent (whose body then explains both); otherwise do not also write a reply_email.
@@ -559,9 +560,7 @@ async function callModel(_apiKey: string, instructions: string, input: string, e
 }
 
 function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = false) {
-  const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
-  const start = t.indexOf("{"), end = t.lastIndexOf("}");
-  const obj = JSON.parse(t.slice(start, end + 1));
+  const obj = sellerDecisionJson(raw);
   const actions = Array.isArray(obj.actions) ? obj.actions : [];
   const mem = obj.memory && typeof obj.memory === "object" ? obj.memory : {};
   return {
@@ -1419,6 +1418,10 @@ Deno.serve(async (req) => {
           if (!c || c.submission_id !== sub.id) throw new Error("That contract isn't on this record.");
           if (act.action_type === "resend_contract_link") {
             if (!["sent", "viewed", "draft"].includes(c.status) || !c.sign_token || (c.sign_token_expires_at && c.sign_token_expires_at < now)) throw new Error("That contract is signed, void or its link has expired — regenerate it from the Contracts panel.");
+            if (c.kind === "listing_agreement" && String(c.fill_data?.email ?? "").toLowerCase() !== String(sub.email ?? "").toLowerCase()) {
+              await callInternal(url, "generate-contract", { submission_id: sub.id, kind: "listing_agreement", overrides: { contact_email_only: true, contract_id: c.id } });
+              await aiNote(`Corrected the email on ${first(sub)}'s unsigned listing agreement to ${sub.email}; all other agreement details and paid terms unchanged.`);
+            }
             await callInternal(url, "send-contract-link", { contract_id: c.id, sign_url: `${SITE}/sign/${c.sign_token}` });
             await aiNote(`Re-sent ${first(sub)} the signing link for the ${contractLabel(c)}.`);
           } else {
