@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Keep the buyer film away from seller-focused pages; removed it and its video metadata from the mixed-purpose cost guide. Retain Buy, buying/preneed guides and four plots-for-sale metro pages only; homepage and seller film unchanged.
 - [x] Integrated the 1:46 buyer film before the Buy form, in the buying/preneed openings, before the cost calculator and immediately after all four metro introductions. Matching cover, descriptive alt text, accessible controls/summary, inquiry links and VideoObject metadata added; eight routes checked on desktop/mobile, Buy playback and inquiry anchor verified, three SEO tests pass. Supplied film has no audio track; publication remains owner-controlled.
 - [x] Replaced every seller VSL placement with TCB-seller-VSL-v4 and its matching classified-listings cover; updated alt text, accessible 2:39 timing and Sell-page VideoObject metadata. Verified 159-second 1920×1080 playback on desktop/mobile homepage and Sell plus the broker guide, with no page errors or horizontal overflow; build clean.
 - [x] Bring the VSL immediately after the mobile homepage opening and Sell introduction, preserve desktop placement, and embed it in selling, broker-role, value and transfer guides; verify layout, playback and valuation links.
