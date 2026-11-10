@@ -1485,15 +1485,19 @@ Deno.serve(async (req) => {
           if (JSON.stringify(answers.v2 ?? null) !== JSON.stringify(act.payload?.before_tree ?? null)) throw new Error("The family tree changed since the AI proposed this. Re-run the AI.");
           const history = Array.isArray(answers.treeEdits) ? answers.treeEdits.slice(-9) : [];
           const next = { ...answers, v2: v.tree, treeEdits: [...history, { at: now, by: `AI agent (approved by ${user.name})`, reason: act.reason ?? null, before: answers.v2 ?? null }] };
-          const { error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id);
+          const { data: savedTree, error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id).eq("ownership_answers", answers).select("id").maybeSingle();
           if (e) throw new Error(e.message);
+          if (!savedTree) throw new Error("The family answers changed while this correction was being saved. No older answers were overwritten.");
+          const synced = await syncPaperwork(db, paperworkHooks(url, user.name), sub.id, { fromTree: true });
+          const prepared = await preparePaperwork(db, paperworkHooks(url, user.name), sub.id, { fromTree: true });
           const lines = treeDiff(answers.v2, v.tree).map((l) => `${l.label}: ${l.before} → ${l.after}`);
-          await aiNote(`Corrected the family tree${act.reason ? ` (${act.reason})` : ""}: ${lines.join("; ") || "details updated"}. The document checklist re-syncs from it.`);
-          clientOp = { kind: "sync", fromTree: true };
+          await aiNote(`Corrected the family tree${act.reason ? ` (${act.reason})` : ""}: ${lines.join("; ") || "details updated"}. Re-synced ${synced.items} checklist items and prepared ${prepared.prepared.length} required document${prepared.prepared.length === 1 ? "" : "s"}; the previous tree remains in history.`);
         } else if (act.action_type === "sync_checklist") {
-          clientOp = { kind: "sync" };
+          const synced = await syncPaperwork(db, paperworkHooks(url, user.name), sub.id);
+          await aiNote(`Re-synced the document checklist from the current family tree: ${synced.items} items, ${synced.inserted} added, ${synced.retired} retired, ${synced.autoMatched} already-on-file items marked received.`);
         } else if (act.action_type === "prepare_listing_agreement") {
-          clientOp = { kind: "prepare_listing_agreement" };
+          const prepared = await prepareListingAgreement(db, paperworkHooks(url, user.name), sub.id);
+          await aiNote(`Prepared the missing listing agreement PDF (${prepared.contractId}); it has not been emailed.`);
         } else if (act.action_type === "change_cemetery") {
           const f = (act.payload?.fields ?? {}) as Record<string, string>;
           const result = await applyCemeteryCorrection(db, sub, f, act.id, user.name, (body) => callInternal(url, "generate-contract", body));
