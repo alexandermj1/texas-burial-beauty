@@ -2,4 +2,4 @@ export function sellerAutopilotOn(mode: string, selected: boolean, pausedAt: str
   return !pausedAt && (mode === "all" || (mode === "selected" && selected));
 }
 export const SELLER_EMAIL_ACTIONS = new Set(["reply_email", "fix_document_request", "send_document_request", "send_quote", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "update_quote_spaces", "resend_email", "resend_contract_link", "email_signed_copy", "send_listing_agreement", "resend_signing_link", "send_family_tree", "resend_family_tree", "countersign_contract"]);
-export const SELLER_RECORD_ACTIONS = new Set(["add_note", "update_fields", "update_document_items", "set_stage", "extend_quote_deadline", "change_cemetery", "change_listing_option", "countersign_contract"]);
+export const SELLER_RECORD_ACTIONS = new Set(["add_note", "update_fields", "update_document_items", "set_stage", "extend_quote_deadline", "change_cemetery", "change_listing_option", "countersign_contract", "edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement"]);

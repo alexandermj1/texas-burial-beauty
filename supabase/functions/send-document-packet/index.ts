@@ -3,6 +3,7 @@
 // Power of Attorney has been prepared — explains the notary route inline so the
 // seller never receives two competing emails.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { isInternalCall } from '../_shared/internal-auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,8 +38,9 @@ Deno.serve(async (req) => {
     const asUser = createClient(SUPABASE_URL, SERVICE_KEY, {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     });
-    const { data: userData } = await asUser.auth.getUser();
-    if (!userData.user) {
+    const internal = isInternalCall(req);
+    const { data: userData } = internal ? { data: { user: null } } : await asUser.auth.getUser();
+    if (!internal && !userData.user) {
       return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders });
     }
 
@@ -240,7 +242,7 @@ Deno.serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         Authorization: req.headers.get('Authorization') ?? '',
-        apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        apikey: internal ? SERVICE_KEY : (Deno.env.get('SUPABASE_ANON_KEY') ?? ''),
       },
       body: JSON.stringify({
         action: 'send',
@@ -303,7 +305,7 @@ Deno.serve(async (req) => {
 
 
 
-    return new Response(JSON.stringify({ ok: true, to, items: items.length }), {
+    return new Response(JSON.stringify({ ok: true, to, items: items.length, email_id: sentId, thread_id: logRow.gmail_thread_id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
