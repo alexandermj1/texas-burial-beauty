@@ -23,6 +23,7 @@ const SellerVsl = () => {
 
   return (
     <section
+      id="seller-vsl"
       aria-labelledby="seller-vsl-title"
       className="relative overflow-hidden border-y border-foreground/15 bg-[hsl(var(--warm-white))] py-14 md:py-24"
     >

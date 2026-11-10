@@ -20,6 +20,8 @@ import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import valuationImg from "@/assets/sell/valuation-t.png";
 import keysImg from "@/assets/sell/keys-closing-t.png";
 import paymentImg from "@/assets/sell/payment-envelope-t.png";
+import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v2.mp4.asset.json";
+import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v2-cover.jpg.asset.json";
 
 const ownershipIntro = "Often people find that they are an owner, or part-owner, of a plot while going through the records of a recently deceased relative. Suddenly there’s the deed, and they realize there’s cemetery property and wonder what to do with it. If you don’t want to use that property, you may be looking to see if you can get some value from it. We help you work out the ownership, the cemetery’s requirements and your options for selling.";
 
@@ -55,6 +57,17 @@ const SellProperty = () => {
             provider: { "@id": "https://texascemeterybrokers.com/#organization" },
             areaServed: "Texas, United States",
             offers: { "@type": "Offer", description: "One-time listing fees: Starter $299, Pro $399, Featured $499" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            name: "How Texas Cemetery Brokers sells your cemetery property",
+            description: "A two-minute overview of our mortuary and cemetery coordination, advance paperwork, buyer inquiries and closing support for Texas cemetery property sellers.",
+            thumbnailUrl: `https://texascemeterybrokers.com${sellerVslCover.url}`,
+            contentUrl: `https://texascemeterybrokers.com${sellerVslVideo.url}`,
+            uploadDate: "2026-11-10",
+            duration: "PT2M4S",
+            inLanguage: "en-US",
           },
           {
             "@context": "https://schema.org",
