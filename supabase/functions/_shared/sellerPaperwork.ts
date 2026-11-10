@@ -294,6 +294,7 @@ export async function sendPaperwork(db: Db, hooks: Hooks, submissionId: string, 
   if (!packet.bundle.sub.email) throw new Error("This seller has no email address.");
   const greeting = String(opts.greeting ?? "").trim() || String(packet.bundle.answers.packetGreeting ?? "").trim() || firstName(packet.bundle.sub);
   const note = String(opts.note ?? "").trim();
+  await saveAnswers(db, packet.bundle, { ...packet.bundle.answers, packetGreeting: greeting, packetEmailNote: note });
   const result = await hooks.sendPacket({ submission_id: submissionId, items: packet.items,
     packet_url: `${hooks.siteUrl}/documents?s=${submissionId}`, poas: packet.poas,
     docs: packet.docs, poa_url: packet.poaUrl, poa_for: packet.poaFor, poa_mail_to: packet.poaMailTo,
