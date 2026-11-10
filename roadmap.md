@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [ ] Extend the public $299/$399/$499 listing offer through December 31, 2026 Texas time; add unnamed $325/$550/$1,500 competitor comparisons and verify admin quotes, payment links and new agreements keep current fees while historical terms stay unchanged.
 - [x] Fixed Seller AI written-number decision failures and requested JSON output, made email counts factual, corrected all-seller switch display, retried blocked records, and set 5–9 minute replies from incoming mail; 36 tests pass, deployed.
 - [x] Corrected Art’s unsigned agreement email only; verified actual PDF, signing page, Featured/$7,000 per plot/$21,000 total and sent the link to artfano@tekselinc.com.
 - [x] Existing checklist updates run before staff handoff without approval; structural family-tree/request changes stay one-click approval because their preparation code currently requires the open Documents panel.
