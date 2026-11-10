@@ -6,12 +6,14 @@ import { Link } from "react-router-dom";
 import starterImg from "@/assets/sell/starter-benefits-t.png";
 import proImg from "@/assets/sell/pro-benefits-t.png";
 import featuredImg from "@/assets/sell/featured-benefits-t.png";
-interface Tier {
+export interface Tier {
   num: string;
   name: string;
   img: string;
   now: string;
   regular: string;
+  competitor: string;
+  competitorSavings: string;
   tagline: string;
   desc: string;
   benefits: string[];
@@ -19,13 +21,15 @@ interface Tier {
   featured?: boolean;
 }
 
-const tiers: Tier[] = [
+export const tiers: Tier[] = [
   {
     num: "01",
     name: "Starter",
     img: starterImg,
     now: "$299",
     regular: "$499",
+    competitor: "$325",
+    competitorSavings: "$26",
     tagline: "A straightforward start.",
     desc: "Your property is listed with a one-time upfront fee. Ideal for owners who want to test the market before committing.",
     benefits: ["Your cemetery property listed", "A straightforward way to test the market"],
@@ -37,6 +41,8 @@ const tiers: Tier[] = [
     img: proImg,
     now: "$399",
     regular: "$599",
+    competitor: "$550",
+    competitorSavings: "$151",
     tagline: "Actively marketed to Texas buyers.",
     desc: "One-time upfront fee. Actively marketed to Texas buyers and sent directly to local mortuaries and family counselors.",
     benefits: ["Active marketing to Texas buyers", "Direct outreach to local mortuaries", "Shared with family counselors"],
@@ -49,6 +55,8 @@ const tiers: Tier[] = [
     img: featuredImg,
     now: "$499",
     regular: "$699",
+    competitor: "$1,500",
+    competitorSavings: "$1,001",
     tagline: "Maximum visibility for your listing.",
     desc: "One-time upfront fee. Includes targeted Google & Meta advertising for your plots, plus top placement on the priority list we send to local mortuaries and counselors.",
     benefits: ["Targeted Google & Meta advertising", "Top placement on our priority list", "Priority list sent to mortuaries & counselors"],
@@ -56,10 +64,10 @@ const tiers: Tier[] = [
   },
 ];
 
-// Midnight after October 31 in America/Chicago (still CDT).
-export const OCTOBER_OFFER_END = Date.parse("2026-11-01T00:00:00-05:00");
+// Midnight after December 31 in America/Chicago (CST).
+export const LISTING_OFFER_END = Date.parse("2027-01-01T00:00:00-06:00");
 export function offerCountdown(now: number) {
-  const seconds = Math.max(0, Math.floor((OCTOBER_OFFER_END - now) / 1000));
+  const seconds = Math.max(0, Math.floor((LISTING_OFFER_END - now) / 1000));
   return [Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24, Math.floor(seconds / 60) % 60, seconds % 60];
 }
 
@@ -74,7 +82,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const offerActive = now < OCTOBER_OFFER_END;
+  const offerActive = now < LISTING_OFFER_END;
   return (
     <section
       id="listing-fees"
@@ -118,8 +126,8 @@ const ListingFeePromo = ({ compact = false }: Props) => {
             </p>
             {offerActive && (
               <div className="mt-7 flex flex-col items-center gap-4">
-                <p className="text-primary font-semibold text-sm sm:text-base flex items-center justify-center gap-2 text-center"><Clock className="h-4 w-4 shrink-0" /> October offer · Save $200 on every package</p>
-                <div role="timer" aria-label="Time remaining in October offer" className="flex justify-center gap-3 sm:gap-5 tabular-nums">
+                <p className="text-primary font-semibold text-sm sm:text-base flex items-center justify-center gap-2 text-center"><Clock className="h-4 w-4 shrink-0" /> Year-end offer · Save $200 on every package</p>
+                <div role="timer" aria-label="Time remaining in year-end offer" className="flex justify-center gap-3 sm:gap-5 tabular-nums">
                   {offerCountdown(now).map((value, index) => (
                     <div key={index} className="min-w-14 sm:min-w-16 text-center">
                       <span className="block rounded-lg border border-primary/20 bg-primary/5 py-3 text-2xl sm:text-3xl font-semibold text-primary">{String(value).padStart(2, "0")}</span>
@@ -127,7 +135,7 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                     </div>
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground">Ends October 31, 2026 at 11:59 p.m. Texas time.</p>
+                <p className="text-sm text-muted-foreground">Ends December 31, 2026 at 11:59 p.m. Texas time.</p>
               </div>
             )}
           </motion.div>
@@ -179,6 +187,16 @@ const ListingFeePromo = ({ compact = false }: Props) => {
                   <p className="text-xs text-muted-foreground mt-3">
                     One-time upfront fee
                   </p>
+                  {offerActive && (
+                    <div className="mt-4 border-t border-primary/15 pt-4">
+                      <p className="text-xs text-muted-foreground">
+                        Comparable competitor fee <span className="font-medium text-foreground/70">{t.competitor}</span>
+                      </p>
+                      <p className="mt-1.5 text-sm font-semibold text-primary">
+                        You pay {t.competitorSavings} less with us
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Tagline */}

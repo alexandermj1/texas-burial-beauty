@@ -2,10 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 const invoke = vi.hoisted(() => vi.fn(async () => ({data: {url: "https://example.test/pay", free: false}, error: null})));
 vi.mock("@/integrations/supabase/client", () => ({supabase: {functions: {invoke}}}));
 import { TIERS, buildListingOptionsBlock } from "@/lib/buildListingOptionsBlock";
+import { TIERS as ADMIN_TIERS } from "@/components/admin/SendListingOptionsDialog";
 
 describe("current listing fees", () => {
   it("keeps all four stable tier IDs and new paid prices", () => {
     expect(TIERS.map(t => [t.id, t.price])).toEqual([
+      ["starter",299], ["pro",399], ["custom_plus",499], ["set_your_price",799],
+    ]);
+  });
+  it("keeps the admin listing-options dialog on the same four fees", () => {
+    expect(ADMIN_TIERS.map(t => [t.id, t.price])).toEqual([
       ["starter",299], ["pro",399], ["custom_plus",499], ["set_your_price",799],
     ]);
   });
