@@ -257,5 +257,5 @@ export function mailFor(r: Requirement, answers: Answers): { address: string } |
   const explicit = answers.mailOriginals?.[reqKey(r)];
   if (explicit) return explicit;
   if (answers.mailSkip?.includes(reqKey(r))) return undefined;
-  return mailsByDefault(r.code) ? { address: String(answers.originalsAddress ?? "").trim() || undefined } as { address: string } : undefined;
+  return mailsByDefault(r.code) ? { address: String(answers.originalsAddress ?? "").trim() || ORIGINALS_MAIL_ADDRESS } : undefined;
 }
