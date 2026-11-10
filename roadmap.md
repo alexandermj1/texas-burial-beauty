@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Replaced every seller VSL placement with TCB-seller-VSL-v4 and its matching classified-listings cover; updated alt text, accessible 2:39 timing and Sell-page VideoObject metadata. Verified 159-second 1920×1080 playback on desktop/mobile homepage and Sell plus the broker guide, with no page errors or horizontal overflow; build clean.
 - [x] Bring the VSL immediately after the mobile homepage opening and Sell introduction, preserve desktop placement, and embed it in selling, broker-role, value and transfer guides; verify layout, playback and valuation links.
 - [x] Place the seller VSL directly below the homepage map, retaining the verified valuation link and desktop/mobile layout.
 - [x] Replace the low Sell-page journey video with the supplied TCB seller VSL; place it prominently immediately after the opening valuation section, add an accessible named player/poster and supporting description, and verify desktop/mobile playback and layout.

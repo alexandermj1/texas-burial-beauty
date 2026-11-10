@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Check, Clock3, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v2.mp4.asset.json";
-import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v2-cover.jpg.asset.json";
+import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v4.mp4.asset.json";
+import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v4-cover.jpg.asset.json";
 
 const videoTitle = "How Texas Cemetery Brokers sells your cemetery property";
 
@@ -42,7 +42,7 @@ const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps
                 <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-accent">Watch the film</span>
                 <span className="h-px w-12 bg-foreground/25" />
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/55">
-                  <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> 2 minutes
+                  <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> 2 min 39 sec
                 </span>
               </div>
               <h2 id="seller-vsl-title" className={cn("max-w-4xl font-display text-3xl leading-tight text-foreground md:text-6xl lg:text-7xl", embedded && "md:text-4xl lg:text-4xl")}>
@@ -72,7 +72,7 @@ const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps
                   playsInline
                   preload="metadata"
                   title={videoTitle}
-                  aria-label={`${videoTitle}, 2 minutes 4 seconds`}
+                  aria-label={`${videoTitle}, 2 minutes 39 seconds`}
                   aria-describedby="seller-vsl-summary"
                   onPlay={() => setHasStarted(true)}
                   onEnded={() => setHasStarted(false)}
@@ -86,12 +86,12 @@ const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps
                     type="button"
                     variant="ghost"
                     onClick={playVideo}
-                    aria-label={`Play video: ${videoTitle}, 2 minutes 4 seconds`}
+                    aria-label={`Play video: ${videoTitle}, 2 minutes 39 seconds`}
                     className="group absolute inset-0 h-full w-full overflow-hidden rounded-none p-0 text-left whitespace-normal focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-ring"
                   >
                     <img
                       src={sellerVslCover.url}
-                      alt="Texas Cemetery Brokers video cover reading “We take a different approach,” with coral hibiscus and palm illustrations on a sage-green background"
+                      alt="Texas Cemetery Brokers video cover reading “A listing isn’t a sale,” over a classified-listings page with a cemetery plot listing"
                       className="absolute inset-0 h-full w-full object-cover"
                       width={1920}
                       height={1080}
@@ -102,8 +102,8 @@ const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps
                         <Play className="ml-0.5 h-4 w-4 fill-current md:h-5 md:w-5" aria-hidden="true" />
                       </span>
                       <span>
-                        <span className="block text-sm font-semibold md:text-base"><span className="sm:hidden">Play our 2-minute film</span><span className="hidden sm:inline">Watch how selling with us works</span></span>
-                        <span className="mt-0.5 hidden text-[10px] uppercase tracking-[0.2em] text-foreground/55 sm:block">Play the 2-minute film</span>
+                        <span className="block text-sm font-semibold md:text-base"><span className="sm:hidden">Play our film</span><span className="hidden sm:inline">Watch how selling with us works</span></span>
+                        <span className="mt-0.5 hidden text-[10px] uppercase tracking-[0.2em] text-foreground/55 sm:block">Play the film · 2 min 39 sec</span>
                       </span>
                     </span>
                   </Button>
@@ -112,7 +112,7 @@ const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps
             </div>
 
             <p id="seller-vsl-summary" className="sr-only">
-              A two-minute animated overview explaining why cemetery property can sit unsold on classified listing sites, how Texas Cemetery Brokers works with mortuaries and cemetery counselors, prepares required documents in advance, handles buyer inquiries and transfer coordination, and leaves offer approval with the seller. It also explains that listing packages start at $299 and a separate 15 percent seller commission applies at closing.
+              An animated overview explaining why cemetery property can sit unsold on classified listing sites, how Texas Cemetery Brokers works with mortuaries and cemetery counselors, prepares required documents in advance, handles buyer inquiries and transfer coordination, and leaves offer approval with the seller. It also explains that listing packages start at $299 and a separate 15 percent seller commission applies at closing.
             </p>
 
             <figcaption className="mt-6 grid gap-5 border-t border-foreground/15 pt-5 md:grid-cols-[1fr_auto] md:items-center">
