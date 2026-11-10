@@ -89,13 +89,13 @@ const SellerVsl = () => {
                       height={1080}
                     />
                     <span className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-foreground/75 via-foreground/20 to-transparent" aria-hidden="true" />
-                    <span className="absolute bottom-4 left-4 inline-flex items-center gap-3 rounded-full bg-[hsl(var(--warm-white))] py-2 pl-2 pr-5 text-foreground shadow-soft transition-transform duration-300 group-hover:scale-[1.02] md:bottom-7 md:left-7 md:gap-4 md:py-2.5 md:pl-2.5 md:pr-7">
+                    <span className="absolute bottom-3 left-3 inline-flex items-center gap-3 rounded-full bg-[hsl(var(--warm-white))] py-2 pl-2 pr-4 text-foreground shadow-soft transition-transform duration-300 group-hover:scale-[1.02] md:bottom-7 md:left-7 md:gap-4 md:py-2.5 md:pl-2.5 md:pr-7">
                       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground md:h-12 md:w-12">
                         <Play className="ml-0.5 h-4 w-4 fill-current md:h-5 md:w-5" aria-hidden="true" />
                       </span>
                       <span>
-                        <span className="block text-sm font-semibold md:text-base">Watch how selling with us works</span>
-                        <span className="mt-0.5 block text-[10px] uppercase tracking-[0.2em] text-foreground/55">Play the 2-minute film</span>
+                        <span className="block text-sm font-semibold md:text-base"><span className="sm:hidden">Play our 2-minute film</span><span className="hidden sm:inline">Watch how selling with us works</span></span>
+                        <span className="mt-0.5 hidden text-[10px] uppercase tracking-[0.2em] text-foreground/55 sm:block">Play the 2-minute film</span>
                       </span>
                     </span>
                   </button>
