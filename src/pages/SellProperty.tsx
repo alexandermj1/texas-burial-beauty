@@ -229,6 +229,7 @@ const SellProperty = () => {
         </div>
       </section>
 
+      <SellerVsl />
 
       {/* Mobile: explain our work before showing the property sheet and package choices. */}
       <div className="flex flex-col">
@@ -244,23 +245,6 @@ const SellProperty = () => {
           <SellerBrokerValue />
         </div>
       </div>
-
-      {/* Seller Journey Video */}
-
-      <section className="py-16 bg-[hsl(var(--sand-light))] border-t border-foreground/10">
-        <div className="container mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-            <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3">The Seller Journey</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground tracking-tight">See what happens <span className="italic text-primary">behind the scenes.</span></h2>
-            <p className="text-foreground/70 mt-4 max-w-lg mx-auto">From your first call to final payment — watch the entire process we handle on your behalf.</p>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="w-full rounded-2xl overflow-hidden shadow-hover aspect-video">
-            <video className="w-full h-full object-cover" autoPlay loop muted playsInline poster="">
-              <source src="/videos/seller-journey.mp4" type="video/mp4" />
-            </video>
-          </motion.div>
-        </div>
-      </section>
 
       {/* ============================================
           WHY SELLERS CHOOSE US — editorial index, matches palette
