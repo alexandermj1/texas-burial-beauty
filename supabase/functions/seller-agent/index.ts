@@ -1485,7 +1485,7 @@ Deno.serve(async (req) => {
           if (JSON.stringify(answers.v2 ?? null) !== JSON.stringify(act.payload?.before_tree ?? null)) throw new Error("The family tree changed since the AI proposed this. Re-run the AI.");
           const history = Array.isArray(answers.treeEdits) ? answers.treeEdits.slice(-9) : [];
           const next = { ...answers, v2: v.tree, treeEdits: [...history, { at: now, by: `AI agent (approved by ${user.name})`, reason: act.reason ?? null, before: answers.v2 ?? null }] };
-          const { data: savedTree, error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id).eq("ownership_answers", answers).select("id").maybeSingle();
+          const { data: savedTree, error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id).eq("ownership_answers", JSON.stringify(answers)).select("id").maybeSingle();
           if (e) throw new Error(e.message);
           if (!savedTree) throw new Error("The family answers changed while this correction was being saved. No older answers were overwritten.");
           const synced = await syncPaperwork(db, paperworkHooks(url, user.name), sub.id, { fromTree: true });

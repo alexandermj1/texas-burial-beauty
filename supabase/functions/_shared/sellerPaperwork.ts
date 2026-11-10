@@ -66,7 +66,7 @@ async function saveAnswers(db: Db, bundle: Bundle, next: Answers, expected: Answ
     ? { ...p, email: bundle.sub.email } : p);
   const withEmails = { ...next, people };
   const { data, error: e } = await db.from("contact_submissions").update({ ownership_answers: withEmails, ownership_roster: people })
-    .eq("id", bundle.sub.id).eq("ownership_answers", expected).select("id").maybeSingle();
+    .eq("id", bundle.sub.id).eq("ownership_answers", JSON.stringify(expected)).select("id").maybeSingle();
   if (e) throw new Error(e.message);
   if (!data) throw new Error("The family answers changed while this step was running. Review the newer answers before trying again.");
   bundle.answers = withEmails;
