@@ -1531,9 +1531,19 @@ Deno.serve(async (req) => {
           } else {
             await aiNote(`Checked Locations being sold ("${verified}") against the deed, notes and emails before sending the document request — it is correct.`);
           }
-          clientOp = { kind: "send_request", greeting: String(act.payload?.fields?.greeting_name ?? "").slice(0, 120), note: String(act.email_body ?? "").slice(0, 4000) };
+          const sendingPayload = { ...(act.payload ?? {}), packet_send: { status: "sending", started_at: now } };
+          await db.from("ai_agent_actions").update({ payload: sendingPayload }).eq("id", act.id).eq("status", "running");
+          const sent = await sendPaperwork(db, paperworkHooks(url, user.name), sub.id, { actionId: act.id, greeting: String(act.payload?.fields?.greeting_name ?? "").slice(0, 120), note: String(act.email_body ?? "").slice(0, 4000) });
+          await db.from("ai_agent_actions").update({ payload: { ...(act.payload ?? {}), packet_send: { status: "sent", started_at: now, completed_at: new Date().toISOString(), email_id: sent.emailId } } }).eq("id", act.id).eq("status", "running");
+          await aiNote(`Emailed ${first(sub)} their document request: ${sent.items} outstanding item${sent.items === 1 ? "" : "s"}, ${sent.poas} prepared POA${sent.poas === 1 ? "" : "s"} and ${sent.docs} other prepared document${sent.docs === 1 ? "" : "s"}. Checklist and PDF attachments were verified before sending.`);
         } else if (act.action_type === "edit_document_request") {
-          await aiNote(`Document request change approved by ${user.name}, applied on the Documents panel for checking: ${act.note_body ?? act.payload?.instruction ?? ""}`);
+          const instruction = String(act.note_body ?? act.payload?.instruction ?? "").trim();
+          if (instruction.length < 3) throw new Error("No document-request instruction was supplied.");
+          const plan = await planDocumentPacket(db, apiKey, sub, instruction);
+          const applied = await applyPaperworkEdit(db, paperworkHooks(url, user.name), sub.id, plan);
+          const changes = [`removed ${applied.removed.length ? applied.removed.join(", ") : "nothing"}`, `added ${applied.added.length ? applied.added.join(", ") : "nothing"}`];
+          if (applied.plotChanged) changes.push("corrected Locations being sold and rebuilt unsigned prepared documents");
+          await aiNote(`Updated the document request: ${changes.join("; ")}. Re-synced ${applied.sync.items} checklist items and prepared the required PDFs. ${plan.reason ?? ""}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
