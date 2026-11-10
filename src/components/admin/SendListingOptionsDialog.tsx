@@ -36,7 +36,7 @@ const parseSpaces = (s: string | null | undefined): number => {
   return Number.isFinite(n) && n > 0 ? n : 1;
 };
 
-const TIERS = [
+export const TIERS = [
   { id: "starter", label: "Starter", price: 299, priceLabel: "$299 One-Time Upfront Fee", blurb: "List your property with a one-time upfront fee. (Please note: an early cancellation fee applies if withdrawn within 36 months)." },
   { id: "pro", label: "Pro", price: 399, priceLabel: "$399 One-Time Upfront Fee", blurb: "Your property is actively marketed and sent directly to local mortuaries and family counselors. Cancel anytime at no charge." },
   { id: "custom_plus", label: "Featured", price: 499, priceLabel: "$499 One-Time Upfront Fee", blurb: "Our most aggressive marketing package. This tier includes active digital advertising (Google Ads and Meta Ads) specifically targeted for your plots. Additionally, your property will be featured at the very top of the priority list we send to local mortuaries and counselors, ensuring it is seen before any other available properties at your cemetery. Cancel anytime at no charge." },
