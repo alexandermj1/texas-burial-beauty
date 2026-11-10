@@ -10,6 +10,7 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import ListingFeePromo from "@/components/ListingFeePromo";
 import SellerBrokerValue from "@/components/SellerBrokerValue";
+import SellerVsl from "@/components/SellerVsl";
 import { Button } from "@/components/ui/button";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
