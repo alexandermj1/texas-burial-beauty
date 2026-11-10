@@ -10,6 +10,7 @@ import Seo from "@/components/Seo";
 import SellerQuoteForm from "@/components/SellerQuoteForm";
 import ListingFeePromo from "@/components/ListingFeePromo";
 import SellerBrokerValue from "@/components/SellerBrokerValue";
+import SellerVsl from "@/components/SellerVsl";
 import { Button } from "@/components/ui/button";
 import hibiscusCoral from "@/assets/flowers/hibiscus-coral.png.asset.json";
 import bananaLeaf from "@/assets/flowers/banana-leaf-clean.png.asset.json";
@@ -19,6 +20,8 @@ import pinkBranch from "@/assets/flowers/pink-branch.png.asset.json";
 import valuationImg from "@/assets/sell/valuation-t.png";
 import keysImg from "@/assets/sell/keys-closing-t.png";
 import paymentImg from "@/assets/sell/payment-envelope-t.png";
+import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v2.mp4.asset.json";
+import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v2-cover.jpg.asset.json";
 
 const ownershipIntro = "Often people find that they are an owner, or part-owner, of a plot while going through the records of a recently deceased relative. Suddenly there’s the deed, and they realize there’s cemetery property and wonder what to do with it. If you don’t want to use that property, you may be looking to see if you can get some value from it. We help you work out the ownership, the cemetery’s requirements and your options for selling.";
 
@@ -54,6 +57,17 @@ const SellProperty = () => {
             provider: { "@id": "https://texascemeterybrokers.com/#organization" },
             areaServed: "Texas, United States",
             offers: { "@type": "Offer", description: "One-time listing fees: Starter $299, Pro $399, Featured $499" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            name: "How Texas Cemetery Brokers sells your cemetery property",
+            description: "A two-minute overview of our mortuary and cemetery coordination, advance paperwork, buyer inquiries and closing support for Texas cemetery property sellers.",
+            thumbnailUrl: `https://texascemeterybrokers.com${sellerVslCover.url}`,
+            contentUrl: `https://texascemeterybrokers.com${sellerVslVideo.url}`,
+            uploadDate: "2026-11-10",
+            duration: "PT2M4S",
+            inLanguage: "en-US",
           },
           {
             "@context": "https://schema.org",
@@ -228,6 +242,7 @@ const SellProperty = () => {
         </div>
       </section>
 
+      <SellerVsl />
 
       {/* Mobile: explain our work before showing the property sheet and package choices. */}
       <div className="flex flex-col">
@@ -243,23 +258,6 @@ const SellProperty = () => {
           <SellerBrokerValue />
         </div>
       </div>
-
-      {/* Seller Journey Video */}
-
-      <section className="py-16 bg-[hsl(var(--sand-light))] border-t border-foreground/10">
-        <div className="container mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-8">
-            <p className="text-[10px] tracking-[0.3em] uppercase font-bold text-accent mb-3">The Seller Journey</p>
-            <h2 className="font-display text-3xl md:text-5xl text-foreground tracking-tight">See what happens <span className="italic text-primary">behind the scenes.</span></h2>
-            <p className="text-foreground/70 mt-4 max-w-lg mx-auto">From your first call to final payment — watch the entire process we handle on your behalf.</p>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }} className="w-full rounded-2xl overflow-hidden shadow-hover aspect-video">
-            <video className="w-full h-full object-cover" autoPlay loop muted playsInline poster="">
-              <source src="/videos/seller-journey.mp4" type="video/mp4" />
-            </video>
-          </motion.div>
-        </div>
-      </section>
 
       {/* ============================================
           WHY SELLERS CHOOSE US — editorial index, matches palette
