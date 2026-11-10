@@ -253,6 +253,47 @@ export function outstandingRequirements(requirements: Requirement[], states: Rec
   });
 }
 
+export type PacketEditPlan = {
+  add_docs: { kind: "poa" | "joint_poa" | "affidavit_heirship" | "custom"; label: string; why: string; person: string; person2: string; needsNotary: boolean }[];
+  remove_keys: string[];
+  cemetery?: string;
+  plot_description?: string;
+  greeting_name?: string;
+  email_note?: string;
+  page_note?: string;
+  reason?: string;
+};
+
+/** Apply an approved instruction to the same answer fields as the staff Add/Remove controls. */
+export function applyPacketPlanToAnswers(current: Answers, requirements: Requirement[], plan: PacketEditPlan, fallbackGreeting = "") {
+  const next = { ...current } as Answers;
+  const removing = requirements.filter((r) => plan.remove_keys.includes(reqKey(r)));
+  if (removing.length) {
+    const extraIds = removing.filter((r) => r.code.startsWith("X-")).map((r) => r.code.slice(2));
+    next.extraDocs = (next.extraDocs ?? []).filter((d) => !extraIds.includes(d.id));
+    next.removedDocs = [...new Set([...(next.removedDocs ?? []), ...removing.filter((r) => !r.code.startsWith("X-")).map(reqKey)])];
+  }
+  const added: Requirement[] = [];
+  for (const d of plan.add_docs) {
+    const label = d.label || (d.kind === "poa" ? `Limited power of attorney to Texas Cemetery Brokers — ${d.person}`
+      : d.kind === "joint_poa" ? `Joint limited power of attorney — ${d.person} & ${d.person2}`
+        : d.kind === "affidavit_heirship" ? "Affidavit of Heirship" : d.label);
+    const doc = { id: crypto.randomUUID().slice(0, 8), kind: d.kind, label, why: d.why || undefined,
+      person: d.person || undefined, person2: d.person2 || undefined, needsNotary: d.kind === "custom" ? d.needsNotary : true };
+    next.extraDocs = [...(next.extraDocs ?? []), doc];
+    const code = d.kind === "affidavit_heirship" ? "D12" : d.kind === "custom" ? `X-${doc.id}` : "D21";
+    next.removedDocs = (next.removedDocs ?? []).filter((k) => k !== `${code}::${d.person}`);
+    added.push({ code, label, why: doc.why ?? "", personName: d.person || undefined,
+      jointNames: d.kind === "joint_poa" ? [d.person, d.person2] : undefined,
+      contractKind: d.kind === "affidavit_heirship" ? "affidavit_heirship" : ["poa", "joint_poa"].includes(d.kind) ? "poa" : undefined });
+  }
+  const newPlot = String(plan.plot_description ?? "").trim();
+  next.packetGreeting = plan.greeting_name || fallbackGreeting;
+  next.packetEmailNote = plan.email_note ?? "";
+  next.packetNote = plan.page_note ?? "";
+  return { next, removing, added, newPlot };
+}
+
 export function mailFor(r: Requirement, answers: Answers): { address: string } | undefined {
   const explicit = answers.mailOriginals?.[reqKey(r)];
   if (explicit) return explicit;
