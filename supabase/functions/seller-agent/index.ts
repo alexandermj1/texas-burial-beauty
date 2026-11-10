@@ -948,6 +948,41 @@ async function callInternal(url: string, name: string, body: unknown): Promise<R
   return parsed;
 }
 
+function paperworkHooks(url: string, actor: string) {
+  return {
+    actor: `AI agent (${actor})`,
+    siteUrl: SITE,
+    generate: (body: Record<string, unknown>) => callInternal(url, "generate-contract", body),
+    sendPacket: (body: Record<string, unknown>) => callInternal(url, "send-document-packet", body),
+  };
+}
+
+/** One planner for the staff instruction box and unattended approved AI edits. */
+async function planDocumentPacket(db: SupabaseClient, apiKey: string, sub: Sub, instruction: string, suppliedItems?: { key: string; label: string; person?: string | null }[]): Promise<PacketEditPlan & { reason: string }> {
+  let items = suppliedItems;
+  if (!items) {
+    const bundle = await loadPaperwork(db, sub.id);
+    items = visibleRequirements({ answers: bundle.answers, rules: bundle.rules, rows: bundle.rows, requestedAt: bundle.sub.documents_requested_at, cemetery: bundle.cemeteryName })
+      .map((r) => ({ key: reqKey(r), label: r.label, person: r.personName ?? null }));
+  }
+  const playbook = await loadPlaybook(db);
+  const ctx = await buildContext(db, sub);
+  const raw = await callModel(apiKey, `${PLAN_GUIDE}\n\n${PACKET_GUIDE.split("Return ONLY JSON")[0]}\n\nPLAYBOOK:\n${playbook.content}`,
+    `APPROVED CHANGE INSTRUCTION: ${instruction}\n\nCURRENT CHECKLIST (key | label | person):\n${items.map((i) => `${i.key} | ${i.label} | ${i.person ?? ""}`).join("\n")}\n\nCURRENT CEMETERY: ${sub.cemetery ?? "(empty)"}\nCURRENT LOCATIONS BEING SOLD: ${sub.plot_description ?? "(empty)"}\n\n${ctx.context}`, "low");
+  const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
+  const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+  const kinds = ["poa", "joint_poa", "affidavit_heirship", "custom"];
+  const keys = new Set(items.map((i) => i.key));
+  return {
+    add_docs: (Array.isArray(r.add_docs) ? r.add_docs : []).filter((d: any) => kinds.includes(d?.kind)).slice(0, 15).map((d: any) => ({
+      kind: d.kind, label: clip(d.label ?? "", 200), why: clip(d.why ?? "", 400), person: clip(d.person ?? "", 120), person2: clip(d.person2 ?? "", 120), needsNotary: !!d.needsNotary,
+    })).filter((d: any) => (d.kind !== "poa" || d.person) && (d.kind !== "joint_poa" || (d.person && d.person2)) && (d.kind !== "custom" || d.label)),
+    remove_keys: (Array.isArray(r.remove_keys) ? r.remove_keys : []).map(String).filter((k: string) => keys.has(k)),
+    cemetery: clip(r.cemetery ?? "", 200), plot_description: clip(r.plot_description ?? "", 300),
+    greeting_name: clip(r.greeting_name, 60), email_note: String(r.email_note ?? "").trim().slice(0, 1500), page_note: String(r.page_note ?? "").trim().slice(0, 1000), reason: clip(r.reason, 300),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
