@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import SellerVsl from "@/components/SellerVsl";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
@@ -232,6 +233,8 @@ const GuideSellingCemeteryPlot = () => (
         <p data-simon-review className="text-lg md:text-xl text-foreground/80 leading-relaxed mb-8 first-letter:font-display first-letter:text-6xl first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85] first-letter:text-primary">
           For most people coming into this, it’s brand new. It’s not a business or an industry that you experience multiple times. Unlike selling a car — you might buy and sell ten different cars over a lifetime — cemetery plots are probably a once-in-a-lifetime experience. Most people who come into the situation just don’t know how the system works, and neither should they. That’s understandable. So as brokers we often have to explain how the industry is structured: the role of a broker, the role of a cemetery, the role of a funeral director, and how all these different people can help.
         </p>
+
+        <SellerVsl embedded ctaHref="/sell#quote-form" />
 
         <section id="plans-change" className="scroll-mt-24 my-12 space-y-5 text-lg leading-relaxed">
           <h2 data-simon-review className="font-display text-3xl md:text-4xl">Plans change — why people sell</h2>

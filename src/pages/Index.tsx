@@ -90,10 +90,10 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
-      {/* On phones the "How selling works" story comes before the map */}
+      {isMobile && <SellerVsl ctaHref="/sell#quote-form" />}
       {isMobile && <SellerPromoAnimation />}
       <HomeCemeteryMap />
-      <SellerVsl ctaHref="/sell#quote-form" />
+      {!isMobile && <SellerVsl ctaHref="/sell#quote-form" />}
       {homepageSections.featuredShopfronts && <FeaturedPlotShopfronts />}
 
 

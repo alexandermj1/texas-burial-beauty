@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, MapPin, ShieldCheck, Receipt, Clock, File
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import SellerVsl from "@/components/SellerVsl";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -94,6 +95,7 @@ export default function GuideCemeteryPlotWorth() {
           <p>Before choosing a price, decide how much waiting you are comfortable with and what work you want to handle yourself. Read <Link to="/sell-cemetery-plot-texas">how to sell a cemetery plot in Texas</Link> for the process behind the number.</p>
         </Chapter>
         <PlotWorthLocalContext />
+        <SellerVsl embedded ctaHref="/sell#quote-form" />
         <Chapter id="ownership" icon={FileText} title="An inherited plot can have value before it is ready to sell">
           <p data-simon-review>Often an executor or family member is looking through a deceased relative’s paperwork, and suddenly there’s the deed. They realize there’s cemetery property and wonder what to do with it. If the descendants don’t want to use that property, they may be looking to see if they can get some value from it.</p>
           <p>If a deed owner has died, a calculator can still help you consider your options. It cannot establish who owns the rights or who must sign. Those questions need to be resolved before a sale can complete.</p>

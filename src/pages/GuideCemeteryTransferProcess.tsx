@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import SellerVsl from "@/components/SellerVsl";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
 import TransferIllustratedNavigation from "@/components/guides/TransferIllustratedNavigation";
@@ -317,6 +318,8 @@ const GuideCemeteryTransferProcess = () => (
           <p>A cemetery broker with real experience is often the better and cheaper first call when the family agrees and you simply want the transfer done. A good broker has dealt with your particular cemetery before, knows its forms and its quirks, and will frequently know its rules better than the statute does. They’ll tell you promptly whether your situation is routine or whether it needs a lawyer.</p>
           <p>Either way, the cost of asking is small and the cost of getting it wrong is not. Cemetery plots are one of those rare assets where the paperwork outlives everyone involved — which is exactly why it’s worth getting right the first time.</p>
         </Section>
+
+        <SellerVsl embedded ctaHref="/sell#quote-form" />
 
         <section className="my-10 md:my-14" aria-label="Estimate inherited cemetery plot resale value">
           <p className="mb-6 max-w-3xl text-lg leading-relaxed text-foreground/75">Considering selling unused inherited spaces? Get an indicative resale estimate below. Ownership and the cemetery’s transfer requirements still need to be confirmed before a sale.</p>
