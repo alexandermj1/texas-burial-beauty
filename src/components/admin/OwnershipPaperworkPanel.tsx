@@ -1,4 +1,5 @@
 import { requiresPhysicalOriginal, physicalOriginalLogged } from "../../../supabase/functions/_shared/originalDocumentReceipt";
+import { planChecklistSync } from "../../../supabase/functions/_shared/paperworkCore";
 import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1197,64 +1198,11 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
     setSaving(true);
     const cemeteryMoved = await reconcileCemeteryChange().catch(() => false);
     try {
-      // Read the live rows first: the unique index is on (submission, code,
-      // person), so inserting against a stale snapshot is what produced the
-      // duplicate-key error.
+      // The staff panel and Seller AI use this exact diff: preserve progress,
+      // adopt equivalent hand-added rows and never hard-delete checklist history.
       const live = await fetchLiveRows();
-      const existing = new Map(live.filter((r) => r.doc_code).map((r) => [keyOf(r.doc_code, r.person_name), r]));
-      // Hand-added rows that mean the same thing as a generated requirement are
-      // adopted rather than duplicated (one "Photo ID — Carol", not two).
-      const adHocByFamily = new Map<string, DocRow>();
-      for (const r of live) {
-        if (!isAdHoc(r.doc_code)) continue;
-        const fk = familyKey(r.doc_code, r.person_name, r.label);
-        if (fk && !adHocByFamily.has(fk)) adHocByFamily.set(fk, r);
-      }
-      const adopted = new Set<string>();
-
-      const seen = new Set<string>();
-      const inserts: Record<string, unknown>[] = [];
-      const updates: { id: string; patch: Record<string, unknown> }[] = [];
-
-      reqs.forEach((r, i) => {
-        const key = reqDbKey(r);
-        if (seen.has(key)) return; // never write the same item twice in one pass
-        seen.add(key);
-        const fk = familyKey(r.code, r.personName, r.label);
-        const twin = !existing.get(key) && fk ? adHocByFamily.get(fk) : undefined;
-        if (twin) adopted.add(twin.id);
-        const prev = existing.get(key) ?? twin;
-
-        const base = {
-          submission_id: submissionId,
-          doc_code: r.code,
-          person_name: r.personName ?? null,
-          person_role: r.personRole ?? null,
-          document_type: r.code,
-          label: r.label,
-          issued_by_us: !!r.issuedByUs,
-          needs_notary: !!r.needsNotary,
-          why: r.why,
-          statute_ref: r.statute ?? null,
-          sort_order: i,
-        };
-        if (prev) {
-          updates.push({ id: prev.id, patch: base });
-        } else {
-          inserts.push({
-            ...base,
-            status: "pending",
-            required_state: r.review ? "maybe" : "needed",
-            manual_override: null,
-          });
-        }
-      });
-
-      if (inserts.length) {
-        // A row that was removed earlier is still on the table, soft-deleted, and
-        // the unique item key would collide with it. Bring those back to life
-        // instead of inserting a second copy — that duplicate-key error is what
-        // brokers were seeing when they re-sent a request.
+      const plan = planChecklistSync(submissionId, reqs, live, cemeteryMoved);
+      if (plan.inserts.length) {
         const { data: buried } = await supabase.from("submission_documents")
           .select("id, doc_code, person_name")
           .eq("submission_id", submissionId).not("deleted_at", "is", null);
@@ -1263,88 +1211,44 @@ export default function OwnershipPaperworkPanel({ submissionId, cemetery, seller
             .map((b) => [keyOf(b.doc_code, b.person_name), b.id]),
         );
         const fresh: Record<string, unknown>[] = [];
-        for (const ins of inserts) {
+        for (const ins of plan.inserts) {
           const id = buriedByKey.get(keyOf(ins.doc_code as string, ins.person_name as string | null));
           if (id) {
             const { error } = await supabase.from("submission_documents")
               .update({ ...ins, deleted_at: null, deleted_by: null } as never).eq("id", id);
             if (error) throw error;
-          } else {
-            fresh.push(ins);
-          }
+          } else fresh.push(ins);
         }
         if (fresh.length) {
           const { error } = await supabase.from("submission_documents").insert(fresh as never);
           if (error) throw error;
         }
       }
+      for (const u of plan.updates) {
+        const { error } = await supabase.from("submission_documents").update(u.patch as never).eq("id", u.id);
+        if (error) throw error;
+      }
+      if (plan.staleIds.length) await softDelete("submission_documents", plan.staleIds);
 
-      for (const u of updates) {
-        const { error } = await supabase.from("submission_documents")
-          .update(u.patch as never).eq("id", u.id);
+      // Empty is meaningful: removing the last required POA retires every
+      // obsolete unsigned POA. Executed paper is never touched.
+      const { data: poaContracts } = await supabase.from("contracts")
+        .select("id, principal_key, signature_name, fill_data, signed_at, notarized_at, completed_at, status")
+        .eq("submission_id", submissionId).eq("kind", "poa").neq("status", "void");
+      for (const c of (poaContracts ?? []) as Record<string, unknown>[]) {
+        if (c.signed_at || c.notarized_at || c.completed_at || ["signed", "notarized", "completed"].includes(String(c.status))) continue;
+        const fill = (c.fill_data ?? {}) as Record<string, unknown>;
+        const names = [
+          ...(Array.isArray(fill.joint_names) ? fill.joint_names as string[] : []),
+          ...String(fill.seller_name ?? c.signature_name ?? c.principal_key ?? "").split(/\s*&\s*|\s+and\s+/i),
+        ].map((n) => personKey(n)).filter(Boolean);
+        if (names.length && names.some((n) => plan.wantedPoaPeople.has(n))) continue;
+        const { error } = await supabase.from("contracts").update({ status: "void" }).eq("id", c.id as string)
+          .is("signed_at", null).is("notarized_at", null).is("completed_at", null);
         if (error) throw error;
       }
 
-      // Remove auto-generated rows that the rules no longer call for and that
-      // nobody has touched (untouched = still pending, no file, no override).
-      const wanted = new Set(reqs.map(reqDbKey));
-      const wantedFamilies = new Set(
-        reqs.map((r) => familyKey(r.code, r.personName, r.label)).filter(Boolean) as string[],
-      );
-      const stale = live.filter((r) => {
-         const key = keyOf(r.doc_code, r.person_name);
-         if (adopted.has(r.id)) return false;
-         const supersededGeneralId = r.doc_code === "D2" && reqs.some((x) => x.code === "D2P");
-         const supersededPlaceholder = !!r.person_name
-           && /^(owner on the deed|each co-owner|each heir|executor|trustee|authorised officer|person acting under authority)$/i.test(r.person_name)
-           && reqs.some((x) => x.code === r.doc_code && x.personName && x.personName !== r.person_name);
-         // A hand-typed row that says the same thing as a generated requirement
-         // for the same person is a duplicate — drop it (never when a file is on it).
-         const fk = familyKey(r.doc_code, r.person_name, r.label);
-         const duplicateAdHoc = isAdHoc(r.doc_code) && !!fk && wantedFamilies.has(fk);
-         if (duplicateAdHoc) return !r.file_url && !(r.file_urls ?? []).length && r.status !== "received";
-         // The file moved to a different cemetery: that cemetery's own extra
-         // forms belong to the old one and go, even if they were marked by hand.
-         const oldCemeteryForm = cemeteryMoved && /^C-/.test(r.doc_code ?? "");
-         return !!r.doc_code && !wanted.has(key) && !r.file_url
-           && (oldCemeteryForm || supersededGeneralId || supersededPlaceholder || (!r.manual_override && (r.status === "pending" || !r.status)));
-       });
-
-      if (stale.length) {
-        await softDelete("submission_documents", stale.map((s) => s.id));
-      }
-
-      // A prepared POA lives in `contracts`, and the seller's page offers every
-      // non-void one of them. If the rules no longer call for that person's POA
-      // (they were marked deceased, say) the checklist row goes but the prepared
-      // contract used to stay — which is why sellers kept being asked to notarise
-      // a POA the broker could no longer even see. Void those too.
-      const wantedPoaPeople = new Set(
-        reqs.filter((r) => r.code === "D21")
-          .flatMap((r) => [r.personName, ...(r.jointNames ?? [])])
-          .filter(Boolean)
-          .map((n) => personKey(n as string)),
-      );
-      if (wantedPoaPeople.size) {
-        const { data: poaContracts } = await supabase.from("contracts")
-          .select("id, principal_key, signature_name, fill_data, signed_at, notarized_at, status")
-          .eq("submission_id", submissionId).eq("kind", "poa").neq("status", "void");
-        for (const c of (poaContracts ?? []) as Record<string, unknown>[]) {
-          if (c.signed_at || c.notarized_at) continue; // never touch executed paper
-          const names = String(
-            (c.fill_data as Record<string, unknown> | null)?.seller_name
-            ?? c.signature_name ?? c.principal_key ?? "",
-          ).split(/\s*&\s*|\s+and\s+/i).map((n) => personKey(n)).filter(Boolean);
-          if (!names.length) continue;
-          if (names.some((n) => wantedPoaPeople.has(n))) continue;
-          await supabase.from("contracts").update({ status: "void" }).eq("id", c.id as string);
-        }
-      }
-
-      // Tick off anything the seller has already sent us (the plot deed almost
-      // always arrives with the first message) so we never ask for it twice.
       const autoMatched = await autoMatchExistingFiles().catch(() => 0);
-
       if (!silent) {
         toast.success(autoMatched
           ? `Paperwork checklist updated — ${autoMatched} item${autoMatched === 1 ? "" : "s"} already on file marked received`

@@ -61,8 +61,8 @@ async function flagHuman(sub: any, task: string, reason = "The AI autopilot stop
 }
 
 /** Steps the autopilot may carry out itself — each finishes entirely on the server with the staff code.
- *  Anything else (Documents-panel steps, opening dialogs) is handed to a person with instructions. */
-export const AUTO_RUN = new Set(["change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "countersign_contract", "change_listing_option", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
+ *  Opening dialogs and genuinely discretionary staff tasks are still handed to a person. */
+export const AUTO_RUN = new Set(["change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "send_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "countersign_contract", "change_listing_option", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
 const STEP_LABEL = (t: string) => t.replace(/_/g, " ");
 
 async function execute(actionId: string) {
@@ -164,7 +164,7 @@ async function runRecordSteps(sub: any, list: { id: string; action_type: string 
   if (done.some((d) => d !== "add_note")) {
     const { data: mem } = await db.from("ai_record_memory").select("fingerprint").eq("submission_id", sub.id).maybeSingle();
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
-    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts, documents: after.documents } }).eq("submission_id", sub.id); }
+    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts, documents: after.documents, family_tree: after.family_tree } }).eq("submission_id", sub.id); }
   }
   return done;
 }

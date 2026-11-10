@@ -110,7 +110,7 @@ export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; ap
   set_stage: { label: "Move pipeline stage", Icon: PencilLine, approve: "Move stage" },
   resend_contract_link: { label: "Re-send contract signing link", Icon: Link2, approve: "Re-send link" },
   email_signed_copy: { label: "Email signed copy", Icon: FileSignature, approve: "Email copy" },
-  edit_document_request: { label: "Change document request", Icon: FileText, approve: "Apply on Documents panel" },
+  edit_document_request: { label: "Change document request", Icon: FileText, approve: "Apply & prepare PDFs" },
   edit_family_tree: { label: "Correct family tree", Icon: Users, approve: "Fix tree & resync checklist" },
   sync_checklist: { label: "Sync document checklist", Icon: FileText, approve: "Sync checklist" },
   send_document_request: { label: "Send document request", Icon: FileText, approve: "Send document request" },
@@ -256,7 +256,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {a.action_type === "send_quote" && <AiQuotePreview submissionId={a.submission_id} fields={a.payload?.fields} />}
       {["increase_quote_ten_percent", "update_quote_spaces", "send_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval emails the seller the branded quote with live listing-option buttons (same as Send seller pack); any text above then goes out as a separate follow-up email.</p>}
       {a.action_type === "resend_expired_quote" && <p className="text-xs text-muted-foreground">Approval re-sends the quote at the same figures with a fresh 10-day window; the text above appears as its intro.</p>}
-      {a.action_type === "edit_document_request" && <p className="text-xs text-muted-foreground">Approval opens the Documents panel and applies this change with the normal steps; check the request there, then preview and send.</p>}
+      {a.action_type === "edit_document_request" && <p className="text-xs text-muted-foreground">Approval applies the change, re-syncs the checklist and prepares required PDFs before reporting completion. Nothing is emailed unless the separate send step is approved.</p>}
       {a.action_type === "edit_family_tree" && <p className="text-xs text-muted-foreground">Approval saves the corrected family tree (the old version is kept), re-syncs the document checklist from it and rebuilds prepared forms. Nothing is emailed by this step.</p>}
       {a.action_type === "send_document_request" && <p className="text-xs text-muted-foreground">Approval syncs the checklist, waits for prepared forms, then emails the seller their document request. The text above appears as the personal note in that email.</p>}
       {a.action_type === "sync_checklist" && <p className="text-xs text-muted-foreground">Approval re-runs the document rules from the current family tree, like Sync checklist.</p>}

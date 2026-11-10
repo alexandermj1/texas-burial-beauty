@@ -25,6 +25,9 @@ import { researchProgress, decisionProgress } from "./reviewProgress.ts";
 import { createScanMeter, type ScanMeter } from "./scanUsage.ts";
 import { listModels } from "npm:@lovable.dev/ai-gateway@0.1.11";
 import { canExtendQuote, extendedDeadline, saveQuoteExtension } from "./quoteDeadline.ts";
+import { applyPaperworkEdit, loadPaperwork, prepareListingAgreement, preparePaperwork, sendPaperwork, syncPaperwork } from "../_shared/sellerPaperwork.ts";
+import { visibleRequirements, type PacketEditPlan } from "../_shared/paperworkCore.ts";
+import { reqKey } from "../_shared/ownershipRules.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -192,6 +195,7 @@ import { parityAllowed, pendingBefore } from "./parity.ts";
 import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQuoteFigures, contractLabel, TEXAS_STAGES } from "./adminActions.ts";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
+const SERVER_PAPERWORK_TYPES = new Set(["edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "send_document_request"]);
 const FIELD_LABEL: Record<string, string> = { name: "seller name", property_type: "property type", deed_owners_status: "owner status", ownership_type: "ownership type", state: "county / state", spaces: "spaces", plot_count: "number of plots", details: "additional details", purchase_info: "purchase information", phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
 const EDITABLE_FIELDS = ["name", "email", "phone", "section", "lawn", "space_numbers", "deed_owner_names", "deed_owners_status", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count", "spaces", "property_type", "ownership_type", "state", "details", "purchase_info"];
 // The quote stores the authorised sale price per space excluding one transfer fee.
@@ -258,7 +262,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - countersign_contract: countersign a listing agreement the seller has signed but we haven't countersigned yet, with the broker's saved signature; the seller is emailed the fully signed copy. Fields: fields = {contract_id}.
 - resend_contract_link: re-email the still-valid signing link for ANY unsigned contract (listing agreement, POA, affidavit, spousal consent). For an unsigned listing agreement, first correct its email to the current seller contact email if different, preserving every other agreement field and paid terms. Fields: fields = {contract_id}. Use this to fix a stale agreement email; it does not require staff.
 - email_signed_copy: email the seller a copy of a contract they already signed. Fields: fields = {contract_id}.
-- edit_document_request: change the document request the way staff do on the Documents panel — add/remove/rename items, add a POA or joint POA, change the name on a POA, add an affidavit, rebuild for different plots. Field: note = the exact instruction (e.g. "Add a limited POA for Mary Smith; remove the marriage certificate for John"). On approval the Documents panel opens with it applied through the normal rules engine so staff can check and send. Pair with reply_email only after it is applied — do not promise it is done.
+- edit_document_request: change the document request through the same rules and staff operations — add/remove/rename items, add a POA or joint POA, change the name on a POA, add an affidavit, rebuild for different plots. Field: note = the exact instruction (e.g. "Add a limited POA for Mary Smith; remove the marriage certificate for John"). Execution saves the answers, soft-deletes removed rows, retires only unsigned obsolete forms, re-syncs and prepares required PDFs before reporting completion. Pair with reply_email only after it is applied — do not promise it is done.
 - update_quote_spaces: quote corrections when the seller, the deed scan or the record shows the quote has the wrong spaces in the SAME section/lawn/garden — add/remove/swap spaces, or the count/space numbers were copied wrongly (e.g. quote for 1 space but the deed/record shows spaces 3 & 4). Spaces in the same area are valued at the same per-space price, so the total scales with the count. Fields: fields = {spaces (required, the new number of spaces as digits), space_numbers?, section?, lawn?}. On approval it saves the new spaces and SENDS the corrected quote pack (same price per space × new count); body = optional separate explanation email. Put a one-line summary in reason (e.g. "Corrects to spaces 3 & 4: 2 × $7,600 = $15,200"). May be combined with increase_quote_ten_percent (whose body then explains both); otherwise do not also write a reply_email.
  - increase_quote_ten_percent: when a seller asks for more / says the price is too low, an existing unaccepted quote is on file, and this action is ALLOWED NOW. body = the SEPARATE explanation email sent alongside the revised quote: we revisited their quote, raised it 10%, a higher price may take slightly longer to sell, and (if paired with update_quote_spaces) the corrected space count. The server calculates the exact 10% and checks the 70%-of-retail buyer ceiling. Staff approval SENDS the revised quote pack, then this explanation as its own email. Never propose for a plain decline, an accepted quote, or a demand for a specific figure beyond 10%. Never pair it with reply_email.
  - resend_expired_quote: ONLY when the seller's unaccepted quote has EXPIRED (ALLOWED NOW) and they want to go ahead, ask about it, or ask for more time. Same price per space, same spaces — nothing changes except a fresh 10-day window. Field: body = a SHORT friendly intro shown above the quote — one or two sentences, NO greeting and NO sign-off (the quote email adds both) (e.g. "Your earlier quote has expired, so we've renewed it at the same figures for another ten days."). On approval it re-sends the quote pack with a fresh 10-day window, with body shown as the intro. Never pair it with reply_email. Use this for expired quotes.
@@ -272,9 +276,9 @@ D1 deed photos/scans are copies only: the original must physically arrive before
 - change_cemetery: correct a blank/wrong cemetery using deed, seller emails or staff evidence. Fields = {cemetery, city?, evidence, create_if_missing?: "true", address?}. Search our registry thoroughly, including Cemetery/Memorial Park variants and location, before choosing. The server resolves the whole registry and rejects ambiguity, city contradictions and possible duplicates. Only when genuinely missing, pass create_if_missing="true" with an evidenced city and source evidence; never invent prices, fees, sections or contacts. Execution preserves original wording/history, rebuilds unsigned prepared documents and leaves signed copies untouched before any same-review reply.
 - change_listing_option: ONLY correct an option to match a verified completed LIVE payment for that exact tier (not pending, test, refunded or another tier). A request to choose Featured is NOT payment: send the quote with its payment buttons instead, leaving the active tier unchanged. Set the listing option like the Starter/Pro/Featured/Set Your Own Price buttons. Fields: fields = {tier: one of ${LISTING_TIERS.join(" | ")}}. Only with a clear reason (the seller chose/asked for a different option, a staff note agreed it, or the record shows the wrong one) — quote it in reason. It does not take a payment or mark the quote accepted.
 - prepare_listing_agreement: prepare (generate & fill) the listing agreement PDF from the accepted quote WITHOUT emailing it. Agreements are normally created automatically after payment, so use this only when one is genuinely missing.
-- edit_family_tree: correct the family tree itself. The document request is generated by our software FROM the tree, so this is THE way to fix a wrong document request caused by the family: a misspelt name, a missing/extra relative (cousin, grandchild, sibling), wrong living/deceased, wrong spouse or will answer. Field: tree = the COMPLETE corrected FAMILY TREE JSON (same shape as FAMILY TREE below: keep every existing id, keep everything you are not changing exactly as it is, give new people a new short unique id; maps like spouse/will/poa/noKids are keyed by person id, signerSpouse/signerPoa/contacts by "first last" lowercase name key — rename those keys too when a name changes). On approval the tree is saved (previous version kept in history), the checklist re-syncs from the rules engine and prepared POAs/affidavits are rebuilt. Always prefer this over edit_document_request when the request is wrong because of the tree, so the tree and request never disagree. If you are NOT sure what the right answer is, do not guess: reply_email asking the family the specific question first.
+- edit_family_tree: correct the family tree itself. The document request is generated by our software FROM the tree, so this is THE way to fix a wrong document request caused by the family: a misspelt name, a missing/extra relative (cousin, grandchild, sibling), wrong living/deceased, wrong spouse or will answer. Field: tree = the COMPLETE corrected FAMILY TREE JSON (same shape as FAMILY TREE below: keep every existing id, keep everything you are not changing exactly as it is, give new people a new short unique id; maps like spouse/will/poa/noKids are keyed by person id, signerSpouse/signerPoa/contacts by "first last" lowercase name key — rename those keys too when a name changes). Execution saves the previous version, atomically re-syncs the checklist and prepares/rebuilds required POAs/affidavits before reporting completion. Always prefer this over edit_document_request when the request is wrong because of the tree, so the tree and request never disagree. If you are NOT sure what the right answer is, do not guess: reply_email asking the family the specific question first, then update the tree when their answer or a document makes it clear.
 - sync_checklist: re-run the rules engine and refresh the checklist from the current tree (like the Sync checklist button). Use when the checklist is out of date with the tree.
-- send_document_request: email the seller the document request (the same Review & send request email: their documents page, every outstanding item explained, prepared POAs/affidavits attached). Fields: fields = {greeting_name?: who to greet, plot_description (REQUIRED: the verified "Locations being sold" wording the request will show — the current record value if it is already right, otherwise your corrected wording), section?, lawn?, space_numbers?}. LOCATIONS BEING SOLD CHECK: the request, the seller's documents page and every prepared POA/affidavit print the record's plot_description. Before sending, compare it with the deed AND the staff notes AND the emails/forms: sellers often sell only one or some of the spaces on a deed (they told us by phone and staff left a note, or said so by email) — the wording must name exactly the spaces being sold, read clearly (e.g. "Lot 24, Spaces 3 & 4, Garden of Devotion"), and never list deed spaces they are keeping. If it is wrong or badly phrased put the corrected wording in plot_description; on approval it is saved everywhere, unsigned prepared documents are rebuilt and the checklist re-synced BEFORE the email goes. Quote your evidence in reason. If locations_being_sold_check says already verified and nothing since suggests a change, just pass the current wording; body = optional short personal note shown in that email (no greeting/sign-off). Only when the family tree is complete and you have checked it against the deed and the emails and are happy the resulting request is right (or after your edit_family_tree / edit_document_request in this same review fixes it). It also works to re-send an updated request. Do not also write a reply_email saying the same thing.
+- send_document_request: email the seller the document request (the same Review & send request email: their documents page, every outstanding item explained, prepared POAs/affidavits attached). Execution finishes the sync and PDF read-back before sending, and records the sent email before reporting completion. Fields: fields = {greeting_name?: who to greet, plot_description (REQUIRED: the verified "Locations being sold" wording the request will show — the current record value if it is already right, otherwise your corrected wording), section?, lawn?, space_numbers?}. LOCATIONS BEING SOLD CHECK: the request, the seller's documents page and every prepared POA/affidavit print the record's plot_description. Before sending, compare it with the deed AND the staff notes AND the emails/forms: sellers often sell only one or some of the spaces on a deed (they told us by phone and staff left a note, or said so by email) — the wording must name exactly the spaces being sold, read clearly (e.g. "Lot 24, Spaces 3 & 4, Garden of Devotion"), and never list deed spaces they are keeping. If it is wrong or badly phrased put the corrected wording in plot_description; on approval it is saved everywhere, unsigned prepared documents are rebuilt and the checklist re-synced BEFORE the email goes. Quote your evidence in reason. If locations_being_sold_check says already verified and nothing since suggests a change, just pass the current wording; body = optional short personal note shown in that email (no greeting/sign-off). Only when the family tree is complete and you have checked it against the deed and the emails and are happy the resulting request is right (or after your edit_family_tree / edit_document_request in this same review fixes it). It also works to re-send an updated request. Do not also write a reply_email saying the same thing.
 VERIFIED RESEARCH: before you decide, a research pass read the whole file with tools (every email, payments, quote history, checklist and the actual files, contracts, activity, cemetery data). Trust it over guesses, fix the MISTAKES it found with the right actions, and close OPEN PROMISES. Do the checking yourself — never ask staff to "check" something the research already answered.
 Only use actions listed as ALLOWED NOW. Anything else will be discarded.`;
 
@@ -945,6 +949,41 @@ async function callInternal(url: string, name: string, body: unknown): Promise<R
   return parsed;
 }
 
+function paperworkHooks(url: string, actor: string) {
+  return {
+    actor: `AI agent (${actor})`,
+    siteUrl: SITE,
+    generate: (body: Record<string, unknown>) => callInternal(url, "generate-contract", body),
+    sendPacket: (body: Record<string, unknown>) => callInternal(url, "send-document-packet", body),
+  };
+}
+
+/** One planner for the staff instruction box and unattended approved AI edits. */
+async function planDocumentPacket(db: SupabaseClient, apiKey: string, sub: Sub, instruction: string, suppliedItems?: { key: string; label: string; person?: string | null }[]): Promise<PacketEditPlan & { reason: string }> {
+  let items = suppliedItems;
+  if (!items) {
+    const bundle = await loadPaperwork(db, sub.id);
+    items = visibleRequirements({ answers: bundle.answers, rules: bundle.rules, rows: bundle.rows, requestedAt: bundle.sub.documents_requested_at, cemetery: bundle.cemeteryName })
+      .map((r) => ({ key: reqKey(r), label: r.label, person: r.personName ?? null }));
+  }
+  const playbook = await loadPlaybook(db);
+  const ctx = await buildContext(db, sub);
+  const raw = await callModel(apiKey, `${PLAN_GUIDE}\n\n${PACKET_GUIDE.split("Return ONLY JSON")[0]}\n\nPLAYBOOK:\n${playbook.content}`,
+    `APPROVED CHANGE INSTRUCTION: ${instruction}\n\nCURRENT CHECKLIST (key | label | person):\n${items.map((i) => `${i.key} | ${i.label} | ${i.person ?? ""}`).join("\n")}\n\nCURRENT CEMETERY: ${sub.cemetery ?? "(empty)"}\nCURRENT LOCATIONS BEING SOLD: ${sub.plot_description ?? "(empty)"}\n\n${ctx.context}`, "low");
+  const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
+  const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+  const kinds = ["poa", "joint_poa", "affidavit_heirship", "custom"];
+  const keys = new Set(items.map((i) => i.key));
+  return {
+    add_docs: (Array.isArray(r.add_docs) ? r.add_docs : []).filter((d: any) => kinds.includes(d?.kind)).slice(0, 15).map((d: any) => ({
+      kind: d.kind, label: clip(d.label ?? "", 200), why: clip(d.why ?? "", 400), person: clip(d.person ?? "", 120), person2: clip(d.person2 ?? "", 120), needsNotary: !!d.needsNotary,
+    })).filter((d: any) => (d.kind !== "poa" || d.person) && (d.kind !== "joint_poa" || (d.person && d.person2)) && (d.kind !== "custom" || d.label)),
+    remove_keys: (Array.isArray(r.remove_keys) ? r.remove_keys : []).map(String).filter((k: string) => keys.has(k)),
+    cemetery: clip(r.cemetery ?? "", 200), plot_description: clip(r.plot_description ?? "", 300),
+    greeting_name: clip(r.greeting_name, 60), email_note: String(r.email_note ?? "").trim().slice(0, 1500), page_note: String(r.page_note ?? "").trim().slice(0, 1000), reason: clip(r.reason, 300),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -1040,24 +1079,7 @@ Deno.serve(async (req) => {
     if (body.action === "plan_packet") {
       const { data: sub } = await db.from("contact_submissions").select("*").eq("id", body.submission_id).maybeSingle();
       if (!sub || !isSeller(sub)) return json({ error: "Not a seller" }, 400);
-      const playbook = await loadPlaybook(db);
-      const ctx = await buildContext(db, sub);
-      const raw = await callModel(apiKey, `${PLAN_GUIDE}\n\n${PACKET_GUIDE.split("Return ONLY JSON")[0]}\n\nPLAYBOOK:\n${playbook.content}`,
-        `STAFF INSTRUCTION: ${body.instruction}\n\nCURRENT CHECKLIST (key | label | person):\n${body.items.map((i: any) => `${i.key} | ${i.label} | ${i.person ?? ""}`).join("\n")}\n\nCURRENT CEMETERY: ${sub.cemetery ?? "(empty)"}\nCURRENT LOCATIONS BEING SOLD: ${sub.plot_description ?? "(empty)"}\n\n${ctx.context}`, "low");
-      const t = raw.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "");
-      const r = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
-      const kinds = ["poa", "joint_poa", "affidavit_heirship", "custom"];
-      const keys = new Set(body.items.map((i: any) => i.key));
-      const out = {
-        add_docs: (Array.isArray(r.add_docs) ? r.add_docs : []).filter((d: any) => kinds.includes(d?.kind)).slice(0, 15).map((d: any) => ({
-          kind: d.kind, label: clip(d.label ?? "", 200), why: clip(d.why ?? "", 400), person: clip(d.person ?? "", 120), person2: clip(d.person2 ?? "", 120), needsNotary: !!d.needsNotary,
-        })).filter((d: any) => (d.kind !== "poa" || d.person) && (d.kind !== "joint_poa" || (d.person && d.person2)) && (d.kind !== "custom" || d.label)),
-        remove_keys: (Array.isArray(r.remove_keys) ? r.remove_keys : []).map(String).filter((k: string) => keys.has(k)),
-        cemetery: clip(r.cemetery ?? "", 200),
-        plot_description: clip(r.plot_description ?? "", 300),
-        greeting_name: clip(r.greeting_name, 60), email_note: String(r.email_note ?? "").trim().slice(0, 1500), page_note: String(r.page_note ?? "").trim().slice(0, 1000),
-        reason: clip(r.reason, 300),
-      };
+      const out = await planDocumentPacket(db, apiKey, sub, body.instruction, body.items);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `AI planned document request changes: ${body.instruction.slice(0, 200)}`, details: out });
       return json(out);
     }
@@ -1151,6 +1173,7 @@ Deno.serve(async (req) => {
     let error: string | null = null;
     let clientOp: Record<string, unknown> | null = null;
     let notedByAction = false;
+    let claimedServerPaperwork = false;
     // Emails sent by approved actions must not retire the other suggestions from the same review.
     const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
@@ -1187,6 +1210,12 @@ Deno.serve(async (req) => {
       const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
       if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
+      if (act.action_type === "send_document_request" && act.payload?.packet_send?.status === "sending") return json({ error: "A previous request send was interrupted. Check the seller's mailbox and sent email record before retrying; no automatic resend was made." }, 409);
+      if (SERVER_PAPERWORK_TYPES.has(act.action_type)) {
+        const { data: claimed, error: claimError } = await db.from("ai_agent_actions").update({ status: "running", error: null }).eq("id", act.id).eq("status", "proposed").select("id").maybeSingle();
+        if (claimError || !claimed) return json({ error: "This paperwork step is already running or was handled. No duplicate step was started." }, 409);
+        claimedServerPaperwork = true;
+      }
       const mail = { url, auth: req.headers.get("authorization")!, anon: mailApiKey(req), actor: `AI agent (approved by ${user.name})` };
       // Same as staff: the quote is only sent once the deed owners and plot wording are confirmed from the deed,
       // because the agreement and the start of the family tree are generated from them.
@@ -1456,15 +1485,19 @@ Deno.serve(async (req) => {
           if (JSON.stringify(answers.v2 ?? null) !== JSON.stringify(act.payload?.before_tree ?? null)) throw new Error("The family tree changed since the AI proposed this. Re-run the AI.");
           const history = Array.isArray(answers.treeEdits) ? answers.treeEdits.slice(-9) : [];
           const next = { ...answers, v2: v.tree, treeEdits: [...history, { at: now, by: `AI agent (approved by ${user.name})`, reason: act.reason ?? null, before: answers.v2 ?? null }] };
-          const { error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id);
+          const { data: savedTree, error: e } = await db.from("contact_submissions").update({ ownership_answers: next }).eq("id", sub.id).eq("ownership_answers", JSON.stringify(answers)).select("id").maybeSingle();
           if (e) throw new Error(e.message);
+          if (!savedTree) throw new Error("The family answers changed while this correction was being saved. No older answers were overwritten.");
+          const synced = await syncPaperwork(db, paperworkHooks(url, user.name), sub.id, { fromTree: true });
+          const prepared = await preparePaperwork(db, paperworkHooks(url, user.name), sub.id, { fromTree: true });
           const lines = treeDiff(answers.v2, v.tree).map((l) => `${l.label}: ${l.before} → ${l.after}`);
-          await aiNote(`Corrected the family tree${act.reason ? ` (${act.reason})` : ""}: ${lines.join("; ") || "details updated"}. The document checklist re-syncs from it.`);
-          clientOp = { kind: "sync", fromTree: true };
+          await aiNote(`Corrected the family tree${act.reason ? ` (${act.reason})` : ""}: ${lines.join("; ") || "details updated"}. Re-synced ${synced.items} checklist items and prepared ${prepared.prepared.length} required document${prepared.prepared.length === 1 ? "" : "s"}; the previous tree remains in history.`);
         } else if (act.action_type === "sync_checklist") {
-          clientOp = { kind: "sync" };
+          const synced = await syncPaperwork(db, paperworkHooks(url, user.name), sub.id);
+          await aiNote(`Re-synced the document checklist from the current family tree: ${synced.items} items, ${synced.inserted} added, ${synced.retired} retired, ${synced.autoMatched} already-on-file items marked received.`);
         } else if (act.action_type === "prepare_listing_agreement") {
-          clientOp = { kind: "prepare_listing_agreement" };
+          const prepared = await prepareListingAgreement(db, paperworkHooks(url, user.name), sub.id);
+          await aiNote(`Prepared the missing listing agreement PDF (${prepared.contractId}); it has not been emailed.`);
         } else if (act.action_type === "change_cemetery") {
           const f = (act.payload?.fields ?? {}) as Record<string, string>;
           const result = await applyCemeteryCorrection(db, sub, f, act.id, user.name, (body) => callInternal(url, "generate-contract", body));
@@ -1498,9 +1531,19 @@ Deno.serve(async (req) => {
           } else {
             await aiNote(`Checked Locations being sold ("${verified}") against the deed, notes and emails before sending the document request — it is correct.`);
           }
-          clientOp = { kind: "send_request", greeting: String(act.payload?.fields?.greeting_name ?? "").slice(0, 120), note: String(act.email_body ?? "").slice(0, 4000) };
+          const sendingPayload = { ...(act.payload ?? {}), packet_send: { status: "sending", started_at: now } };
+          await db.from("ai_agent_actions").update({ payload: sendingPayload }).eq("id", act.id).eq("status", "running");
+          const sent = await sendPaperwork(db, paperworkHooks(url, user.name), sub.id, { actionId: act.id, greeting: String(act.payload?.fields?.greeting_name ?? "").slice(0, 120), note: String(act.email_body ?? "").slice(0, 4000) });
+          await db.from("ai_agent_actions").update({ payload: { ...(act.payload ?? {}), packet_send: { status: "sent", started_at: now, completed_at: new Date().toISOString(), email_id: sent.emailId } } }).eq("id", act.id).eq("status", "running");
+          await aiNote(`Emailed ${first(sub)} their document request: ${sent.items} outstanding item${sent.items === 1 ? "" : "s"}, ${sent.poas} prepared POA${sent.poas === 1 ? "" : "s"} and ${sent.docs} other prepared document${sent.docs === 1 ? "" : "s"}. Checklist and PDF attachments were verified before sending.`);
         } else if (act.action_type === "edit_document_request") {
-          await aiNote(`Document request change approved by ${user.name}, applied on the Documents panel for checking: ${act.note_body ?? act.payload?.instruction ?? ""}`);
+          const instruction = String(act.note_body ?? act.payload?.instruction ?? "").trim();
+          if (instruction.length < 3) throw new Error("No document-request instruction was supplied.");
+          const plan = await planDocumentPacket(db, apiKey, sub, instruction);
+          const applied = await applyPaperworkEdit(db, paperworkHooks(url, user.name), sub.id, plan);
+          const changes = [`removed ${applied.removed.length ? applied.removed.join(", ") : "nothing"}`, `added ${applied.added.length ? applied.added.join(", ") : "nothing"}`];
+          if (applied.plotChanged) changes.push("corrected Locations being sold and rebuilt unsigned prepared documents");
+          await aiNote(`Updated the document request: ${changes.join("; ")}. Re-synced ${applied.sync.items} checklist items and prepared the required PDFs. ${plan.reason ?? ""}`);
         } else if (act.action_type === "open_quote_dialog" || act.action_type === "open_document_request") {
           await aiNote(`${act.action_type === "open_quote_dialog" ? "Suggested sending the quote" : "Suggested sending/updating the document request"}; ${user.name} opened it to review and send.${act.note_body ? ` AI note: ${act.note_body}` : ""}`);
         }
@@ -1508,7 +1551,7 @@ Deno.serve(async (req) => {
     }
 
     await db.from("ai_agent_actions").update(error
-      ? { error }
+      ? { ...(claimedServerPaperwork ? { status: "proposed" } : {}), error }
       : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, decision_reason: body.reason || null, error: null }).eq("id", act.id);
     // Every approved AI step leaves a plain note on the file explaining what it did.
     if (!error && !notedByAction && !["reply_email", "add_note"].includes(act.action_type) && !clientOp) {
@@ -1525,7 +1568,6 @@ Deno.serve(async (req) => {
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    if (!error && act.action_type === "edit_document_request") clientOp = { kind: "instruction", instruction: act.note_body ?? act.payload?.instruction ?? "" };
     return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : (clientOp || act.action_type === "open_document_request") ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null, client_op: clientOp ? { ...clientOp, action_id: act.id } : null });
   } catch (e) {
     console.error("seller-agent error", e);
