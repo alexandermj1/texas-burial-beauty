@@ -2,6 +2,7 @@ import FeaturedPlotShopfronts from "@/components/FeaturedPlotShopfronts";
 import { homepageSections } from "@/config/homepageSections";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import SellerVsl from "@/components/SellerVsl";
 import AboutSeoSection from "@/components/AboutSeoSection";
 import { BuyerPromoAnimation, SellerPromoAnimation } from "@/components/PromoAnimation";
 import PriceComparison from "@/components/PriceComparison";
@@ -88,6 +89,7 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
+      <SellerVsl ctaHref="/sell#quote-form" />
 
       {/* On phones the "How selling works" story comes before the map */}
       {isMobile && <SellerPromoAnimation />}

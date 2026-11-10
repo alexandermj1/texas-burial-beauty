@@ -6,7 +6,11 @@ import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v2-cover.jpg.asset.json
 
 const videoTitle = "How Texas Cemetery Brokers sells your cemetery property";
 
-const SellerVsl = () => {
+interface SellerVslProps {
+  ctaHref?: string;
+}
+
+const SellerVsl = ({ ctaHref = "#quote-form" }: SellerVslProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -116,7 +120,7 @@ const SellerVsl = () => {
                   </li>
                 ))}
               </ul>
-              <a href="#quote-form" className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-self-end">
+              <a href={ctaHref} className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-self-end">
                 Start your free valuation <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
             </figcaption>
