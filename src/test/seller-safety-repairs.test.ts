@@ -22,6 +22,11 @@ it("never rewrites an agreement signed by either party", () => {
 it("document and listing record updates execute independently but never count as emails", () => {
   expect(SELLER_RECORD_ACTIONS.has("update_document_items")).toBe(true);
   expect(SELLER_RECORD_ACTIONS.has("change_listing_option")).toBe(true);
+  expect(SELLER_RECORD_ACTIONS.has("edit_family_tree")).toBe(true);
+  expect(SELLER_RECORD_ACTIONS.has("edit_document_request")).toBe(true);
+  expect(SELLER_RECORD_ACTIONS.has("sync_checklist")).toBe(true);
+  expect(SELLER_RECORD_ACTIONS.has("prepare_listing_agreement")).toBe(true);
+  expect(SELLER_EMAIL_ACTIONS.has("send_document_request")).toBe(true);
   expect(SELLER_EMAIL_ACTIONS.has("update_fields")).toBe(false);
   expect(SELLER_EMAIL_ACTIONS.has("reply_email")).toBe(true);
 });

@@ -164,7 +164,7 @@ async function runRecordSteps(sub: any, list: { id: string; action_type: string 
   if (done.some((d) => d !== "add_note")) {
     const { data: mem } = await db.from("ai_record_memory").select("fingerprint").eq("submission_id", sub.id).maybeSingle();
     const { data: fresh } = await db.from("contact_submissions").select("*").eq("id", sub.id).maybeSingle();
-    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts, documents: after.documents } }).eq("submission_id", sub.id); }
+    if (mem?.fingerprint) { const after = await recordFingerprint(db, fresh ?? sub); await db.from("ai_record_memory").update({ fingerprint: { ...mem.fingerprint, record: after.record, contracts: after.contracts, documents: after.documents, family_tree: after.family_tree } }).eq("submission_id", sub.id); }
   }
   return done;
 }
