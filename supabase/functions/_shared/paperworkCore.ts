@@ -1,7 +1,7 @@
 // Runtime-neutral document-request rules used by both the staff Documents panel
 // and Seller AI. No browser, React, Deno or database APIs belong in this file.
 import {
-  computeRequirements, mailsByDefault, reqKey,
+  computeRequirements, mailsByDefault, reqKey, ORIGINALS_MAIL_ADDRESS,
   type CemeteryDocRules, type OwnershipAnswers, type RequiredState, type Requirement,
 } from "./ownershipRules.ts";
 import { physicalOriginalLogged, requiresPhysicalOriginal } from "./originalDocumentReceipt.ts";
