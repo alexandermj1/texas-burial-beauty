@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ArrowRight, Plus } from "lucide-react";
 import MortuarySheetShowcase from "@/components/MortuarySheetShowcase";
@@ -43,6 +44,7 @@ const faqs = [
 ];
 
 const SellProperty = () => {
+  const isMobile = useIsMobile();
   return (
     <div className="min-h-screen bg-[hsl(var(--sand-light))] flex flex-col [&>footer]:mt-auto">
       <Seo
@@ -137,6 +139,8 @@ const SellProperty = () => {
                 <p className="mt-3 text-xs text-muted-foreground">No obligation. Your valuation is free.</p>
               </div>
             </div>
+
+            {isMobile && <div className="col-span-12"><SellerVsl embedded /></div>}
 
             {/* Standfirst — drop cap intro paragraph, narrow left column */}
             <div className="hidden md:block col-span-12 md:col-span-6 lg:col-span-5 lg:col-start-2">
@@ -242,7 +246,7 @@ const SellProperty = () => {
         </div>
       </section>
 
-      <SellerVsl />
+      {!isMobile && <SellerVsl />}
 
       {/* Mobile: explain our work before showing the property sheet and package choices. */}
       <div className="flex flex-col">

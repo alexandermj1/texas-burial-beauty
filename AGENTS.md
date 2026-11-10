@@ -39,3 +39,4 @@
 - Seller stage logic lives in _shared/sellerPipeline, re-exported by seller-agent/pipeline; shared attachment metadata feeds staff and quote-backlog checks — why: acknowledgements cannot hide unfinished quotes.
 - Human attention reuses flag_human payloads and record-ID sorting via _shared/humanAttention, gated by an owner release lock and boolean setting; resolution requires an outcome note — why: discretionary priorities without accidental activation or automatic reviews.
 - AI doc requests verify plot wording first (autopilot.plotVerified) — why: only spaces sold.
+- Reuse SellerVsl for seller films, with an embedded article variant and one mounted player per page — why: shared accessibility, media and playback stay consistent across mobile placements and guides.

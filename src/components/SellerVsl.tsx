@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Check, Clock3, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v2.mp4.asset.json";
 import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v2-cover.jpg.asset.json";
 
@@ -8,9 +10,10 @@ const videoTitle = "How Texas Cemetery Brokers sells your cemetery property";
 
 interface SellerVslProps {
   ctaHref?: string;
+  embedded?: boolean;
 }
 
-const SellerVsl = ({ ctaHref = "#quote-form" }: SellerVslProps) => {
+const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -29,25 +32,25 @@ const SellerVsl = ({ ctaHref = "#quote-form" }: SellerVslProps) => {
     <section
       id="seller-vsl"
       aria-labelledby="seller-vsl-title"
-      className="relative overflow-hidden border-y border-foreground/15 bg-[hsl(var(--warm-white))] py-14 md:py-24"
+      className={cn("relative overflow-hidden border-y border-foreground/15 bg-[hsl(var(--warm-white))] py-7 md:py-24", embedded && "bg-transparent md:py-10")}
     >
-      <div className="container mx-auto px-5 md:px-6">
+      <div className={cn("container mx-auto px-5 md:px-6", embedded && "w-full max-w-none px-0 md:px-0")}>
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 grid gap-6 md:mb-12 md:grid-cols-12 md:items-end">
+          <div className={cn("mb-5 grid gap-6 md:mb-12 md:grid-cols-12 md:items-end", embedded && "md:mb-7")}>
             <div className="md:col-span-8">
-              <div className="mb-5 flex items-center gap-4">
+              <div className="mb-3 flex items-center gap-4 md:mb-5">
                 <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-accent">Watch the film</span>
                 <span className="h-px w-12 bg-foreground/25" />
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-foreground/55">
                   <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> 2 minutes
                 </span>
               </div>
-              <h2 id="seller-vsl-title" className="max-w-4xl font-display text-4xl leading-[1.02] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+              <h2 id="seller-vsl-title" className={cn("max-w-4xl font-display text-3xl leading-tight text-foreground md:text-6xl lg:text-7xl", embedded && "md:text-4xl lg:text-4xl")}>
                 A listing isn’t a sale.
                 <span className="block italic text-primary">See how we work differently.</span>
               </h2>
             </div>
-            <p className="max-w-md text-base leading-relaxed text-foreground/70 md:col-span-4 md:justify-self-end">
+            <p className="hidden max-w-md text-base leading-relaxed text-foreground/70 md:block md:col-span-4 md:justify-self-end">
               From mortuary relationships and buyer inquiries to the documents prepared before a sale — see what we handle, and the few steps that remain yours.
             </p>
           </div>
@@ -79,11 +82,12 @@ const SellerVsl = ({ ctaHref = "#quote-form" }: SellerVslProps) => {
                 </video>
 
                 {!hasStarted && (
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={playVideo}
                     aria-label={`Play video: ${videoTitle}, 2 minutes 4 seconds`}
-                    className="group absolute inset-0 overflow-hidden text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-ring"
+                    className="group absolute inset-0 h-full w-full overflow-hidden rounded-none p-0 text-left whitespace-normal focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-ring"
                   >
                     <img
                       src={sellerVslCover.url}
@@ -102,7 +106,7 @@ const SellerVsl = ({ ctaHref = "#quote-form" }: SellerVslProps) => {
                         <span className="mt-0.5 hidden text-[10px] uppercase tracking-[0.2em] text-foreground/55 sm:block">Play the 2-minute film</span>
                       </span>
                     </span>
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
+import SellerVsl from "@/components/SellerVsl";
 import { Button } from "@/components/ui/button";
 import teamPhoto from "@/assets/team/tcb-plot-walkthrough-v2.jpg.asset.json";
 
@@ -53,6 +54,7 @@ export default function GuideCemeteryBroker() {
         <p data-simon-review className="mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground">A cemetery broker helps families buy and sell property within a cemetery, checks the ownership, finds the right buyer and coordinates the transfer. It is a different role from maintaining a cemetery or arranging a funeral.</p>
         <p className="mt-5 text-xs text-muted-foreground">Texas Cemetery Brokers · Based on Emma MacLaren’s brokerage commentary · November 2026</p>
       </header>
+      <SellerVsl embedded ctaHref="/sell#quote-form" />
       <figure className="mb-9"><img src={teamPhoto.url} alt="Texas Cemetery Brokers team member walking the cemetery grounds" width={1536} height={1024} className="aspect-[16/9] w-full rounded-lg object-cover sm:aspect-[5/2]" /><figcaption className="mt-3 text-xs text-muted-foreground">Understanding the location is part of the work, alongside the ownership and paperwork.</figcaption></figure>
       <nav aria-label="Guide chapters" className="mb-8 flex flex-wrap gap-x-6 gap-y-3 border-y border-border py-5 text-sm text-primary">{chapters.map((chapter) => <a className="underline underline-offset-4" key={chapter.id} href={`#${chapter.id}`}>{chapter.title}</a>)}</nav>
       <article>{chapters.map((chapter) => <section id={chapter.id} key={chapter.id} className="scroll-mt-28 border-b border-border py-8 md:py-10"><h2 data-simon-review className="mb-5 font-display text-3xl leading-tight text-foreground md:text-4xl">{chapter.title}</h2><div className="space-y-5 text-base leading-relaxed text-muted-foreground md:text-lg">{chapter.paragraphs.map((paragraph) => <p data-simon-review key={paragraph}>{paragraph}</p>)}</div></section>)}</article>
