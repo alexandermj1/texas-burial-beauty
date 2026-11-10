@@ -41,9 +41,31 @@ export function validateTreeEdit(current: unknown, proposed: unknown): { tree: J
   }
   if (!isUsableTree(next)) return { error: "Every deed holder needs a name and living/deceased" };
   const ids = new Set<string>();
+  const deedIds = new Set<string>((next.deed ?? []).map((p: Json) => clean(p.id)));
   for (const list of PEOPLE_LISTS) for (const p of next[list] ?? []) {
     if (ids.has(p.id)) return { error: `Duplicate person id ${p.id}` };
     ids.add(p.id);
+    for (const g of p.kids ?? []) {
+      if (ids.has(g.id)) return { error: `Duplicate person id ${g.id}` };
+      ids.add(g.id);
+    }
+    for (const parent of p.of ?? []) {
+      if (!deedIds.has(parent)) return { error: `${clean(p.n) || clean(p.id)} refers to a deed holder who is not in the tree` };
+    }
+  }
+  // Relationship maps must point at real people; signer-name maps intentionally
+  // use first/last name keys and are checked by the document rules instead.
+  for (const mapName of ["spouse", "will", "taker", "noKids", "noSibs", "noParents"]) {
+    const map = next[mapName];
+    if (map == null) continue;
+    if (typeof map !== "object" || Array.isArray(map)) return { error: `${mapName} must be keyed by person id` };
+    for (const id of Object.keys(map)) if (!deedIds.has(id)) return { error: `${mapName} refers to a deed holder who is not in the tree` };
+  }
+  for (const mapName of ["heirSpouse", "poa"]) {
+    const map = next[mapName];
+    if (map == null) continue;
+    if (typeof map !== "object" || Array.isArray(map)) return { error: `${mapName} must be keyed by person id` };
+    for (const id of Object.keys(map)) if (!ids.has(id)) return { error: `${mapName} refers to a person who is not in the tree` };
   }
   if (JSON.stringify(next) === JSON.stringify(cur)) return { error: "The proposed family tree is identical to the current one" };
   return { tree: next };

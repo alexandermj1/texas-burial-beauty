@@ -5,6 +5,8 @@ import {
   type ContractRow, type DocRow,
 } from "../../supabase/functions/_shared/paperworkCore";
 import type { Requirement } from "../../supabase/functions/_shared/ownershipRules";
+import { applyPacketPlanToAnswers } from "../../supabase/functions/_shared/paperworkCore";
+import { validateTreeEdit } from "../../supabase/functions/seller-agent/familyTree";
 
 const row = (patch: Partial<DocRow>): DocRow => ({
   id: "row-1", doc_code: "D1", person_name: null, label: "Certificate of ownership (plot deed)",
@@ -78,5 +80,32 @@ describe("seller paperwork parity", () => {
   it("uses the same family-tree engine for the standard living-owner request", () => {
     const codes = computedRequirements(answers).map((r) => r.code);
     expect(codes).toEqual(expect.arrayContaining(["D1", "D2P", "D21", "LA"]));
+  });
+
+  it("applies request additions and removals through answers rather than deleting history", () => {
+    const current = { ...answers, extraDocs: [{ id: "old", kind: "custom", label: "Old certificate" }] } as any;
+    const reqs = [requirement({ code: "X-old", label: "Old certificate" })];
+    const applied = applyPacketPlanToAnswers(current, reqs, {
+      remove_keys: ["X-old::"], add_docs: [{ kind: "custom", label: "Certified death certificate", why: "Needed for the deceased owner", person: "Alice Example", person2: "", needsNotary: false }],
+      greeting_name: "Alice", email_note: "We have updated the request.", page_note: "Please send the certificate.",
+    });
+    expect(applied.next.extraDocs).toHaveLength(1);
+    expect(applied.next.extraDocs[0].label).toBe("Certified death certificate");
+    expect(applied.next.packetEmailNote).toContain("updated");
+    expect(applied.removing.map((r) => r.label)).toEqual(["Old certificate"]);
+  });
+
+  it("rejects duplicate grandchild ids and broken family references", () => {
+    const current = { deed: [{ id: "a", n: "Alice Example", st: "living" }] };
+    expect(validateTreeEdit(current, { deed: current.deed, kids: [{ id: "k", n: "Kid Example", of: ["missing"] }] })).toHaveProperty("error");
+    expect(validateTreeEdit(current, { deed: current.deed, kids: [{ id: "k", n: "Kid Example", kids: [{ id: "k", n: "Duplicate Example" }] }] })).toHaveProperty("error");
+    expect(validateTreeEdit(current, { deed: current.deed, spouse: { missing: { has: "no" } } })).toHaveProperty("error");
+  });
+
+  it("preserves customer contact answers and accepts a supported tree correction", () => {
+    const current = { deed: [{ id: "a", n: "Alice Example", st: "living" }], contacts: { "alice example": { phone: "123" } }, submitted: true };
+    const result = validateTreeEdit(current, { deed: [{ id: "a", n: "Alice Example", st: "deceased" }] });
+    expect(result).toHaveProperty("tree");
+    if ("tree" in result) expect(result.tree.contacts).toEqual(current.contacts);
   });
 });
