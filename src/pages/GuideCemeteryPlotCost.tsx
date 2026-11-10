@@ -164,9 +164,9 @@ const GuideCemeteryPlotCost = () => (
       <div>
 
         <div className="min-w-0">
-      <section className="my-10 md:my-14"><PlotResaleCalculator /></section>
-
       <BuyerVsl embedded />
+
+      <section className="my-10 md:my-14"><PlotResaleCalculator /></section>
 
       <Section id="by-city" icon={MapPin} eyebrow="City by city" title="What actually moves the price">
         <p>
