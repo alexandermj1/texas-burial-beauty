@@ -89,6 +89,7 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
+      <SellerVsl ctaHref="/sell#quote-form" />
 
       {/* On phones the "How selling works" story comes before the map */}
       {isMobile && <SellerPromoAnimation />}

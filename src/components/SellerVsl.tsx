@@ -120,7 +120,7 @@ const SellerVsl = ({ ctaHref = "#quote-form" }: SellerVslProps) => {
                   </li>
                 ))}
               </ul>
-              <a href="#quote-form" className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-self-end">
+              <a href={ctaHref} className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline md:justify-self-end">
                 Start your free valuation <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </a>
             </figcaption>
