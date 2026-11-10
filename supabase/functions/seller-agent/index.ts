@@ -195,6 +195,7 @@ import { parityAllowed, pendingBefore } from "./parity.ts";
 import { researchRecord, sendQuotePack, resendEarlierEmail, stagePatch, allowedQuoteFigures, contractLabel, TEXAS_STAGES } from "./adminActions.ts";
 const FIX_FIELDS = ["plot_description", "section", "lawn", "space_numbers"];
 const DOC_STATES = ["needed", "received", "notarized", "not_needed", "issued"];
+const SERVER_PAPERWORK_TYPES = new Set(["edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "send_document_request"]);
 const FIELD_LABEL: Record<string, string> = { name: "seller name", property_type: "property type", deed_owners_status: "owner status", ownership_type: "ownership type", state: "county / state", spaces: "spaces", plot_count: "number of plots", details: "additional details", purchase_info: "purchase information", phone: "phone number", section: "section", lawn: "lawn/garden", space_numbers: "space numbers", deed_owner_names: "deed owner names", relationship_to_owner: "relationship to the owner", plot_description: "plot description", cemetery_city: "cemetery city" };
 const EDITABLE_FIELDS = ["name", "email", "phone", "section", "lawn", "space_numbers", "deed_owner_names", "deed_owners_status", "relationship_to_owner", "plot_description", "cemetery_city", "plot_count", "spaces", "property_type", "ownership_type", "state", "details", "purchase_info"];
 // The quote stores the authorised sale price per space excluding one transfer fee.
@@ -1172,6 +1173,7 @@ Deno.serve(async (req) => {
     let error: string | null = null;
     let clientOp: Record<string, unknown> | null = null;
     let notedByAction = false;
+    let claimedServerPaperwork = false;
     // Emails sent by approved actions must not retire the other suggestions from the same review.
     const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
@@ -1208,6 +1210,12 @@ Deno.serve(async (req) => {
       const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
       if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
+      if (act.action_type === "send_document_request" && act.payload?.packet_send?.status === "sending") return json({ error: "A previous request send was interrupted. Check the seller's mailbox and sent email record before retrying; no automatic resend was made." }, 409);
+      if (SERVER_PAPERWORK_TYPES.has(act.action_type)) {
+        const { data: claimed, error: claimError } = await db.from("ai_agent_actions").update({ status: "running", error: null }).eq("id", act.id).eq("status", "proposed").select("id").maybeSingle();
+        if (claimError || !claimed) return json({ error: "This paperwork step is already running or was handled. No duplicate step was started." }, 409);
+        claimedServerPaperwork = true;
+      }
       const mail = { url, auth: req.headers.get("authorization")!, anon: mailApiKey(req), actor: `AI agent (approved by ${user.name})` };
       // Same as staff: the quote is only sent once the deed owners and plot wording are confirmed from the deed,
       // because the agreement and the start of the family tree are generated from them.
@@ -1529,7 +1537,7 @@ Deno.serve(async (req) => {
     }
 
     await db.from("ai_agent_actions").update(error
-      ? { error }
+      ? { ...(claimedServerPaperwork ? { status: "proposed" } : {}), error }
       : { status: act.action_type === "flag_human" ? "acknowledged" : "executed", decided_by_name: user.name, decided_by_user_id: user.id ?? null, was_edited: (act.email_body ?? null) !== (act.original_email_body ?? null), decided_at: now, executed_at: now, decision_reason: body.reason || null, error: null }).eq("id", act.id);
     // Every approved AI step leaves a plain note on the file explaining what it did.
     if (!error && !notedByAction && !["reply_email", "add_note"].includes(act.action_type) && !clientOp) {
@@ -1546,7 +1554,6 @@ Deno.serve(async (req) => {
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);
       await db.from("customer_activity_log").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, actor_user_id: user.id, actor_name: user.name, action_type: "ai_agent_action", action_summary: `Approved AI ${act.action_type.replace(/_/g, " ")}`, details: { action_id: act.id, edited: act.email_body !== act.original_email_body } });
     }
-    if (!error && act.action_type === "edit_document_request") clientOp = { kind: "instruction", instruction: act.note_body ?? act.payload?.instruction ?? "" };
     return error ? json({ error }, 502) : json({ ok: true, open: act.action_type === "open_quote_dialog" ? "quote" : (clientOp || act.action_type === "open_document_request") ? "documents" : null, instruction: act.action_type === "edit_document_request" ? (act.note_body ?? act.payload?.instruction ?? null) : null, client_op: clientOp ? { ...clientOp, action_id: act.id } : null });
   } catch (e) {
     console.error("seller-agent error", e);
