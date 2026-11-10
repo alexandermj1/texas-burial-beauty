@@ -1,4 +1,5 @@
 import { requiresPhysicalOriginal, physicalOriginalLogged } from "../../../supabase/functions/_shared/originalDocumentReceipt";
+import { planChecklistSync } from "../../../supabase/functions/_shared/paperworkCore";
 import { fetchDeedSellingLocation } from "@/lib/deedSellingLocation";
 import { formatPlotDescription } from "@/lib/plotDescription";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
