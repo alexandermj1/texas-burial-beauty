@@ -8,6 +8,8 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import PreneedBlock from "@/components/PreneedBlock";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
+import BuyerVsl from "@/components/BuyerVsl";
+import { buyerVslJsonLd } from "@/data/buyerVsl";
 import { RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
 import { MotionConfig } from "framer-motion";
 import transferBotanical from "@/assets/transfer-guide-botanical.png";
@@ -129,7 +131,7 @@ const GuideCemeteryPlotCost = () => (
       description={COST_GUIDE_SEO.description}
       path={PATH}
       type="article"
-      jsonLd={jsonLd}
+      jsonLd={[...jsonLd, buyerVslJsonLd(PATH)]}
     />
     <Navbar forceScrolled />
 
@@ -162,6 +164,8 @@ const GuideCemeteryPlotCost = () => (
       <div>
 
         <div className="min-w-0">
+      <BuyerVsl embedded />
+
       <section className="my-10 md:my-14"><PlotResaleCalculator /></section>
 
       <Section id="by-city" icon={MapPin} eyebrow="City by city" title="What actually moves the price">
