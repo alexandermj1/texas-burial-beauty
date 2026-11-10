@@ -6,12 +6,14 @@ import { Link } from "react-router-dom";
 import starterImg from "@/assets/sell/starter-benefits-t.png";
 import proImg from "@/assets/sell/pro-benefits-t.png";
 import featuredImg from "@/assets/sell/featured-benefits-t.png";
-interface Tier {
+export interface Tier {
   num: string;
   name: string;
   img: string;
   now: string;
   regular: string;
+  competitor: string;
+  competitorSavings: string;
   tagline: string;
   desc: string;
   benefits: string[];
