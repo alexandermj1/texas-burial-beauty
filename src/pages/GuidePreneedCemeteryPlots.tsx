@@ -25,6 +25,8 @@ const TEAM_WALKTHROUGH = teamWalkthroughAsset.url;
 import { DiscountTable, FinancingGraphic, PriceAppreciationChart } from "@/components/guides/PreneedSavingsGraphics";
 import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
+import BuyerVsl from "@/components/BuyerVsl";
+import { buyerVslJsonLd } from "@/data/buyerVsl";
 import { EMAIL, jsonLd, reasons, priceFactors, myths, faqs, resources } from "./guide-preneed-data";
 
 const Ext = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -187,7 +189,7 @@ const GuidePreneedCemeteryPlots = () => {
       description="Cheap preneed cemetery plots in Texas — verified by-owner spaces at up to 50% off cemetery retail, sold-out sections sourced, in-person showings and 0% interest for 24 months."
       path="/preneed-cemetery-plots-texas"
       type="article"
-      jsonLd={[...jsonLd, guideGalleryJsonLd("https://texascemeterybrokers.com/preneed-cemetery-plots-texas", "Texas cemeteries where we place buyers")]}
+      jsonLd={[...jsonLd, buyerVslJsonLd("/preneed-cemetery-plots-texas"), guideGalleryJsonLd("https://texascemeterybrokers.com/preneed-cemetery-plots-texas", "Texas cemeteries where we place buyers")]}
     />
     <Navbar forceScrolled />
 
@@ -289,6 +291,8 @@ const GuidePreneedCemeteryPlots = () => {
             ))}
           </motion.div>
         </motion.div>
+
+        <BuyerVsl embedded />
 
         <nav aria-label="In this guide" className="mt-5">
           <p className="mb-3 text-[10px] uppercase text-muted-foreground">In this guide</p>

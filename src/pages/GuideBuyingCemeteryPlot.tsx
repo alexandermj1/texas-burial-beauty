@@ -8,6 +8,8 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import GuideCemeteryGallery, { guideGalleryJsonLd } from "@/components/guides/GuideCemeteryGallery";
 import PreneedBlock from "@/components/PreneedBlock";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
+import BuyerVsl from "@/components/BuyerVsl";
+import { buyerVslJsonLd } from "@/data/buyerVsl";
 import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 
@@ -155,7 +157,7 @@ const GuideBuyingCemeteryPlot = () => (
       description="Buy cemetery plots, niches & crypts across Texas for 30–50% below cemetery prices. Verified resale inventory, in-person showings & 24-month 0% pre-need financing."
       path={PATH}
       type="article"
-      jsonLd={jsonLd}
+      jsonLd={[...jsonLd, buyerVslJsonLd(PATH)]}
     />
     <Navbar forceScrolled />
 
@@ -219,6 +221,8 @@ const GuideBuyingCemeteryPlot = () => (
               Browse Available Plots <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+
+          <BuyerVsl embedded />
 
           <div className="pt-6 border-t border-border/50">
             <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-foreground/50 mb-3">In this guide</p>

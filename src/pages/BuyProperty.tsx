@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Seo from "@/components/Seo";
 import BuyerWizard from "@/components/BuyerWizard";
+import BuyerVsl from "@/components/BuyerVsl";
+import { buyerVslJsonLd } from "@/data/buyerVsl";
 import EmmaEditorialPassage from "@/components/guides/EmmaEditorialPassage";
 
 const BuyProperty = () => {
@@ -17,6 +19,7 @@ const BuyProperty = () => {
         description="Looking for burial plots for sale in Texas? Our free buyer concierge matches you with privately resold cemetery plots, niches and crypts in Dallas, Houston, Austin & beyond — typically 30–50% below cemetery prices."
         path="/buy"
         jsonLd={[
+          buyerVslJsonLd("/buy"),
           {
             "@context": "https://schema.org",
             "@type": "Service",
@@ -72,7 +75,8 @@ const BuyProperty = () => {
       </header>
 
       <main className="flex-1 min-h-0">
-        <div className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10">
+        <BuyerVsl ctaHref="#buyer-inquiry" />
+        <div id="buyer-inquiry" className="w-full max-w-screen-2xl mx-auto px-6 lg:px-10 scroll-mt-24 pt-8">
           <BuyerWizard />
         </div>
       </main>

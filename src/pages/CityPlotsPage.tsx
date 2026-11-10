@@ -8,6 +8,8 @@ import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import FeaturedDallasCemeteries from "@/components/FeaturedDallasCemeteries";
 import CemeteryTransferDirectory from "@/components/guides/CemeteryTransferDirectory";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
+import BuyerVsl from "@/components/BuyerVsl";
+import { buyerVslJsonLd } from "@/data/buyerVsl";
 import { emmaMetroNotes } from "@/data/emmaEditorial";
 
 import { getCityPage, CITY_PAGES } from "./city-page-data";
@@ -113,7 +115,7 @@ const CityPlotsPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
-      <Seo title={data.title} description={data.description} path={path} type="article" jsonLd={jsonLd} />
+      <Seo title={data.title} description={data.description} path={path} type="article" jsonLd={[...jsonLd, buyerVslJsonLd(path)]} />
       <Navbar forceScrolled />
 
       {/* HERO */}
@@ -268,6 +270,8 @@ const CityPlotsPage = () => {
         </div>
       </section>
       )}
+
+      <BuyerVsl key={data.slug} />
 
 
 
