@@ -219,7 +219,8 @@ async function markIssued(db: Db, submissionId: string, r: Requirement) {
   for (const row of rows ?? []) {
     const { data: full } = await db.from("submission_documents").select("id,person_name").eq("id", row.id).maybeSingle();
     if (keyOf(r.code, full?.person_name) !== wanted) continue;
-    await db.from("submission_documents").update({ manual_override: "issued", required_state: "issued", status: "pending" }).eq("id", row.id);
+    const { error: updateError } = await db.from("submission_documents").update({ manual_override: "issued", required_state: "issued", status: "pending" }).eq("id", row.id);
+    if (updateError) throw new Error(updateError.message);
   }
 }
 
@@ -256,7 +257,7 @@ export async function preparePaperwork(db: Db, hooks: Hooks, submissionId: strin
   return { prepared };
 }
 
-export async function buildPacket(db: Db, submissionId: string) {
+export async function buildPacket(db: Db, submissionId: string, siteUrl: string) {
   const bundle = await loadPaperwork(db, submissionId);
   const reqs = visibleRequirements({ answers: bundle.answers, rules: bundle.rules, rows: bundle.rows, requestedAt: bundle.sub.documents_requested_at, cemetery: bundle.cemeteryName });
   const states = documentStates(reqs, bundle.rows, bundle.contracts, bundle.answers);
@@ -268,7 +269,7 @@ export async function buildPacket(db: Db, submissionId: string) {
     if (!c.filled_pdf_path) throw new Error(`${r.label} has no PDF yet. Nothing was sent.`);
     if (poas.some((p) => p.path === c.filled_pdf_path)) continue;
     poas.push({ name: c.signature_name ?? (c.fill_data?.seller_name as string | undefined) ?? r.jointNames?.join(" & ") ?? r.personName ?? null,
-      url: c.sign_token ? `${hooksafeSite(bundle.sub)}/sign/${c.sign_token}` : null, path: c.filled_pdf_path });
+      url: c.sign_token ? `${siteUrl}/sign/${c.sign_token}` : null, path: c.filled_pdf_path });
   }
   const docs: { label: string; path: string }[] = [];
   for (const r of outstanding.filter((x) => x.contractKind && x.contractKind !== "poa")) {
@@ -285,19 +286,16 @@ export async function buildPacket(db: Db, submissionId: string) {
     poaMailTo: poaRequirements.length ? mailFor(poaRequirements[0], bundle.answers)?.address ?? null : ORIGINALS_MAIL_ADDRESS };
 }
 
-// The signing URL is replaced by the caller's configured public site in sendPaperwork.
-const hooksafeSite = (_sub: Record<string, any>) => "https://texascemeterybrokers.com";
-
 export async function sendPaperwork(db: Db, hooks: Hooks, submissionId: string, opts: { actionId: string; greeting?: string; note?: string }) {
   await syncPaperwork(db, hooks, submissionId);
   await preparePaperwork(db, hooks, submissionId);
-  const packet = await buildPacket(db, submissionId);
+  const packet = await buildPacket(db, submissionId, hooks.siteUrl);
   if (!packet.items.length) throw new Error("Nothing is outstanding on the checklist, so there is no request to send.");
   if (!packet.bundle.sub.email) throw new Error("This seller has no email address.");
   const greeting = String(opts.greeting ?? "").trim() || String(packet.bundle.answers.packetGreeting ?? "").trim() || firstName(packet.bundle.sub);
   const note = String(opts.note ?? "").trim();
   const result = await hooks.sendPacket({ submission_id: submissionId, items: packet.items,
-    packet_url: `${hooks.siteUrl}/documents?s=${submissionId}`, poas: packet.poas.map((p) => ({ ...p, url: p.url?.replace("https://texascemeterybrokers.com", hooks.siteUrl) ?? null })),
+    packet_url: `${hooks.siteUrl}/documents?s=${submissionId}`, poas: packet.poas,
     docs: packet.docs, poa_url: packet.poaUrl, poa_for: packet.poaFor, poa_mail_to: packet.poaMailTo,
     greeting_name: greeting, note, sent_by_ai: true, action_id: opts.actionId });
   const { data: verify, error: ve } = await db.from("contact_submissions").select("documents_requested_at").eq("id", submissionId).maybeSingle();
