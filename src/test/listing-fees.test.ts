@@ -10,6 +10,11 @@ describe("current listing fees", () => {
       ["starter",299], ["pro",399], ["custom_plus",499], ["set_your_price",799],
     ]);
   });
+  it("keeps the admin listing-options dialog on the same four fees", () => {
+    expect(ADMIN_TIERS.map(t => [t.id, t.price])).toEqual([
+      ["starter",299], ["pro",399], ["custom_plus",499], ["set_your_price",799],
+    ]);
+  });
   it("generates the correct paid buttons without changing seller commission", async () => {
     invoke.mockClear();
     const html = await buildListingOptionsBlock({ seller: {id:"test",name:"Test Seller",email:"test@example.test",cemetery:"Restland",section:null,property_type:null,spaces:"2"}, netPerPlot: 1000, plotCount: 2, transferFee: 100, environment: "sandbox" });
