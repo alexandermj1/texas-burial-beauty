@@ -37,7 +37,7 @@
 // Pure functions only.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CemeteryDocRules, PersonRole, Requirement } from "./ownershipRules";
+import type { CemeteryDocRules, PersonRole, Requirement } from "./ownershipRules.ts";
 
 type YesNo = string | undefined;
 

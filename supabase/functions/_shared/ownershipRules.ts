@@ -9,7 +9,7 @@
 // unit-tested and reused anywhere.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { hasFamilyTree, masterRequirements, type V2State } from "./plotInheritanceRules";
+import { hasFamilyTree, masterRequirements, type V2State } from "./plotInheritanceRules.ts";
 
 export type OwnerKind = "living" | "deceased" | "trust" | "org";
 
