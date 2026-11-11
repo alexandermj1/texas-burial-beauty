@@ -3,8 +3,8 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Check, Clock3, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v4.mp4.asset.json";
-import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v4-cover.jpg.asset.json";
+import sellerVslVideo from "@/assets/sell/tcb-seller-vsl-v5.mp4.asset.json";
+import sellerVslCover from "@/assets/sell/tcb-seller-vsl-v5-cover.jpg.asset.json";
 
 const videoTitle = "How Texas Cemetery Brokers sells your cemetery property";
 
