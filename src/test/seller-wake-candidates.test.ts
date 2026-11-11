@@ -22,3 +22,18 @@ describe("unanswered seller priority", () => {
     expect(sellerWakeCandidates([s], incoming("2026-11-06T12:00:00Z"), [], new Set([s.id]))).toEqual([s.id]);
   });
 });
+describe("quiet never-reviewed records", () => {
+  const now = Date.parse("2026-11-11T00:00:00Z");
+  it("skips a first review when the last contact was over 60 days ago", async () => {
+    const { sellerWakeCandidates } = await import("../../supabase/functions/_shared/sellerWakeCandidates");
+    const sellers = [{ id: "old", email: "a@x.com", created_at: "2026-08-01T00:00:00Z" }];
+    const mail = [{ matched_submission_id: "old", from_email: "info@texascemeterybrokers.com", to_email: "a@x.com", received_at: "2026-09-01T00:00:00Z" }];
+    expect(sellerWakeCandidates(sellers, mail, [], new Set(), now)).toEqual([]);
+  });
+  it("still gives a first review when contact was within 60 days", async () => {
+    const { sellerWakeCandidates } = await import("../../supabase/functions/_shared/sellerWakeCandidates");
+    const sellers = [{ id: "new", email: "b@x.com", created_at: "2026-08-01T00:00:00Z" }];
+    const mail = [{ matched_submission_id: "new", from_email: "info@texascemeterybrokers.com", to_email: "b@x.com", received_at: "2026-10-20T00:00:00Z" }];
+    expect(sellerWakeCandidates(sellers, mail, [], new Set(), now)).toEqual(["new"]);
+  });
+});

@@ -3,7 +3,9 @@ export const emailAddress = (raw: string | null | undefined) => (String(raw ?? "
 export const sellerMailOutgoing = (raw: string | null | undefined) => ["info@texascemeterybrokers.com", "texascemeterybrokers@gmail.com", "contracts@texascemeterybrokers.com"].includes(emailAddress(raw));
 type Seller = { id: string; email?: string; created_at: string; reply_dismissed_at?: string | null; ownership_answers?: any };
 type Mail = { matched_submission_id?: string | null; from_email?: string | null; to_email?: string | null; received_at: string };
-export function sellerWakeCandidates(sellers: Seller[], emails: Mail[], due: string[], known: Set<string>) {
+/** First-time reviews only wake records with seller-side activity in this window; unanswered mail and due check-backs always wake. */
+export const FIRST_REVIEW_QUIET_DAYS = 60;
+export function sellerWakeCandidates(sellers: Seller[], emails: Mail[], due: string[], known: Set<string>, now = Date.now()) {
   const byAddress = new Map<string, string[]>();
   const ids = new Set(sellers.map(s => s.id));
   for (const s of sellers) { const addr = emailAddress(s.email); if (addr) byAddress.set(addr, [...(byAddress.get(addr) ?? []), s.id]); }
@@ -22,5 +24,5 @@ export function sellerWakeCandidates(sellers: Seller[], emails: Mail[], due: str
     if (treeAt && (!mail || !sellerMailOutgoing(mail.from_email) || mail.received_at <= treeAt)) at = !at || treeAt > at ? treeAt : at;
     return at && (!s.reply_dismissed_at || at > s.reply_dismissed_at) ? [{ id: s.id, at }] : [];
   }).sort((a,b) => a.at.localeCompare(b.at));
-  return [...new Set([...unanswered.map(s => s.id), ...due, ...sellers.filter(s => !known.has(s.id)).map(s => s.id)])];
+  return [...new Set([...unanswered.map(s => s.id), ...due, ...sellers.filter(s => !known.has(s.id) && Date.parse(latest.get(s.id)?.received_at ?? s.created_at) >= now - FIRST_REVIEW_QUIET_DAYS * 86400_000).map(s => s.id)])];
 }
