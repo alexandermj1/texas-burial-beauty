@@ -40,3 +40,5 @@
 - Human attention reuses flag_human payloads and record-ID sorting via _shared/humanAttention, gated by an owner release lock and boolean setting; resolution requires an outcome note — why: discretionary priorities without accidental activation or automatic reviews.
 - AI doc requests verify plot wording first (autopilot.plotVerified) — why: only spaces sold.
 - Reuse SellerVsl for seller films, with an embedded article variant and one mounted player per page — why: shared accessibility, media and playback stay consistent across mobile placements and guides.
+
+- Logged-out seller file reads go through the seller-files function (per-folder only); storage has no public read rules on portal-uploads/customer-files — why: strangers must not enumerate customer documents.

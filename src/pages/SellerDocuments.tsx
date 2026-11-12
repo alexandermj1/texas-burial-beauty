@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { listSellerFiles } from "@/lib/sellerFiles";
 import { Button } from "@/components/ui/button";
 import DocumentWalkthrough from "@/components/DocumentWalkthrough";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
@@ -296,13 +297,10 @@ const PoaUpload = ({
   }, [phone, mobileUrl]);
 
   const refreshUploads = useCallback(async () => {
-    const { data } = await supabase.storage
-      .from("portal-uploads")
-      .list(submissionId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-    const mine = (data ?? []).filter((f) => f.name.startsWith(`${docKey}-`));
+    const mine = (await listSellerFiles("portal-uploads", submissionId, `${docKey}-`)) ?? [];
     if (!mine.length) { setUploads([]); return []; }
-    const paths = mine.map((f) => `${submissionId}/${f.name}`);
-    const { data: signed } = await supabase.storage.from("portal-uploads").createSignedUrls(paths, 3600);
+    const paths = mine.map((f) => f.path);
+    const signed = mine.map((f) => ({ signedUrl: f.url }));
     const next: Uploaded[] = mine.map((f, i) => ({
       name: f.name,
       path: paths[i],
@@ -484,13 +482,10 @@ const DocRow = ({
 
   /** Everything this seller has already sent for this item, with previews. */
   const refreshUploads = useCallback(async () => {
-    const { data } = await supabase.storage
-      .from("portal-uploads")
-      .list(submissionId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-    const mine = (data ?? []).filter((f) => f.name.startsWith(`${doc.id}-`));
+    const mine = (await listSellerFiles("portal-uploads", submissionId, `${doc.id}-`)) ?? [];
     if (!mine.length) { setUploads([]); return []; }
-    const paths = mine.map((f) => `${submissionId}/${f.name}`);
-    const { data: signed } = await supabase.storage.from("portal-uploads").createSignedUrls(paths, 3600);
+    const paths = mine.map((f) => f.path);
+    const signed = mine.map((f) => ({ signedUrl: f.url }));
     const next: Uploaded[] = mine.map((f, i) => ({
       name: f.name,
       path: paths[i],

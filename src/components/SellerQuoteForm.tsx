@@ -1,3 +1,4 @@
+import { listSellerFiles } from "@/lib/sellerFiles";
 import { reportLeadConversion } from "@/lib/adsConversions";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Check, Upload, Lock, X, FileText, User, MapPin, FileSignature, Paperclip } from "lucide-react";
@@ -126,10 +127,8 @@ const SellerQuoteForm = ({
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
-      const { data, error } = await supabase.storage
-        .from("customer-files")
-        .list(`public-intake/${intakeId}`, { limit: 50, sortBy: { column: "name", order: "asc" } });
-      if (cancelled || error || !data) return;
+      const data = await listSellerFiles("customer-files", `public-intake/${intakeId}`);
+      if (cancelled || !data) return;
       setFiles(prev => {
         const known = new Set(prev.map(f => f.path));
         const incoming = data
@@ -137,8 +136,8 @@ const SellerQuoteForm = ({
           .map(o => ({
             path: `public-intake/${intakeId}/${o.name}`,
             name: o.name.replace(/^\d{10,}-/, ""),
-            size: (o as any).metadata?.size ?? 0,
-            type: (o as any).metadata?.mimetype ?? "",
+            size: o.size,
+            type: "",
           }));
         return incoming.length ? [...prev, ...incoming] : prev;
       });

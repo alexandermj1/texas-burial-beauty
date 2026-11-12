@@ -16,6 +16,7 @@ import {
   Share2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { listSellerFiles, sellerFileUrl } from "@/lib/sellerFiles";
 
 interface DocRequirement {
   key: string;
@@ -79,21 +80,11 @@ export const DocumentUploadCard = ({
     setWaitingForPhone(true);
     let cancelled = false;
     const check = async () => {
-      const { data, error } = await supabase.storage
-        .from("portal-uploads")
-        .list(sessionId, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-      if (error || cancelled || !data) return;
-      const match = data.find((entry) => entry.name.startsWith(`${doc.key}-`));
+      const data = await listSellerFiles("portal-uploads", sessionId, `${doc.key}-`);
+      if (cancelled || !data) return;
+      const match = data[0];
       if (match) {
-        const path = `${sessionId}/${match.name}`;
-        const { data: signed } = await supabase.storage
-          .from("portal-uploads")
-          .createSignedUrl(path, 60 * 60);
-        onFile({
-          name: match.name,
-          size: (match.metadata as { size?: number } | null)?.size ?? 0,
-          url: signed?.signedUrl,
-        });
+        onFile({ name: match.name, size: match.size, url: match.url });
         setMode("idle");
         setWaitingForPhone(false);
       }
@@ -115,10 +106,8 @@ export const DocumentUploadCard = ({
         .from("portal-uploads")
         .upload(path, f, { cacheControl: "3600", upsert: false, contentType: f.type });
       if (error) throw error;
-      const { data: signed } = await supabase.storage
-        .from("portal-uploads")
-        .createSignedUrl(path, 60 * 60);
-      onFile({ name: f.name, size: f.size, url: signed?.signedUrl });
+      const url = await sellerFileUrl("portal-uploads", path);
+      onFile({ name: f.name, size: f.size, url });
     } catch (err) {
       // Fall back to just recording metadata so wizard progress isn't blocked.
       onFile({ name: f.name, size: f.size });

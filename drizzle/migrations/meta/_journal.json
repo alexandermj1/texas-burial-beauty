@@ -155,6 +155,13 @@
       "when": 1794235692473,
       "tag": "0021_daily_briefings",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794445350233,
+      "tag": "0022_lock_seller_upload_reads",
+      "breakpoints": true
     }
   ]
 }
