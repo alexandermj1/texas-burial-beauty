@@ -4,6 +4,7 @@
 // seller never receives two competing emails.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { isInternalCall } from '../_shared/internal-auth.ts';
+import { documentWalkthroughEmail, documentWalkthroughLink } from '../_shared/documentWalkthrough.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -81,7 +82,7 @@ Deno.serve(async (req) => {
     const cemLine = sub?.cemetery ? ` at ${esc(sub.cemetery)}` : '';
     const propertyLine = sub?.plot_description ? esc(sub.plot_description) : '';
 
-    // The email stays deliberately short: one button, nothing else. The list of
+    // The email includes the walkthrough preview and document-page button. The list of
     // documents, how to get each one, notary steps and the mailing address all
     // live on the seller's document page — never in the email itself.
     const subject = `The documents we need to complete your sale${sub?.cemetery ? ` — ${sub.cemetery}` : ''}`;
@@ -113,6 +114,7 @@ Deno.serve(async (req) => {
             secure page for you, with simple instructions for each one.
           </p>
           ${propertyLine ? `<p style="margin:0 0 22px;padding:12px 16px;background:#faf7f1;border-radius:8px;font-size:14px;color:#4a5568;"><strong style="color:#1f2a37;">Property:</strong> ${propertyLine}</p>` : ''}
+          ${documentWalkthroughEmail(packetUrl)}
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 22px;">
             <tr><td align="center" style="background:#1f2a37;border-radius:8px;">
               <a href="${esc(packetUrl)}" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:17px;">
@@ -236,7 +238,7 @@ Deno.serve(async (req) => {
 
     // Send through the info@ Gmail mailbox (same path as the quote email) so the
     // message lands in Gmail's Sent folder and can be verified there.
-    const plain = `Your document page: ${packetUrl}\n\nEverything we need is listed on that page.${attachments.length ? `\n\nWe've attached ${attachments.length} prepared document${attachments.length === 1 ? '' : 's'} — please complete any blank sections, sign (before a notary where indicated) and send back.` : ''}`;
+    const plain = `Your document page: ${packetUrl}\n\nWatch your document walkthrough (3 min 52 sec): ${documentWalkthroughLink(packetUrl)}\n\nEverything we need is listed on that page. Follow your personal checklist; not every film example applies.${attachments.length ? `\n\nWe've attached ${attachments.length} prepared document${attachments.length === 1 ? '' : 's'} — please complete any blank sections, sign (before a notary where indicated) and send back.` : ''}`;
     const gmailRes = await fetch(`${SUPABASE_URL}/functions/v1/gmail-action`, {
       method: 'POST',
       headers: {

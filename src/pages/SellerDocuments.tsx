@@ -8,6 +8,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import DocumentWalkthrough from "@/components/DocumentWalkthrough";
 import { DOC_GUIDE } from "@/lib/ownershipRules";
 import { openFileViewer } from "@/lib/fileViewer";
 import hibiscusLogo from "@/assets/flowers/hibiscus-coral.png.asset.json";
@@ -838,6 +839,7 @@ const SellerDocuments = () => {
           )}
           </div>
         </div>
+        <DocumentWalkthrough />
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] gap-8 xl:gap-12 items-start">
           {/* ---------------------------------------------------------------- */}
           {/* Left column — intro, context, and help (sticky on desktop)        */}
