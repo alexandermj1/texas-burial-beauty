@@ -3,8 +3,8 @@ export const DOCUMENT_WALKTHROUGH = {
   title: "Your cemetery property documents, explained",
   durationSeconds: 232,
   videoUrl: "https://www.texascemeterybrokers.com/__l5e/assets-v1/eeb165da-ceee-46c7-9821-917fd95f6611/tcb-documents-walkthrough-v2.mp4",
-  coverUrl: "https://www.texascemeterybrokers.com/__l5e/assets-v1/6b3048e2-3c19-47fe-8597-415712f2943c/tcb-documents-walkthrough-v2-cover.jpg",
-  coverAlt: "Texas Cemetery Brokers document film showing the family and ownership questionnaire and the words: The cemetery needs three things",
+  coverUrl: "https://www.texascemeterybrokers.com/__l5e/assets-v1/65efd7a2-93dd-47de-ada4-59813858d80e/tcb-documents-walkthrough-first-item-cover.jpg",
+  coverAlt: "Texas Cemetery Brokers document walkthrough showing a phone with your document checklist and the words: Start with the first item on your page",
 } as const;
 
 export function documentWalkthroughLink(packetUrl: string): string {

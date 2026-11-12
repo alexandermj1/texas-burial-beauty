@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import videoAsset from "@/assets/documents/tcb-documents-walkthrough-v2.mp4.asset.json";
-import coverAsset from "@/assets/documents/tcb-documents-walkthrough-v2-cover.jpg.asset.json";
+import coverAsset from "@/assets/documents/tcb-documents-walkthrough-first-item-cover.jpg.asset.json";
 import { DOCUMENT_WALKTHROUGH } from "../../supabase/functions/_shared/documentWalkthrough";
 
 export default function DocumentWalkthrough() {

@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Removed the document-page cemetery photo and selected the film’s “Start with the first item on your page” cover with updated alt text for pages and request/reminder emails; desktop/mobile playback and checklist verified, email-link test passed, email functions deployed, build clean. Page changes require publication.
 - [x] Add 3:52 document walkthrough to all current/new request pages and request/reminder emails; desktop/mobile playback and existing checklist verified, 12 tests pass, playbook v22 saved, Alexander AI TEST 2 email sent and read back with film cover/link. Publication requested; one live check still served the previous page, so rollout completion remains unconfirmed. Existing customer-file access warnings surfaced to owner.
 - [x] Keep the buyer film away from seller-focused pages; removed it and its video metadata from the mixed-purpose cost guide. Retain Buy, buying/preneed guides and four plots-for-sale metro pages only; homepage and seller film unchanged.
 - [x] Integrated the 1:46 buyer film before the Buy form, in the buying/preneed openings, before the cost calculator and immediately after all four metro introductions. Matching cover, descriptive alt text, accessible controls/summary, inquiry links and VideoObject metadata added; eight routes checked on desktop/mobile, Buy playback and inquiry anchor verified, three SEO tests pass. Supplied film has no audio track; publication remains owner-controlled.
