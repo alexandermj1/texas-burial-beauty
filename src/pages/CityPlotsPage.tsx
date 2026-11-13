@@ -1,3 +1,5 @@
+import DallasFilm from "@/components/DallasFilm";
+import { dallasFilmJsonLd } from "@/data/dallasFilm";
 import { useLocation, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, MapPin, Phone, Plus, ShieldCheck, Wallet, FileCheck2 } from "lucide-react";
@@ -115,7 +117,7 @@ const CityPlotsPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
-      <Seo title={data.title} description={data.description} path={path} type="article" jsonLd={[...jsonLd, buyerVslJsonLd(path)]} />
+      <Seo title={data.title} description={data.description} path={path} type="article" jsonLd={[...jsonLd, buyerVslJsonLd(path), ...(data.slug === "dallas" ? [dallasFilmJsonLd(path)] : [])]} />
       <Navbar forceScrolled />
 
       {/* HERO */}
@@ -271,6 +273,7 @@ const CityPlotsPage = () => {
       </section>
       )}
 
+      {data.slug === "dallas" && <DallasFilm ctaHref="#cemeteries" />}
       <BuyerVsl key={data.slug} />
 
 

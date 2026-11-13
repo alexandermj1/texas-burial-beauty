@@ -1,3 +1,4 @@
+import { useFilmTracking } from "@/hooks/useFilmTracking";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Check, Clock3, Play } from "lucide-react";
@@ -15,6 +16,7 @@ interface SellerVslProps {
 
 const SellerVsl = ({ ctaHref = "#quote-form", embedded = false }: SellerVslProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  useFilmTracking(videoRef, "seller");
   const [hasStarted, setHasStarted] = useState(false);
 
   const playVideo = async () => {

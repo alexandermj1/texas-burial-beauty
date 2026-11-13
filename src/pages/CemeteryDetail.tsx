@@ -1,3 +1,5 @@
+import DallasFilm from "@/components/DallasFilm";
+import { dallasFilmJsonLd } from "@/data/dallasFilm";
 import { useParams, useLocation, Link, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -247,7 +249,7 @@ const CemeteryDetail = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col [&>footer]:mt-auto">
-      <Seo title={title} description={description} path={`/cemeteries/${slugify(cemetery.name)}`} jsonLd={jsonLd} />
+      <Seo title={title} description={description} path={`/cemeteries/${slugify(cemetery.name)}`} jsonLd={cemetery.region === "Dallas–Fort Worth" ? [...jsonLd, dallasFilmJsonLd(`/cemeteries/${slugify(cemetery.name)}`)] : jsonLd} />
       <Navbar forceScrolled />
 
       {/* Hero — editorial split with integrated landscape backdrop */}
@@ -581,6 +583,8 @@ const CemeteryDetail = () => {
           <SellerQuoteForm compact defaultCemetery={cemetery.name} />
         </div>
       </section>
+
+      {cemetery.region === "Dallas–Fort Worth" && <DallasFilm />}
 
       {/* Why us — feature ribbon */}
       <section id="why" className="py-14 md:py-20 scroll-mt-32">

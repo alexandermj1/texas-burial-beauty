@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "events": {
+    "project.video_played": {
+      "event_schema_version": 1,
+      "description": "A visitor started playing one of the site films (seller, buyer, documents walkthrough, Dallas cemeteries).",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "film",
+          "page"
+        ],
+        "properties": {
+          "film": {
+            "type": "string"
+          },
+          "page": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "project.video_watched": {
+      "event_schema_version": 1,
+      "description": "A viewing of a site film ended (pause, finish or leaving the page), with seconds actually watched.",
+      "privacy": {
+        "contains_pii": false,
+        "purpose": "product_analytics"
+      },
+      "properties_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "film",
+          "page",
+          "seconds_watched",
+          "percent_watched",
+          "completed"
+        ],
+        "properties": {
+          "film": {
+            "type": "string"
+          },
+          "page": {
+            "type": "string"
+          },
+          "seconds_watched": {
+            "type": "number"
+          },
+          "percent_watched": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

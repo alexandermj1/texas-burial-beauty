@@ -1,3 +1,4 @@
+import { useFilmTracking } from "@/hooks/useFilmTracking";
 import { useRef, useState } from "react";
 import { ArrowUpRight, Check, Clock3, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ interface BuyerVslProps {
 
 const BuyerVsl = ({ embedded = false, ctaHref = "/buy#buyer-inquiry" }: BuyerVslProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  useFilmTracking(videoRef, "buyer");
   const [started, setStarted] = useState(false);
   const [failed, setFailed] = useState(false);
 

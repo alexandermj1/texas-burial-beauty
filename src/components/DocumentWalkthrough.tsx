@@ -1,3 +1,4 @@
+import { useFilmTracking } from "@/hooks/useFilmTracking";
 import { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { DOCUMENT_WALKTHROUGH } from "../../supabase/functions/_shared/documentW
 
 export default function DocumentWalkthrough() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  useFilmTracking(videoRef, "documents-walkthrough");
   const [started, setStarted] = useState(false);
   const [failed, setFailed] = useState(false);
   const play = async () => {

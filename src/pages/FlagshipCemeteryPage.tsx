@@ -1,3 +1,5 @@
+import DallasFilm from "@/components/DallasFilm";
+import { dallasFilmJsonLd } from "@/data/dallasFilm";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -248,7 +250,7 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
         title={cemetery.seo.title}
         description={cemetery.seo.description}
         path={path}
-        jsonLd={jsonLd}
+        jsonLd={[...jsonLd, dallasFilmJsonLd(path)]}
       />
       <Navbar forceScrolled />
 
@@ -563,6 +565,8 @@ const FlagshipCemeteryPage = ({ cemetery }: { cemetery: FlagshipCemetery }) => {
       {photoEssay && <CemeteryPhotoEssay essay={photoEssay} cemeteryName={cemetery.name} />}
 
 
+
+      <DallasFilm />
 
       {/* ============ MAP ============ */}
       <section id="map" className="py-12 md:py-16 scroll-mt-32">

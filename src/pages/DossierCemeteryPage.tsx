@@ -1,3 +1,5 @@
+import DallasFilm from "@/components/DallasFilm";
+import { dallasFilmJsonLd } from "@/data/dallasFilm";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -308,7 +310,7 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
       {/* Editorial ground: warm radial light, engraved hairline grid, paper grain, vignette */}
       <div aria-hidden className="dossier-ground" />
       <div aria-hidden className="dossier-vignette" />
-      <Seo title={cemetery.seo.title} description={cemetery.seo.description} path={path} jsonLd={jsonLd} />
+      <Seo title={cemetery.seo.title} description={cemetery.seo.description} path={path} jsonLd={cemetery.region === "Dallas–Fort Worth" ? [...jsonLd, dallasFilmJsonLd(path)] : jsonLd} />
       <Navbar forceScrolled dark />
 
 
@@ -651,6 +653,8 @@ const DossierCemeteryPage = ({ cemetery, hero, strip, photos = [] }: Props) => {
               </div>
             </div>
           </section>
+
+          {cemetery.region === "Dallas–Fort Worth" && <div className="px-6 md:px-10 pt-16"><DallasFilm embedded /></div>}
 
           {/* ---------- Photographs ---------- */}
           {photos.length > 0 && (
