@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import MetroCemeteryMap from "@/components/MetroCemeteryMap";
 import PreneedBlock from "@/components/PreneedBlock";
+import DallasFilm from "@/components/DallasFilm";
 import PlotResaleCalculator from "@/components/PlotResaleCalculator";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
 import { RESTLAND_STRIP } from "@/data/restlandDossierPhotos";
@@ -274,6 +275,8 @@ const GuideCemeteryPlotCost = () => (
           blurb="Search any cemetery on the map to open its profile. Pricing, sections and the current transfer fee are recorded on each one."
         />
       </div>
+
+      <div className="border-t border-border/60 pt-10 md:pt-14"><DallasFilm embedded /></div>
 
       <Section id="save" icon={Lightbulb} eyebrow="Practical steps" title="How families keep the total sensible">
         <p>

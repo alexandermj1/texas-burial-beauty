@@ -26,6 +26,7 @@ import { DiscountTable, FinancingGraphic, PriceAppreciationChart } from "@/compo
 import PreneedInquiryForm from "@/components/guides/PreneedInquiryForm";
 import GuideBuyerForm from "@/components/guides/GuideBuyerForm";
 import BuyerVsl from "@/components/BuyerVsl";
+import DallasFilm from "@/components/DallasFilm";
 import { buyerVslJsonLd } from "@/data/buyerVsl";
 import { EMAIL, jsonLd, reasons, priceFactors, myths, faqs, resources } from "./guide-preneed-data";
 
@@ -367,6 +368,9 @@ const GuidePreneedCemeteryPlots = () => {
             </Link>
           ))}
         </div>
+
+        {/* Dallas section — regional film */}
+        <div className="my-14"><DallasFilm embedded /></div>
 
         {/* Chapter 01 */}
         <section id="what-is-preneed" className="scroll-mt-24 mt-16">
