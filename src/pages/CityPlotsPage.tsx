@@ -273,7 +273,6 @@ const CityPlotsPage = () => {
       </section>
       )}
 
-      {data.slug === "dallas" && <DallasFilm ctaHref="#cemeteries" />}
       <BuyerVsl key={data.slug} />
 
 
@@ -328,6 +327,7 @@ const CityPlotsPage = () => {
 
         {/* Pricing */}
         {data.slug === "dallas" && <FeaturedDallasCemeteries />}
+        {data.slug === "dallas" && <div className="my-6"><DallasFilm embedded ctaHref="#cemeteries" /></div>}
 
         <Section id="pricing" eyebrow="What it costs" title={`Cemetery plot prices in ${data.city}`}>
           <p>
