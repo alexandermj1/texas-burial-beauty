@@ -25,10 +25,11 @@ type Props = {
   onOpenDocuments: () => void;
   onRefresh?: () => void;
   onScanCost?: (submissionId: string, usage: ScanUsage | null) => void;
+  canControl?: boolean;
 };
 
 /** The AI's workspace on one seller record — its status, pending suggestions, history and controls. */
-export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh, onScanCost }: Props) {
+export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh, onScanCost, canControl = false }: Props) {
   const { toast } = useToast();
   const [run, setRun] = useState<Run | null>(null);
   const [reviews, setReviews] = useState<Run[]>([]);
@@ -44,7 +45,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   const load = useCallback(async () => {
     const [{ data: r }, { data: a }, { data: ins }, { data: costs }] = await Promise.all([
       supabase.from("ai_agent_runs" as never).select("created_at,trigger,decision_model,scan_usage,status,stage_summary,next_step,needs_human,error").eq("submission_id", submissionId).is("deleted_at", null).order("created_at", { ascending: false }).limit(6),
-      supabase.from("ai_agent_actions" as never).select("*").eq("submission_id", submissionId).is("deleted_at", null).neq("status", "superseded").order("created_at", { ascending: false }).limit(30),
+      supabase.from("ai_agent_actions" as never).select("*").eq("submission_id", submissionId).is("deleted_at", null).eq("status", "proposed").order("created_at", { ascending: false }),
       supabase.from("customer_notes").select("body,author_name,created_at").eq("submission_id", submissionId).ilike("body", "Instruction for AI:%").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
       supabase.from("ai_agent_runs" as never).select("scan_usage").eq("submission_id", submissionId).is("deleted_at", null).not("scan_usage", "is", null).limit(1000),
     ]);
@@ -54,7 +55,8 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     const recent = (r ?? []) as unknown as Run[];
     setRun(recent[0] ?? null);
     setReviews(recent);
-    setActions((a ?? []) as unknown as AiAction[]);
+    const { data: past } = await supabase.from("ai_agent_actions").select("*").eq("submission_id", submissionId).is("deleted_at", null).not("status", "in", "(proposed,superseded)").order("created_at", { ascending: false }).limit(30);
+    setActions([...(a ?? []), ...(past ?? [])] as unknown as AiAction[]);
   }, [submissionId]);
 
   useEffect(() => { setPaused(!!pausedAt); load(); }, [submissionId, pausedAt, load]);
@@ -108,11 +110,13 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
   };
 
   const pending = orderSellerActions(actions.filter((a) => a.status === "proposed"));
+  const staffTasks = pending.filter(a => a.action_type === "flag_human");
+  const aiActions = pending.filter(a => a.action_type !== "flag_human");
   const history = actions.filter((a) => a.status !== "proposed");
   const reviewing = busy || !!run && ["running", "research_ready", "research_running", "decision_ready", "deciding"].includes(run.status) && Date.now() - Date.parse(run.created_at) < 10 * 60_000;
 
   return (
-    <section aria-label="AI Agent" className="rounded-2xl border border-indigo-500/40 bg-indigo-500/5 ring-1 ring-indigo-500/15 p-4 space-y-3">
+    <section id={`seller-ai-${submissionId}`} aria-label="Seller AI suggestions" className="border-y border-border py-4 space-y-4 scroll-mt-24">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="w-7 h-7 rounded-full bg-indigo-600 text-primary-foreground flex items-center justify-center"><Bot className="w-4 h-4" /></span>
@@ -120,7 +124,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
             <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">AI Agent</p>
             <p className="text-[11px] text-muted-foreground">
               {paused ? "Paused for this seller" : run ? `${reviewModelLabel(run.trigger, run.decision_model)} · Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
-              {pending.length ? ` · ${pending.length} waiting for approval` : ""}
+              {aiActions.length ? ` · ${aiActions.length} AI actions awaiting approval` : ""}{staffTasks.length ? ` · ${staffTasks.length} staff tasks outstanding` : ""}
             </p>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {run?.scan_usage?.equivalent != null && <AiScanCost usage={run.scan_usage} label="last run" />}
@@ -129,20 +133,17 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {canControl && <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Switch checked={paused} onCheckedChange={togglePause} /> Pause AI
-          </label>
+          </label>}
           <AiReviewButton onReview={chosen => review(chosen)} busy={reviewing} disabled={paused} />
         </div>
       </div>
 
       {run && run.status === "done" && (
-        <div className="rounded-xl bg-card/80 border border-indigo-500/20 p-3 text-sm space-y-1">
-          {run.stage_summary && <p className="text-foreground">{run.stage_summary}</p>}
-          {run.next_step && <p className="text-indigo-800 dark:text-indigo-200"><span className="font-medium">Next step:</span> {run.next_step}</p>}
-        </div>
+        <details className="text-sm text-muted-foreground"><summary className="cursor-pointer">AI review findings</summary><div className="mt-2 space-y-2">{run.stage_summary && <p>{run.stage_summary}</p>}{run.next_step && <p>Suggested next step: {run.next_step}</p>}</div></details>
       )}
-      <AutopilotStrip submissionId={submissionId} refreshKey={run?.created_at} />
+      <AutopilotStrip submissionId={submissionId} refreshKey={run?.created_at} canControl={canControl} />
       {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
       {reviewing && (progress ? <AiReviewProgress progress={progress} /> : <p role="status" className="text-sm text-muted-foreground">{run?.stage_summary || "Starting seller review"}</p>)}
       {reviews.length > 1 && <details className="border-t border-border pt-2">
@@ -158,9 +159,10 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         </ul>
       </details>}
 
-      <p className="text-[11px] text-muted-foreground">Approve the AI's suggestion, decline it and say why, or type an instruction below. Every decision is saved with your name.</p>
       {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI looks again when you press Review now, or by itself if autopilot is on.</p>}
-      {(() => { const own = visualOwners(pending); return pending.map((a) => (
+      {staffTasks.length > 0 && <div className="space-y-3"><h3 className="text-sm font-semibold text-foreground">Staff tasks — still outstanding ({staffTasks.length})</h3>{staffTasks.map(a => <AiActionCard key={a.id} action={a} compact hideVisuals onChanged={() => { load(); onRefresh?.(); }} />)}</div>}
+      {aiActions.length > 0 && <h3 className="text-sm font-semibold text-foreground">AI actions — ready for approval ({aiActions.length})</h3>}
+      {(() => { const own = visualOwners(aiActions); return aiActions.map((a) => (
         <AiActionCard key={a.id} action={a} prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
       )); })()}
@@ -184,7 +186,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       {history.length > 0 && (
         <div>
           <button onClick={() => setShowHistory((v) => !v)} className="text-xs text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1">
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showHistory ? "rotate-180" : ""}`} /> What the AI has done ({history.length})
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showHistory ? "rotate-180" : ""}`} /> Completed actions & decisions ({history.length})
           </button>
           {showHistory && (
             <ul className="mt-2 space-y-1.5">

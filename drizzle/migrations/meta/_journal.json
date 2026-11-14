@@ -162,6 +162,13 @@
       "when": 1794445350233,
       "tag": "0022_lock_seller_upload_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794683095871,
+      "tag": "0023_preserve_outstanding_staff_tasks",
+      "breakpoints": true
     }
   ]
 }

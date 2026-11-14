@@ -1762,7 +1762,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const sharedSellingLocation = (sharedLocationIsVerified ? sharedSavedLocation : sharedDeedLocation) || seller.plot_description || "Not provided";
 
     const headBlock = (<>
-            {humanQueueOn && <StaffTaskNotice entry={selectedAttention(humanTasks, selectedRaw?.id, selected.id)} />}
+            {humanQueueOn && <StaffTaskNotice entry={selectedAttention(humanTasks, selectedRaw?.id, selected.id)} submissionId={selected.id} />}
             {kind !== "buyer" && (() => {
               const fmtMoney = (value: unknown) => {
                 const amount = Number(value);
@@ -3290,6 +3290,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
               <div className="space-y-5">
                 {headBlock}
                 {aiOn && <AiRecordCard
+                  canControl={aiCanControl}
                   submissionId={selected.id}
                   onScanCost={receiveScanCost}
                   pausedAt={(selected as any).ai_paused_at ?? null}
@@ -3891,7 +3892,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           <Bot className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${quote ? "text-[hsl(var(--status-quote-fg))]" : "text-[hsl(var(--status-attention-fg))]"}`} />
                           <p className={`min-w-0 text-xs leading-snug ${quote ? "text-[hsl(var(--status-quote-fg))]" : "text-[hsl(var(--status-attention-fg))]"}`}>
                             <span className="font-semibold">Staff needed{quote ? " · Quote · low" : task.priority === "urgent" || task.priority === "high" ? ` · ${task.priority}` : ""}</span>
-                            <span className="block line-clamp-2 opacity-90">{attentionHeadline(task.task)}</span>
+                            <span className="block leading-relaxed opacity-90">{attentionHeadline(task.task, 180)}</span>
                           </p>
                         </div>
                       ) : null;

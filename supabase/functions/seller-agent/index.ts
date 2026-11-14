@@ -3,7 +3,7 @@ import { sellerDecisionJson } from "../_shared/sellerDecisionJson.ts";
 import { aiFetch } from "../_shared/aiRunLabel.ts";
 import { applyCemeteryCorrection, prepareCemeteryCorrection } from "./cemeteryCorrection.ts";
 import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
-import { HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, parseHumanAttention, humanAttentionNote, withHumanAttentionPolicy } from "../_shared/humanAttention.ts";
+import { humanTaskDecisionError, HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, parseHumanAttention, humanAttentionNote, withHumanAttentionPolicy } from "../_shared/humanAttention.ts";
 import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
 // Seller Agent — reviews one seller's whole record against the TCB Seller
 // Playbook and proposes the next step (reply, internal note, or hand to a
@@ -36,7 +36,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("run"), submission_id: z.string().uuid(), trigger: z.string().max(60).optional(), instruction: z.string().trim().max(2000).optional(), model: z.enum(SELLER_MODELS) }),
   z.object({ action: z.literal("continue_review"), run_id: z.string().uuid(), model: z.enum(SELLER_MODELS) }),
   z.object({ action: z.literal("sweep"), limit: z.number().int().min(1).max(25).optional(), model: z.enum(SELLER_MODELS) }),
-  z.object({ action: z.literal("execute"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
+  z.object({ action: z.literal("execute"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional(), staff_completed: z.boolean().optional() }),
   z.object({ action: z.literal("feedback"), action_id: z.string().uuid(), kind: z.enum(["comment", "outcome"]), comment: z.string().trim().max(2000).optional(), correct: z.boolean().optional(), went_live: z.boolean().optional() }),
   z.object({ action: z.literal("reject"), action_id: z.string().uuid(), reason: z.string().trim().max(2000).optional() }),
   z.object({ action: z.literal("prepare_packet"), submission_id: z.string().uuid(), items: z.array(z.object({ label: z.string().max(300), person: z.string().max(200).nullable().optional(), needsNotary: z.boolean().optional() })).max(40).optional() }),
@@ -63,8 +63,6 @@ const stripQuoted = (t: string) => t.replace(/\nOn .{5,160}wrote:[\s\S]*$/, "").
 import { isSellerRecord } from "../_shared/sellerKind.ts";
 const isSeller = (s: Sub) => isSellerRecord(s);
 
-const AI_HIDDEN_USER_IDS = new Set(["e07b4a4c-56d1-4b2f-bc27-7989314d008f", "fcb3b678-3ac9-4207-83fe-86fb7952ae41"]);
-
 async function staffUser(db: SupabaseClient, req: Request) {
   const auth = req.headers.get("authorization") ?? "";
   if (!auth.toLowerCase().startsWith("bearer ")) return null;
@@ -72,8 +70,6 @@ async function staffUser(db: SupabaseClient, req: Request) {
   if (!data.user) return null;
   const { data: role } = await db.from("user_roles").select("role").eq("user_id", data.user.id).in("role", ["admin", "staff"]).limit(1).maybeSingle();
   if (!role) return null;
-  // Staff who can't use AI suggestions yet (still see AI-made notes/emails).
-  if (AI_HIDDEN_USER_IDS.has(data.user.id)) return null;
   const { data: prof } = await db.from("profiles").select("full_name").eq("id", data.user.id).maybeSingle();
   return { id: data.user.id, name: prof?.full_name || data.user.email || "Staff" };
 }
@@ -842,8 +838,12 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
       confidence: d.confidence, needs_human: needsHuman, human_reason: d.human_reason,
     }).eq("id", run.id);
 
-    // Supersede older undecided proposals for this seller so the queue stays current.
-    await db.from("ai_agent_actions").update({ status: "superseded" }).eq("submission_id", sub.id).eq("status", "proposed");
+    // Refresh executable suggestions, never silently close outstanding human work.
+    await db.from("ai_agent_actions").update({ status: "superseded" }).eq("submission_id", sub.id).eq("status", "proposed").neq("action_type", "flag_human");
+    const { data: outstandingTasks, error: taskReadError } = await db.from("ai_agent_actions").select("payload").eq("submission_id", sub.id).eq("status", "proposed").eq("action_type", "flag_human").is("deleted_at", null);
+    if (taskReadError) throw new Error(taskReadError.message);
+    const existingTaskText = new Set((outstandingTasks ?? []).map(t => parseHumanAttention(t.payload?.human_attention)?.task.toLowerCase()));
+    d.actions = d.actions.filter(a => a.type !== "flag_human" || !existingTaskText.has(a.human_attention?.task.toLowerCase()));
 
     // Visual aids: resolve scan numbers to the stored file so the panel can show the actual document.
     const visuals = d.visuals.map((v: any) => v.kind === "scan" ? (scans.refs[v.scan - 1] ? { ...v, ...scans.refs[v.scan - 1], marks: /pdf/.test(scans.refs[v.scan - 1].mime_type ?? "") ? [] : v.marks } : null) : v).filter(Boolean);
@@ -1150,6 +1150,8 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
     if (act.status !== "proposed") return json({ error: `Action already ${act.status}` }, 409);
+    const taskDecisionError = humanTaskDecisionError(act.action_type, body.action, body.staff_completed === true, body.reason, !!user.id);
+    if (taskDecisionError) return json({ error: taskDecisionError }, 400);
 
     if (body.action === "reject") {
       const reason = (body as any).reason?.trim() || null;
@@ -1202,7 +1204,7 @@ Deno.serve(async (req) => {
       const attention = parseHumanAttention(act.payload.human_attention);
       if (!attention) return json({ error: "Human task details are incomplete; review the record again." }, 409);
       if (!body.reason?.trim()) return json({ error: "Explain the completed check or call before resolving this task." }, 400);
-      const { error: noteError } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `${user.name} resolved the human task: ${attention.task}\n${body.reason.trim()}`, author_name: `AI agent (reviewed by ${user.name})` });
+      const { error: noteError } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Instruction for AI: ${user.name} completed this staff task: ${attention.task}\nStaff findings: ${body.reason.trim()}\nUse these findings to continue the record. Do not claim any other outstanding staff task is complete.`, author_name: user.name, author_user_id: user.id });
       if (noteError) error = noteError.message;
       notedByAction = !noteError;
     } else if (act.action_type !== "flag_human") {
@@ -1559,10 +1561,14 @@ Deno.serve(async (req) => {
       const why = String(act.reason ?? act.note_body ?? "").trim().replace(/[.\s]+$/, "");
       await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Approved AI step (${what})${why ? `: ${why}` : ""}.`, author_name: `AI agent (approved by ${user.name})` });
     }
-    if (!error && openSiblings?.length) {
+    if (!error && act.action_type !== "flag_human" && openSiblings?.length) {
       await db.from("ai_agent_actions").update({ status: "proposed" }).in("id", openSiblings.map((x: any) => x.id)).eq("status", "superseded");
     }
     if (!error) {
+      if (act.action_type === "flag_human") {
+        const { error: memoryError } = await db.from("ai_record_memory").update({ due_at: now, waiting_for: "Staff findings received; AI follow-up due" }).eq("submission_id", sub.id);
+        if (memoryError) return json({ error: "Staff task completed and findings saved, but follow-up scheduling failed: " + memoryError.message }, 500);
+      }
       // Autopilot runs have no staff author — only human approvals are recorded as decision feedback.
       const { error: feedbackError } = user.id ? await db.from("ai_agent_feedback").insert({ action_id: act.id, submission_id: sub.id, kind: "accepted", comment: body.reason || null, author_user_id: user.id, author_name: user.name }) : { error: null };
       if (feedbackError) return json({ error: "Action completed, but its decision feedback could not be saved: " + feedbackError.message }, 500);

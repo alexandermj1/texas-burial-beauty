@@ -28,6 +28,15 @@ export function parseHumanAttention(value: unknown): HumanAttention | null {
 export const humanAttentionNote = (a: HumanAttention) =>
   `Needs a person (${a.priority} priority): ${a.task}\n${a.reason}\nWhere to check: ${a.evidence}`;
 
+/** Human completion is separate from approval of the AI's executable work. */
+export function humanTaskDecisionError(actionType: string, decision: string, completed: boolean, reason: string | undefined, staff: boolean): string | null {
+  if (actionType !== "flag_human") return null;
+  if (!staff) return "Only a staff member can close a human task.";
+  if (!reason?.trim()) return decision === "reject" ? "Explain why this staff task is not needed." : "Record what you did and found before completing this staff task.";
+  if (decision === "execute" && !completed) return "Confirm that you completed the staff task; approving AI work does not complete it.";
+  return null;
+}
+
 export type AttentionAction = { id: string; submission_id: string; action_type: string; status: string; created_at: string; deleted_at?: string | null; payload?: { human_attention?: unknown } | null };
 export type AttentionEntry = { actionId: string; createdAt: string; attention: HumanAttention };
 /** Preserve the clicked task even when documents come from a stage-leading duplicate. */

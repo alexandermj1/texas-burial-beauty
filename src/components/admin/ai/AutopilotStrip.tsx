@@ -9,7 +9,7 @@ type Memory = { summary: string; waiting_for: string | null; next_if_silent: str
 type Held = { id: string; send_at: string };
 
 /** Per-seller autopilot switch plus the AI's own file note and its next check-back. */
-export default function AutopilotStrip({ submissionId, refreshKey }: { submissionId: string; refreshKey?: unknown }) {
+export default function AutopilotStrip({ submissionId, refreshKey, canControl = false }: { submissionId: string; refreshKey?: unknown; canControl?: boolean }) {
   const { toast } = useToast();
   const [on, setOn] = useState(false);
   const [mem, setMem] = useState<Memory | null>(null);
@@ -47,7 +47,7 @@ export default function AutopilotStrip({ submissionId, refreshKey }: { submissio
   return (
     <div className="rounded-xl border border-border bg-card/80 p-2.5 text-xs space-y-1">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label className="flex items-center gap-1.5 text-muted-foreground"><Switch checked={on} onCheckedChange={toggle} /> Autopilot for this seller</label>
+        {canControl ? <label className="flex items-center gap-1.5 text-muted-foreground"><Switch checked={on} onCheckedChange={toggle} /> Autopilot for this seller</label> : <span className="text-muted-foreground">Autopilot {on ? "on" : "off"} for this seller</span>}
         {mem?.due_at && <span className="text-muted-foreground">Next check: {new Date(mem.due_at).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}{mem.reminder_count ? ` · ${mem.reminder_count} reminder${mem.reminder_count === 1 ? "" : "s"} sent` : ""}</span>}
       </div>
       {held && (

@@ -8,9 +8,12 @@ describe("Susie staff identity", () => {
     expect(loginIdentifier(" Cici@BayerBrokers.com ")).toBe("cici@bayerbrokers.com");
     expect(loginIdentifier("unknown")).toBe("unknown");
   });
-  it("has the same AI restriction as Cici", () => {
-    expect(canUseAi("fcb3b678-3ac9-4207-83fe-86fb7952ae41")).toBe(false);
-    expect(canUseAi("e07b4a4c-56d1-4b2f-bc27-7989314d008f")).toBe(false);
+  it("lets Cici use seller AI suggestions", () => {
+    expect(canUseAi("e07b4a4c-56d1-4b2f-bc27-7989314d008f")).toBe(true);
     expect(canUseAi("8c6be60c-cfea-4f0d-a9de-09a68bc0c0a5")).toBe(true);
+  });
+  it("keeps Susie's seller suggestion access the same as Cici", () => {
+    expect(canUseAi("fcb3b678-3ac9-4207-83fe-86fb7952ae41")).toBe(true);
+    expect(canUseAi(null)).toBe(false);
   });
 });

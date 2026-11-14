@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cleanAttentionText } from "@/lib/attentionText";
 import { useToast } from "@/hooks/use-toast";
 import AiVisuals, { type AiVisual } from "./AiVisuals";
 import AiActionFeedback from "./AiActionFeedback";
@@ -60,7 +62,7 @@ function ChangesView({ c }: { c: AiChanges }) {
               <div className="text-xs text-muted-foreground">
                 {i.after ? <>Status: <span className="line-through">{i.before}</span> → <span className="font-medium text-foreground">{i.after}</span></> : `Status stays ${i.before}`}
                 {i.attach.length > 0 && <> · attach {i.attach.join(", ")}</>}
-                {(i.detach?.length ?? 0) > 0 && <> · remove {i.detach!.join(", ")}</>}
+                {(i.detach?.length ?? 0) > 0 && <> · remove {i.detach?.join(", ")}</>}
               </div>
               {i.note && <div className="text-xs text-muted-foreground italic">{i.note}</div>}
             </li>
@@ -159,9 +161,11 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const [subject, setSubject] = useState(a.email_subject ?? "");
   const [body, setBody] = useState(a.email_body ?? "");
   const [decisionReason, setDecisionReason] = useState("");
+  const [staffCompleted, setStaffCompleted] = useState(false);
   const attention = HUMAN_ATTENTION_RELEASED ? parseHumanAttention(a.payload?.human_attention) : null;
   const baseMeta = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
-  const meta = attention ? { ...baseMeta, approve: "Resolved" } : baseMeta;
+  const humanTask = a.action_type === "flag_human";
+  const meta = humanTask ? { ...baseMeta, approve: "Complete staff task & give findings to AI" } : baseMeta;
   const pending = a.status === "proposed";
 
   const approve = async () => {
@@ -175,7 +179,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
        if (EMAIL_TYPES.includes(a.action_type) && (body !== a.email_body || subject !== a.email_subject)) {
         await supabase.from("ai_agent_actions" as never).update({ email_body: body, email_subject: subject } as never).eq("id", a.id);
       }
-      const r = await callSellerAgent({ action: "execute", action_id: a.id, reason: decisionReason.trim() });
+      const r = await callSellerAgent({ action: "execute", action_id: a.id, reason: decisionReason.trim(), staff_completed: humanTask && staffCompleted });
       const op = r?.client_op as ({ kind: string; action_id: string } & Record<string, unknown>) | null | undefined;
       if (op?.kind === "change_cemetery") {
         // Same audited reassignment as the Change cemetery button.
@@ -209,25 +213,25 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   };
 
   return (
-    <div id={`ai-action-${a.id}`} className={`rounded-xl border border-indigo-500/30 bg-card ${compact ? "p-3" : "p-4 md:p-5"} space-y-2.5`}>
+    <div id={`ai-action-${a.id}`} className={`rounded-lg border border-border bg-card ${compact ? "p-3" : "p-4 md:p-5"} space-y-2.5`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           {sellerName !== undefined && (
             <button onClick={() => onOpenSubmission?.(a.submission_id)} className="font-medium text-foreground hover:text-indigo-600 text-left">{sellerName ?? "Seller"}</button>
           )}
           {sellerSub && <div className="text-xs text-muted-foreground">{sellerSub}</div>}
-          <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
             <meta.Icon className="w-3.5 h-3.5" />{meta.label}
             {a.confidence != null && <span className="text-muted-foreground font-normal">· {Math.round(a.confidence * 100)}% sure</span>}
           </div>
         </div>
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
-      {a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
-      {attention && <div className="border-l-2 border-primary pl-3 text-sm space-y-1"><p className="font-semibold text-foreground">{attention.priority} priority · {attention.task}</p><p className="text-muted-foreground">{attention.reason}</p><p className="text-xs text-muted-foreground">Where to check: {attention.evidence}</p></div>}
+      {!humanTask && a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
+      {humanTask && <div className="border-l-2 border-primary pl-3 text-sm space-y-2"><p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p><ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <><p className="text-muted-foreground">Why: {cleanAttentionText(attention.reason)}</p><p className="text-xs text-muted-foreground">Where to check: {cleanAttentionText(attention.evidence)}</p></>}</div>}
       {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}
       {!hideVisuals && <AiVisuals visuals={a.payload?.changes ? a.payload?.visuals?.filter((v) => v.kind !== "compare") : a.payload?.visuals} />}
-      {a.payload?.research && (
+      {!humanTask && a.payload?.research && (
         <details className="text-xs bg-muted/40 rounded-lg p-2.5">
           <summary className="cursor-pointer text-muted-foreground">What the AI checked first ({a.payload.research.tools.length} lookups)</summary>
           <p className="mt-1.5 text-muted-foreground">{[...new Set(a.payload.research.tools)].map((t) => t.replace(/_/g, " ")).join(" · ") || "No lookups"}</p>
@@ -252,7 +256,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           {a.payload.items.map((i) => <li key={i.id}>{i.note ?? "Checklist item"}{i.state ? ` — mark ${i.state.replace(/_/g, " ")}` : ""}{i.attach_file_ids.length ? ` · attach ${i.attach_file_ids.length} file${i.attach_file_ids.length > 1 ? "s" : ""}` : ""}</li>)}
         </ul>
       )}
-      {!["reply_email", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
+      {!humanTask && !["reply_email", "increase_quote_ten_percent", "resend_expired_quote"].includes(a.action_type) && a.note_body && <p className="text-sm text-foreground bg-muted/40 rounded-lg p-3 whitespace-pre-wrap">{a.note_body}</p>}
       {a.action_type === "send_quote" && <AiQuotePreview submissionId={a.submission_id} fields={a.payload?.fields} />}
       {["increase_quote_ten_percent", "update_quote_spaces", "send_quote"].includes(a.action_type) && <p className="text-xs text-muted-foreground">Approval emails the seller the branded quote with live listing-option buttons (same as Send seller pack); any text above then goes out as a separate follow-up email.</p>}
       {a.action_type === "resend_expired_quote" && <p className="text-xs text-muted-foreground">Approval re-sends the quote at the same figures with a fresh 10-day window; the text above appears as its intro.</p>}
@@ -269,12 +273,13 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
             <p className="font-medium">Before sending this reply:</p>
             {prerequisites.map(p => <a key={p.id} className="block text-primary underline underline-offset-2" href={`#ai-action-${p.id}`}>{AI_TYPE_META[p.action_type]?.approve ?? p.action_type.replace(/_/g, " ")}</a>)}
           </div>}
-          <Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder="Why accept or decline? (optional)" />
+          <Textarea aria-label={humanTask ? "Staff findings" : "Decision reason"} rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={humanTask ? "What did you do and find? Include the information the AI needs next." : "Why accept or decline? (optional)"} />
+          {humanTask && <label className="flex items-start gap-2 text-sm text-foreground"><Checkbox checked={staffCompleted} onCheckedChange={v => setStaffCompleted(v === true)} className="mt-0.5" />I have completed this staff task and recorded the findings above.</label>}
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={approve} disabled={busy || prerequisites.length > 0} className="bg-indigo-600 hover:bg-indigo-700 text-primary-foreground">
+          <Button size="sm" onClick={approve} disabled={busy || prerequisites.length > 0 || (humanTask && (!staffCompleted || !decisionReason.trim()))} className="h-auto min-h-9 whitespace-normal text-left">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />{meta.approve}</>}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => { setWhy(decisionReason); setDeclining((v) => !v); }} disabled={busy}><X className="w-4 h-4 mr-1" />Decline</Button>
+          <Button size="sm" variant="outline" onClick={() => { setWhy(decisionReason); setDeclining((v) => !v); }} disabled={busy}><X className="w-4 h-4 mr-1" />{humanTask ? "Task not needed…" : "Decline"}</Button>
         </div>
         </div>
       )}

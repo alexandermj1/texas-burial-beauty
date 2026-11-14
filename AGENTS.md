@@ -37,7 +37,7 @@
 - Seller-agent runs a tool-using research pass (_shared/recordAgent ADMIN_READ_TOOLS) before each staff-clicked decision, and approved quote actions send via supabase/functions/_shared/listingOptionsBlock.ts — the same builder the staff composer wraps; quote figures are limited to allowedQuoteFigures — why: AI checks like an admin and sends identical quotes without inventing prices.
 - Seller-agent validates tree edits and keeps prior versions; _shared/sellerPaperwork performs tree/sync/send/prepare with staff functions, while aiDocOps handles only legacy queued steps — why: tree/request parity without a browser.
 - Seller stage logic lives in _shared/sellerPipeline, re-exported by seller-agent/pipeline; shared attachment metadata feeds staff and quote-backlog checks — why: acknowledgements cannot hide unfinished quotes.
-- Human attention reuses flag_human payloads and record-ID sorting via _shared/humanAttention, gated by an owner release lock and boolean setting; resolution requires an outcome note — why: discretionary priorities without accidental activation or automatic reviews.
+- Human attention uses flag_human and record-ID sorting; new mail/reviews preserve staff tasks, explicit staff completion needs findings and wakes AI — why: AI approval must not erase human work.
 - AI doc requests verify plot wording first (autopilot.plotVerified) — why: only spaces sold.
 - Reuse SellerVsl for seller films, with an embedded article variant and one mounted player per page — why: shared accessibility, media and playback stay consistent across mobile placements and guides.
 - Films track views/watch time via useFilmTracking — why: one queryable record.
