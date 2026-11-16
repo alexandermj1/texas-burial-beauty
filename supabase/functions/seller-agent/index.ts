@@ -789,7 +789,7 @@ YOUR NOTE FROM LAST TIME (${mem?.updated_at ?? "none"}): ${mem?.summary || "(non
 Waiting for: ${mem?.waiting_for || "-"} · Planned if silent: ${mem?.next_if_silent || "-"} · Reminders already sent: ${mem?.reminder_count ?? 0}
 CHANGED SINCE THEN: ${changes}
 ${quick ? "Read the file below with your note in mind, focusing on what changed. Before ANY reply that says what is still needed, which documents are right or wrong, who must sign, family details, plots or prices, check it against the documents list, files, notes and emails shown below; if those are not enough to be sure, set memory.escalate true instead of replying. Read every new staff note and seller email in full and act on them. Treat your note as a guide, NOT as truth: if anything changed contradicts it, a staff note gives new facts or instructions, or you are unsure, set memory.escalate true and propose no actions — a full review will follow. For a check-back with nothing changed, send at most one short, warm, non-pushy reminder about the single thing we are waiting for (never repeat a reminder sent in the last few days), or nothing if a reminder would not help. If staff have replied or handled it, propose nothing and just update memory." : "Do a complete review; use your note only as background. Check emails, notes, uploaded files, the document request and family tree with care before replying."}
-PERSON IN THE LOOP: no one else is watching this file. Use flag_human (with a clear note of what a person should do) whenever things seem to be going wrong or a person would genuinely help: the seller is upset, confused after several emails, complaining, disputing money or asking for a refund, the documents or family tree keep contradicting each other, a mistake may already have been sent, or you are not confident. A flagged file is left for staff until they resolve it.
+PERSON IN THE LOOP: a staff task blocks only work that depends on its outcome, not the whole record. Propose ALL independent safe actions alongside flag_human, ready for separate approval. For dependent work, state the exact outcome staff must supply in human_attention.outcome_needed and what you will do afterwards in human_attention.after_outcome; do not propose executable actions based on unknown facts. Read completed staff findings and continue those steps even if another unrelated staff task remains open. Human-only tasks such as refunds are done by staff, never by you; do not claim they happened without confirmation.
 ALWAYS set memory.check_back_days for the next look, even if you propose nothing.
 
 ` + prep.input;
@@ -1204,7 +1204,7 @@ Deno.serve(async (req) => {
       const attention = parseHumanAttention(act.payload.human_attention);
       if (!attention) return json({ error: "Human task details are incomplete; review the record again." }, 409);
       if (!body.reason?.trim()) return json({ error: "Explain the completed check or call before resolving this task." }, 400);
-      const { error: noteError } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Instruction for AI: ${user.name} completed this staff task: ${attention.task}\nStaff findings: ${body.reason.trim()}\nUse these findings to continue the record. Do not claim any other outstanding staff task is complete.`, author_name: user.name, author_user_id: user.id });
+      const { error: noteError } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `Instruction for AI: ${user.name} completed this staff task: ${attention.task}\nStaff findings: ${body.reason.trim()}${attention.after_outcome ? `\nPreviously deferred AI work: ${attention.after_outcome}` : ""}\nUse these findings to review the record and continue all supported work. Do not claim any other outstanding staff task is complete.`, author_name: user.name, author_user_id: user.id });
       if (noteError) error = noteError.message;
       notedByAction = !noteError;
     } else if (act.action_type !== "flag_human") {
@@ -1566,7 +1566,7 @@ Deno.serve(async (req) => {
     }
     if (!error) {
       if (act.action_type === "flag_human") {
-        const { error: memoryError } = await db.from("ai_record_memory").update({ due_at: now, waiting_for: "Staff findings received; AI follow-up due" }).eq("submission_id", sub.id);
+        const { error: memoryError } = await db.from("ai_record_memory").upsert({ submission_id: sub.id, due_at: now, waiting_for: "Staff findings received; AI follow-up due" }, { onConflict: "submission_id" });
         if (memoryError) return json({ error: "Staff task completed and findings saved, but follow-up scheduling failed: " + memoryError.message }, 500);
       }
       // Autopilot runs have no staff author — only human approvals are recorded as decision feedback.

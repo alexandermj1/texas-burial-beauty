@@ -37,10 +37,13 @@ export type Route =
 
 /** What to do for one record on a wake-up. Errs towards a full review when in doubt. */
 export function routeWake(o: { memory: Memory | null; now: Fingerprint; at: number; humanOpen: boolean }): Route {
-  if (o.humanOpen) return { kind: "human", reason: "A person is handling this record" };
   const m = o.memory;
   if (!m || !m.fingerprint) return { kind: "full", reason: "No memory of this record yet", changed: [...FP_PARTS] };
   const changed = diffFingerprint(m.fingerprint, o.now);
+  if (o.humanOpen) {
+    if (changed.length) return { kind: "full", reason: "New evidence or staff findings received; continue independent work without completing outstanding staff tasks", changed };
+    return { kind: "human", reason: "Waiting for staff outcome; no new context to review" };
+  }
   const sinceFull = m.last_full_review_at ? o.at - Date.parse(m.last_full_review_at) : Infinity;
   if (changed.length) {
     if (m.suspect_problem) return { kind: "full", reason: "Last review suspected a problem", changed };

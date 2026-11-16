@@ -230,6 +230,8 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {!humanTask && a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
       {humanTask && <div className="border-l-2 border-primary pl-3 text-sm space-y-2"><p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p><ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <><p className="text-muted-foreground">Why: {cleanAttentionText(attention.reason)}</p><p className="text-xs text-muted-foreground">Where to check: {cleanAttentionText(attention.evidence)}</p></>}</div>}
       {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}
+      {humanTask && attention?.outcome_needed && <p className="text-sm text-foreground"><span className="font-medium">Tell the AI:</span> {attention.outcome_needed}</p>}
+      {humanTask && attention?.after_outcome && <p className="text-sm text-muted-foreground"><span className="font-medium">AI work waiting for this outcome:</span> {attention.after_outcome}</p>}
       {!hideVisuals && <AiVisuals visuals={a.payload?.changes ? a.payload?.visuals?.filter((v) => v.kind !== "compare") : a.payload?.visuals} />}
       {!humanTask && a.payload?.research && (
         <details className="text-xs bg-muted/40 rounded-lg p-2.5">
@@ -273,7 +275,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
             <p className="font-medium">Before sending this reply:</p>
             {prerequisites.map(p => <a key={p.id} className="block text-primary underline underline-offset-2" href={`#ai-action-${p.id}`}>{AI_TYPE_META[p.action_type]?.approve ?? p.action_type.replace(/_/g, " ")}</a>)}
           </div>}
-          <Textarea aria-label={humanTask ? "Staff findings" : "Decision reason"} rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={humanTask ? "What did you do and find? Include the information the AI needs next." : "Why accept or decline? (optional)"} />
+          <Textarea aria-label={humanTask ? "Staff findings" : "Decision reason"} rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={humanTask ? attention?.outcome_needed ?? "What happened? Record the call result, findings or confirmation of the staff-only task." : "Why accept or decline? (optional)"} />
           {humanTask && <label className="flex items-start gap-2 text-sm text-foreground"><Checkbox checked={staffCompleted} onCheckedChange={v => setStaffCompleted(v === true)} className="mt-0.5" />I have completed this staff task and recorded the findings above.</label>}
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={approve} disabled={busy || prerequisites.length > 0 || (humanTask && (!staffCompleted || !decisionReason.trim()))} className="h-auto min-h-9 whitespace-normal text-left">

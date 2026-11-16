@@ -6,8 +6,14 @@ const now = Date.parse("2026-11-10T18:00:00Z"); // Tue 12:00 Texas
 const mem = (o: Partial<any> = {}) => ({ due_at: null, suspect_problem: false, reminder_count: 0, last_full_review_at: new Date(now - 86400_000).toISOString(), fingerprint: fp, ...o });
 
 describe("autopilot wake routing", () => {
-  it("does nothing while a person is handling the record", () => {
-    expect(routeWake({ memory: mem(), now: { ...fp, seller_email: "x" }, at: now, humanOpen: true }).kind).toBe("human");
+  it("reviews new seller context even when an unrelated staff task remains open", () => {
+    expect(routeWake({ memory: mem(), now: { ...fp, seller_email: "x" }, at: now, humanOpen: true }).kind).toBe("full");
+  });
+  it("uses staff call outcomes for a full review despite other open staff tasks", () => {
+    expect(routeWake({ memory: mem(), now: { ...fp, staff_note: "Call confirmed two owners" }, at: now, humanOpen: true })).toMatchObject({ kind: "full", changed: ["staff_note"] });
+  });
+  it("does not loop over an unchanged record while awaiting staff", () => {
+    expect(routeWake({ memory: mem({ due_at: new Date(now - 1).toISOString() }), now: fp, at: now, humanOpen: true }).kind).toBe("human");
   });
   it("waits when nothing changed and the check-back isn't due", () => {
     expect(routeWake({ memory: mem({ due_at: new Date(now + 3600_000).toISOString() }), now: fp, at: now, humanOpen: false }).kind).toBe("wait");

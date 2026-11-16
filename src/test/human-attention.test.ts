@@ -21,6 +21,11 @@ describe("human-attention rollout", () => {
   });
 });
 describe("human task judgments", () => {
+  it("retains the requested call outcome and work to resume without inventing it", () => {
+    const task = { ...attention, outcome_needed: "Who did the cemetery confirm owns the rights?", after_outcome: "Correct the family tree, resync and prepare the request." };
+    expect(parseHumanAttention(task)).toEqual(task);
+    expect(parseHumanAttention(attention)?.after_outcome).toBeUndefined();
+  });
   it("requires explicit human completion as well as findings", () => {
     expect(humanTaskDecisionError("flag_human", "execute", false, "Checked deed", true)).not.toBeNull();
     expect(humanTaskDecisionError("flag_human", "execute", true, "", true)).not.toBeNull();

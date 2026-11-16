@@ -10,6 +10,8 @@ export type HumanAttention = {
   task: string;
   reason: string;
   evidence: string;
+  outcome_needed?: string;
+  after_outcome?: string;
 };
 export const QUOTE_TASK_IMPORTANCE = 10;
 export const isQuoteNeededAttention = (a: Pick<HumanAttention, "task">) => /^quote needed\s*:/i.test(a.task.trim());
@@ -22,11 +24,12 @@ export function parseHumanAttention(value: unknown): HumanAttention | null {
   if (typeof v.importance !== "number" || !Number.isFinite(v.importance) || v.importance < 0 || v.importance > 100) return null;
   const task = text(v.task, 1000), reason = text(v.reason, 1000), evidence = text(v.evidence, 1000);
   if (!task || !reason || !evidence) return null;
-  const parsed = { priority: v.priority as HumanAttention["priority"], category: v.category as HumanAttention["category"], importance: Math.round(v.importance), task, reason, evidence };
+  const outcome = text(v.outcome_needed, 1000), after = text(v.after_outcome, 1000);
+  const parsed = { priority: v.priority as HumanAttention["priority"], category: v.category as HumanAttention["category"], importance: Math.round(v.importance), task, reason, evidence, ...(outcome ? { outcome_needed: outcome } : {}), ...(after ? { after_outcome: after } : {}) };
   return isQuoteNeededAttention(parsed) ? { ...parsed, priority: "low" as const, importance: Math.min(parsed.importance, QUOTE_TASK_IMPORTANCE) } : parsed;
 }
 export const humanAttentionNote = (a: HumanAttention) =>
-  `Needs a person (${a.priority} priority): ${a.task}\n${a.reason}\nWhere to check: ${a.evidence}`;
+  `Needs a person (${a.priority} priority): ${a.task}\n${a.reason}\nWhere to check: ${a.evidence}${a.outcome_needed ? `\nOutcome needed: ${a.outcome_needed}` : ""}${a.after_outcome ? `\nAI next, after staff outcome: ${a.after_outcome}` : ""}`;
 
 /** Human completion is separate from approval of the AI's executable work. */
 export function humanTaskDecisionError(actionType: string, decision: string, completed: boolean, reason: string | undefined, staff: boolean): string | null {
