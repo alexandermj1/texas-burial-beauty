@@ -6,11 +6,12 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2.119.0/cors";
 import { createClient } from "npm:@supabase/supabase-js@2.119.0";
 import { generateMessage } from "npm:@lovable.dev/ai-gateway@0.1.11";
 import { isInternalCall } from "../_shared/internal-auth.ts";
+import { DAILY_UPDATE_RECIPIENTS } from "../_shared/dailyUpdateRecipients.ts";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const FROM = "texascemeterybrokers@gmail.com";
-const TEAM = ["alexandermaclarenjames@gmail.com", "simonjamesphd@gmail.com", "emmamaclaren@gmail.com"];
+const TEAM = DAILY_UPDATE_RECIPIENTS;
 const TZ = "America/Chicago";
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -68,7 +69,7 @@ async function gather(day: string) {
   return { text: L.join("\n").slice(0, 90000), previous, stats: { new_enquiries: newSubs.length, inbound_emails: inbound.length, activity: (act.data ?? []).length, ai_actions: (actions.data ?? []).length, open_tasks: openFlags.length } };
 }
 
-const SYSTEM = `You write the end-of-day internal briefing email for Texas Cemetery Brokers (a cemetery plot brokerage). Readers: Alexander (owner), Simon, Emma. Team members include Cici and Susie (staff), Simon James and Alexander Maclaren James (owners); "Seller AI"/"AI autopilot"/"AI agent" is the seller assistant, "Buyer AI" handles buyers, "Automatic follow-up" is scheduled reminders. Customers' own actions (e.g. confirming ownership, uploading files) appear in the log under the customer's name.
+const SYSTEM = `You write the end-of-day internal briefing email for Texas Cemetery Brokers (a cemetery plot brokerage). Readers: Alexander (owner), Simon, Emma and Cici. Team members include Cici and Susie (staff), Simon James and Alexander Maclaren James (owners); "Seller AI"/"AI autopilot"/"AI agent" is the seller assistant, "Buyer AI" handles buyers, "Automatic follow-up" is scheduled reminders. Customers' own actions (e.g. confirming ownership, uploading files) appear in the log under the customer's name.
 Use ONLY the facts supplied. Never invent events, prices, names or outcomes. If a section has nothing, say "Nothing today." Plain, warm, concise company English. Use customer names so people can find records.
 Where the previous briefing mentioned something and today's data shows progress on the same person (e.g. they sent documents we asked for), say so explicitly ("Carol sent the documents referenced yesterday").
 Output ONLY an HTML fragment (no <html>/<body>, no styles, no scripts) using <h2>, <h3>, <p>, <ul>, <li>, <strong>. Sections in this order:
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
   if (scheduled && !body.force && localHour(now) !== 17) return json({ skipped: "not 5pm in Texas" });
   const day = body.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : localDate(now);
   const practice = !!body.to?.length;
-  const to = practice ? body.to!.filter((e) => TEAM.includes(e)) : TEAM;
+  const to = practice ? (body.to ?? []).filter((e) => TEAM.includes(e)) : TEAM;
   if (!to.length) return json({ error: "Recipients must be team addresses" }, 400);
   if (!practice) {
     const { data: done } = await db.from("daily_briefings").select("id").eq("briefing_date", day).eq("is_practice", false).limit(1);

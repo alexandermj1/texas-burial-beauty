@@ -2,6 +2,7 @@
 // to the owners' inboxes from texascemeterybrokers@gmail.com via the Gmail
 // connector gateway.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { DAILY_UPDATE_RECIPIENTS } from "../_shared/dailyUpdateRecipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,11 +11,7 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 const FROM_EMAIL = "texascemeterybrokers@gmail.com";
-const TO_EMAILS = [
-  "alexandermaclarenjames@gmail.com",
-  "simonjamesphd@gmail.com",
-  "emmamaclaren@gmail.com",
-];
+const TO_EMAILS = DAILY_UPDATE_RECIPIENTS;
 
 function fmtDate(d: Date) {
   return d.toLocaleString("en-US", { timeZone: "America/Los_Angeles", dateStyle: "full", timeStyle: "short" });
