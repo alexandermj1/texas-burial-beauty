@@ -1,10 +1,11 @@
+import { parseExecutionPlan, workBlocker, relatedRecordEvidence } from "../_shared/sellerWorkPlan.ts";
 import { paidListingOption, requestedLowerQuote } from "./quoteCorrectionPolicy.ts";
 import { sellerDecisionJson } from "../_shared/sellerDecisionJson.ts";
 import { aiFetch } from "../_shared/aiRunLabel.ts";
 import { applyCemeteryCorrection, prepareCemeteryCorrection } from "./cemeteryCorrection.ts";
 import { feedbackAllowed } from "../_shared/sellerActionFeedback.ts";
 import { humanTaskDecisionError, HUMAN_ATTENTION_RELEASED, HUMAN_ATTENTION_SETTING, humanAttentionEnabled, parseHumanAttention, humanAttentionNote, withHumanAttentionPolicy } from "../_shared/humanAttention.ts";
-import { requiresPhysicalOriginal, physicalOriginalLogged, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
+import { safeChecklistState, pendingRecordChanges } from "../_shared/originalDocumentReceipt.ts";
 // Seller Agent — reviews one seller's whole record against the TCB Seller
 // Playbook and proposes the next step (reply, internal note, or hand to a
 // human). Phase 1 runs in shadow/approval mode: nothing is sent to a customer
@@ -82,14 +83,14 @@ async function loadPlaybook(db: SupabaseClient) {
 async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string | null = null, meter?: ScanMeter) {
   const email = String(sub.email ?? "").toLowerCase();
   const [siblings, emails, notes, files, contracts, docs, reminders, feedback] = await Promise.all([
-    db.from("contact_submissions").select("id,created_at,cemetery,property_type,spaces,quote_sent_at,quote_response,la_signed_at,archived_at").eq("email", sub.email).neq("id", sub.id).is("deleted_at", null).limit(10),
+    db.from("contact_submissions").select("id,email,customer_profile_id,created_at,cemetery,plot_description,property_type,spaces,quote_sent_at,quote_response,la_signed_at,archived_at").eq("email", sub.email).neq("id", sub.id).is("deleted_at", null).limit(10),
     db.from("email_messages").select("id,from_email,subject,body_text,snippet,received_at,gmail_thread_id,gmail_message_id").or(`matched_submission_id.eq.${sub.id},from_email.ilike.%${email}%,to_email.ilike.%${email}%`).is("deleted_at", null).order("received_at", { ascending: false }).limit(16),
     db.from("customer_notes").select("body,author_name,created_at").or(`submission_id.eq.${sub.id}${sub.customer_profile_id ? `,customer_profile_id.eq.${sub.customer_profile_id}` : ""}`).is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
     sub.customer_profile_id
       ? db.from("customer_files").select("id,file_name,document_type,extracted_summary,extracted_data,created_at").eq("customer_profile_id", sub.customer_profile_id).is("deleted_at", null).limit(30)
       : Promise.resolve({ data: [] as any[] }),
     db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,countersigned_at,signed_copy_emailed_at,sign_token,sign_token_expires_at,principal_key,fill_data").eq("submission_id", sub.id).is("deleted_at", null),
-    db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
+    db.from("submission_documents").select("id,doc_code,label,person_name,status,required_state,manual_override,why,needs_notary,received_at,notes,file_url,file_urls").eq("submission_id", sub.id).is("deleted_at", null).order("sort_order"),
     db.from("reminder_log").select("reminder_type,status,sent_at").eq("submission_id", sub.id).is("deleted_at", null).order("sent_at", { ascending: false }).limit(10),
     db.from("ai_agent_feedback").select("action_id,kind,comment,correct,went_live,author_name,created_at").eq("submission_id", sub.id).order("created_at", { ascending: false }).limit(20),
   ]);
@@ -157,7 +158,7 @@ async function buildContext(db: SupabaseClient, sub: Sub, summarizeKey: string |
     `TODAY: ${new Date().toISOString()}`,
     stageLine,
     `SELLER RECORD:\n${JSON.stringify(record, null, 1)}`,
-    `OTHER SUBMISSIONS FROM THIS PERSON:\n${JSON.stringify(siblings.data ?? [])}`,
+    `OTHER RECORD CANDIDATES (same email is NOT proof of duplicate property; verify each before borrowing facts):\n${JSON.stringify((siblings.data ?? []).map(r => ({ ...r, relationship_evidence: relatedRecordEvidence(sub, r) })))}`,
     `CONTRACTS (contract_id usable in resend_contract_link / email_signed_copy):\n${JSON.stringify((contracts.data ?? []).map(({ id, sign_token: _t, ...c }: any) => ({ contract_id: id, ...c })))}`,
     `DOCUMENT REQUEST ITEMS (from our rules engine — authoritative):\n${JSON.stringify((docs.data ?? []).filter((d: any) => d.doc_code !== "LA" && !/listing agreement/i.test(String(d.label))).map(({ doc_code: _c, file_url, file_urls, notes, ...d }: any) => ({ ...d, files_attached: (file_urls?.length ? file_urls : file_url ? [file_url] : []).map((u: string) => String(u).split("/").pop()), notes: clip(notes, 200) })))}\n(The listing agreement is NOT part of the document review — its status comes only from CONTRACTS / listing_agreement_signed_at.)`,
     `SELLER'S DOCUMENT PAGE (include in replies about downloads, uploads or outstanding documents ONLY if a document request has been sent): ${sub.documents_requested_at ? `https://www.texascemeterybrokers.com/documents?s=${sub.id}` : "Not yet available"}`,
@@ -212,7 +213,7 @@ function allowedActions(sub: Sub, contracts: any[]) {
   const la = contracts.filter((c) => c.kind === "listing_agreement" && c.status !== "void");
   const signed = !!sub.la_signed_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status));
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0 || !!sub.listing_paid_at;
-  const liveLink = la.find((c) => ["sent", "viewed"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()));
+  const liveLink = la.find((c) => ["draft", "sent", "viewed"].includes(c.status) && !c.signed_at && !c.notarized_at && !c.completed_at);
   const out = new Set(["reply_email", "add_note", "flag_human", "update_fields"]);
   if (canExtendQuote(sub, signed)) out.add("extend_quote_deadline");
   // All customer-facing quote changes still require staff approval.
@@ -221,12 +222,13 @@ function allowedActions(sub: Sub, contracts: any[]) {
   if (signed && !answers.questionsSentAt && !answers.sellerConfirmedAt) out.add("send_family_tree");
   if (signed && answers.questionsSentAt && !answers.sellerConfirmedAt && !sub.documents_requested_at) out.add("resend_family_tree");
   // The document request itself is proposed as send_document_request (parity.ts) once the tree is complete; staff approve it.
-  if (sub.documents_requested_at && !sub.documents_completed_at) { out.add("fix_document_request"); out.add("update_document_items"); }
+  if (sub.documents_requested_at) { out.add("fix_document_request"); out.add("update_document_items"); }
   if (sub.quote_sent_at && !accepted && !signed) { out.add("resend_quote_free_listing"); if (Number(sub.quote_amount) > 0) out.add("update_quote_spaces"); if (higherQuote(sub) !== null) out.add("increase_quote_ten_percent"); }
   if (sub.quote_sent_at && !accepted && !signed && quoteExpired(sub)) out.add("resend_expired_quote");
   if (!accepted && !signed && !sub.listing_paid_at && allowedQuoteFigures(sub, null).size) out.add("send_quote");
   out.add("resend_email"); out.add("set_stage");
-  if (contracts.some((c) => ["sent", "viewed", "draft"].includes(c.status) && c.sign_token && (!c.sign_token_expires_at || c.sign_token_expires_at > new Date().toISOString()))) out.add("resend_contract_link");
+  if (contracts.some((c) => ["sent", "viewed", "draft"].includes(c.status) && !c.signed_at && !c.notarized_at && !c.completed_at)) out.add("resend_contract_link");
+  if (la.some(c => ["draft", "sent", "viewed"].includes(c.status) && !c.signed_at && !c.notarized_at && !c.completed_at)) out.add("repair_unsigned_agreement");
   if (contracts.some((c) => ["signed", "notarized", "completed"].includes(c.status))) out.add("email_signed_copy");
   if (la.some((c) => c.signed_at && !c.countersigned_at)) out.add("countersign_contract");
   if (sub.documents_requested_at || la.some((c) => ["signed", "notarized", "completed"].includes(c.status)) || sub.la_signed_at) out.add("edit_document_request");
@@ -242,13 +244,14 @@ function quoteExpired(sub: Sub) {
 }
 
 const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves each one; each runs the exact same code staff use, so records, email tags, milestones and notifications are identical to a human doing it):
+- repair_unsigned_agreement: evidence-backed descriptive repair of an EXISTING unsigned listing agreement. fields = {contract_id, email?, seller_name?, cemetery?, plot_description?}. Exact price, listing fee version and seller-entered terms are preserved. Cannot rewrite signed documents. Pair with resend_contract_link only when the seller needs the corrected link.
 - reply_email: plain-text reply in the seller's thread. Fields: subject, body.
 - add_note: internal team note on the profile. Field: note.
 - flag_human: ONLY when a phone call is genuinely required (the seller asks to be called, or we must ring the cemetery for a new price/confirmation). Field: note = who to call and exactly what to ask. Everything else you solve yourself with the other actions. Always pair it with the reply_email/notes/record fixes you can do now (e.g. answer what you can and say a colleague will ring them).
 - update_fields: correct descriptive record fields ONLY from facts the seller or a document clearly states. Change "email" only when the seller asks us to use a new address (the old one stays on their profile). Field: fields = object with keys from ${EDITABLE_FIELDS.join(", ")}. Never prices, stages, dates or names from guesses.
 - extend_quote_deadline: give an unaccepted quote more time when the seller asks or context warrants it, BEFORE or after expiry. Fields: fields = {quote_expires_at: exact ISO timestamp with timezone}. Pick a sensible later deadline covering the requested discussion/decision time, use Texas local time for the seller, and explain why. Approval saves only the expiry; prices, spaces, fees, terms, original quote email/buttons and quote_sent_at stay unchanged. Pair with reply_email confirming the specific new date; the extension MUST be approved before that reply is sent. Do not defer a routine extension to a person or say you cannot extend it. An expired quote needing a new pack can still use resend_expired_quote instead.
 - send_listing_agreement: generates the listing agreement from the ACCEPTED quote and emails the signing link (autopilot). Only when the quote is accepted and no agreement has been sent. Do not also write a reply_email saying the same thing.
-- resend_signing_link: re-emails the existing, still-valid signing link. Use when the seller says they can't find it. Do not resend if they said they will sign later.
+- resend_signing_link: re-emails the existing unsigned agreement link, safely refreshing expiry without repricing. Use when the seller says they can't find it. Do not resend if they said they will sign later.
 - send_family_tree: emails the family tree / ownership questions. Only after the agreement is signed.
 - resend_family_tree: re-emails the family tree link when it was sent but not completed. body = optional short follow-up email sent first (thank them, explain briefly why we need it). Do not also write a reply_email.
 - resend_quote_free_listing: ONLY when a staff note or email shows we agreed the seller's listing fee is waived / free listing (e.g. "Pro with its listing fee waived"). Re-sends their ORIGINAL quote email in the same thread (same figures and buttons) with a short intro asking them to use the existing explicitly waived Starter option (never the current paid Starter button); we record it internally as Pro, so no payment is taken. Fields: subject, body = the short plain intro (e.g. "As agreed, your listing fee is waived. To continue, simply click the explicitly waived option in your original quote below — we will record it on our side as the Pro listing, so there is nothing to pay."). Use this for fee waivers.
@@ -500,7 +503,7 @@ async function preparePrompt(db: SupabaseClient, apiKey: string, sub: Sub, ctx: 
   const scans = (stageNeedsScan || (o.customerWaiting && wantsCheck) || o.instruction || (o.trigger === "manual" && wantsCheck)) ? await loadScans(db, sub) : noScans;
   if (scans.names.length) topics.add("documents");
   const directive = o.instruction ? `STAFF INSTRUCTION — a staff member reviewing this file is telling you what to do: "${o.instruction}"\nFollow it. Facts the staff member states (e.g. what the seller told them by phone, the correct plot wording) count as evidence — use them. ${attentionEnabled ? "Do the requested safe work; if a real human-only blocker remains, explain the concrete task using flag_human, without bouncing ordinary work back." : "A person is already reviewing, so do NOT use flag_human and set needs_human false. Produce exactly what they asked (e.g. a reply_email draft). Only if it is truly impossible, say why in reasoning and propose an add_note instead."}\n\n` : "";
-  const head = `${directive}ALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n`;
+  const head = `${directive}ACTION EXECUTION PROTOCOL: include execution on each executable action: {independent: boolean, reason: evidence-based explanation, depends_on_action_types: string[], depends_on_staff_task_ids: string[]}. Clarification emails can be independent; confirmations of updates must depend on those update action types. A missing prerequisite blocks execution. Use human_attention.existing_task_id ONLY for the same unresolved issue as an actual outstanding task id; append new evidence to that task instead of duplicating it.\nALLOWED NOW: ${[...allowed].join(", ")}\n\nSCANS ATTACHED: ${scans.names.length ? scans.names.join("; ") : "(none readable)"}\n\n`;
   if (!o.lean) return { instructions: withHumanAttentionPolicy(INSTRUCTIONS(playbook), attentionEnabled), input: head + ctx.context, scans };
   return { instructions: withHumanAttentionPolicy(LEAN_STATIC(playbook), attentionEnabled), input: `${withHumanAttentionPolicy(leanCaseRules(playbook, allowed, topics), attentionEnabled)}\n\n${head}${ctx.context}`, scans };
 }
@@ -583,6 +586,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
         subject: a.subject ? String(a.subject).slice(0, 300) : null,
         body: a.body ? String(a.body).slice(0, 12000) : null,
         note: a.note ? String(a.note).slice(0, 4000) : null,
+        execution: parseExecutionPlan(a.execution),
         human_attention: attentionEnabled && a.type === "flag_human" ? parseHumanAttention(a.human_attention) : null,
         fields: FIELD_KEYS[a.type] && a.fields && typeof a.fields === "object"
           ? Object.fromEntries(Object.entries(a.fields).filter(([k, v]) => FIELD_KEYS[a.type].includes(k) && v != null && String(v).trim()).map(([k, v]) => [k, String(v).slice(0, 500)]))
@@ -605,7 +609,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
       .filter((a: any) => a.type !== "send_quote" || (Number(a.fields?.per_space) > 0 && Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20))
       .filter((a: any) => a.type !== "resend_email" || /^[0-9a-f-]{36}$/i.test(String(a.fields?.email_id ?? "")))
       .filter((a: any) => a.type !== "set_stage" || TEXAS_STAGES.includes(String(a.fields?.stage)))
-      .filter((a: any) => !["resend_contract_link", "email_signed_copy", "countersign_contract"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
+      .filter((a: any) => !["repair_unsigned_agreement", "resend_contract_link", "email_signed_copy", "countersign_contract"].includes(a.type) || /^[0-9a-f-]{36}$/i.test(String(a.fields?.contract_id ?? "")))
       .filter((a: any) => a.type !== "edit_document_request" || (a.note && a.note.trim().length > 5))
       .filter((a: any) => a.type !== "edit_family_tree" || a.tree)
       .filter((a: any) => a.type !== "change_listing_option" || (LISTING_TIERS as readonly string[]).includes(String(a.fields?.tier)))
@@ -614,6 +618,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
 }
 
 const FIELD_KEYS: Record<string, string[]> = {
+  repair_unsigned_agreement: ["contract_id", "email", "seller_name", "cemetery", "plot_description"],
   extend_quote_deadline: ["quote_expires_at"],
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
   send_quote: ["per_space", "spaces", "plot_description", "requested_price_email_id"], resend_family_tree: [], change_listing_option: ["tier"], change_cemetery: ["cemetery", "city", "evidence", "create_if_missing", "address"], send_document_request: ["greeting_name", "plot_description", "section", "lawn", "space_numbers"], resend_email: ["email_id"], set_stage: ["stage"], resend_contract_link: ["contract_id"], email_signed_copy: ["contract_id"], countersign_contract: ["contract_id"],
@@ -760,6 +765,8 @@ async function runForSubmission(db: SupabaseClient, apiKey: string, submissionId
   try {
     const { allowed } = allowedActions(sub, ctx.contracts);
     const prep = checkpoint?.prep ?? await preparePrompt(db, apiKey, sub, ctx, allowed, playbook.content, { lean, instruction, customerWaiting, trigger }, meter);
+    const { data: openTasks } = await db.from("ai_agent_actions").select("id,reason,payload").eq("submission_id", sub.id).eq("action_type", "flag_human").eq("status", "proposed").is("deleted_at", null);
+    prep.input += `\nOUTSTANDING STAFF TASKS (preserve them, reference ids only for truly dependent work):\n${JSON.stringify(openTasks ?? [])}`;
     let research: { tools: string[]; text: string } | null = checkpoint?.research ?? null;
     if (!resume && !prep.skip && ownerId) {
       const { parts: _parts, ...scanInfo } = prep.scans;
@@ -790,6 +797,7 @@ Waiting for: ${mem?.waiting_for || "-"} · Planned if silent: ${mem?.next_if_sil
 CHANGED SINCE THEN: ${changes}
 ${quick ? "Read the file below with your note in mind, focusing on what changed. Before ANY reply that says what is still needed, which documents are right or wrong, who must sign, family details, plots or prices, check it against the documents list, files, notes and emails shown below; if those are not enough to be sure, set memory.escalate true instead of replying. Read every new staff note and seller email in full and act on them. Treat your note as a guide, NOT as truth: if anything changed contradicts it, a staff note gives new facts or instructions, or you are unsure, set memory.escalate true and propose no actions — a full review will follow. For a check-back with nothing changed, send at most one short, warm, non-pushy reminder about the single thing we are waiting for (never repeat a reminder sent in the last few days), or nothing if a reminder would not help. If staff have replied or handled it, propose nothing and just update memory." : "Do a complete review; use your note only as background. Check emails, notes, uploaded files, the document request and family tree with care before replying."}
 PERSON IN THE LOOP: a staff task blocks only work that depends on its outcome, not the whole record. Propose ALL independent safe actions alongside flag_human, ready for separate approval. For dependent work, state the exact outcome staff must supply in human_attention.outcome_needed and what you will do afterwards in human_attention.after_outcome; do not propose executable actions based on unknown facts. Read completed staff findings and continue those steps even if another unrelated staff task remains open. Human-only tasks such as refunds are done by staff, never by you; do not claim they happened without confirmation.
+ACTION EXECUTION PROTOCOL: include execution on every executable action: {independent: boolean, reason: string explaining the evidence and why it is safe before outstanding staff findings, depends_on_action_types: string[], depends_on_staff_task_ids: string[]}. independent=true means safe without a human outcome, NOT permission to claim incomplete changes. List the types of same-review actions that must execute successfully before this action. A clarification reply normally is independent with no prerequisites. A reply claiming corrections were made must depend on those correction types. Never propose work based on unknown staff outcomes; describe it in after_outcome instead.
 ALWAYS set memory.check_back_days for the next look, even if you propose nothing.
 
 ` + prep.input;
@@ -824,6 +832,16 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
     await db.from("ai_agent_runs").update({ stage_summary: "Checking suggested actions against approval safeguards", scan_usage: meter.snapshot() }).eq("id", run.id);
     const attentionEnabled = await attentionQueueEnabled(db);
     const d = parseDecision(raw, allowed, attentionEnabled);
+    for (const a of d.actions) if (a.type === "update_document_items" && a.items) {
+      const { data: checklist } = await db.from("submission_documents").select("id,doc_code,label,needs_notary,person_name,manual_override").eq("submission_id", sub.id).is("deleted_at", null);
+      for (const item of a.items) {
+        const row = (checklist ?? []).find(r => r.id === item.id);
+        if (!row) continue;
+        const safe = safeChecklistState(row, item.state, sub.ownership_answers ?? {});
+        item.state = safe.state;
+        if (safe.warning) item.note = [item.note, safe.warning].filter(Boolean).join(" ").slice(0, 300);
+      }
+    }
     if (attentionEnabled) d.actions = d.actions.filter((a) => a.type !== "flag_human" || a.human_attention);
     if (instruction && !attentionEnabled) {
       // Staff-directed: never bounce the work back to a human.
@@ -840,8 +858,18 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
 
     // Refresh executable suggestions, never silently close outstanding human work.
     await db.from("ai_agent_actions").update({ status: "superseded" }).eq("submission_id", sub.id).eq("status", "proposed").neq("action_type", "flag_human");
-    const { data: outstandingTasks, error: taskReadError } = await db.from("ai_agent_actions").select("payload").eq("submission_id", sub.id).eq("status", "proposed").eq("action_type", "flag_human").is("deleted_at", null);
+    const { data: outstandingTasks, error: taskReadError } = await db.from("ai_agent_actions").select("id,payload").eq("submission_id", sub.id).eq("status", "proposed").eq("action_type", "flag_human").is("deleted_at", null);
     if (taskReadError) throw new Error(taskReadError.message);
+    for (const a of d.actions) if (a.type === "flag_human" && a.human_attention?.existing_task_id) {
+      const old = (outstandingTasks ?? []).find(t => t.id === a.human_attention?.existing_task_id);
+      if (!old) continue;
+      // Keep one outstanding task, append its new evidence to immutable feedback.
+      const { error: feedbackError } = await db.from("customer_notes").insert({ submission_id: sub.id, customer_profile_id: sub.customer_profile_id, body: `AI task follow-up (${old.id}): ${humanAttentionNote(a.human_attention)}`, author_name: "AI agent (task follow-up)" });
+      if (feedbackError) throw new Error(feedbackError.message);
+      const { error: updateError } = await db.from("ai_agent_actions").update({ payload: { ...old.payload, human_attention: a.human_attention, task_history: [...(old.payload?.task_history ?? []), { at: new Date().toISOString(), previous: old.payload?.human_attention }] }, note_body: humanAttentionNote(a.human_attention), reason: a.reason }).eq("id", old.id).eq("status", "proposed");
+      if (updateError) throw new Error(updateError.message);
+    }
+    d.actions = d.actions.filter(a => a.type !== "flag_human" || !a.human_attention?.existing_task_id || !(outstandingTasks ?? []).some(t => t.id === a.human_attention?.existing_task_id));
     const existingTaskText = new Set((outstandingTasks ?? []).map(t => parseHumanAttention(t.payload?.human_attention)?.task.toLowerCase()));
     d.actions = d.actions.filter(a => a.type !== "flag_human" || !existingTaskText.has(a.human_attention?.task.toLowerCase()));
 
@@ -858,7 +886,7 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
       if (blockedCemetery) {
         // Never send a reply claiming a rejected cemetery correction happened.
         d.actions = d.actions.filter(a => !["reply_email", "send_quote", "update_quote_spaces", "resend_expired_quote", "increase_quote_ten_percent"].includes(a.type));
-        d.actions.push({ type: "flag_human", reason: "Verify the cemetery identity before changing this record or replying about the correction.", note: "Check the deed and seller email against our cemetery directory; the proposed cemetery could not be matched safely.", human_attention: { priority: "high", importance: 70, category: "uncertain", task: "Verify the cemetery identity before changing this record.", reason: "The registry check found an ambiguous, conflicting or insufficiently evidenced cemetery target.", evidence: "Deed, seller emails and cemetery directory; review the AI findings on this record." }, confidence: 1, subject: null, body: null, fields: null, items: null, tree: null });
+        d.actions.push({ type: "flag_human", reason: "Verify the cemetery identity before changing this record or replying about the correction.", note: "Check the deed and seller email against our cemetery directory; the proposed cemetery could not be matched safely.", execution: null, human_attention: { priority: "high", importance: 70, category: "uncertain", task: "Verify the cemetery identity before changing this record.", reason: "The registry check found an ambiguous, conflicting or insufficiently evidenced cemetery target.", evidence: "Deed, seller emails and cemetery directory; review the AI findings on this record." }, confidence: 1, subject: null, body: null, fields: null, items: null, tree: null });
         previews.push(null);
       }
     }
@@ -868,7 +896,7 @@ ALWAYS set memory.check_back_days for the next look, even if you propose nothing
       email_subject: a.subject, email_body: a.body, original_email_body: a.body,
       note_body: a.human_attention ? humanAttentionNote(a.human_attention) : a.type === "flag_human" ? (a.note ?? d.human_reason ?? a.reason) : a.note,
       gmail_thread_id: ctx.threadId,
-      payload: { model, ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length && ai === 0 ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
+      payload: { model, ...(a.execution ? { execution: a.execution } : {}), ...(a.human_attention ? { human_attention: a.human_attention } : {}), ...(a.fields ? { fields: a.fields } : a.items ? { items: a.items } : {}), ...(a.type === "edit_document_request" ? { instruction: a.note } : {}), ...(a.type === "edit_family_tree" ? { tree: a.tree, before_tree: (sub.ownership_answers ?? {}).v2 ?? null } : {}), ...(research ? { research } : {}), ...(visuals.length && ai === 0 ? { visuals } : {}), ...(previews[ai] ? { changes: previews[ai] } : {}) },
     }));
     if (rows.length) {
       const { error: actionError } = await db.from("ai_agent_actions").insert(rows);
@@ -1116,7 +1144,7 @@ Deno.serve(async (req) => {
     if (body.action === "do") {
       const { data: sub } = await db.from("contact_submissions").select("*").eq("id", body.submission_id).maybeSingle();
       if (!sub) return json({ error: "Seller not found" }, 404);
-      const { data: cs } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
+      const { data: cs } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at,signed_at,countersigned_at,notarized_at,completed_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed } = allowedActions(sub, cs ?? []);
       const signed = !!sub.la_signed_at;
       if (!allowed.has(body.type) && !(body.type === "send_family_tree" && signed)) return json({ error: `That step doesn't apply to this record right now (${body.type.replace(/_/g, " ")}).` }, 409);
@@ -1179,10 +1207,17 @@ Deno.serve(async (req) => {
     // Emails sent by approved actions must not retire the other suggestions from the same review.
     const { data: openSiblings } = await db.from("ai_agent_actions").select("id").eq("run_id", act.run_id).eq("status", "proposed").neq("id", act.id);
 
+    const { data: planSiblings, error: planError } = await db.from("ai_agent_actions").select("id,action_type,status,payload").eq("run_id", act.run_id).is("deleted_at", null);
+    const { data: staffTasks, error: staffError } = await db.from("ai_agent_actions").select("id,action_type,status,payload").eq("submission_id", sub.id).eq("action_type", "flag_human").is("deleted_at", null);
+    if (planError || staffError) return json({ error: "Could not verify action dependencies; nothing was executed." }, 500);
+    if (act.action_type !== "flag_human") {
+      const blocker = workBlocker(act, planSiblings ?? [], staffTasks ?? []);
+      if (blocker && (autoExec || act.payload?.execution)) return json({ error: blocker }, 409);
+    }
     if (act.action_type === "reply_email") {
       const { data: siblings, error: siblingError } = await db.from("ai_agent_actions").select("id,run_id,status,action_type").eq("run_id", act.run_id).is("deleted_at", null);
       if (siblingError) return json({ error: siblingError.message }, 500);
-      if (pendingRecordChanges(siblings ?? [], act)) return json({ error: "Approve the record and document updates from this review before sending its reply." }, 409);
+      if (!parseExecutionPlan(act.payload?.execution) && pendingRecordChanges(siblings ?? [], act)) return json({ error: "Approve the record and document updates from this review before sending its reply." }, 409);
       if (!act.email_body || !sub.email) return json({ error: "Email body or recipient missing" }, 400);
       const res = await fetch(`${url}/functions/v1/gmail-action`, {
         method: "POST",
@@ -1209,7 +1244,7 @@ Deno.serve(async (req) => {
       notedByAction = !noteError;
     } else if (act.action_type !== "flag_human") {
       // Re-check against the record as it is NOW — it may have moved on since the proposal.
-      const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at").eq("submission_id", sub.id).is("deleted_at", null);
+      const { data: contracts } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at,signed_at,countersigned_at,notarized_at,completed_at").eq("submission_id", sub.id).is("deleted_at", null);
       const { allowed, liveLink } = allowedActions(sub, contracts ?? []);
       if (!allowed.has(act.action_type) && !(staffRequested && act.action_type === "send_family_tree")) return json({ error: "This step no longer applies — the record has moved on. Reject it or re-run the AI." }, 409);
       if (act.action_type === "send_document_request" && act.payload?.packet_send?.status === "sending") return json({ error: "A previous request send was interrupted. Check the seller's mailbox and sent email record before retrying; no automatic resend was made." }, 409);
@@ -1252,7 +1287,9 @@ Deno.serve(async (req) => {
           if (r.status !== "sent") throw new Error(`Listing agreement not sent: ${r.reason ?? r.status}`);
           await aiNote(`Sent ${first(sub)} the listing agreement to sign.`);
         } else if (act.action_type === "resend_signing_link") {
-          await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${liveLink.sign_token}` });
+          if (!liveLink) throw new Error("No unsigned listing agreement to resend");
+          const refreshed = await callInternal(url, "generate-contract", { submission_id: sub.id, kind: "listing_agreement", overrides: { refresh_signing_link: true, contract_id: liveLink.id } });
+          await callInternal(url, "send-contract-link", { contract_id: liveLink.id, sign_url: `${SITE}/sign/${refreshed.sign_token}` });
           await aiNote(`Re-sent ${first(sub)} the link to sign the listing agreement.`);
         } else if (act.action_type === "resend_family_tree") {
           const follow = String(act.email_body ?? "").trim();
@@ -1294,8 +1331,10 @@ Deno.serve(async (req) => {
             const row = (rows ?? []).find((x) => x.id === it.id);
             if (!row) continue;
             const patch: Record<string, unknown> = {};
+            const safe = safeChecklistState(row, it.state, sub.ownership_answers ?? {});
+            it.state = safe.state;
+            if (safe.warning) it.note = [it.note, safe.warning].filter(Boolean).join(" ");
             if (it.state) {
-              if (["received", "notarized"].includes(it.state) && requiresPhysicalOriginal(row, sub.ownership_answers ?? {}) && !physicalOriginalLogged(row)) throw new Error(`A scan or mailing confirmation cannot mark ${row.label} received. Attach the copy without changing its state; staff must log arrival of the physical original separately.`);
               patch.manual_override = it.state; patch.required_state = it.state;
               patch.status = ["received", "notarized"].includes(it.state) ? "received" : "pending";
               if (patch.status === "received") patch.received_at = now;
@@ -1304,7 +1343,7 @@ Deno.serve(async (req) => {
             const removed: string[] = [];
             if (it.detach_files?.length) {
               const cur: string[] = row.file_urls?.length ? [...row.file_urls] : row.file_url ? [row.file_url] : [];
-              const keep = cur.filter((u) => { const hit = it.detach_files!.includes(String(u).split("/").pop() ?? ""); if (hit) removed.push(String(u).split("/").pop()!); return !hit; });
+              const keep = cur.filter((u) => { const hit = (it.detach_files ?? []).includes(String(u).split("/").pop() ?? ""); if (hit) removed.push(String(u).split("/").pop() ?? String(u)); return !hit; });
               if (removed.length) {
                 if (!it.note) throw new Error(`Say why ${removed.join(", ")} is wrong for ${row.label} before detaching it.`);
                 patch.file_urls = keep; patch.file_url = keep.at(-1) ?? null;
@@ -1443,17 +1482,25 @@ Deno.serve(async (req) => {
           const { error: e } = await db.from("contact_submissions").update(stagePatch(sub, st)).eq("id", sub.id);
           if (e) throw new Error(e.message);
           await aiNote(`Moved ${first(sub)}'s file to stage "${st.replace(/_/g, " ")}"${act.reason ? `: ${act.reason}` : ""}.`);
+        } else if (act.action_type === "repair_unsigned_agreement") {
+          const f = act.payload?.fields ?? {};
+          const patch = Object.fromEntries(["email", "seller_name", "cemetery", "plot_description"].filter(k => f[k] != null).map(k => [k, f[k]]));
+          if (!Object.keys(patch).length || !String(act.reason ?? "").trim()) throw new Error("Evidence and a descriptive correction are required");
+          const repaired = await callInternal(url, "generate-contract", { submission_id: sub.id, kind: "listing_agreement", overrides: { repair_unsigned: true, contract_id: f.contract_id, descriptive_patch: patch } });
+          if (!repaired.pdf_path) throw new Error("Corrected agreement PDF was not verified");
+          await aiNote(`Corrected the unsigned agreement (${Object.keys(patch).join(", ")}); exact financial terms and historical fee version preserved. ${act.reason}`);
         } else if (act.action_type === "resend_contract_link" || act.action_type === "email_signed_copy") {
           const cid = String(act.payload?.fields?.contract_id ?? "");
-          const { data: c } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at,fill_data,submission_id").eq("id", cid).is("deleted_at", null).maybeSingle();
+          const { data: c } = await db.from("contracts").select("id,kind,status,sign_token,sign_token_expires_at,fill_data,submission_id,signed_at,notarized_at,completed_at,countersigned_at").eq("id", cid).is("deleted_at", null).maybeSingle();
           if (!c || c.submission_id !== sub.id) throw new Error("That contract isn't on this record.");
           if (act.action_type === "resend_contract_link") {
-            if (!["sent", "viewed", "draft"].includes(c.status) || !c.sign_token || (c.sign_token_expires_at && c.sign_token_expires_at < now)) throw new Error("That contract is signed, void or its link has expired — regenerate it from the Contracts panel.");
+            if (!["sent", "viewed", "draft"].includes(c.status) || c.signed_at || c.notarized_at || c.completed_at || c.countersigned_at) throw new Error("Signed or inactive contracts cannot be resent for signature.");
             if (c.kind === "listing_agreement" && String(c.fill_data?.email ?? "").toLowerCase() !== String(sub.email ?? "").toLowerCase()) {
               await callInternal(url, "generate-contract", { submission_id: sub.id, kind: "listing_agreement", overrides: { contact_email_only: true, contract_id: c.id } });
               await aiNote(`Corrected the email on ${first(sub)}'s unsigned listing agreement to ${sub.email}; all other agreement details and paid terms unchanged.`);
             }
-            await callInternal(url, "send-contract-link", { contract_id: c.id, sign_url: `${SITE}/sign/${c.sign_token}` });
+            const refreshed = await callInternal(url, "generate-contract", { submission_id: sub.id, kind: c.kind, overrides: { refresh_signing_link: true, contract_id: c.id } });
+            await callInternal(url, "send-contract-link", { contract_id: c.id, sign_url: `${SITE}/sign/${refreshed.sign_token}` });
             await aiNote(`Re-sent ${first(sub)} the signing link for the ${contractLabel(c)}.`);
           } else {
             if (!["signed", "notarized", "completed"].includes(c.status)) throw new Error("That contract isn't signed yet.");

@@ -19,7 +19,7 @@ export type AiAction = {
   id: string; run_id?: string | null; submission_id: string; action_type: string; status: string; reason: string | null;
   confidence: number | null; email_to: string | null; email_subject: string | null; email_body: string | null;
   note_body: string | null; created_at: string; decided_by_name: string | null; error: string | null; decision_reason?: string | null;
-  payload?: { human_attention?: unknown; fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string; tree?: Record<string, unknown>; before_tree?: Record<string, unknown> | null } | null;
+  payload?: { execution?: { independent: boolean; reason: string; depends_on_action_types: string[]; depends_on_staff_task_ids: string[] }; human_attention?: unknown; fields?: Record<string, string>; items?: { id: string; state: string | null; attach_file_ids: string[]; note: string | null }[]; visuals?: AiVisual[]; changes?: AiChanges; research?: { tools: string[]; text: string }; instruction?: string; tree?: Record<string, unknown>; before_tree?: Record<string, unknown> | null } | null;
 };
 
 type AiChanges = {
@@ -91,6 +91,7 @@ function TreeDocsView({ before, after }: { before: Record<string, unknown> | nul
 const EMAIL_TYPES = ["send_document_request", "reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "update_quote_spaces", "send_quote", "resend_email"];
 
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
+  repair_unsigned_agreement: { label: "Correct unsigned agreement", Icon: FileSignature, approve: "Correct agreement" },
   reply_email: { label: "Reply email", Icon: Mail, approve: "Approve & send" },
   add_note: { label: "Internal note", Icon: StickyNote, approve: "Add note" },
   flag_human: { label: "Needs a person", Icon: UserRound, approve: "I'll handle it" },
@@ -227,6 +228,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         </div>
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
+      {!humanTask && a.payload?.execution && <p className="text-xs text-muted-foreground">{a.payload.execution.depends_on_staff_task_ids?.length ? "Requires the specified staff findings" : a.payload.execution.depends_on_action_types?.length ? "Requires the listed AI changes first" : a.payload.execution.independent ? "AI can do this without staff findings" : "Requires staff findings"} · {a.payload.execution.reason}</p>}
       {!humanTask && a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
       {humanTask && <div className="border-l-2 border-primary pl-3 text-sm space-y-2"><p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p><ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <><p className="text-muted-foreground">Why: {cleanAttentionText(attention.reason)}</p><p className="text-xs text-muted-foreground">Where to check: {cleanAttentionText(attention.evidence)}</p></>}</div>}
       {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}

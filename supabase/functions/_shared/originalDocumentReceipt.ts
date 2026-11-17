@@ -16,6 +16,14 @@ export function physicalOriginalLogged(doc: Document): boolean {
   return ["received", "notarized", "complete"].includes(doc.manual_override ?? "");
 }
 
+/** Keep safe attachment work even when the proposed state would falsely confirm originals. */
+export function safeChecklistState(doc: Document, state: string | null, answers: Answers = {}): { state: string | null; warning: string | null } {
+  if (["received", "notarized"].includes(state ?? "") && requiresPhysicalOriginal(doc, answers) && !physicalOriginalLogged(doc)) {
+    return { state: null, warning: "Copy reviewed; the physical original is still needed until staff log its receipt." };
+  }
+  return { state, warning: null };
+}
+
 export function documentSatisfied(doc: Document, answers: Answers = {}): boolean {
   const state = doc.manual_override ?? doc.required_state ?? doc.status;
   if (["not_needed", "not_required", "waived"].includes(state ?? "")) return true;

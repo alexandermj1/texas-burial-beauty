@@ -1,3 +1,4 @@
+import { workBlocker } from "../_shared/sellerWorkPlan.ts";
 // Seller autopilot — runs every 10 minutes (and on "Run now" from the admin page).
 //  1) Sends AI replies whose natural delay has passed (re-checking the file first).
 //  2) Wakes records that have a new seller email or whose check-back is due, and decides
@@ -62,7 +63,7 @@ async function flagHuman(sub: any, task: string, reason = "The AI autopilot stop
 
 /** Steps the autopilot may carry out itself — each finishes entirely on the server with the staff code.
  *  Opening dialogs and genuinely discretionary staff tasks are still handed to a person. */
-export const AUTO_RUN = new Set(["change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "send_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "countersign_contract", "change_listing_option", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
+export const AUTO_RUN = new Set(["repair_unsigned_agreement", "change_cemetery", "reply_email", "add_note", "update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "send_document_request", "resend_quote_free_listing", "update_quote_spaces", "increase_quote_ten_percent", "extend_quote_deadline", "resend_expired_quote", "send_quote", "resend_email", "set_stage", "resend_contract_link", "countersign_contract", "change_listing_option", "send_listing_agreement", "resend_signing_link", "resend_family_tree", "send_family_tree"]);
 const STEP_LABEL = (t: string) => t.replace(/_/g, " ");
 
 async function execute(actionId: string) {
@@ -106,27 +107,31 @@ async function sendDue(mode: string) {
       continue;
     }
     if ((newer ?? []).length) { await cancel("Our team already emailed since this was drafted"); continue; }
-    if (await humanOpen(o.submission_id)) { await cancel("A person is handling this record"); continue; }
+    const { data: staffTasks } = await db.from("ai_agent_actions").select("id,action_type,status,payload").eq("submission_id", sub.id).eq("action_type", "flag_human").is("deleted_at", null);
     if (await emailsToday(o.submission_id) >= MAX_EMAILS_PER_SELLER_DAY) { await db.from("ai_outbox").update({ send_at: new Date(Date.now() + 86400_000).toISOString() }).eq("id", o.id); continue; }
     // Claim the row first so an overlapping run can never send it twice.
     const { data: claimed } = await db.from("ai_outbox").update({ status: "sending", send_at: new Date().toISOString() }).eq("id", o.id).eq("status", "held").select("id").maybeSingle();
     if (!claimed) continue;
     // Carry out the whole review in order: record/document changes, then notes, then the reply last.
-    const { data: siblings } = await db.from("ai_agent_actions").select("id,action_type,status,created_at").eq("run_id", act.run_id).eq("status", "proposed").is("deleted_at", null).order("created_at");
+    const { data: siblings } = await db.from("ai_agent_actions").select("id,action_type,status,created_at,payload").eq("run_id", act.run_id).is("deleted_at", null).order("created_at");
     const rank = (t: string) => t === "reply_email" ? 2 : t === "add_note" ? 1 : 0;
-    const steps = (siblings ?? []).filter((x) => AUTO_RUN.has(x.action_type)).sort((x, y) => rank(x.action_type) - rank(y.action_type));
+    const steps = (siblings ?? []).filter((x) => x.status === "proposed" && AUTO_RUN.has(x.action_type)).sort((x, y) => rank(x.action_type) - rank(y.action_type));
+    const primaryBlock = workBlocker(act, siblings ?? [], staffTasks ?? []);
+    if (primaryBlock && !act.payload?.execution?.depends_on_action_types?.length) { await cancel(primaryBlock); continue; }
     const done: string[] = [];
     let failed: string | null = null;
     for (const st of steps) {
+      if (workBlocker(st, siblings ?? [], staffTasks ?? [])) continue;
       const r = await execute(st.id);
-      if (!r.ok) { failed = `${STEP_LABEL(st.action_type)}: ${r.error.slice(0, 200)}`; break; }
-      done.push(st.action_type);
+      if (!r.ok) { failed = `${STEP_LABEL(st.action_type)}: ${r.error.slice(0, 200)}`; continue; }
+      done.push(st.action_type); st.status = "executed";
     }
     if (failed) {
       await db.from("ai_outbox").update({ status: "failed", status_reason: `Stopped at ${failed}${done.length ? ` (already done: ${done.map(STEP_LABEL).join(", ")})` : ""}` }).eq("id", o.id);
-      await flagHuman(sub, `The AI couldn't finish its planned steps (${failed}). Please check the record and finish or correct it${done.includes("reply_email") ? "" : " — no reply has been sent to the seller yet"}.`, "An automatic step failed, so the autopilot stopped before doing anything further.");
+      await flagHuman(sub, `The AI couldn't finish a planned step (${failed}). Please check this step${done.includes("reply_email") ? " — an independent reply was sent" : " — no reply was confirmed"}.`, "Completed independent steps were retained; dependent work remains blocked. Check delivery before retrying any send.");
       out.push({ id: o.id, failed }); continue;
     }
+    if (!done.includes(act.action_type)) { await cancel("Dependent action is still waiting; independent changes were retained"); continue; }
     const now = new Date().toISOString();
     await db.from("ai_outbox").update({ status: "sent", sent_at: now, status_reason: done.map(STEP_LABEL).join(", ") || null }).eq("id", o.id);
     // Remember the file as it is now (our email is part of it) so the next visit doesn't treat it as new.
@@ -151,14 +156,16 @@ async function callAgent(body: Record<string, unknown>) {
 const RECORD_ONLY = SELLER_RECORD_ACTIONS;
 const PAPERWORK_LABEL: Record<string, string> = { edit_document_request: "document request change", edit_family_tree: "family tree update", sync_checklist: "checklist re-sync", send_document_request: "document request email", prepare_listing_agreement: "listing agreement preparation" };
 /** Carry out a review's record-only steps now, and accept them into memory so they don't wake another review. */
-async function runRecordSteps(sub: any, list: { id: string; action_type: string }[]) {
+async function runRecordSteps(sub: any, list: { id: string; action_type: string; status: string; payload?: any }[]) {
   const done: string[] = [];
-  for (const a of list.filter((x) => RECORD_ONLY.has(x.action_type)).sort((x, y) => (x.action_type === "add_note" ? 1 : 0) - (y.action_type === "add_note" ? 1 : 0))) {
+  const { data: staffTasks } = await db.from("ai_agent_actions").select("id,action_type,status,payload").eq("submission_id", sub.id).eq("action_type", "flag_human").is("deleted_at", null);
+  for (const a of list.filter((x) => x.status === "proposed" && RECORD_ONLY.has(x.action_type)).sort((x, y) => (x.action_type === "add_note" ? 1 : 0) - (y.action_type === "add_note" ? 1 : 0))) {
+    if (workBlocker(a, list, staffTasks ?? [])) continue;
     const r = await execute(a.id);
-    if (r.ok) done.push(a.action_type);
+    if (r.ok) { done.push(a.action_type); a.status = "executed"; }
     else {
       await flagHuman(sub, `The AI could not finish ${STEP_LABEL(a.action_type)}: ${r.error.slice(0, 180)}. Check this step before sending its reply.`, "Other completed changes are retained; no confirmation reply has been sent.");
-      return done;
+      continue;
     }
   }
   if (done.some((d) => d !== "add_note")) {
@@ -170,25 +177,16 @@ async function runRecordSteps(sub: any, list: { id: string; action_type: string 
 }
 
 async function queueReply(sub: any, runId: string) {
-  const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at").eq("run_id", runId).eq("status", "proposed").order("created_at");
+  const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at,status,payload").eq("run_id", runId).is("deleted_at", null).order("created_at");
   const list = acts ?? [];
   if (!list.length) return null;
-  const manual = list.filter((a) => !AUTO_RUN.has(a.action_type) && a.action_type !== "flag_human");
-  const flagged = list.some((a) => a.action_type === "flag_human");
+  const manual = list.filter((a) => a.status === "proposed" && !AUTO_RUN.has(a.action_type) && a.action_type !== "flag_human");
   const done = await runRecordSteps(sub, list);
-  if (!flagged && await humanOpen(sub.id)) return { handed_to_person: true, done };
-  if (flagged || manual.length) {
-    // Do everything that doesn't depend on the person now; only the reply/sends wait, ready for one-click approval.
-    if (flagged) return { handed_to_person: true, done };
-    const names = manual.map((a) => PAPERWORK_LABEL[a.action_type] ?? STEP_LABEL(a.action_type)).join(" and ");
-    const ready = list.some((a) => a.action_type === "reply_email") ? " The AI's email explaining it to the seller is written and ready" : "";
-    await flagHuman(sub, `Paperwork approval only: approve the AI's ${names} in the Family tree & documents panel.${ready}${done.length ? `; its other changes (${done.map(STEP_LABEL).join(", ")}) are already done.` : "."}`,
-      `Only this paperwork step needs the panel open; approving it there carries out the rest of the AI's plan.`, "normal");
-    return { held_for_staff: names, done };
-  }
-  const reply = list.find((a) => a.action_type === "reply_email");
-  const primary = reply ?? list.find((a) => !RECORD_ONLY.has(a.action_type));
-  if (!primary) { for (const n of list) await execute(n.id); return { notes_only: list.length }; }
+  const { data: staffTasks } = await db.from("ai_agent_actions").select("id,action_type,status,payload").eq("submission_id", sub.id).eq("action_type", "flag_human").is("deleted_at", null);
+  const candidates = list.filter(a => a.status === "proposed" && AUTO_RUN.has(a.action_type) && !RECORD_ONLY.has(a.action_type));
+  const reply = candidates.find(a => a.action_type === "reply_email" && !workBlocker(a, list, staffTasks ?? []));
+  const primary = reply ?? candidates.find(a => !workBlocker(a, list, staffTasks ?? []));
+  if (!primary) return { waiting_for_dependencies: true, done, manual_steps: manual.map(a => a.action_type) };
   const { data: mail } = await db.from("email_messages").select("from_email,received_at").eq("matched_submission_id", sub.id).is("deleted_at", null).order("received_at", { ascending: false }).limit(10);
   const seller = (mail ?? []).find((m) => !/texascemeterybrokers/i.test(m.from_email ?? ""));
   const oursBefore = seller ? (mail ?? []).find((m) => /texascemeterybrokers/i.test(m.from_email ?? "") && m.received_at <= seller.received_at) : null;

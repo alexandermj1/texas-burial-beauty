@@ -12,6 +12,7 @@ export type HumanAttention = {
   evidence: string;
   outcome_needed?: string;
   after_outcome?: string;
+  existing_task_id?: string;
 };
 export const QUOTE_TASK_IMPORTANCE = 10;
 export const isQuoteNeededAttention = (a: Pick<HumanAttention, "task">) => /^quote needed\s*:/i.test(a.task.trim());
@@ -25,7 +26,7 @@ export function parseHumanAttention(value: unknown): HumanAttention | null {
   const task = text(v.task, 1000), reason = text(v.reason, 1000), evidence = text(v.evidence, 1000);
   if (!task || !reason || !evidence) return null;
   const outcome = text(v.outcome_needed, 1000), after = text(v.after_outcome, 1000);
-  const parsed = { priority: v.priority as HumanAttention["priority"], category: v.category as HumanAttention["category"], importance: Math.round(v.importance), task, reason, evidence, ...(outcome ? { outcome_needed: outcome } : {}), ...(after ? { after_outcome: after } : {}) };
+  const parsed = { priority: v.priority as HumanAttention["priority"], category: v.category as HumanAttention["category"], importance: Math.round(v.importance), task, reason, evidence, ...(outcome ? { outcome_needed: outcome } : {}), ...(after ? { after_outcome: after } : {}), ...(/^[0-9a-f-]{36}$/i.test(String(v.existing_task_id ?? "")) ? { existing_task_id: String(v.existing_task_id) } : {}) };
   return isQuoteNeededAttention(parsed) ? { ...parsed, priority: "low" as const, importance: Math.min(parsed.importance, QUOTE_TASK_IMPORTANCE) } : parsed;
 }
 export const humanAttentionNote = (a: HumanAttention) =>

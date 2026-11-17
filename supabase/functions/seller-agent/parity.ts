@@ -13,11 +13,12 @@ export const RECORD_CHANGE_TYPES = ["update_fields", "update_document_items", "f
 export function parityAllowed(sub: Rec, contracts: Rec[]): Set<string> {
   const out = new Set<string>(["change_cemetery"]);
   const a = (sub.ownership_answers ?? {}) as Rec;
-  const done = !!sub.documents_completed_at || !!sub.sold_at;
+  const done = !!sub.sold_at || !!sub.closed_at || !!sub.archived_at;
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0 || !!sub.listing_paid_at;
   if (sub.quote_sent_at && sub.listing_paid_at && !sub.sold_at) out.add("change_listing_option");
   if (accepted && !contracts.some((c) => c.kind === "listing_agreement" && c.status !== "void")) out.add("prepare_listing_agreement");
-  if (!done && isUsableTree(a.v2)) { out.add("edit_family_tree"); out.add("sync_checklist"); }
+  if (!done) out.add("edit_family_tree"); // A missing/broken input tree is precisely what this action repairs.
+  if (!done && isUsableTree(a.v2)) out.add("sync_checklist");
   if (!done && a.sellerConfirmedAt && isUsableTree(a.v2) && sub.email) out.add("send_document_request");
   return out;
 }

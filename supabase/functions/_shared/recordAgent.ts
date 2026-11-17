@@ -1,3 +1,4 @@
+import { relatedRecordEvidence } from "./sellerWorkPlan.ts";
 import { aiFetch } from "./aiRunLabel.ts";
 // Shared, READ-ONLY record toolkit + bounded tool-calling loop for AI agents.
 // Built so any agent (buyer-watch today; a future buyer/seller communications agent) can read
@@ -21,6 +22,7 @@ export const RECORD_TOOLS = [
 
 /** Extra read-only tools that give an agent the same view of a seller file an admin has. */
 export const ADMIN_READ_TOOLS = [
+  { name: "get_related_records", description: "Verify other actual submissions sharing the customer profile or exact email. Returns candidate IDs and connection evidence, NOT a duplicate diagnosis. Compare property details before reading another candidate with get_record/get_contracts/get_documents.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_all_emails", description: "Every email on the record (both directions), oldest first, full text. Use offset/limit to page (max 25 per call). Each item has an id you can cite.", parameters: { type: "object", properties: { id: { type: "string" }, offset: { type: "number" }, limit: { type: "number" } }, required: ["id"] } },
   { name: "get_payments", description: "Every payment on the record: what for, amount, status, who paid, when paid, refunds, test vs live.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_quote_history", description: "Quote history: AI estimates, approved revisions and every past change to quote/price/space fields with who changed them.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
@@ -28,7 +30,7 @@ export const ADMIN_READ_TOOLS = [
   { name: "get_family_tree", description: "The seller's family-tree questionnaire exactly as answered (every person, relationship, alive/deceased, spouses, heirs, wills, notes), the deed-owner roster it started from, when it was sent/confirmed, staff-added/removed document requests, and the saved 'Why these documents are needed' explanation.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_documents", description: "The live document request checklist: each item, person, state, notary need, received date, notes and attached file names.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
   { name: "get_contracts", description: "Every contract on the record (listing agreement, POAs, affidavits): status, sent/viewed/signed/countersigned dates, link expiry; plus buyer purchase agreements for this plot.", parameters: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
-  { name: "read_file", description: "Open ONE file (image or PDF) from get_files (file_id) or a checklist upload path from get_documents (path) and read it with vision. Ask a specific question.", parameters: { type: "object", properties: { id: { type: "string" }, file_id: { type: "string" }, path: { type: "string" }, question: { type: "string" } }, required: ["id", "question"] } },
+  { name: "read_file", description: "Open ONE file (image or PDF) from get_files (file_id) a prepared contract from get_contracts (contract_id), or a checklist upload path from get_documents (path) and read it with vision. Ask a specific question.", parameters: { type: "object", properties: { id: { type: "string" }, file_id: { type: "string" }, contract_id: { type: "string" }, path: { type: "string" }, question: { type: "string" } }, required: ["id", "question"] } },
   { name: "cemetery_stock", description: "Other plots we hold or are working on at a cemetery: other seller records (stage, lawn, spaces, quote) and website listings. Never share another seller's identity with a customer.", parameters: { type: "object", properties: { cemetery: { type: "string" }, exclude_id: { type: "string" } }, required: ["cemetery"] } },
   { name: "nearby_cemeteries", description: "Cemeteries in our file within N miles (default 25) of a cemetery, nearest first, with how many active seller records each has.", parameters: { type: "object", properties: { cemetery: { type: "string" }, miles: { type: "number" } }, required: ["cemetery"] } },
 ] as const;
@@ -60,6 +62,17 @@ async function record(db: any, id: string) {
 export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<unknown> {
   const { db } = ctx;
   const id = String(args?.id ?? "");
+  if (name === "get_related_records") {
+    const { data: current } = await db.from("contact_submissions").select("id,email,customer_profile_id,cemetery,plot_description").eq("id", id).is("deleted_at", null).maybeSingle();
+    if (!current) return { error: "Record not found" };
+    const candidates: any[] = [];
+    for (const key of ["customer_profile_id", "email"]) {
+      if (!current[key]) continue;
+      const { data } = await db.from("contact_submissions").select("id,email,customer_profile_id,cemetery,plot_description,property_type,space_numbers,created_at,archived_at").eq(key, current[key]).neq("id", id).is("deleted_at", null).limit(30);
+      candidates.push(...(data ?? []));
+    }
+    return [...new Map(candidates.map(c => [c.id, { ...c, connection: relatedRecordEvidence(current, c) }])).values()];
+  }
   if (name === "get_record") {
     const r = await record(db, id); if (!r) return { error: "not found" };
     const count = Math.max(1, Number(r.plot_count) || Number(r.spaces) || 1);
@@ -86,7 +99,7 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
     if (!r?.customer_profile_id) return { files: [], note: "No files on this record." };
     const { data } = await db.from("customer_files").select("id,file_name,file_path,mime_type,document_type,extracted_summary,extracted_data").eq("customer_profile_id", r.customer_profile_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(20);
     const files = data ?? [];
-    if (name === "get_files") return files.map((f: any) => ({ name: f.file_name, type: f.document_type, summary: clip(f.extracted_summary, 500), insights: f.extracted_data ? clip(JSON.stringify(f.extracted_data), 1500) : null }));
+    if (name === "get_files") return files.map((f: any) => ({ id: f.id, file_id: f.id, path: f.file_path, mime_type: f.mime_type, name: f.file_name, type: f.document_type, summary: clip(f.extracted_summary, 500), insights: f.extracted_data ? clip(JSON.stringify(f.extracted_data), 1500) : null }));
     if (ctx.deedReads >= 2) return { error: "Deed reading budget used for this check — rely on file summaries." };
     const isImg = (f: any) => /^image\/(jpe?g|png|webp)$/i.test(f.mime_type ?? "") || /\.(jpe?g|png|webp)$/i.test(f.file_name ?? "");
     const score = (f: any) => /(deed|certificate|sepulture|ownership|interment right|title)/i.test(`${f.document_type} ${f.extracted_summary} ${f.file_name}`) ? 1 : 0;
@@ -148,25 +161,29 @@ export async function runTool(ctx: ToolCtx, name: string, args: any): Promise<un
   }
   if (name === "get_contracts") {
     const [c, pa] = await Promise.all([
-      db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,countersigned_at,notarized_at,completed_at,signed_copy_emailed_at,sign_token_expires_at,principal_key,fill_data").eq("submission_id", id).is("deleted_at", null).order("created_at"),
+      db.from("contracts").select("id,kind,status,sent_at,viewed_at,signed_at,countersigned_at,notarized_at,completed_at,signed_copy_emailed_at,sign_token_expires_at,principal_key,filled_pdf_path,signed_pdf_path,notarized_pdf_path,countersigned_pdf_path,fill_data").eq("submission_id", id).is("deleted_at", null).order("created_at"),
       db.from("purchase_agreements").select("id,status,sent_at,buyer_signed_at,countersigned_at,paid_at,voided_at,fields").eq("seller_submission_id", id).is("deleted_at", null),
     ]);
-    return { contracts: (c.data ?? []).map((x: any) => ({ id: x.id, kind: x.kind, status: x.status, sent_at: x.sent_at, viewed_at: x.viewed_at, signed_at: x.signed_at, countersigned_at: x.countersigned_at, notarized_at: x.notarized_at, signed_copy_emailed_at: x.signed_copy_emailed_at, link_expires: x.sign_token_expires_at, signer: x.fill_data?.principal_name ?? x.fill_data?.seller_name ?? x.principal_key ?? null, plot: x.fill_data?.plot_description ?? null, listing_option: x.fill_data?.listing_option ?? null })),
+    return { contracts: (c.data ?? []).map((x: any) => ({ id: x.id, kind: x.kind, status: x.status, sent_at: x.sent_at, viewed_at: x.viewed_at, signed_at: x.signed_at, countersigned_at: x.countersigned_at, notarized_at: x.notarized_at, signed_copy_emailed_at: x.signed_copy_emailed_at, link_expires: x.sign_token_expires_at, prepared_pdf_path: x.filled_pdf_path, returned_pdf_path: x.notarized_pdf_path ?? x.countersigned_pdf_path ?? x.signed_pdf_path, completed_at: x.completed_at, signer: x.fill_data?.principal_name ?? x.fill_data?.seller_name ?? x.principal_key ?? null, plot: x.fill_data?.plot_description ?? null, listing_option: x.fill_data?.listing_option ?? null })),
       purchase_agreements: (pa.data ?? []).map((x: any) => ({ status: x.status, sent_at: x.sent_at, buyer_signed_at: x.buyer_signed_at, paid_at: x.paid_at, voided_at: x.voided_at, total: x.fields?.charges?.total ?? null })) };
   }
   if (name === "read_file") {
-    if ((ctx.fileReads ?? 0) >= 4) return { error: "File reading budget used for this review." };
     let path = String(args?.path ?? ""), bucket = "portal-uploads", fileName = path.split("/").pop() ?? "file", mime = "";
     if (args?.file_id) {
       const { data: f } = await db.from("customer_files").select("file_path,file_name,mime_type").eq("id", String(args.file_id)).is("deleted_at", null).maybeSingle();
       if (!f) return { error: "File not found." };
       path = f.file_path; bucket = "customer-files"; fileName = f.file_name; mime = f.mime_type ?? "";
+    } else if (args?.contract_id) {
+      const { data: c } = await db.from("contracts").select("filled_pdf_path,signed_pdf_path,notarized_pdf_path,countersigned_pdf_path,kind").eq("id", String(args.contract_id)).eq("submission_id", id).is("deleted_at", null).maybeSingle();
+      if (!c?.filled_pdf_path) return { error: "Contract PDF missing on this record" };
+      path = c.notarized_pdf_path ?? c.countersigned_pdf_path ?? c.signed_pdf_path ?? c.filled_pdf_path; bucket = "contracts"; fileName = `${c.kind}.pdf`; mime = "application/pdf";
     } else if (!path || !path.startsWith(`${id}/`)) return { error: "Give a file_id from get_files or a checklist path from get_documents for this record." };
     if (!mime) mime = /\.pdf$/i.test(fileName) ? "application/pdf" : /\.png$/i.test(fileName) ? "image/png" : /\.webp$/i.test(fileName) ? "image/webp" : "image/jpeg";
     if (!/^(image\/(jpe?g|png|webp)|application\/pdf)$/i.test(mime)) return { error: `Can't read ${mime} files.` };
     const fileKey = `file:v1:${bucket}:${path}:${await sha256(String(clip(args?.question, 600)))}`;
     const hit = await cachedRead(db, fileKey);
     if (hit) return { ...hit, reused_earlier_read: true };
+    if ((ctx.fileReads ?? 0) >= 8) return { error: "Uncached file reading budget used; identify the exact remaining evidence, do not infer a document conflict from a reading limit." };
     const dl = await db.storage.from(bucket).download(path);
     if (dl.error || !dl.data) return { error: "Could not open the file." };
     const bytes = new Uint8Array(await dl.data.arrayBuffer());

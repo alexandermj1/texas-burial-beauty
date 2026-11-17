@@ -6,3 +6,15 @@ export function correctedAgreementEmail(c: { kind: string; status: string; signe
   if (!c.fill_data || !Object.keys(c.fill_data).length) throw new Error('Existing agreement terms are missing');
   return { ...c.fill_data, email: next };
 }
+
+/** Evidence-backed descriptive repair only; financial and seller-entered terms stay exact. */
+export function repairedUnsignedAgreement(c: Parameters<typeof correctedAgreementEmail>[0], patch: Record<string, unknown>): Record<string, any> {
+  const fill = correctedAgreementEmail(c, patch.email ?? c.fill_data?.email);
+  for (const key of ["seller_name", "plot_description", "cemetery"] as const) {
+    if (patch[key] == null) continue;
+    const value = String(patch[key]).trim();
+    if (!value || value.length > 500) throw new Error(`Invalid ${key}`);
+    fill[key] = value;
+  }
+  return fill;
+}
