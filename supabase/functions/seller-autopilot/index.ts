@@ -206,7 +206,7 @@ async function queueReply(sub: any, runId: string) {
 async function finishStranded(mode: string) {
   const out: any[] = [];
   const { data: runs } = await db.from("ai_agent_runs").select("id,submission_id,created_at").like("trigger", "autopilot:%").eq("status", "done").is("autopilot_processed_at", null).is("deleted_at", null)
-    .gte("created_at", new Date(Date.now() - 48 * 3600_000).toISOString()).lte("created_at", new Date(Date.now() - 3 * 60_000).toISOString()).order("created_at").limit(10);
+    .gte("created_at", new Date(Date.now() - 48 * 3600_000).toISOString()).lte("created_at", new Date(Date.now() - 3 * 60_000).toISOString()).order("created_at", { ascending: false }).limit(30);
   for (const run of runs ?? []) {
     const { data: latest } = await db.from("ai_agent_runs").select("id").eq("submission_id", run.submission_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
     const { data: sub } = await db.from("contact_submissions").select("*").eq("id", run.submission_id).maybeSingle();
