@@ -164,7 +164,6 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   const [body, setBody] = useState(a.email_body ?? "");
   const [decisionReason, setDecisionReason] = useState("");
   const [staffCompleted, setStaffCompleted] = useState(false);
-  const [recordingOutcome, setRecordingOutcome] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const attention = HUMAN_ATTENTION_RELEASED ? parseHumanAttention(a.payload?.human_attention) : null;
   const baseMeta = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
@@ -217,28 +216,29 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   };
 
   return (
-    <div id={`ai-action-${a.id}`} className={`${streamlined ? "border-b border-border py-4" : `rounded-lg border border-border bg-card ${compact ? "p-3" : "p-4 md:p-5"}`} space-y-2.5`}>
+    <div id={`ai-action-${a.id}`} className={`${streamlined ? "rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5" : `rounded-lg border border-border bg-card ${compact ? "p-3" : "p-4 md:p-5"}`} space-y-2.5`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           {sellerName !== undefined && (
             <button onClick={() => onOpenSubmission?.(a.submission_id)} className="font-medium text-foreground hover:text-indigo-600 text-left">{sellerName ?? "Seller"}</button>
           )}
           {sellerSub && <div className="text-xs text-muted-foreground">{sellerSub}</div>}
-          <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
-            <meta.Icon className="w-3.5 h-3.5" />{meta.label}
+          <div className={streamlined ? "flex items-center gap-2.5 text-[15px] font-semibold text-foreground" : "flex items-center gap-1.5 text-xs font-medium text-primary"}>
+            {streamlined ? <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><meta.Icon className="h-4 w-4" /></span> : <meta.Icon className="w-3.5 h-3.5" />}{humanTask && streamlined ? "Staff task" : meta.label}
             {!streamlined && a.confidence != null && <span className="text-muted-foreground font-normal">· {Math.round(a.confidence * 100)}% sure</span>}
           </div>
         </div>
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
-      {!humanTask && a.payload?.execution && <p className="text-xs text-muted-foreground">{a.payload.execution.depends_on_staff_task_ids?.length ? "Requires the specified staff findings" : a.payload.execution.depends_on_action_types?.length ? "Requires the listed AI changes first" : a.payload.execution.independent ? "AI can do this without staff findings" : "Requires staff findings"} · {a.payload.execution.reason}</p>}
-      {!humanTask && a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
-      {humanTask && <div className="text-sm space-y-2">{!streamlined && <p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p>}<ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <details open={streamlined ? undefined : true}><summary className="cursor-pointer text-xs text-muted-foreground">Why this is needed & where to check</summary><p className="mt-2 text-muted-foreground">{cleanAttentionText(attention.reason)}</p><p className="mt-1 text-xs text-muted-foreground">{cleanAttentionText(attention.evidence)}</p></details>}</div>}
+      {streamlined && pending && !humanTask && <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${prerequisites.length || a.payload?.execution?.depends_on_staff_task_ids?.length ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>{prerequisites.length ? "Waiting on another step" : a.payload?.execution?.depends_on_staff_task_ids?.length ? "Needs your findings first" : "Ready to approve"}</span>}
+      {!streamlined && !humanTask && a.payload?.execution && <p className="text-xs text-muted-foreground">{a.payload.execution.depends_on_staff_task_ids?.length ? "Requires the specified staff findings" : a.payload.execution.depends_on_action_types?.length ? "Requires the listed AI changes first" : a.payload.execution.independent ? "AI can do this without staff findings" : "Requires staff findings"} · {a.payload.execution.reason}</p>}
+      {!humanTask && a.reason && <p className="text-sm leading-relaxed text-muted-foreground">{a.reason}</p>}
+      {humanTask && <div className="text-sm space-y-2">{!streamlined && <p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p>}<ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <details open={streamlined ? undefined : true}><summary className="cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground">Why this is needed & where to check</summary><p className="mt-2 text-muted-foreground">{cleanAttentionText(attention.reason)}</p><p className="mt-1 text-xs text-muted-foreground">{cleanAttentionText(attention.evidence)}</p></details>}</div>}
       {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}
-      {humanTask && attention?.outcome_needed && <p className="text-sm text-foreground"><span className="font-medium">Tell the AI:</span> {attention.outcome_needed}</p>}
-      {humanTask && attention?.after_outcome && <p className="text-sm text-muted-foreground"><span className="font-medium">AI work waiting for this outcome:</span> {attention.after_outcome}</p>}
+      {!streamlined && humanTask && attention?.outcome_needed && <p className="text-sm text-foreground"><span className="font-medium">Tell the AI:</span> {attention.outcome_needed}</p>}
+      {!streamlined && humanTask && attention?.after_outcome && <p className="text-sm text-muted-foreground"><span className="font-medium">AI work waiting for this outcome:</span> {attention.after_outcome}</p>}
       {!hideVisuals && <AiVisuals visuals={a.payload?.changes ? a.payload?.visuals?.filter((v) => v.kind !== "compare") : a.payload?.visuals} />}
-      {!humanTask && a.payload?.research && (
+      {!streamlined && !humanTask && a.payload?.research && (
         <details className="text-xs bg-muted/40 rounded-lg p-2.5">
           <summary className="cursor-pointer text-muted-foreground">What the AI checked first ({a.payload.research.tools.length} lookups)</summary>
           <p className="mt-1.5 text-muted-foreground">{[...new Set(a.payload.research.tools)].map((t) => t.replace(/_/g, " ")).join(" · ") || "No lookups"}</p>
@@ -251,7 +251,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           <Textarea aria-label="Email message" value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
           {streamlined && <Button size="sm" variant="ghost" onClick={() => setEditingEmail(false)}>Done editing</Button>}
         </div>
-      ) : <div className="space-y-2"><p className="text-sm font-medium text-foreground">{subject}</p><pre className="whitespace-pre-wrap break-words text-sm text-foreground font-sans leading-relaxed">{body}</pre>{pending && streamlined && <Button size="sm" variant="outline" onClick={() => setEditingEmail(true)}><PencilLine className="mr-1 h-3.5 w-3.5" />Edit email</Button>}</div>)}
+      ) : <div className={streamlined ? "rounded-xl bg-muted/50 p-4 space-y-2" : "space-y-2"}>{streamlined && a.email_to && <p className="text-xs text-muted-foreground">To {a.email_to}</p>}<div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-foreground">{subject}</p>{pending && streamlined && <button type="button" onClick={() => setEditingEmail(true)} className="shrink-0 text-xs font-medium text-primary hover:underline">Edit</button>}</div><pre className={`whitespace-pre-wrap break-words text-sm text-foreground font-sans leading-relaxed ${streamlined ? "max-h-64 overflow-y-auto" : ""}`}>{body}</pre></div>)}
       {a.payload?.changes && <ChangesView c={a.payload.changes} />}
       {!a.payload?.changes && ["update_fields", "fix_document_request", "update_quote_spaces", "send_quote", "set_stage", "resend_email", "resend_contract_link", "email_signed_copy"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
@@ -275,31 +275,31 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {a.action_type === "prepare_listing_agreement" && <p className="text-xs text-muted-foreground">Approval prepares and fills the listing agreement without emailing it.</p>}
       {a.action_type === "change_listing_option" && <p className="text-xs text-muted-foreground">Only changes the saved option — no payment is taken and the quote is not marked accepted.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
-      {pending && streamlined && humanTask && !recordingOutcome && <Button size="sm" variant="outline" onClick={() => setRecordingOutcome(true)}>Record outcome</Button>}
-      {pending && (!streamlined || !humanTask || recordingOutcome) && (
-        <div className="space-y-2">
+      {pending && (
+        <div className={streamlined ? "space-y-3 border-t border-border pt-4" : "space-y-2"}>
           {prerequisites.length > 0 && <div className="border-l-2 border-destructive pl-3 text-sm text-foreground">
             <p className="font-medium">Waiting for:</p>
             {prerequisites.map(p => <a key={p.id} className="block text-primary underline underline-offset-2" href={`#ai-action-${p.id}`}>{AI_TYPE_META[p.action_type]?.approve ?? p.action_type.replace(/_/g, " ")}</a>)}
           </div>}
-          {humanTask ? <div className="space-y-1.5"><label htmlFor={`findings-${a.id}`} className="text-sm font-medium text-foreground">What happened / what did you find?</label><Textarea id={`findings-${a.id}`} aria-label="Staff findings" rows={3} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={attention?.outcome_needed ?? "Record the call result, findings or confirmation of the staff-only task."} /></div> : streamlined ? <details><summary className="cursor-pointer text-xs text-muted-foreground">Add an approval note (optional)</summary><Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} className="mt-2" /></details> : <Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder="Why accept or decline? (optional)" />}
-          {humanTask && <label className="flex items-start gap-2 text-sm text-foreground"><Checkbox checked={staffCompleted} onCheckedChange={v => setStaffCompleted(v === true)} className="mt-0.5" />I have completed this staff task and recorded the findings above.</label>}
-        <div className="flex flex-wrap gap-2">
+          {humanTask ? <div className="space-y-1.5"><label htmlFor={`findings-${a.id}`} className="text-sm font-medium text-foreground">{streamlined && attention?.outcome_needed ? cleanAttentionText(attention.outcome_needed) : "What happened / what did you find?"}</label><Textarea id={`findings-${a.id}`} aria-label="Staff findings" rows={3} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={streamlined ? "Type what happened or what you found" : attention?.outcome_needed ?? "Record the call result, findings or confirmation of the staff-only task."} /></div> : streamlined ? null : <Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder="Why accept or decline? (optional)" />}
+          {humanTask && <label className="flex items-start gap-2 text-sm text-foreground"><Checkbox checked={staffCompleted} onCheckedChange={v => setStaffCompleted(v === true)} className="mt-0.5" />{streamlined ? "I've done this task" : "I have completed this staff task and recorded the findings above."}</label>}
+        <div className={streamlined ? "flex flex-wrap items-center justify-end gap-3" : "flex flex-wrap gap-2"}>
+          {streamlined && <button type="button" onClick={() => setDeclining((v) => !v)} disabled={busy} className="text-sm text-muted-foreground hover:text-foreground">{humanTask ? "Not needed" : "Decline"}</button>}
           <Button size="sm" onClick={approve} disabled={busy || prerequisites.length > 0 || (humanTask && (!staffCompleted || !decisionReason.trim()))} className="h-auto min-h-9 whitespace-normal text-left">
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />{meta.approve}</>}
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />{streamlined && humanTask ? "Send findings to AI" : meta.approve}</>}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => { setWhy(decisionReason); setDeclining((v) => !v); }} disabled={busy}><X className="w-4 h-4 mr-1" />{humanTask ? "Task not needed…" : "Decline"}</Button>
+          {!streamlined && <Button size="sm" variant="outline" onClick={() => { setWhy(decisionReason); setDeclining((v) => !v); }} disabled={busy}><X className="w-4 h-4 mr-1" />{humanTask ? "Task not needed…" : "Decline"}</Button>}
         </div>
         </div>
       )}
       {pending && declining && (
         <div className="space-y-2 rounded-lg border border-border p-2.5">
-          <Textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} placeholder="Why is this wrong? (e.g. she already mailed the POA last week)" className="text-sm" />
+          <Textarea value={why} onChange={(e) => setWhy(e.target.value)} rows={2} aria-label="Reason for declining" placeholder={humanTask ? "Why isn't this needed?" : "What's wrong with this? The AI learns from your answer."} className="text-sm" />
           <Button size="sm" variant="outline" onClick={reject} disabled={busy || !why.trim()}>Decline and tell the AI</Button>
         </div>
       )}
       {!pending && a.decision_reason && <p className="text-xs text-muted-foreground">Reason: {a.decision_reason}</p>}
-      {streamlined ? <details><summary className="cursor-pointer text-xs text-muted-foreground">Comments & feedback (optional)</summary><AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} /></details> : <AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} />}
+      {streamlined ? null : <AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} />}
     </div>
   );
 }
