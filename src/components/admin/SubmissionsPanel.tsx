@@ -1228,7 +1228,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
     const baseline = buyerView
       ? [...matches].sort(byCemetery)
       : [...awaitingRows, ...freshRows, ...taggedRows, ...otherRows];
-    const ordered = prioritizeHumanAttention(baseline, humanTasks, humanQueueOn && !buyerView && !archivedView);
+    const ordered = prioritizeHumanAttention(baseline, humanTasks, humanQueueOn && !buyerView && !archivedView, s => !!awaitingAll[s.id]);
     // Merge duplicate submissions by (lowercased) email: keep only the highest-priority
     // row per email in the visible list. The kept row remains sorted by its bucket and
     // recency, so if the same person filled the form again today they surface at top.

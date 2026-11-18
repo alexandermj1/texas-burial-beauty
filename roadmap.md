@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current request
+- [x] Keep needs-reply records first and rank both groups by comparative importance rather than legacy priority labels. Recalibrated 229 open non-quote tasks together (9 high, 169 normal, 51 low), preserving task contents/history and quote policy. Deployed seller-agent/autopilot guidance; 26 tests passed, signed-in list verified and build clean. List ordering requires publication.
 - [x] Remove routine signing/tree/checklist blockers; preserve signed history and original receipt safeguards. Added descriptive unsigned agreement repair and expired-link refresh paths; unit safeguards verified, not exercised on a live agreement this turn.
 - [x] Gate only dependent AI work, keep staff-outcome continuation and consolidate repeated staff requests. Signed-in owner test approved an independent note while the call task remained open, then saved simulated call findings and confirmed acknowledgement/read-back; no customer emails or payments. Scheduled continuation not separately observed.
 - [x] Verify related-record evidence, improve document conflict research/clarifications in playbook v26, and test/deploy the workflow. Seventy regression tests passed; seller-agent, seller-autopilot and generate-contract deployed. Autopilot remains all sellers, 70 daily reviews. Temporary test tasks soft-hidden; UI changes require publication.

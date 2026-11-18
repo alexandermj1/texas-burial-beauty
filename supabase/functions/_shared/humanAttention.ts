@@ -46,10 +46,9 @@ export type AttentionEntry = { actionId: string; createdAt: string; attention: H
 /** Preserve the clicked task even when documents come from a stage-leading duplicate. */
 export const selectedAttention = (index: Map<string, AttentionEntry>, clickedId: string | undefined, documentId: string) =>
   (clickedId ? index.get(clickedId) : undefined) ?? index.get(documentId);
-const ranks = { urgent: 4, high: 3, normal: 2, low: 1 };
 const quoteGroup = (entry: AttentionEntry) => isQuoteNeededAttention(entry.attention) ? 0 : 1;
 export function compareAttention(a: AttentionEntry, b: AttentionEntry): number {
-  return quoteGroup(b) - quoteGroup(a) || ranks[b.attention.priority] - ranks[a.attention.priority] || b.attention.importance - a.attention.importance || a.createdAt.localeCompare(b.createdAt);
+  return quoteGroup(b) - quoteGroup(a) || b.attention.importance - a.attention.importance || a.createdAt.localeCompare(b.createdAt);
 }
 export function attentionIndex(actions: AttentionAction[]): Map<string, AttentionEntry> {
   const out = new Map<string, AttentionEntry>();
@@ -64,11 +63,13 @@ export function attentionIndex(actions: AttentionAction[]): Map<string, Attentio
   return out;
 }
 export function prioritizeHumanAttention<T extends { id: string; archived_at?: string | null; deleted_at?: string | null; sold_at?: string | null; closed_at?: string | null }>(
-  rows: T[], index: Map<string, AttentionEntry>, enabled: boolean,
+  rows: T[], index: Map<string, AttentionEntry>, enabled: boolean, needsReply: (row: T) => boolean = () => false,
 ): T[] {
   if (!enabled) return rows;
   const eligible = (s: T) => !s.archived_at && !s.deleted_at && !s.sold_at && !s.closed_at ? index.get(s.id) : undefined;
   return [...rows].sort((a, b) => {
+    const replyOrder = Number(needsReply(b)) - Number(needsReply(a));
+    if (replyOrder) return replyOrder;
     const aa = eligible(a), bb = eligible(b);
     return aa && bb ? compareAttention(aa, bb) : aa ? -1 : bb ? 1 : 0;
   });
@@ -83,5 +84,5 @@ export function withHumanAttentionPolicy(instructions: string, enabled: boolean)
     .replace(/- flag_human: ONLY[^\n]+/, "- flag_human: request a necessary human check, call, human-only task or genuinely unresolved material uncertainty.");
   return `${softened}\n\nHUMAN ATTENTION QUEUE (owner-controlled):
 Use discretion like an experienced admin. Read the available evidence and try the safe actions you can do first. Do not escalate merely because a case is complex, a deed owner died, or an action needs routine staff approval. Never guess a material fact or force your best answer when genuinely unsure. If a human must call, inspect something unavailable to you (including physical originals), perform a task you cannot perform, or settle uncertainty that remains after research, propose flag_human alongside any independent safe fixes/reply. A staff instruction does not remove a real blocker. Do not claim a colleague has called or completed a check.
-Each flag_human action MUST include human_attention: {priority: "urgent"|"high"|"normal"|"low", importance: integer 0..100, category: "call"|"check"|"human_task"|"uncertain", task: string, reason: string, evidence: string}. Say exactly who to contact/what to check or decide, why you cannot settle it, and where in the file to look. Choose relative importance yourself from real deadlines, customer impact, risk and blocked progress; urgent means genuine immediate harm or an evidenced near deadline, not simply an old record. Use importance to order similar-priority cases, not a fixed score per stage. note must explain the task in plain colleague language. These are internal notes, never customer messages. Keep handling everything else you safely can. Only propose flag_human when this concrete task is still outstanding.`;
+Each flag_human action MUST include human_attention: {priority: "urgent"|"high"|"normal"|"low", importance: integer 0..100, category: "call"|"check"|"human_task"|"uncertain", task: string, reason: string, evidence: string}. Say exactly who to contact/what to check or decide, why you cannot settle it, and where in the file to look. Importance is the PRIMARY comparative ranking across all staff tasks, not merely a tie-break within high/medium/low labels. Imagine the whole team's queue: evidenced immediate deadlines, harm, a customer ready to pay, or a time-sensitive blocked transaction deserve the highest positions; active confusion or stalled progress should outrank unsolicited routine checks for whether originals arrived. Routine receipt checks without a customer question, deadline or blocked transaction belong near the bottom. Do not label every call, document issue or old record high; explain the actual consequence of waiting. Use the full score range with meaningful differences, exercising judgment rather than a fixed score per stage. Unanswered customers always form the first group; the same comparative ranking applies inside that group and separately inside the remaining group. Routine quote-needed flags retain their low-importance policy. note must explain the task in plain colleague language. These are internal notes, never customer messages. Keep handling everything else you safely can. Only propose flag_human when this concrete task is still outstanding.`;
 }

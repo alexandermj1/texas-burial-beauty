@@ -66,10 +66,20 @@ describe("human task judgments", () => {
   it("promotes outstanding human work above normal records and ranks by AI importance", () => {
     const rows = [{ id: "reply" }, { id: "david" }, { id: "deadline" }, { id: "other-check" }, { id: "ordinary" }];
     const index = attentionIndex([flag("david", "high", 85), flag("deadline", "urgent", 90), flag("other-check", "high", 95)]);
-    expect(prioritizeHumanAttention(rows, index, true).map(s => s.id)).toEqual(["deadline", "other-check", "david", "reply", "ordinary"]);
+    expect(prioritizeHumanAttention(rows, index, true).map(s => s.id)).toEqual(["other-check", "deadline", "david", "reply", "ordinary"]);
   });
   it("labels every quote-preparation task low importance even when an older flag was urgent", () => {
     expect(parseHumanAttention(quoteFlag("quote").payload?.human_attention)).toMatchObject({ priority: "low", importance: 10 });
+  });
+  it("keeps every unanswered customer ahead of even urgent non-reply tasks and ranks both groups", () => {
+    const rows = [{ id: "receipt" }, { id: "paying" }, { id: "urgent" }, { id: "question" }, { id: "reply-only" }];
+    const index = attentionIndex([flag("receipt", "high", 15), flag("paying", "normal", 95), flag("urgent", "urgent", 99), flag("question", "high", 60)]);
+    const replies = new Set(["paying", "question", "reply-only"]);
+    expect(prioritizeHumanAttention(rows, index, true, row => replies.has(row.id)).map(row => row.id)).toEqual(["paying", "question", "reply-only", "urgent", "receipt"]);
+  });
+  it("uses comparative importance rather than legacy high labels within non-reply tasks", () => {
+    const index = attentionIndex([flag("receipt", "high", 15), flag("payment", "normal", 92)]);
+    expect(prioritizeHumanAttention([{ id: "receipt" }, { id: "payment" }], index, true).map(row => row.id)).toEqual(["payment", "receipt"]);
   });
   it("places quote preparation behind every other staff-needed task, including other low-priority checks", () => {
     const rows = [{ id: "ordinary" }, { id: "quote" }, { id: "low-check" }, { id: "david" }];
