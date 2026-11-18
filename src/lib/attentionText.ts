@@ -23,3 +23,11 @@ export function attentionHeadline(task: string, max = 80): string {
   t = t.split(/(?<=[.;])\s|\s\(1\)|:\s*\(1\)/)[0].replace(/[.;:]$/, "");
   return t.length > max ? t.slice(0, max).replace(/\s+\S*$/, "") + "…" : t;
 }
+
+/** Splits a staff task into clean steps: numbered lines ("1. …", "2) …") or sentences, never a bare "1." bullet. */
+export function taskSteps(raw: string | null | undefined): string[] {
+  const text = cleanAttentionText(raw);
+  const numbered = text.split(/(?:^|\n|(?<=[.!?:;])\s+)\s*\(?\d{1,2}[.)]\s+/).map(s => s.trim()).filter(Boolean);
+  const parts = numbered.length > 1 ? numbered : text.split(/(?<=[.!?])\s+(?=[A-Z])/);
+  return parts.map(s => s.replace(/^\(?\d{1,2}[.)]\s*/, "").trim()).filter(s => s && !/^\d{1,2}[.)]?$/.test(s));
+}

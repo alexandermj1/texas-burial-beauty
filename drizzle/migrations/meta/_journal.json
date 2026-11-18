@@ -169,6 +169,13 @@
       "when": 1794683095871,
       "tag": "0023_preserve_outstanding_staff_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795042089350,
+      "tag": "0024_ai_runs_autopilot_processed",
+      "breakpoints": true
     }
   ]
 }

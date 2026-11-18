@@ -51,6 +51,8 @@ import { isSellerRecord } from "../_shared/sellerKind.ts";
 const isSeller = (s: any) => isSellerRecord(s);
 import { groupActivity } from "./activity.ts";
 import { SELLER_EMAIL_ACTIONS, SELLER_RECORD_ACTIONS } from "../_shared/sellerAutopilotState.ts";
+/** Suggestions from before saved work plans; newer unplanned ones are not re-reviewed (no repeat-review loop). */
+const UNPLANNED_BEFORE = "2026-11-18T00:00:00Z";
 const AUTOPILOT_ON_SINCE = "2026-11-06T22:00:00Z";
 const eligible = (s: any, mode: string) => s && !s.deleted_at && !s.archived_at && !s.closed_at && !s.sold_at && !s.ai_paused_at && isSeller(s) && (mode === "all" || s.ai_autopilot);
 
@@ -159,7 +161,7 @@ const PAPERWORK_LABEL: Record<string, string> = { edit_document_request: "docume
 async function runRecordSteps(sub: any, list: { id: string; action_type: string; status: string; payload?: any }[]) {
   const done: string[] = [];
   const { data: staffTasks } = await db.from("ai_agent_actions").select("id,action_type,status,payload").eq("submission_id", sub.id).eq("action_type", "flag_human").is("deleted_at", null);
-  for (const a of list.filter((x) => x.status === "proposed" && RECORD_ONLY.has(x.action_type)).sort((x, y) => (x.action_type === "add_note" ? 1 : 0) - (y.action_type === "add_note" ? 1 : 0))) {
+  for (const a of list.filter((x: any) => x.status === "proposed" && !x.error && RECORD_ONLY.has(x.action_type)).sort((x, y) => (x.action_type === "add_note" ? 1 : 0) - (y.action_type === "add_note" ? 1 : 0))) {
     if (workBlocker(a, list, staffTasks ?? [])) continue;
     const r = await execute(a.id);
     if (r.ok) { done.push(a.action_type); a.status = "executed"; }
@@ -177,7 +179,10 @@ async function runRecordSteps(sub: any, list: { id: string; action_type: string;
 }
 
 async function queueReply(sub: any, runId: string) {
-  const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at,status,payload").eq("run_id", runId).is("deleted_at", null).order("created_at");
+  // Claim the review once: the wake call and the stranded-review recovery must never both carry it out.
+  const { data: claim } = await db.from("ai_agent_runs").update({ autopilot_processed_at: new Date().toISOString() }).eq("id", runId).is("autopilot_processed_at", null).select("id").maybeSingle();
+  if (!claim) return { already_processed: true };
+  const { data: acts } = await db.from("ai_agent_actions").select("id,action_type,email_body,created_at,status,payload,error").eq("run_id", runId).is("deleted_at", null).order("created_at");
   const list = acts ?? [];
   if (!list.length) return null;
   const manual = list.filter((a) => a.status === "proposed" && !AUTO_RUN.has(a.action_type) && a.action_type !== "flag_human");
@@ -194,6 +199,21 @@ async function queueReply(sub: any, runId: string) {
   const at = replySendAt({ now: Date.now(), receivedAt: seller ? Date.parse(seller.received_at) : undefined, inConversation: inConversation(seller?.received_at ?? null, oursBefore?.received_at ?? null), words, rand: Math.random(), rand2: Math.random() });
   await db.from("ai_outbox").insert({ submission_id: sub.id, action_id: primary.id, send_at: new Date(at).toISOString() });
   return { held_until: new Date(at).toISOString() };
+}
+
+/** Phase 1b — a long review can outlive the sweep's request (504) yet still finish and save its plan.
+ *  Carry out those finished-but-unprocessed autopilot reviews so their work never sits waiting for approval. */
+async function finishStranded(mode: string) {
+  const out: any[] = [];
+  const { data: runs } = await db.from("ai_agent_runs").select("id,submission_id,created_at").like("trigger", "autopilot:%").eq("status", "done").is("autopilot_processed_at", null).is("deleted_at", null)
+    .gte("created_at", new Date(Date.now() - 48 * 3600_000).toISOString()).lte("created_at", new Date(Date.now() - 3 * 60_000).toISOString()).order("created_at").limit(10);
+  for (const run of runs ?? []) {
+    const { data: latest } = await db.from("ai_agent_runs").select("id").eq("submission_id", run.submission_id).is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const { data: sub } = await db.from("contact_submissions").select("*").eq("id", run.submission_id).maybeSingle();
+    if (latest?.id !== run.id || !eligible(sub, mode)) { await db.from("ai_agent_runs").update({ autopilot_processed_at: new Date().toISOString() }).eq("id", run.id).is("autopilot_processed_at", null); continue; }
+    out.push({ sid: run.submission_id, recovered: await queueReply(sub, run.id) });
+  }
+  return out;
 }
 
 /** Phase 2 — wake records with a new seller email or a due check-back. */
@@ -217,7 +237,7 @@ async function wake(mode: string, dailyReviews: number, quoteTasksOnly = false) 
     readPages("contact_submissions", "id,name,email,created_at,customer_kind,source,customer_profile_id,cemetery,section,lawn,seller_attachments,quote_sent_at,quote_response,la_signed_at,documents_requested_at,documents_completed_at,deleted_at,archived_at,closed_at,sold_at,ai_paused_at,ai_autopilot,reply_dismissed_at,ownership_answers"),
     readPages("email_messages", "id,matched_submission_id,from_email,to_email,received_at,deleted_at"),
     readPages("ai_record_memory", "submission_id,due_at", "submission_id"),
-    readPages("ai_agent_actions", "id,submission_id,action_type,status,deleted_at,reason,payload,run_id"),
+    readPages("ai_agent_actions", "id,submission_id,action_type,status,deleted_at,reason,payload,run_id,created_at"),
     readPages("ai_agent_runs", "id,trigger"),
     readPages("customer_profiles", "id,primary_email,alt_emails,deleted_at"),
     readPages("customer_files", "id,customer_profile_id,deleted_at"),
@@ -258,9 +278,11 @@ async function wake(mode: string, dailyReviews: number, quoteTasksOnly = false) 
       if (error) throw error;
     }
     const legacy = legacySuggestionsNeedReview(proposed, autoIds, !!held) || retired.length > 0;
+    // Older suggestions saved without a work plan can't tell independent work from staff-dependent work, so they strand behind any staff task. Re-plan them once.
+    const unplanned = !held && proposed.some(p => p.action_type !== "flag_human" && !p.payload?.execution && autoIds.has(p.run_id) && p.created_at < UNPLANNED_BEFORE);
     const now = await recordFingerprint(db, sub);
     const blocked = await humanOpen(sid);
-    const route = legacy && !blocked ? { kind: "full" as const, changed: [], reason: "Reassess abandoned manual suggestions under owner-enabled autonomy; never send an old draft without reviewing it again" } : routeWake({ memory: memory as any, now, at: Date.now(), humanOpen: blocked });
+    const route = (legacy && !blocked) || unplanned ? { kind: "full" as const, changed: [], reason: "Reassess abandoned manual suggestions under owner-enabled autonomy; never send an old draft without reviewing it again" } : routeWake({ memory: memory as any, now, at: Date.now(), humanOpen: blocked });
     if (route.kind === "wait" || route.kind === "human") continue;
     if (held && route.kind === "checkback") continue;
     if (held) await db.from("ai_outbox").update({ status: "cancelled", status_reason: "File changed — redrafting" }).eq("submission_id", sid).eq("status", "held");
@@ -406,8 +428,9 @@ Deno.serve(async (req) => {
   if (!lease) return json({ status: "busy" });
   try {
     const sent = await sendDue(s.mode);
+    const stranded = await finishStranded(s.mode);
     const woke = await wake(s.mode, s.dailyReviews);
-    return json({ status: "ok", recovered, sent, woke });
+    return json({ status: "ok", recovered, stranded, sent, woke });
   } catch (e) {
     return json({ error: String((e as Error).message) }, 500);
   } finally {

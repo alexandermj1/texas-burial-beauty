@@ -297,6 +297,7 @@ export type Database = {
       }
       ai_agent_runs: {
         Row: {
+          autopilot_processed_at: string | null
           confidence: number | null
           created_at: string
           decision_model: string | null
@@ -317,6 +318,7 @@ export type Database = {
           trigger: string
         }
         Insert: {
+          autopilot_processed_at?: string | null
           confidence?: number | null
           created_at?: string
           decision_model?: string | null
@@ -337,6 +339,7 @@ export type Database = {
           trigger: string
         }
         Update: {
+          autopilot_processed_at?: string | null
           confidence?: number | null
           created_at?: string
           decision_model?: string | null

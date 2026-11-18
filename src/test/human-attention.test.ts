@@ -19,6 +19,9 @@ describe("human-attention rollout", () => {
     expect(prioritizeHumanAttention(rows, attentionIndex([flag("david")]), false)).toBe(rows);
     expect(withHumanAttentionPolicy("phone-only baseline", false)).toBe("phone-only baseline");
   });
+  it("keeps numbers inside a step", () => {
+    expect(taskSteps("1. Call Brookside about Spaces 4, 5 and 6. 2. Ask what they accept.")).toEqual(["Call Brookside about Spaces 4, 5 and 6.", "Ask what they accept."]);
+  });
 });
 describe("human task judgments", () => {
   it("retains the requested call outcome and work to resume without inventing it", () => {
@@ -88,5 +91,17 @@ describe("human task judgments", () => {
     for (const field of ["archived_at", "deleted_at", "sold_at", "closed_at"]) {
       expect(prioritizeHumanAttention([{ id: "normal" }, { id: "david", [field]: "2026-11-05" }], attentionIndex([flag("david")]), true)[0].id).toBe("normal");
     }
+  });
+  it("keeps numbers inside a step", () => {
+    expect(taskSteps("1. Call Brookside about Spaces 4, 5 and 6. 2. Ask what they accept.")).toEqual(["Call Brookside about Spaces 4, 5 and 6.", "Ask what they accept."]);
+  });
+});
+import { taskSteps } from "@/lib/attentionText";
+describe("taskSteps", () => {
+  it("splits numbered staff steps without a stray number bullet", () => {
+    expect(taskSteps("1. Arrange a call time with Chad.\n2. Walk him through the documents.\n3. Clarify whether Jaquelin is his spouse.")).toEqual(["Arrange a call time with Chad.", "Walk him through the documents.", "Clarify whether Jaquelin is his spouse."]);
+  });
+  it("keeps numbers inside a step", () => {
+    expect(taskSteps("1. Call Brookside about Spaces 4, 5 and 6. 2. Ask what they accept.")).toEqual(["Call Brookside about Spaces 4, 5 and 6.", "Ask what they accept."]);
   });
 });

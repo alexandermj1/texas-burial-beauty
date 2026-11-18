@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Bot, Loader2, RefreshCw, ChevronDown, Send } from "lucide-react";
 import AiActionCard, { AiAction, callSellerAgent, AI_TYPE_META , visualOwners } from "./AiActionCard";
+import AiHandling from "./AiHandling";
 import AiReviewButton from "./AiReviewButton";
 import AiScanCost from "./AiScanCost";
 import { runSellerReview, type ReviewProgress } from "@/lib/runSellerReview";
@@ -159,11 +160,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
 
       {!paused && pending.length === 0 && <p className="rounded-2xl bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">You're all caught up. Nothing needs you on this record.</p>}
       {staffTasks.length > 0 && <div className="space-y-3"><SectionTitle n={1} title="Your task" hint="Do this, then tell the AI what you found." />{staffTasks.map((a) => <AiActionCard key={a.id} action={a} streamlined compact hideVisuals onChanged={() => { load(); onRefresh?.(); }} />)}</div>}
-      {aiActions.length > 0 && <SectionTitle n={staffTasks.length ? 2 : 1} title="Approve the AI's work" hint={`${aiActions.length} ${aiActions.length === 1 ? "item" : "items"} ready. Approving these doesn't complete your task above.`} />}
-      {(() => { const own = visualOwners(aiActions); return aiActions.map((a) => (
-        <AiActionCard key={a.id} action={a} streamlined prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
-          onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
-      )); })()}
+      {aiActions.length > 0 && <AiHandling actions={aiActions} waitingOnStaff={staffTasks.length > 0} n={staffTasks.length ? 2 : 1} onChanged={() => { load(); onRefresh?.(); }} />}
 
       <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Give the AI an instruction</summary>
       <div className="mt-3 flex gap-2">
