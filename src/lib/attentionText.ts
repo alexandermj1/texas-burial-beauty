@@ -20,7 +20,9 @@ export function attentionHeadline(task: string, max = 80): string {
   if (/couldn.t finish.*planned steps/i.test(task)) return "Check the AI’s unfinished changes";
   if (/interrupted|stuck.*sending/i.test(task)) return "Check whether the seller received the reply";
   let t = cleanAttentionText(task).replace(/^(guidance needed|quote needed|needs a person[^:]*):\s*/i, (m) => m);
-  t = t.split(/(?<=[.;])\s|\s\(1\)|:\s*\(1\)/)[0].replace(/[.;:]$/, "");
+  const steps = taskSteps(t);
+  t = (steps.length > 1 ? steps[0] : t.replace(/^\(?\d{1,2}[.)]\s+/, "").split(/(?<=[.;])\s|\s\(1\)|:\s*\(1\)/)[0]).replace(/[.;:]$/, "");
+  if (!t || /^\d{1,2}$/.test(t)) t = steps[0] ?? cleanAttentionText(task);
   return t.length > max ? t.slice(0, max).replace(/\s+\S*$/, "") + "…" : t;
 }
 
