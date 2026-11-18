@@ -142,6 +142,7 @@ type Props = {
   onOpen?: (which: "quote" | "documents", action: AiAction) => void;
   onChanged: () => void;
   compact?: boolean;
+  streamlined?: boolean;
   prerequisites?: AiAction[];
 };
 
@@ -156,13 +157,15 @@ export function visualOwners(actions: { id: string; submission_id?: string | nul
   return owners;
 }
 
-export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenSubmission, onOpen, onChanged, compact, hideVisuals, prerequisites = [] }: Props & { hideVisuals?: boolean }) {
+export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenSubmission, onOpen, onChanged, compact, streamlined = false, hideVisuals, prerequisites = [] }: Props & { hideVisuals?: boolean }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const [subject, setSubject] = useState(a.email_subject ?? "");
   const [body, setBody] = useState(a.email_body ?? "");
   const [decisionReason, setDecisionReason] = useState("");
   const [staffCompleted, setStaffCompleted] = useState(false);
+  const [recordingOutcome, setRecordingOutcome] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
   const attention = HUMAN_ATTENTION_RELEASED ? parseHumanAttention(a.payload?.human_attention) : null;
   const baseMeta = AI_TYPE_META[a.action_type] ?? AI_TYPE_META.add_note;
   const humanTask = a.action_type === "flag_human";
@@ -214,7 +217,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
   };
 
   return (
-    <div id={`ai-action-${a.id}`} className={`rounded-lg border border-border bg-card ${compact ? "p-3" : "p-4 md:p-5"} space-y-2.5`}>
+    <div id={`ai-action-${a.id}`} className={`${streamlined ? "border-b border-border py-4" : `rounded-lg border border-border bg-card ${compact ? "p-3" : "p-4 md:p-5"}`} space-y-2.5`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           {sellerName !== undefined && (
@@ -223,14 +226,14 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           {sellerSub && <div className="text-xs text-muted-foreground">{sellerSub}</div>}
           <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
             <meta.Icon className="w-3.5 h-3.5" />{meta.label}
-            {a.confidence != null && <span className="text-muted-foreground font-normal">· {Math.round(a.confidence * 100)}% sure</span>}
+            {!streamlined && a.confidence != null && <span className="text-muted-foreground font-normal">· {Math.round(a.confidence * 100)}% sure</span>}
           </div>
         </div>
         {!pending && <span className="text-[11px] px-2 py-0.5 rounded-full border border-border text-muted-foreground">{a.status}{a.decided_by_name ? ` · ${a.decided_by_name}` : ""} · {new Date(a.created_at).toLocaleDateString()}</span>}
       </div>
       {!humanTask && a.payload?.execution && <p className="text-xs text-muted-foreground">{a.payload.execution.depends_on_staff_task_ids?.length ? "Requires the specified staff findings" : a.payload.execution.depends_on_action_types?.length ? "Requires the listed AI changes first" : a.payload.execution.independent ? "AI can do this without staff findings" : "Requires staff findings"} · {a.payload.execution.reason}</p>}
       {!humanTask && a.reason && <p className="text-sm text-muted-foreground">{a.reason}</p>}
-      {humanTask && <div className="border-l-2 border-primary pl-3 text-sm space-y-2"><p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p><ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <><p className="text-muted-foreground">Why: {cleanAttentionText(attention.reason)}</p><p className="text-xs text-muted-foreground">Where to check: {cleanAttentionText(attention.evidence)}</p></>}</div>}
+      {humanTask && <div className="text-sm space-y-2">{!streamlined && <p className="font-semibold text-foreground">{pending ? "Staff — still to do" : a.status === "acknowledged" ? "Staff task completed" : "Staff task dismissed"}</p>}<ul className="list-disc space-y-2 pl-5">{cleanAttentionText(attention?.task ?? a.note_body ?? a.reason).split(/(?<=[.!?])\s+(?=[A-Z])/).map((step, i) => <li key={i}>{step}</li>)}</ul>{attention && <details open={streamlined ? undefined : true}><summary className="cursor-pointer text-xs text-muted-foreground">Why this is needed & where to check</summary><p className="mt-2 text-muted-foreground">{cleanAttentionText(attention.reason)}</p><p className="mt-1 text-xs text-muted-foreground">{cleanAttentionText(attention.evidence)}</p></details>}</div>}
       {/* The changes list below already shows before → after; an AI "compare" table of the same fields would repeat it. */}
       {humanTask && attention?.outcome_needed && <p className="text-sm text-foreground"><span className="font-medium">Tell the AI:</span> {attention.outcome_needed}</p>}
       {humanTask && attention?.after_outcome && <p className="text-sm text-muted-foreground"><span className="font-medium">AI work waiting for this outcome:</span> {attention.after_outcome}</p>}
@@ -242,12 +245,13 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
           <pre className="mt-1.5 whitespace-pre-wrap font-sans text-foreground">{a.payload.research.text}</pre>
         </details>
       )}
-       {EMAIL_TYPES.includes(a.action_type) && a.email_body !== null && (pending ? (
+       {EMAIL_TYPES.includes(a.action_type) && a.email_body !== null && (pending && (!streamlined || editingEmail) ? (
         <div className="space-y-2">
-          <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
-          <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
+          <Input aria-label="Email subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
+          <Textarea aria-label="Email message" value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px] text-sm leading-relaxed" />
+          {streamlined && <Button size="sm" variant="ghost" onClick={() => setEditingEmail(false)}>Done editing</Button>}
         </div>
-      ) : <pre className="whitespace-pre-wrap text-sm text-foreground bg-muted/40 rounded-lg p-3 font-sans">{a.email_body}</pre>)}
+      ) : <div className="space-y-2"><p className="text-sm font-medium text-foreground">{subject}</p><pre className="whitespace-pre-wrap break-words text-sm text-foreground font-sans leading-relaxed">{body}</pre>{pending && streamlined && <Button size="sm" variant="outline" onClick={() => setEditingEmail(true)}><PencilLine className="mr-1 h-3.5 w-3.5" />Edit email</Button>}</div>)}
       {a.payload?.changes && <ChangesView c={a.payload.changes} />}
       {!a.payload?.changes && ["update_fields", "fix_document_request", "update_quote_spaces", "send_quote", "set_stage", "resend_email", "resend_contract_link", "email_signed_copy"].includes(a.action_type) && a.payload?.fields && (
         <ul className="text-sm bg-muted/40 rounded-lg p-3 space-y-0.5">
@@ -271,13 +275,14 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
       {a.action_type === "prepare_listing_agreement" && <p className="text-xs text-muted-foreground">Approval prepares and fills the listing agreement without emailing it.</p>}
       {a.action_type === "change_listing_option" && <p className="text-xs text-muted-foreground">Only changes the saved option — no payment is taken and the quote is not marked accepted.</p>}
       {a.error && <p className="text-sm text-destructive">{a.error}</p>}
-      {pending && (
+      {pending && streamlined && humanTask && !recordingOutcome && <Button size="sm" variant="outline" onClick={() => setRecordingOutcome(true)}>Record outcome</Button>}
+      {pending && (!streamlined || !humanTask || recordingOutcome) && (
         <div className="space-y-2">
           {prerequisites.length > 0 && <div className="border-l-2 border-destructive pl-3 text-sm text-foreground">
-            <p className="font-medium">Before sending this reply:</p>
+            <p className="font-medium">Waiting for:</p>
             {prerequisites.map(p => <a key={p.id} className="block text-primary underline underline-offset-2" href={`#ai-action-${p.id}`}>{AI_TYPE_META[p.action_type]?.approve ?? p.action_type.replace(/_/g, " ")}</a>)}
           </div>}
-          <Textarea aria-label={humanTask ? "Staff findings" : "Decision reason"} rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={humanTask ? attention?.outcome_needed ?? "What happened? Record the call result, findings or confirmation of the staff-only task." : "Why accept or decline? (optional)"} />
+          {humanTask ? <div className="space-y-1.5"><label htmlFor={`findings-${a.id}`} className="text-sm font-medium text-foreground">What happened / what did you find?</label><Textarea id={`findings-${a.id}`} aria-label="Staff findings" rows={3} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder={attention?.outcome_needed ?? "Record the call result, findings or confirmation of the staff-only task."} /></div> : streamlined ? <details><summary className="cursor-pointer text-xs text-muted-foreground">Add an approval note (optional)</summary><Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} className="mt-2" /></details> : <Textarea aria-label="Decision reason" rows={2} maxLength={2000} value={decisionReason} onChange={e => setDecisionReason(e.target.value)} placeholder="Why accept or decline? (optional)" />}
           {humanTask && <label className="flex items-start gap-2 text-sm text-foreground"><Checkbox checked={staffCompleted} onCheckedChange={v => setStaffCompleted(v === true)} className="mt-0.5" />I have completed this staff task and recorded the findings above.</label>}
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={approve} disabled={busy || prerequisites.length > 0 || (humanTask && (!staffCompleted || !decisionReason.trim()))} className="h-auto min-h-9 whitespace-normal text-left">
@@ -294,7 +299,7 @@ export default function AiActionCard({ action: a, sellerName, sellerSub, onOpenS
         </div>
       )}
       {!pending && a.decision_reason && <p className="text-xs text-muted-foreground">Reason: {a.decision_reason}</p>}
-      <AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} />
+      {streamlined ? <details><summary className="cursor-pointer text-xs text-muted-foreground">Comments & feedback (optional)</summary><AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} /></details> : <AiActionFeedback actionId={a.id} completed={["executed", "acknowledged"].includes(a.status)} call={callSellerAgent} />}
     </div>
   );
 }

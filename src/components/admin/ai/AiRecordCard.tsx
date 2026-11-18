@@ -119,17 +119,13 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
     <section id={`seller-ai-${submissionId}`} aria-label="Seller AI suggestions" className="border-y border-border py-4 space-y-4 scroll-mt-24">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-7 h-7 rounded-full bg-indigo-600 text-primary-foreground flex items-center justify-center"><Bot className="w-4 h-4" /></span>
+          <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center"><Bot className="w-4 h-4" /></span>
           <div>
-            <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">AI Agent</p>
+            <p className="text-sm font-semibold text-foreground">Staff tasks & AI actions</p>
             <p className="text-[11px] text-muted-foreground">
               {paused ? "Paused for this seller" : run ? `${reviewModelLabel(run.trigger, run.decision_model)} · Last looked ${new Date(run.created_at).toLocaleString()}` : "Hasn't reviewed this seller yet"}
               {aiActions.length ? ` · ${aiActions.length} AI actions awaiting approval` : ""}{staffTasks.length ? ` · ${staffTasks.length} staff tasks outstanding` : ""}
             </p>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {run?.scan_usage?.equivalent != null && <AiScanCost usage={run.scan_usage} label="last run" />}
-              {allRunsCost != null && <AiScanCost total={allRunsCost} label="all runs" />}
-            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -140,12 +136,12 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
         </div>
       </div>
 
+      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">AI status, findings & review history</summary><div className="mt-3 space-y-3">
+      <div className="flex flex-wrap gap-2">{run?.scan_usage && <AiScanCost usage={run.scan_usage} label="last run" />}{allRunsCost != null && <AiScanCost total={allRunsCost} label="all runs" />}</div>
       {run && run.status === "done" && (
         <details className="text-sm text-muted-foreground"><summary className="cursor-pointer">AI review findings</summary><div className="mt-2 space-y-2">{run.stage_summary && <p>{run.stage_summary}</p>}{run.next_step && <p>Suggested next step: {run.next_step}</p>}</div></details>
       )}
       <AutopilotStrip submissionId={submissionId} refreshKey={run?.created_at} canControl={canControl} />
-      {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
-      {reviewing && (progress ? <AiReviewProgress progress={progress} /> : <p role="status" className="text-sm text-muted-foreground">{run?.stage_summary || "Starting seller review"}</p>)}
       {reviews.length > 1 && <details className="border-t border-border pt-2">
         <summary className="cursor-pointer text-xs text-muted-foreground">Recent model reviews</summary>
         <ul className="mt-2 space-y-3">
@@ -158,16 +154,20 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           </li>)}
         </ul>
       </details>}
+      </div></details>
+      {run?.status === "error" && <p className="text-sm text-destructive">Last review failed: {run.error}</p>}
+      {reviewing && (progress ? <AiReviewProgress progress={progress} /> : <p role="status" className="text-sm text-muted-foreground">{run?.stage_summary || "Starting seller review"}</p>)}
 
-      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground rounded-xl border border-dashed border-indigo-500/30 p-3">No suggestion right now. The AI looks again when you press Review now, or by itself if autopilot is on.</p>}
-      {staffTasks.length > 0 && <div className="space-y-3"><h3 className="text-sm font-semibold text-foreground">Staff tasks — still outstanding ({staffTasks.length})</h3>{staffTasks.map(a => <AiActionCard key={a.id} action={a} compact hideVisuals onChanged={() => { load(); onRefresh?.(); }} />)}</div>}
-      {aiActions.length > 0 && <h3 className="text-sm font-semibold text-foreground">AI actions — ready for approval ({aiActions.length})</h3>}
+      {!paused && pending.length === 0 && <p className="text-sm text-muted-foreground">No AI actions awaiting approval.</p>}
+      {staffTasks.length > 0 && <div><h3 className="text-sm font-semibold text-foreground">Your tasks ({staffTasks.length} outstanding)</h3>{staffTasks.map((a, i) => <div key={a.id} className="flex gap-3"><span className="pt-4 text-sm font-semibold text-muted-foreground">{i + 1}.</span><div className="min-w-0 flex-1"><AiActionCard action={a} streamlined compact hideVisuals onChanged={() => { load(); onRefresh?.(); }} /></div></div>)}</div>}
+      {aiActions.length > 0 && <h3 className="text-sm font-semibold text-foreground">Review & approve AI work ({aiActions.length})</h3>}
       {(() => { const own = visualOwners(aiActions); return aiActions.map((a) => (
-        <AiActionCard key={a.id} action={a} prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
+        <AiActionCard key={a.id} action={a} streamlined prerequisites={replyDependencies(actions, a)} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }}
           onOpen={(which, action) => (which === "quote" ? onOpenQuote(action) : onOpenDocuments())} />
       )); })()}
 
-      <div className="flex gap-2">
+      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Other instructions & previous staff updates</summary>
+      <div className="mt-3 flex gap-2">
         <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={1} placeholder="Instruction for AI (e.g. hold until after the funeral)" className="min-h-9 text-sm bg-card" />
         <AiReviewButton label="Send instruction" onReview={saveInstruction} disabled={!instruction.trim() || paused} busy={reviewing} />
       </div>
@@ -182,15 +182,16 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
           ))}
         </ul>
       )}
+      </details>
 
       {history.length > 0 && (
         <div>
-          <button onClick={() => setShowHistory((v) => !v)} className="text-xs text-indigo-700 dark:text-indigo-300 inline-flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setShowHistory((v) => !v)} className="h-auto px-0 text-xs text-muted-foreground inline-flex items-center gap-1">
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showHistory ? "rotate-180" : ""}`} /> Completed actions & decisions ({history.length})
-          </button>
+          </Button>
           {showHistory && (
             <ul className="mt-2 space-y-1.5">
-              {(() => { const own = visualOwners(history); return history.map(a => <li key={a.id}><AiActionCard action={a} hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }} /></li>); })()}
+              {(() => { const own = visualOwners(history); return history.map(a => <li key={a.id}><AiActionCard action={a} streamlined hideVisuals={!own.has(a.id)} compact onChanged={() => { load(); onRefresh?.(); }} /></li>); })()}
             </ul>
           )}
         </div>
