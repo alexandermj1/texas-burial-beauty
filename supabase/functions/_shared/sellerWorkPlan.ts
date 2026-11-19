@@ -20,7 +20,7 @@ export function workBlocker(action: WorkAction, siblings: WorkAction[], staffTas
     if (p.depends_on_staff_task_ids.some(id => !staffTasks.some(t => t.id === id && t.status === "acknowledged"))) return "Waiting for the requested staff findings.";
     if (p.independent || p.depends_on_staff_task_ids.length) return null;
   }
-  if (staffTasks.some(t => t.status === "proposed") && !p?.independent && !(["add_note", "update_fields", "update_document_items", "edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "repair_unsigned_agreement", "change_listing_option", "change_cemetery", "set_stage", "extend_quote_deadline"].includes(action.action_type))) return "Waiting for staff findings; independent work needs an explicit evidence-based plan.";
+  if (staffTasks.some(t => t.status === "proposed") && !p?.independent && !(["pause_document_reminders", "add_note", "update_fields", "update_document_items", "edit_family_tree", "edit_document_request", "sync_checklist", "prepare_listing_agreement", "repair_unsigned_agreement", "change_listing_option", "change_cemetery", "set_stage", "extend_quote_deadline"].includes(action.action_type))) return "Waiting for staff findings; independent work needs an explicit evidence-based plan.";
   return null;
 }
 

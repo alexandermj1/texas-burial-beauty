@@ -8,12 +8,13 @@ type Rec = Record<string, any>;
 export const CLIENT_OP_TYPES = ["edit_family_tree", "sync_checklist", "send_document_request", "prepare_listing_agreement", "edit_document_request"];
 
 /** Record/checklist changes that must be approved before a reply from the same review goes out. */
-export const RECORD_CHANGE_TYPES = ["update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "change_cemetery", "change_listing_option", "sync_checklist"];
+export const RECORD_CHANGE_TYPES = ["pause_document_reminders", "update_fields", "update_document_items", "fix_document_request", "edit_family_tree", "edit_document_request", "change_cemetery", "change_listing_option", "sync_checklist"];
 
 export function parityAllowed(sub: Rec, contracts: Rec[]): Set<string> {
   const out = new Set<string>(["change_cemetery"]);
   const a = (sub.ownership_answers ?? {}) as Rec;
   const done = !!sub.sold_at || !!sub.closed_at || !!sub.archived_at;
+  if (!done && !sub.deleted_at && !sub.document_followup_paused_at) out.add("pause_document_reminders");
   const accepted = sub.quote_response === "accepted" || Number(sub.accepted_quote_amount) > 0 || !!sub.listing_paid_at;
   if (sub.quote_sent_at && sub.listing_paid_at && !sub.sold_at) out.add("change_listing_option");
   if (accepted && !contracts.some((c) => c.kind === "listing_agreement" && c.status !== "void")) out.add("prepare_listing_agreement");

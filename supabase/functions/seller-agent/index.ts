@@ -1,4 +1,5 @@
 import { parseExecutionPlan, workBlocker, relatedRecordEvidence } from "../_shared/sellerWorkPlan.ts";
+import { reminderPausePatch, reminderPauseVerified } from "./reminderPause.ts";
 import { paidListingOption, requestedLowerQuote } from "./quoteCorrectionPolicy.ts";
 import { sellerDecisionJson } from "../_shared/sellerDecisionJson.ts";
 import { aiFetch } from "../_shared/aiRunLabel.ts";
@@ -247,6 +248,7 @@ const TOOLS_DOC = `ADMIN PANEL ACTIONS YOU CAN PROPOSE (a staff member approves 
 - repair_unsigned_agreement: evidence-backed descriptive repair of an EXISTING unsigned listing agreement. fields = {contract_id, email?, seller_name?, cemetery?, plot_description?}. Exact price, listing fee version and seller-entered terms are preserved. Cannot rewrite signed documents. Pair with resend_contract_link only when the seller needs the corrected link.
 - reply_email: plain-text reply in the seller's thread. Fields: subject, body.
 - add_note: internal team note on the profile. Field: note.
+- pause_document_reminders: pause the seller's existing automatic follow-ups using the same switch staff use. fields = {reason: evidenced reason}. This also suppresses the shared missing-deed, quote-progress, quote-expiry and agreement reminders; it does NOT pause AI reviews or independent personal replies. Use for an explicit stop-chasing request, an inappropriate/wrong pending document request, or a documented hold. Do this yourself, never ask staff to pause reminders. Only staff resume the switch. Do not send personal chasers while the pause/hold reason still applies; answer incoming questions and finish safe independent corrections. Any reply confirming the pause depends on this action succeeding.
 - flag_human: ONLY when a phone call is genuinely required (the seller asks to be called, or we must ring the cemetery for a new price/confirmation). Field: note = who to call and exactly what to ask. Everything else you solve yourself with the other actions. Always pair it with the reply_email/notes/record fixes you can do now (e.g. answer what you can and say a colleague will ring them).
 - update_fields: correct descriptive record fields ONLY from facts the seller or a document clearly states. Change "email" only when the seller asks us to use a new address (the old one stays on their profile). Field: fields = object with keys from ${EDITABLE_FIELDS.join(", ")}. Never prices, stages, dates or names from guesses.
 - extend_quote_deadline: give an unaccepted quote more time when the seller asks or context warrants it, BEFORE or after expiry. Fields: fields = {quote_expires_at: exact ISO timestamp with timezone}. Pick a sensible later deadline covering the requested discussion/decision time, use Texas local time for the seller, and explain why. Approval saves only the expiry; prices, spaces, fees, terms, original quote email/buttons and quote_sent_at stay unchanged. Pair with reply_email confirming the specific new date; the extension MUST be approved before that reply is sent. Do not defer a routine extension to a person or say you cannot extend it. An expired quote needing a new pack can still use resend_expired_quote instead.
@@ -603,6 +605,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
       }))
       .filter((a: any) => a.type !== "update_document_items" || a.items?.length)
       .filter((a: any) => a.type !== "update_fields" || (a.fields && Object.keys(a.fields).length))
+      .filter((a: any) => a.type !== "pause_document_reminders" || String(a.fields?.reason ?? "").trim().length > 0)
       .filter((a: any) => a.type !== "fix_document_request" || (a.fields?.plot_description && a.body))
       .filter((a: any) => a.type !== "resend_quote_free_listing" || a.body)
       .filter((a: any) => a.type !== "update_quote_spaces" || (Number(a.fields?.spaces) >= 1 && Number(a.fields?.spaces) <= 20))
@@ -618,6 +621,7 @@ function parseDecision(raw: string, allowed: Set<string>, attentionEnabled = fal
 }
 
 const FIELD_KEYS: Record<string, string[]> = {
+  pause_document_reminders: ["reason"],
   repair_unsigned_agreement: ["contract_id", "email", "seller_name", "cemetery", "plot_description"],
   extend_quote_deadline: ["quote_expires_at"],
   update_fields: EDITABLE_FIELDS, fix_document_request: FIX_FIELDS, update_quote_spaces: ["spaces", "space_numbers", "section", "lawn"],
@@ -647,6 +651,9 @@ function parseVisuals(v: unknown) {
 const DOC_KIND_LABEL: Record<string, string> = { listing_agreement: "Listing agreement", poa: "Power of attorney", affidavit_heirship: "Affidavit of heirship", spousal_consent: "Spousal consent" };
 /** What approving a change will do, worked out up front so staff can see it before approving. */
 async function changePreview(db: SupabaseClient, sub: Sub, a: any) {
+  if (a.type === "pause_document_reminders") {
+    return { fields: [{ label: "automatic follow-ups", before: sub.document_followup_paused_at ? "Paused" : "Active", after: "Paused — " + String(a.fields?.reason ?? "") }] };
+  }
   if (a.type === "extend_quote_deadline") {
     const next = extendedDeadline(sub, a.fields?.quote_expires_at);
     return { fields: [{ label: "quote deadline", before: String(sub.quote_expires_at ?? "10 days after quote sent"), after: next }] };
@@ -1301,6 +1308,13 @@ Deno.serve(async (req) => {
           const r = await callInternal(url, "autopilot", { submission_id: sub.id, step: "family_tree", ...(staffRequested ? { force: true } : {}) });
           if (r.status !== "sent") throw new Error(`Family tree not sent: ${r.reason ?? r.status}`);
           await aiNote(`Sent ${first(sub)} the family tree questionnaire.`);
+        } else if (act.action_type === "pause_document_reminders") {
+          const patch = reminderPausePatch(act.payload?.fields?.reason, sub.document_followup_paused_at ?? null, new Date().toISOString());
+          const { error: pauseError } = await db.from("contact_submissions").update(patch).eq("id", sub.id).is("deleted_at", null);
+          if (pauseError) throw new Error(pauseError.message);
+          const { data: saved, error: readError } = await db.from("contact_submissions").select("document_followup_paused_at,document_followup_pause_reason").eq("id", sub.id).single();
+          if (readError || !reminderPauseVerified(saved, patch)) throw new Error("Automatic follow-up pause could not be verified");
+          await aiNote(`Paused automatic follow-ups for ${first(sub)}: ${patch.document_followup_pause_reason}. Staff can resume them when appropriate; independent AI work remains active.`);
         } else if (act.action_type === "update_fields") {
           const fields = (act.payload?.fields ?? {}) as Record<string, string>;
           const patch = Object.fromEntries(Object.entries(fields).filter(([k]) => EDITABLE_FIELDS.includes(k)));

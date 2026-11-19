@@ -91,6 +91,7 @@ function TreeDocsView({ before, after }: { before: Record<string, unknown> | nul
 const EMAIL_TYPES = ["send_document_request", "reply_email", "fix_document_request", "resend_quote_free_listing", "increase_quote_ten_percent", "resend_expired_quote", "update_quote_spaces", "send_quote", "resend_email"];
 
 export const AI_TYPE_META: Record<string, { label: string; Icon: typeof Mail; approve: string }> = {
+  pause_document_reminders: { label: "Pause automatic follow-ups", Icon: Mail, approve: "Pause follow-ups" },
   repair_unsigned_agreement: { label: "Correct unsigned agreement", Icon: FileSignature, approve: "Correct agreement" },
   reply_email: { label: "Reply email", Icon: Mail, approve: "Approve & send" },
   add_note: { label: "Internal note", Icon: StickyNote, approve: "Add note" },
