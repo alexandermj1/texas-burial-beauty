@@ -3,7 +3,7 @@ import { buildSheetRow, sheetEligible, sheetPaperwork } from "../lib/priceSheet"
 
 const seller = { id: "seller", name: "Seller", customer_kind: "seller", cemetery: "Restland", quote_response: "accepted", plot_count: 2, accepted_quote_amount: 4500, transfer_fee_amount: 350, cemetery_retail: 10000, ownership_answers: { sellerConfirmedAt: "2026-11-21" } };
 const directory = [{ name: "Restland Memorial Park", city: "Dallas", region: "Dallas–Fort Worth", transfer_fee: 350 }];
-const docs = [{ submission_id: "seller", doc_code: "D1", status: "received" }, { submission_id: "seller", doc_code: "POA", status: "received" }];
+const docs = [{ submission_id: "seller", doc_code: "D1", status: "received", manual_override: "received" }, { submission_id: "seller", doc_code: "POA", status: "received", manual_override: "received" }];
 describe("private price sheet", () => {
   it("includes signed sellers without an accepted pipeline marker", () => expect(sheetEligible({ ...seller, quote_response: null, la_signed_at: "2026-11-21" })).toBe(true));
   it("excludes buyers and soft-deleted / archived records", () => {
@@ -52,6 +52,9 @@ describe("private price sheet", () => {
     expect(row.documentState).toBe("complete");
     expect(row.issues.some(x => x.includes("milestone is not recorded"))).toBe(true);
   });
+  it("an uploaded deed without a logged original is returning, not complete", () => {
+    expect(sheetPaperwork(seller, [{ submission_id: "seller", doc_code: "D1", status: "received" }]).state).toBe("pending");
+  });
   it("recognizes our actual D21 limited POA code, not the D15 outside POA", () => {
     expect(sheetPaperwork(seller, [docs[0], { ...docs[1], doc_code: "D21", document_type: "D21" }]).state).toBe("complete");
     expect(sheetPaperwork(seller, [docs[0], { ...docs[1], doc_code: "D15", document_type: "D15" }]).state).toBe("review");
@@ -65,11 +68,11 @@ describe("private price sheet", () => {
     expect(row.pending).toHaveLength(1);
   });
   it("never treats an uploaded copy or a deed alone as all documents back", () => {
-    expect(sheetPaperwork(seller, [{ ...docs[1], status: "uploaded" }]).state).toBe("pending");
+    expect(sheetPaperwork(seller, [{ ...docs[1], status: "uploaded", manual_override: null }]).state).toBe("pending");
     expect(sheetPaperwork(seller, [docs[0]]).state).not.toBe("complete");
   });
   it("does not invent document returns for a staff-completed record with uploaded copies", () => {
-    const row = buildSheetRow({ ...seller, documents_completed_at: "2026-11-21" }, [{ ...docs[1], status: "uploaded" }], directory);
+    const row = buildSheetRow({ ...seller, documents_completed_at: "2026-11-21" }, [{ ...docs[1], status: "uploaded", manual_override: null }], directory);
     expect(row.documentState).toBe("complete");
     expect(row.docsReceived).toBe(0);
     expect(row.docsTotal).toBe(1);
@@ -97,5 +100,30 @@ describe("private price sheet", () => {
     expect(row.documentState).toBe("pending");
     expect(row.docsReceived).toBe(5);
     expect(row.docsTotal).toBe(7);
+  });
+});
+import { documentProgress } from "../../supabase/functions/_shared/documentProgress";
+describe("uploaded vs at Glendale", () => {
+  const docs = [
+    { doc_code: "D2P", label: "Photo ID", person_name: "Ann", status: "pending", file_urls: ["a/id.jpg"] },
+    { doc_code: "D21", label: "POA", person_name: "Ann", status: "pending", manual_override: "issued", file_urls: ["a/poa.pdf"] },
+    { doc_code: "D1", label: "Deed", status: "pending", file_urls: ["a/deed.pdf"] },
+    { doc_code: "LA", label: "Listing agreement", status: "pending" },
+  ];
+  it("counts uploads separately from originals at Glendale", () => {
+    const p = documentProgress(docs, { la_signed_at: "2026-10-01" });
+    expect(p.total).toBe(4);
+    expect(p.uploaded).toBe(4);
+    expect(p.atGlendale).toBe(2); // photo ID copy + e-signed agreement; POA and deed originals not logged
+  });
+  it("counts the seller's posted tick as at Glendale", () => {
+    const p = documentProgress(docs, { la_signed_at: "2026-10-01", ownership_answers: { mailedConfirmed: { "D21::Ann": "x", "D1::": "x" } } });
+    expect(p.atGlendale).toBe(4);
+    expect(p.sellerPostedOnly).toBe(2);
+  });
+  it("an upload alone never puts a deed at Glendale", () => {
+    const p = documentProgress([docs[2]], {});
+    expect(p.uploaded).toBe(1);
+    expect(p.atGlendale).toBe(0);
   });
 });

@@ -255,6 +255,15 @@ Deno.serve(async (req) => {
       extracted_at: new Date().toISOString(),
     }).eq("id", fileId);
 
+    // Emailed/uploaded files get filed under the matching document-request item once read.
+    if (row.customer_profile_id && !body?.skip_filing) {
+      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/file-documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+        body: JSON.stringify({ customer_profile_id: row.customer_profile_id, extract_limit: 0 }),
+      }).catch((e) => console.warn("file-documents invoke failed", e));
+    }
+
     return json({ status: "done", summary, extracted_data: parsed });
   } catch (err) {
     console.error("extract-attachment-info error", err);

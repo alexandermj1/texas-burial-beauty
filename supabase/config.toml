@@ -31,3 +31,6 @@ verify_jwt = false
 
 [functions.seller-files]
 verify_jwt = false
+
+[functions.file-documents]
+verify_jwt = false

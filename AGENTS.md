@@ -42,3 +42,4 @@
 - Reuse SellerVsl for seller films, with an embedded article variant and one mounted player per page — why: shared accessibility, media and playback stay consistent across mobile placements and guides.
 - Films track views/watch time via useFilmTracking — why: one queryable record.
 - Price sheet uses Buyer AI pricing; staff Complete stays green with separate checklist flags — why: stage parity without rewriting history or receipt counts.
+- Price-sheet paperwork counts come from _shared/documentProgress (uploaded vs originals at Glendale) — why: one rule for copies versus physical receipt.
