@@ -29,8 +29,11 @@ export function sheetPaperwork(s: SheetRecord, docs: SheetDocument[]) {
   const conflicts: string[] = [];
   if (readiness.complete && pending.length) conflicts.push("Completion milestone conflicts with outstanding checklist items.");
   if (readiness.complete && (!count.paperwork || !poa)) conflicts.push("Completion needs a transfer-paperwork checklist with POA evidence; a deed alone is not enough.");
-  const state: PaperworkState = conflicts.length ? "review" : readiness.complete ? "complete" : readiness.requested || count.received > 0 ? "pending" : "not_requested";
-  return { state, count, pending, conflicts, aiReadiness: readiness.complete ? "Available now (AI milestone/checklist)" : readiness.almostComplete ? "About 2 weeks (staff check)" : s.la_signed_at ? "About a month for preneed (staff check)" : "Timing to confirm" };
+  // The pipeline's staff-confirmed completion is authoritative for the row colour.
+  // Keep checklist discrepancies visible without undoing that recorded decision.
+  const staffComplete = !!s.documents_completed_at;
+  const state: PaperworkState = staffComplete ? "complete" : conflicts.length ? "review" : readiness.complete ? "complete" : readiness.requested || count.received > 0 ? "pending" : "not_requested";
+  return { state, staffComplete, count, pending, conflicts, aiReadiness: readiness.complete ? "Available now (AI milestone/checklist)" : readiness.almostComplete ? "About 2 weeks (staff check)" : s.la_signed_at ? "About a month for preneed (staff check)" : "Timing to confirm" };
 }
 
 export function buildSheetRow(s: SheetRecord, docs: SheetDocument[], directory: SheetCemetery[], now = Date.now()) {

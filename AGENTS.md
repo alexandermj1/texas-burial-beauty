@@ -41,4 +41,4 @@
 - AI doc requests verify plot wording first (autopilot.plotVerified) — why: only spaces sold.
 - Reuse SellerVsl for seller films, with an embedded article variant and one mounted player per page — why: shared accessibility, media and playback stay consistent across mobile placements and guides.
 - Films track views/watch time via useFilmTracking — why: one queryable record.
-- Price sheet uses Buyer AI pricing/readiness with separate conflict flags, not stage edits — why: accurate private inventory without rewriting history.
+- Price sheet uses Buyer AI pricing; staff Complete stays green with separate checklist flags — why: stage parity without rewriting history or receipt counts.

@@ -56,14 +56,24 @@ describe("private price sheet", () => {
     expect(sheetPaperwork(seller, [docs[0], { ...docs[1], doc_code: "D21", document_type: "D21" }]).state).toBe("complete");
     expect(sheetPaperwork(seller, [docs[0], { ...docs[1], doc_code: "D15", document_type: "D15" }]).state).toBe("review");
   });
-  it("flags completed milestones with outstanding POAs instead of painting them green", () => {
+  it("keeps staff-marked Complete green while flagging outstanding checklist items separately", () => {
     const row = sheetPaperwork({ ...seller, documents_completed_at: "2026-11-21" }, [docs[0], { ...docs[1], status: "pending" }]);
-    expect(row.state).toBe("review");
+    expect(row.state).toBe("complete");
+    expect(row.staffComplete).toBe(true);
+    expect(row.conflicts).toContain("Completion milestone conflicts with outstanding checklist items.");
+    expect(row.count).toMatchObject({ received: 1, total: 2 });
     expect(row.pending).toHaveLength(1);
   });
   it("never treats an uploaded copy or a deed alone as all documents back", () => {
     expect(sheetPaperwork(seller, [{ ...docs[1], status: "uploaded" }]).state).toBe("pending");
-    expect(sheetPaperwork({ ...seller, documents_completed_at: "2026-11-21" }, [docs[0]]).state).toBe("review");
+    expect(sheetPaperwork(seller, [docs[0]]).state).not.toBe("complete");
+  });
+  it("does not invent document returns for a staff-completed record with uploaded copies", () => {
+    const row = buildSheetRow({ ...seller, documents_completed_at: "2026-11-21" }, [{ ...docs[1], status: "uploaded" }], directory);
+    expect(row.documentState).toBe("complete");
+    expect(row.docsReceived).toBe(0);
+    expect(row.docsTotal).toBe(1);
+    expect(row.paperwork.conflicts.length).toBeGreaterThan(0);
   });
   it("keeps sold/closed history separate and reserved inventory out of Buyer AI eligibility", () => {
     for (const change of [{ sold_at: "2026-11-21" }, { closed_at: "2026-11-21" }, { reserved_until: "2099-01-01" }]) expect(buildSheetRow({ ...seller, ...change }, docs, directory).aiEligible).toBe(false);
