@@ -40,6 +40,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import BroadcastDialog from "./BroadcastDialog";
 import AddSubmissionDialog from "./AddSubmissionDialog";
 import PriceSheetDialog from "./PriceSheetDialog";
+import GuidedCrmMode from "./GuidedCrmMode";
 import AiAgentPanel from "./AiAgentPanel";
 import AutopilotBar from "./ai/AutopilotBar";
 import AiFeedStatus, { type AiTracking } from "./ai/AiFeedStatus";
@@ -159,6 +160,8 @@ interface Props {
   onRestore?: (id: string) => Promise<void>;
   /** Jump to the Cemeteries tab from the submissions toolbar. */
   onViewCemeteries?: () => void;
+  guidedMode?: boolean;
+  onExitGuidedMode?: () => void;
 }
 
 
@@ -237,10 +240,16 @@ const ftState = (s: any): { sentAt: string | null; doneAt: string | null } => {
   return { sentAt: a.questionsSentAt ?? null, doneAt: a.sellerConfirmedAt ?? null };
 };
 
-const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries }: Props) => {
+const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusSubmissionId, onRefresh, deletedSubmissions = [], onRestore, onViewCemeteries, guidedMode = false, onExitGuidedMode }: Props) => {
   const { user } = useAuth();
   const aiOn = canUseAi(user?.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [guidedSelectedId, setGuidedSelectedId] = useState<string | null>(null);
+  const selectGuidedRecord = useCallback((id: string) => {
+    setGuidedSelectedId(id);
+    setSelectedId(id);
+  }, []);
+  useEffect(() => { if (!guidedMode) setGuidedSelectedId(null); }, [guidedMode]);
   const [sellerScanCost, setSellerScanCost] = useState<{ id: string; usage: ScanUsage | null } | null>(null);
   const receiveScanCost = useCallback((id: string, usage: ScanUsage | null) => setSellerScanCost({ id, usage }), []);
   // Focus mode: collapse the submissions list into a slide-over drawer so the
@@ -1326,7 +1335,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   // Duplicates are merged into one card, but paperwork/documents live on whichever
   // submission actually reached the furthest stage. Open that one so the requested
   // documents are always visible instead of an empty checklist on an older duplicate.
-  const selectedRaw = submissions.find(s => s.id === selectedId) || filtered[0] || null;
+  const selectedRaw = guidedMode
+    ? submissions.find(s => s.id === guidedSelectedId) || filtered[0] || null
+    : submissions.find(s => s.id === selectedId) || filtered[0] || null;
   const selected = selectedRaw ? stageSource(selectedRaw) : null;
 
   const cemeteryProfileFor = (cemetery: string | null | undefined) => {
@@ -1640,7 +1651,9 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       { label: "Complete", icon: Sparkles, tone: "green" },
     ];
     const stageTone = sellerStages[sellerStage - 1]?.tone ?? "slate";
-    const toneVar = (suffix: string) => `hsl(var(--pipeline-${stageTone}${suffix}))`;
+    const toneVar = (suffix: string) => guidedMode
+      ? `hsl(var(--${suffix === "-soft" ? "muted" : suffix === "-border" ? "border" : suffix === "-fg" ? "foreground" : "primary"}))`
+      : `hsl(var(--pipeline-${stageTone}${suffix}))`;
     const needsAttention = !!awaitingAll[selected.id];
     const stagePrimaryStyle = { backgroundColor: "hsl(var(--seller-stage))", color: "hsl(var(--primary-foreground))" };
     const stageSecondaryStyle = { borderColor: toneVar("-border"), backgroundColor: toneVar("-soft"), color: toneVar("-fg") };
@@ -2648,7 +2661,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
        <nav aria-label="Seller workspace" className="sticky top-2 z-20 grid grid-cols-4 gap-1 overflow-x-auto rounded-xl border p-1.5 shadow-sm backdrop-blur" style={{ borderColor: toneVar("-border"), backgroundColor: toneVar("-soft") }}>
         {([
           { key: "email", label: "Email", icon: Mail },
-          { key: "paperwork", label: "Family tree & documents", icon: Users },
+          { key: "paperwork", label: guidedMode ? "Documents" : "Family tree & documents", icon: Users },
           { key: "notes", label: "Notes", icon: Pencil },
           { key: "files", label: "Attachments", icon: Paperclip },
         ] as const).map(({ key, label, icon: TabIcon }) => (
@@ -2658,7 +2671,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             size="sm"
             variant={sellerWorkspaceTab === key ? "default" : "ghost"}
             style={sellerWorkspaceTab === key ? stagePrimaryStyle : { color: toneVar("-fg") }}
-            className="h-10 min-w-max justify-center gap-2 rounded-lg px-3 text-xs hover:brightness-95"
+            className={guidedMode ? "h-auto min-h-11 min-w-0 flex-col justify-center gap-1 rounded-md px-1 py-2 text-[11px] sm:flex-row sm:gap-2 sm:text-xs" : "h-10 min-w-max justify-center gap-2 rounded-lg px-3 text-xs hover:brightness-95"}
             onClick={() => { setExpandedCemetery(false); setEditCemeteryInline(false); setSellerWorkspaceTab(key); }}
           >
             <TabIcon className="h-3.5 w-3.5" />{label}
@@ -3288,7 +3301,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           >
             {kind !== "buyer" ? (
               <div className="space-y-5">
-                {headBlock}
+                {guidedMode ? <details className="guided-crm-overview border-b border-border pb-4"><summary className="cursor-pointer py-2 text-sm font-medium text-muted-foreground">Record details, pricing & current stage</summary><div className="mt-4">{headBlock}</div></details> : headBlock}
+                {guidedMode && sellerWorkspaceNav}
                 {aiOn && <AiRecordCard
                   canControl={aiCanControl}
                   submissionId={selected.id}
@@ -3305,7 +3319,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                   onOpenDocuments={() => setSellerWorkspaceTab("paperwork")}
                   onRefresh={() => { loadAiPending(); onRefresh?.(); }}
                 />}
-                {sellerWorkspaceNav}
+                {!guidedMode && sellerWorkspaceNav}
                 {sellerWorkspaceTab === "email" && emailBlock}
                  {tailBlock}
                  {recordControls}
@@ -3327,6 +3341,16 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {guidedMode && <GuidedCrmMode
+        records={submissions}
+        initialIds={filtered.map(s => s.id)}
+        noteRecord={selected}
+        attention={selectedAttention(humanTasks, selectedRaw?.id, selected?.id)}
+        needsReply={!!(selectedRaw && awaitingAll[selectedRaw.id])}
+        workers={(selected ? activeWorkers[selected.id] || [] : []).filter(w => w.user_id !== user?.id).map(w => w.user_name)}
+        onSelect={selectGuidedRecord}
+        onExit={() => onExitGuidedMode?.()}
+      >{selected && renderSubmissionDetail(selected)}</GuidedCrmMode>}
       {/* Region tabs hidden — Texas-only view. Bayer code is preserved above. */}
       {false && (
       <div className="lg:col-span-12 flex items-center gap-2 flex-wrap">
@@ -3637,7 +3661,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[2px] animate-in fade-in duration-200"
         />
       )}
-      <div
+      {!guidedMode && <div
         data-tour="submissions-list"
         className={
           isMobile
@@ -4020,12 +4044,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             )}
           </button>
         </div>
-      </div>
+      </div>}
 
 
 
       {/* Detail (desktop) — on mobile, the detail is rendered inline beneath the row */}
-      <div data-tour="detail-panel" className={`${listCollapsed ? "lg:col-span-12" : "lg:col-span-8"} lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
+      {!guidedMode && <div data-tour="detail-panel" className={`${listCollapsed ? "lg:col-span-12" : "lg:col-span-8"} lg:order-none space-y-4 ${isMobile ? "hidden" : ""}`}>
         {!isMobile && listCollapsed && (
           <div className="flex items-center gap-2">
             <button
@@ -4142,7 +4166,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
           </div>
         )}
         {selected && !selectedIsInCemeteryList && !cemeteriesOpen && renderSubmissionDetail(selected)}
-      </div>
+      </div>}
 
       {selected && (
         <>

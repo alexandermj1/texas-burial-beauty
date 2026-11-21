@@ -1,0 +1,1 @@
+- Guided CRM snapshots the existing filtered priority order and reuses SubmissionsPanel's record actions; advancement requires a returned saved customer note, never updates pipeline stages or resolves staff tasks — why: ordered staff work without false completion or duplicated business logic.

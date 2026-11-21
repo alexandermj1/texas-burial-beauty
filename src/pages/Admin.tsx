@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone, Radio, FlaskConical } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone, Radio, FlaskConical, Layers } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
 import ActivityMonitorPanel from "@/components/admin/ActivityMonitorPanel";
 import AccountingPanel from "@/components/admin/AccountingPanel";
@@ -30,8 +30,7 @@ import InboxPanel from "@/components/admin/InboxPanel";
 import RulesPlaygroundPanel from "@/components/admin/RulesPlaygroundPanel";
 import NotificationsBell from "@/components/admin/NotificationsBell";
 import { cleanDisplayName } from "@/lib/displayName";
-import HelpButton from "@/components/admin/HelpButton";
-import GuidedTour from "@/components/admin/GuidedTour";
+import { Switch } from "@/components/ui/switch";
 import BroadcastDialog from "@/components/admin/BroadcastDialog";
 import { MessageSquare } from "lucide-react";
 
@@ -80,6 +79,7 @@ const Admin = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [agentProfiles, setAgentProfiles] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [guidedMode, setGuidedMode] = useState(false);
   const [cemSelected, setCemSelected] = useState<{ canon: string; name: string } | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   // When admin clicks "Open customer" inside the Gmail inbox, this id flows into the
@@ -907,6 +907,8 @@ const Admin = () => {
             <SubmissionsPanel
               submissions={submissions}
               searchQuery={searchQuery}
+              guidedMode={guidedMode}
+              onExitGuidedMode={() => setGuidedMode(false)}
               focusSubmissionId={focusSubmissionId}
               onRefresh={handleInboxRefresh}
               onViewCemeteries={() => {
@@ -1087,15 +1089,10 @@ const Admin = () => {
             >
               📧 Send daily summary now
             </button>
-            <HelpButton />
-            <GuidedTour
-              onGoToSubmissions={() => setTab("submissions")}
-              onOpenMenu={(o) => setMenuOpen(o)}
-              onSelectFirstSubmission={() => {
-                const first = submissions.find(s => !s.handled) || submissions[0];
-                if (first) { setTab("submissions"); setFocusSubmissionId(first.id); }
-              }}
-            />
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium">
+              <Layers className="h-4 w-4 text-primary" />Guided mode
+              <Switch aria-label="Guided mode" checked={guidedMode} disabled={loading} onCheckedChange={checked => { setTab("submissions"); setMenuOpen(false); setGuidedMode(checked); }} />
+            </label>
           </div>
         </div>
       </section>
