@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone, Radio, FlaskConical, Layers } from "lucide-react";
+import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone, Radio, FlaskConical, Layers, Palette } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
+import BrandKitPanel from "@/components/admin/BrandKitPanel";
 import ActivityMonitorPanel from "@/components/admin/ActivityMonitorPanel";
 import AccountingPanel from "@/components/admin/AccountingPanel";
 import CustomersPanel from "@/components/admin/CustomersPanel";
@@ -73,7 +74,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground" | "ai_agent">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground" | "ai_agent" | "brand_kit">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -261,7 +262,7 @@ const Admin = () => {
       const t = params.get("tab");
       const sid = params.get("submission");
       const cust = params.get("customer");
-      if (t && ["listings","cemeteries","reservations","sales","submissions","inbox","performance","customers","ca_inventory","inventory_requests"].includes(t)) {
+      if (t && ["listings","cemeteries","reservations","sales","submissions","inbox","performance","customers","ca_inventory","inventory_requests","brand_kit"].includes(t)) {
         setTab(t as any);
       }
       if (sid) { setFocusSubmissionId(sid); setTab("submissions"); }
@@ -493,6 +494,7 @@ const Admin = () => {
     { key: "cemeteries", label: "Cemeteries", Icon: Building2 },
     { key: "map", label: "Map", Icon: MapIcon },
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
+    { key: "brand_kit", label: "Brand Kit", Icon: Palette },
     ...(user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com"
       ? [{ key: "activity_monitor" as typeof tab, label: "Activity Monitor", Icon: Radio }]
       : []),
@@ -999,6 +1001,7 @@ const Admin = () => {
           <TeamTasksStartup onOpenList={() => setTeamMsgTasks(true)} />
           {tab === "rules_playground" && <RulesPlaygroundPanel />}
           {tab === "performance" && <AgentPerformancePanel />}
+          {tab === "brand_kit" && <BrandKitPanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}
           {tab === "customers" && <CustomersPanel />}
