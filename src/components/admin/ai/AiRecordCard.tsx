@@ -27,10 +27,11 @@ type Props = {
   onRefresh?: () => void;
   onScanCost?: (submissionId: string, usage: ScanUsage | null) => void;
   canControl?: boolean;
+  hideStaffTasks?: boolean;
 };
 
 /** The AI's workspace on one seller record — its status, pending suggestions, history and controls. */
-export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh, onScanCost, canControl = false }: Props) {
+export default function AiRecordCard({ submissionId, pausedAt, customerProfileId, onOpenQuote, onOpenDocuments, onRefresh, onScanCost, canControl = false, hideStaffTasks = false }: Props) {
   const { toast } = useToast();
   const [run, setRun] = useState<Run | null>(null);
   const [reviews, setReviews] = useState<Run[]>([]);
@@ -159,7 +160,7 @@ export default function AiRecordCard({ submissionId, pausedAt, customerProfileId
       {reviewing && (progress ? <AiReviewProgress progress={progress} /> : <p role="status" className="text-sm text-muted-foreground">{run?.stage_summary || "Starting seller review"}</p>)}
 
       {!paused && pending.length === 0 && <p className="rounded-2xl bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">You're all caught up. Nothing needs you on this record.</p>}
-      {staffTasks.length > 0 && <div className="space-y-3"><SectionTitle n={1} title="Your task" hint="Do this, then tell the AI what you found." />{staffTasks.map((a) => <AiActionCard key={a.id} action={a} streamlined compact hideVisuals onChanged={() => { load(); onRefresh?.(); }} />)}</div>}
+      {!hideStaffTasks && staffTasks.length > 0 && <div className="space-y-3"><SectionTitle n={1} title="Your task" hint="Do this, then tell the AI what you found." />{staffTasks.map((a) => <AiActionCard key={a.id} action={a} streamlined compact hideVisuals onChanged={() => { load(); onRefresh?.(); }} />)}</div>}
       {aiActions.length > 0 && <AiHandling actions={aiActions} waitingOnStaff={staffTasks.length > 0} n={staffTasks.length ? 2 : 1} onChanged={() => { load(); onRefresh?.(); }} />}
 
       <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Give the AI an instruction</summary>

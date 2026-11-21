@@ -7,9 +7,14 @@
 .guided-crm { --guided-surface: var(--popover); background: hsl(var(--guided-surface)); letter-spacing: 0; }
 .guided-crm h1, .guided-crm h2, .guided-crm h3, .guided-crm .font-display { font-family: inherit; letter-spacing: 0; }
 .guided-crm-header { background: hsl(var(--guided-surface) / .96); }
-.guided-crm-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.guided-crm-layout { display: grid; grid-template-columns: minmax(320px, 360px) minmax(0, 1fr); overflow: hidden; }
 .guided-crm-brief { border-right-width: 1px; background: hsl(var(--muted) / .32); }
 .guided-crm-workspace { background: hsl(var(--background)); }
+.guided-crm-record-heading { background: hsl(var(--background)); }
+.guided-crm-task-number { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: hsl(var(--primary) / .1); color: hsl(var(--primary)); font-size: 12px; }
+.guided-crm-task > div { border: 0; border-radius: 0; background: transparent; padding: 0; box-shadow: none; }
+.guided-crm-task > div > div:first-child { display: none; }
+.guided-crm-task > div > div:nth-child(2) > ul { list-style: none; padding-left: 0; }
 .guided-crm-progress { appearance: none; border: 0; background: hsl(var(--border)); }
 .guided-crm-progress::-webkit-progress-bar { background: hsl(var(--border)); }
 .guided-crm-progress::-webkit-progress-value { background: hsl(var(--primary)); transition: width .25s ease; }
@@ -19,11 +24,9 @@
 .guided-crm-record section[aria-label="What the AI needs from staff"] { display: none; }
 .guided-crm-record section[aria-label="Seller overview"] { border-radius: 8px; box-shadow: none; }
 @media (max-width: 767px) {
-  .guided-crm-layout { display: block; overflow-y: auto; overscroll-behavior: contain; }
+  .guided-crm-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 38%) minmax(0, 1fr); }
   .guided-crm-brief { border-right: 0; border-bottom: 1px solid hsl(var(--border)); }
-  .guided-crm-brief > h1 { margin-top: 6px; font-size: 22px; }
-  .guided-crm-brief > div:last-child:has(> p:first-child) { display: none; }
-  .guided-crm-workspace { overflow: visible; }
+  .guided-crm-record-heading { padding-block: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .guided-crm-progress::-webkit-progress-value { transition: none; }

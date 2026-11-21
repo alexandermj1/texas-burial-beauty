@@ -1,7 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { snapshotQueue, advanceQueue, queueOutcomeBody } from "../lib/guidedCrm";
+import { snapshotQueue, advanceQueue, queueOutcomeBody, guidedTaskCount } from "../lib/guidedCrm";
 
 describe("one-record-at-a-time CRM", () => {
+  it("counts each open staff task and an unanswered customer separately", () => {
+    const tasks = [{ id: "call", status: "proposed", action_type: "flag_human" }, { id: "check", status: "proposed", action_type: "flag_human" }];
+    expect(guidedTaskCount(tasks, true)).toBe(3);
+    expect(guidedTaskCount(tasks, false)).toBe(2);
+  });
+  it("does not count closed tasks, AI work or duplicate tasks", () => {
+    expect(guidedTaskCount([
+      { id: "call", status: "proposed", action_type: "flag_human" },
+      { id: "call", status: "proposed", action_type: "flag_human" },
+      { id: "done", status: "acknowledged", action_type: "flag_human" },
+      { id: "ai", status: "proposed", action_type: "update_fields" },
+    ], false)).toBe(1);
+    expect(guidedTaskCount([], false)).toBe(0);
+  });
   it("preserves the supplied priority order and does not mutate it", () => {
     const source = ["unanswered", "urgent-task", "routine", "unanswered"];
     expect(snapshotQueue(source)).toEqual(["unanswered", "urgent-task", "routine"]);

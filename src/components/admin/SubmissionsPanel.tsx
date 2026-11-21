@@ -320,6 +320,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
   const [aiPending, setAiPending] = useState<Map<string, { type: string; label: string }>>(new Map());
   const [humanQueueOn, setHumanQueueOn] = useState(false);
   const [humanTasks, setHumanTasks] = useState<Map<string, AttentionEntry>>(new Map());
+  const [guidedStaffTasks, setGuidedStaffTasks] = useState<import("./ai/AiActionCard").AiAction[]>([]);
   const AI_ROW_LABEL: Record<string, string> = {
     reply_email: "drafted a reply",
     add_note: "left a status note",
@@ -360,16 +361,17 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
       const { data: setting, error: settingError } = await supabase.from("ai_agent_settings").select("value").eq("key", HUMAN_ATTENTION_SETTING).maybeSingle();
       const enabled = !settingError && humanAttentionEnabled(setting?.value);
       setHumanQueueOn(enabled);
-      if (!enabled) { setHumanTasks(new Map()); return; }
+      if (!enabled) { setHumanTasks(new Map()); setGuidedStaffTasks([]); return; }
       const flags: AttentionAction[] = [];
       for (let offset = 0; ; offset += 500) {
-        const { data: page, error } = await supabase.from("ai_agent_actions" as never).select("id,submission_id,action_type,status,created_at,deleted_at,payload").eq("action_type", "flag_human").eq("status", "proposed").is("deleted_at", null).order("id").range(offset, offset + 499);
-        if (error) { setHumanQueueOn(false); setHumanTasks(new Map()); return; }
+        const { data: page, error } = await supabase.from("ai_agent_actions" as never).select("*").eq("action_type", "flag_human").eq("status", "proposed").is("deleted_at", null).order("id").range(offset, offset + 499);
+        if (error) { setHumanQueueOn(false); setHumanTasks(new Map()); setGuidedStaffTasks([]); return; }
         const batch = (page ?? []) as unknown as AttentionAction[];
         flags.push(...batch);
         if (batch.length < 500) break;
       }
       setHumanTasks(attentionIndex(flags));
+      setGuidedStaffTasks(flags as unknown as import("./ai/AiActionCard").AiAction[]);
     }
   }, [aiOn]);
   const [aiFirst, setAiFirst] = useState(false);
@@ -3304,6 +3306,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 {guidedMode ? <details className="guided-crm-overview border-b border-border pb-4"><summary className="cursor-pointer py-2 text-sm font-medium text-muted-foreground">Record details, pricing & current stage</summary><div className="mt-4">{headBlock}</div></details> : headBlock}
                 {guidedMode && sellerWorkspaceNav}
                 {aiOn && <AiRecordCard
+                  hideStaffTasks={guidedMode}
                   canControl={aiCanControl}
                   submissionId={selected.id}
                   onScanCost={receiveScanCost}
@@ -3346,6 +3349,8 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
         initialIds={filtered.map(s => s.id)}
         noteRecord={selected}
         attention={selectedAttention(humanTasks, selectedRaw?.id, selected?.id)}
+        staffTasks={guidedStaffTasks.filter(a => a.submission_id === selectedRaw?.id || a.submission_id === selected?.id)}
+        onTasksChanged={() => { loadAiPending(); onRefresh?.(); }}
         needsReply={!!(selectedRaw && awaitingAll[selectedRaw.id])}
         workers={(selected ? activeWorkers[selected.id] || [] : []).filter(w => w.user_id !== user?.id).map(w => w.user_name)}
         onSelect={selectGuidedRecord}
