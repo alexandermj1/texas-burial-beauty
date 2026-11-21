@@ -3399,13 +3399,15 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
             >
               <Building2 className="w-4 h-4" />
             </button>
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPriceSheetOpen(true)}
-              title="Price sheet — every accepted listing with prices, sortable"
-              className="h-8 px-3 rounded-full text-xs font-medium border bg-card text-muted-foreground border-border hover:text-foreground inline-flex items-center gap-1.5"
+              title="Price sheet — buyer totals, commissions and paperwork"
+              className="h-8 gap-1.5 bg-card px-3 text-xs text-foreground"
             >
               <FileSpreadsheet className="w-4 h-4" /> Price sheet
-            </button>
+            </Button>
             {!buyerView && <AutopilotBar onOpenPanel={() => setAiOpen(true)} />}
 
             <div className="h-6 w-px bg-border/60 mx-1" />

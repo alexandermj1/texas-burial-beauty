@@ -1,291 +1,182 @@
-import { useEffect, useMemo, useState } from "react";
-import { X, ArrowUpDown, ArrowUp, ArrowDown, Download, Printer, Search, FileSpreadsheet } from "lucide-react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Download, Printer, Search, FileSpreadsheet, SlidersHorizontal, ChevronDown, ChevronRight, ExternalLink, RefreshCw, CheckCircle2, Clock3, AlertCircle, Circle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { quoteFigures, normalizeBuyerFees } from "@/lib/quoteFigures";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { buildSheetRow, sheetEligible, type SheetRow, type SheetRecord, type SheetDocument, type SheetCemetery, type PaperworkState } from "@/lib/priceSheet";
 
-interface Props {
-  open: boolean;
-  onClose: () => void;
-  onOpenSubmission?: (id: string) => void;
-}
-
-type Row = {
-  id: string;
-  seller: string;
-  cemetery: string;
-  city: string;
-  location: string;
-  propertyType: string;
-  plots: number;
-  netPerSpace: number;
-  transferFee: number;
-  sellerTotal: number;
-  buyerPerSpace: number;
-  buyerTotal: number;
-  retail: number | null;
-  pctRetail: number | null;
-  acceptedAt: string | null;
-  status: string;
-  stage: string;
-  metro: string;
-  listingNumber: string;
-};
-
-type Key = keyof Row;
-
-const money = (n: number | null) => (n == null || !n ? "—" : `$${Math.round(n).toLocaleString()}`);
-const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—");
-
-const statusOf = (s: any): string => {
-  if (s.sold_at) return "Sold";
-  if (s.reserved_until && new Date(s.reserved_until) > new Date()) return "Reserved";
-  if (s.listing_live_at) return "Listed";
-  if (s.la_signed_at || s.contracts_completed_at) return "Agreement signed";
-  return "Accepted";
-};
-
-// Where the seller sits in the process after accepting — most advanced milestone wins.
-const stageOf = (s: any): string => {
-  if (s.sold_at) return "Sold";
-  if (s.contracts_completed_at) return "Completed";
-  if (s.listing_live_at) return "Listed";
-  if (s.la_signed_at) return "Agreement signed";
-  if (s.documents_completed_at) return "Docs returned";
-  if (s.documents_requested_at) return "Docs requested";
-  return "Quote accepted";
-};
-
-const STAGE_CLS: Record<string, string> = {
-  "Quote accepted": "bg-amber-500/10 text-amber-700",
-  "Docs requested": "bg-sky-500/10 text-sky-700",
-  "Docs returned": "bg-sky-600/15 text-sky-800",
-  "Agreement signed": "bg-primary/10 text-primary",
-  "Listed": "bg-emerald-500/10 text-emerald-700",
-  "Completed": "bg-emerald-600/15 text-emerald-800",
-  "Sold": "bg-emerald-600/20 text-emerald-900",
-};
-
+interface Props { open: boolean; onClose: () => void; onOpenSubmission?: (id: string) => void }
+type Key = keyof SheetRow;
+const money = (n: number | null) => n == null ? "—" : n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const date = (s: string | null) => s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+const percent = (n: number | null) => n == null ? "—" : `${n.toFixed(1)}%`;
+const PAPERWORK = {
+  complete: { label: "All docs back", Icon: CheckCircle2, cls: "text-primary" },
+  pending: { label: "Docs pending", Icon: Clock3, cls: "text-accent" },
+  review: { label: "Check completion", Icon: AlertCircle, cls: "text-destructive" },
+  not_requested: { label: "Not requested", Icon: Circle, cls: "text-muted-foreground" },
+} satisfies Record<PaperworkState, { label: string; Icon: typeof Circle; cls: string }>;
 const COLS: { key: Key; label: string; num?: boolean }[] = [
-  { key: "seller", label: "Seller" },
-  { key: "cemetery", label: "Cemetery" },
-  { key: "city", label: "City" },
-  { key: "metro", label: "Metro area" },
-  { key: "location", label: "Lawn / section / spaces" },
-  { key: "propertyType", label: "Type" },
-  { key: "plots", label: "Spaces", num: true },
-  { key: "netPerSpace", label: "Price / space", num: true },
-  { key: "transferFee", label: "Transfer fee", num: true },
-  { key: "sellerTotal", label: "Price · all spaces", num: true },
-  { key: "buyerPerSpace", label: "Buyer price / space", num: true },
-  { key: "buyerTotal", label: "Buyer total", num: true },
-  { key: "retail", label: "Retail / space", num: true },
-  { key: "pctRetail", label: "Buyer % of retail", num: true },
-  { key: "status", label: "Status" },
-  { key: "stage", label: "Stage" },
-  { key: "acceptedAt", label: "Accepted" },
+  { key: "seller", label: "Seller" }, { key: "cemetery", label: "Cemetery" }, { key: "city", label: "City" }, { key: "metro", label: "Metro" },
+  { key: "location", label: "Lawn / section / spaces" }, { key: "propertyType", label: "Type" }, { key: "plots", label: "Spaces", num: true },
+  { key: "netPerSpace", label: "Property price / space", num: true }, { key: "transferFee", label: "Transfer fee · once", num: true },
+  { key: "sellerTotal", label: "Property price · all spaces", num: true }, { key: "sellerProceeds", label: "Seller proceeds", num: true },
+  { key: "buyerPerSpace", label: "Buyer · separate space", num: true }, { key: "buyerTotal", label: "Buyer · all spaces", num: true },
+  { key: "sellerCommission", label: "Seller commission · 15%", num: true }, { key: "buyerCommission", label: "Buyer commission · 15%", num: true },
+  { key: "profit", label: "Our gross commission", num: true }, { key: "extraFees", label: "Other buyer fees", num: true },
+  { key: "retail", label: "Retail / space", num: true }, { key: "pctRetail", label: "Separate buyer % of retail", num: true },
+  { key: "pctRetailBundle", label: "Bundle buyer % of retail", num: true }, { key: "documentState", label: "Paperwork" },
+  { key: "docsReceived", label: "Docs received", num: true }, { key: "docsTotal", label: "Docs required", num: true },
+  { key: "status", label: "Status" }, { key: "stage", label: "Recorded stage" }, { key: "acceptedAt", label: "Accepted" }, { key: "listingNumber", label: "Listing number" },
+];
+const HEADERS: { key: Key; label: string; num?: boolean }[] = [
+  { key: "cemetery", label: "Property" }, { key: "metro", label: "Metro" }, { key: "documentState", label: "Paperwork" },
+  { key: "plots", label: "Spaces", num: true }, { key: "buyerPerSpace", label: "Buyer / space", num: true },
+  { key: "buyerTotal", label: "Final buyer total", num: true }, { key: "profit", label: "Our gross profit", num: true },
+  { key: "pctRetail", label: "% of retail", num: true }, { key: "status", label: "Status" },
 ];
 
+// Every read is paginated and errors are explicit: never present a truncated sheet as complete.
+async function readPages<T>(query: (start: number, end: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<T[]> {
+  const result: T[] = [];
+  for (let start = 0; ; start += 1000) {
+    const { data, error } = await query(start, start + 999);
+    if (error) throw new Error(error.message);
+    const page = (data || []) as T[];
+    result.push(...page);
+    if (page.length < 1000) return result;
+  }
+}
+
 const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<SheetRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [updated, setUpdated] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [scope, setScope] = useState("active");
+  const [metro, setMetro] = useState("all");
+  const [docsFilter, setDocsFilter] = useState("all");
   const [status, setStatus] = useState("all");
-  const [sort, setSort] = useState<{ key: Key; dir: 1 | -1 }>({ key: "acceptedAt", dir: -1 });
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [sort, setSort] = useState<{ key: Key; dir: 1 | -1 }>({ key: "metro", dir: 1 });
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
+    let live = true;
+    setLoading(true); setError("");
     (async () => {
-      const [{ data }, { data: cemData }] = await Promise.all([
-        supabase
-          .from("contact_submissions")
-          .select("id,name,cemetery,cemetery_city,lawn,section,space_numbers,property_type,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,cemetery_retail,buyer_fees,quote_responded_at,sold_at,reserved_until,listing_live_at,la_signed_at,contracts_completed_at,documents_requested_at,documents_completed_at,listing_number,customer_kind")
-          .eq("quote_response", "accepted")
-          .is("deleted_at", null)
-          .is("archived_at", null),
-        supabase.from("texas_cemeteries").select("name,canonical_name,city,region").is("deleted_at", null),
-      ]);
-      // Metro area lookup: match on cemetery name (or canonical name), fall back to city.
-      const byName = new Map<string, string>();
-      const byCity = new Map<string, string>();
-      for (const c of (cemData as any[]) || []) {
-        const region = c.region || "";
-        if (!region) continue;
-        for (const n of [c.name, c.canonical_name]) {
-          const k = String(n || "").trim().toLowerCase();
-          if (k && !byName.has(k)) byName.set(k, region);
+      try {
+        const [submissions, directory] = await Promise.all([
+          readPages<SheetRecord>((start, end) => supabase.from("contact_submissions")
+            .select("id,name,source,customer_kind,cemetery,cemetery_city,lawn,section,space_numbers,property_type,plot_count,spaces,quote_amount,accepted_quote_amount,transfer_fee_amount,cemetery_retail,buyer_fees,quote_response,quote_responded_at,sold_at,closed_at,reserved_until,listing_live_at,la_signed_at,contracts_completed_at,documents_requested_at,documents_completed_at,ownership_answers,pipeline_stage_override,listing_number")
+            .is("deleted_at", null).is("archived_at", null)
+            .or("quote_response.eq.accepted,la_signed_at.not.is.null,listing_live_at.not.is.null,documents_completed_at.not.is.null,contracts_completed_at.not.is.null")
+            .order("id").range(start, end)),
+          readPages<SheetCemetery>((start, end) => supabase.from("texas_cemeteries").select("name,city,region,transfer_fee").is("deleted_at", null).order("id").range(start, end)),
+        ]);
+        const eligible = submissions.filter(sheetEligible);
+        const documentGroups = await Promise.all(Array.from({ length: Math.ceil(eligible.length / 100) }, (_, index) => {
+          const ids = eligible.slice(index * 100, (index + 1) * 100).map(s => s.id);
+          return readPages<SheetDocument>((start, end) => supabase.from("submission_documents").select("submission_id,status,doc_code,document_type").is("deleted_at", null).in("submission_id", ids).order("id").range(start, end));
+        }));
+        const byId = new Map<string, SheetDocument[]>();
+        for (const doc of documentGroups.flat()) byId.set(doc.submission_id, [...(byId.get(doc.submission_id) || []), doc]);
+        if (live) {
+          setRows(eligible.map(s => buildSheetRow(s, byId.get(s.id) || [], directory)));
+          setUpdated(new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }));
         }
-        const ck = String(c.city || "").trim().toLowerCase();
-        if (ck && !byCity.has(ck)) byCity.set(ck, region);
-      }
-      const metroOf = (s: any): string =>
-        byName.get(String(s.cemetery || "").trim().toLowerCase()) ||
-        byCity.get(String(s.cemetery_city || "").trim().toLowerCase()) || "";
-      const out: Row[] = ((data as any[]) || [])
-        .filter((s) => s.customer_kind !== "buyer")
-        .map((s) => {
-          const plots = Number(s.plot_count) || parseInt(String(s.spaces || ""), 10) || 1;
-          const f = quoteFigures({
-            quoteAmount: s.quote_amount,
-            acceptedAmount: s.accepted_quote_amount,
-            transferFee: s.transfer_fee_amount,
-            plotCount: plots,
-            buyerFees: normalizeBuyerFees(s.buyer_fees),
-          });
-          const retail = Number(s.cemetery_retail) || null;
-          return {
-            id: s.id,
-            seller: s.name || "Unknown",
-            cemetery: s.cemetery || "—",
-            city: s.cemetery_city || "",
-            location: [s.lawn, s.section, s.space_numbers].filter(Boolean).join(" · "),
-            propertyType: s.property_type || "",
-            plots: f.plotCount,
-            netPerSpace: f.netPerSpace,
-            transferFee: f.transferFee,
-            sellerTotal: f.netTotal,
-            buyerPerSpace: f.buyerPricePerSpace,
-            buyerTotal: f.buyerPriceTotal,
-            retail,
-            pctRetail: retail && f.buyerPricePerSpace ? Math.round((f.buyerPricePerSpace / retail) * 100) : null,
-            acceptedAt: s.quote_responded_at,
-            status: statusOf(s),
-            stage: stageOf(s),
-            metro: metroOf(s),
-            listingNumber: s.listing_number || "",
-          };
-        });
-      setRows(out);
-      setLoading(false);
+      } catch (e) { if (live) setError(e instanceof Error ? e.message : "The full price sheet could not be loaded."); }
+      finally { if (live) setLoading(false); }
     })();
-  }, [open]);
+    return () => { live = false; };
+  }, [open, reload]);
 
   const view = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    let r = rows.filter((x) => (status === "all" || x.status === status) &&
-      (!needle || [x.seller, x.cemetery, x.city, x.metro, x.location, x.propertyType, x.stage, x.listingNumber].join(" ").toLowerCase().includes(needle)));
-    const { key, dir } = sort;
-    r = [...r].sort((a, b) => {
-      const av = a[key], bv = b[key];
-      if (av == null || av === "") return 1;
-      if (bv == null || bv === "") return -1;
-      if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
-      return String(av).localeCompare(String(bv)) * dir;
-    });
-    return r;
-  }, [rows, q, status, sort]);
-
+    return rows.filter(r => (scope === "all" || (scope === "active" ? r.active : !r.active)) &&
+      (metro === "all" || metro === r.metro) && (status === "all" || status === r.status) &&
+      (docsFilter === "all" || (docsFilter === "issues" ? r.issues.length > 0 : r.documentState === docsFilter)) &&
+      (!needle || [r.seller, r.cemetery, r.city, r.metro, r.location, r.propertyType, r.stage, r.listingNumber].join(" ").toLowerCase().includes(needle)))
+      .sort((a, b) => {
+        const av = a[sort.key], bv = b[sort.key];
+        const missingA = av == null || av === "", missingB = bv == null || bv === "";
+        if (missingA || missingB) return missingA === missingB ? a.id.localeCompare(b.id) : missingA ? 1 : -1;
+        return (typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv))) * sort.dir || a.cemetery.localeCompare(b.cemetery) || a.id.localeCompare(b.id);
+      });
+  }, [rows, q, scope, metro, status, docsFilter, sort]);
   const totals = useMemo(() => ({
-    plots: view.reduce((a, r) => a + r.plots, 0),
-    seller: view.reduce((a, r) => a + r.sellerTotal, 0),
-    buyer: view.reduce((a, r) => a + r.buyerTotal, 0),
+    plots: view.reduce((n, r) => n + (r.plots || 0), 0), buyer: view.reduce((n, r) => n + (r.buyerTotal || 0), 0),
+    profit: view.reduce((n, r) => n + (r.profit || 0), 0), complete: view.filter(r => r.documentState === "complete").length,
+    unpriced: view.filter(r => r.buyerTotal === null).length, issues: view.filter(r => r.issues.length).length,
   }), [view]);
+  const toggleSort = (key: Key) => setSort(s => ({ key, dir: s.key === key && s.dir === 1 ? -1 : 1 }));
+  const exportCsv = useCallback(() => {
+    const esc = (v: unknown) => { const text = String(v ?? ""); return `"${(/^[=+@-]/.test(text) ? "'" : "") + text.replace(/"/g, '""')}"`; };
+    const csv = [COLS.map(c => esc(c.label)).concat([esc("Buyer AI eligible"), esc("Checks / discrepancies")]).join(","), ...view.map(r => COLS.map(c => esc(c.key === "documentState" ? PAPERWORK[r.documentState].label : r[c.key])).concat([esc(r.aiEligible ? "Yes" : "No"), esc(r.issues.join(" | "))]).join(","))].join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `price-sheet-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url);
+  }, [view]);
+  const openRecord = (id: string) => { onClose(); onOpenSubmission?.(id); };
+  const field = (label: string, value: string) => <div className="flex justify-between gap-4 border-b border-border/50 py-2 text-xs"><dt className="text-muted-foreground">{label}</dt><dd className="text-right font-medium tabular-nums">{value}</dd></div>;
 
-  if (!open) return null;
-
-  const toggle = (key: Key) => setSort((s) => (s.key === key ? { key, dir: (s.dir * -1) as 1 | -1 } : { key, dir: 1 }));
-
-  const exportCsv = () => {
-    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const lines = [COLS.map((c) => esc(c.label)).join(",")].concat(
-      view.map((r) => COLS.map((c) => esc(c.key === "acceptedAt" ? fmtDate(r.acceptedAt) : r[c.key])).join(",")),
-    );
-    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `price-sheet-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-  };
-
-  const cell = (r: Row, key: Key) => {
-    switch (key) {
-      case "netPerSpace": case "transferFee": case "sellerTotal": case "buyerPerSpace": case "buyerTotal": case "retail":
-        return money(r[key] as number);
-      case "pctRetail":
-        return r.pctRetail == null ? "—" : <span className={r.pctRetail > 70 ? "text-destructive font-semibold" : ""}>{r.pctRetail}%</span>;
-      case "acceptedAt": return fmtDate(r.acceptedAt);
-      case "seller": return <span className="font-medium text-foreground">{r.seller}{r.listingNumber && <span className="ml-1 text-[10px] text-muted-foreground">#{r.listingNumber}</span>}</span>;
-      case "status": return <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary whitespace-nowrap">{r.status}</span>;
-      case "stage": return <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${STAGE_CLS[r.stage] || "bg-muted text-muted-foreground"}`}>{r.stage}</span>;
-      case "metro": return r.metro || "—";
-      default: return (r[key] as any) || "—";
-    }
-  };
-
-  const statuses = ["all", "Accepted", "Agreement signed", "Listed", "Reserved", "Sold"];
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-foreground/40 print:static print:bg-transparent print:p-0" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl w-full max-w-[1500px] h-[92vh] flex flex-col shadow-xl print:h-auto print:border-0 print:shadow-none">
-        <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-border">
-          <span className="w-9 h-9 rounded-full bg-primary/15 text-primary grid place-items-center"><FileSpreadsheet className="w-4 h-4" /></span>
-          <div className="mr-auto">
-            <h3 className="font-display text-lg text-foreground">Price sheet</h3>
-            <p className="text-[11px] text-muted-foreground">Every seller who accepted their quote · {view.length} listing{view.length === 1 ? "" : "s"}</p>
-          </div>
-          <div className="relative print:hidden">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search seller, cemetery, lawn…" className="pl-8 pr-3 py-2 w-64 rounded-full bg-background border border-border text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
-          </div>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="py-2 px-3 rounded-full bg-background border border-border text-xs print:hidden">
-            {statuses.map((s) => <option key={s} value={s}>{s === "all" ? "All statuses" : s}</option>)}
-          </select>
-          <button onClick={exportCsv} className="print:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-border text-xs hover:bg-muted"><Download className="w-3.5 h-3.5" /> CSV</button>
-          <button onClick={() => window.print()} className="print:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-border text-xs hover:bg-muted"><Printer className="w-3.5 h-3.5" /> Print</button>
-          <button onClick={onClose} className="print:hidden text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
+  return <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+    <DialogContent className="flex h-[94dvh] w-[calc(100%-24px)] max-w-[1536px] flex-col gap-0 overflow-y-auto rounded-xl bg-card p-0 font-body sm:overflow-hidden [&_h2]:!font-body [&_h4]:!font-body sm:w-[calc(100%-48px)] motion-reduce:animate-none [&>button]:print:hidden">
+      <header className="flex flex-wrap items-center shrink-0 gap-3 border-b border-border px-5 py-3 pr-12 sm:px-7 sm:pr-14">
+        <FileSpreadsheet className="h-6 w-6 text-primary" />
+        <div className="mr-auto min-w-0 flex-1"><DialogTitle className="text-xl font-semibold tracking-normal">Price sheet</DialogTitle><DialogDescription className="mt-1 text-xs">{loading ? "Checking inventory and paperwork…" : `${rows.filter(r => r.active).length} active seller records · ${rows.filter(r => !r.active).length} sold / closed · Checked ${updated || "—"}`}</DialogDescription></div>
+        <div className="flex items-center gap-1 print:hidden">
+          <Button variant="ghost" size="icon" title="Refresh price sheet" aria-label="Refresh price sheet" onClick={() => setReload(n => n + 1)} disabled={loading}><RefreshCw className={loading ? "animate-spin motion-reduce:animate-none" : ""} /></Button>
+          <Button variant="ghost" size="icon" title="Download full CSV" aria-label="Download full CSV" onClick={exportCsv} disabled={loading || !!error}><Download /></Button>
+          <Button variant="ghost" size="icon" title="Print price sheet" aria-label="Print price sheet" onClick={() => window.print()} disabled={loading || !!error}><Printer /></Button>
         </div>
-
-        <div className="flex-1 overflow-auto">
-          {loading ? (
-            <p className="p-10 text-center text-sm text-muted-foreground">Loading…</p>
-          ) : view.length === 0 ? (
-            <p className="p-10 text-center text-sm text-muted-foreground">No accepted listings match.</p>
-          ) : (
-            <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-muted/90 backdrop-blur z-10">
-                <tr>
-                  {COLS.map((c) => {
-                    const active = sort.key === c.key;
-                    const Icon = !active ? ArrowUpDown : sort.dir === 1 ? ArrowUp : ArrowDown;
-                    return (
-                      <th key={c.key} className={`px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap ${c.num ? "text-right" : "text-left"}`}>
-                        <button onClick={() => toggle(c.key)} className={`inline-flex items-center gap-1 hover:text-foreground ${active ? "text-foreground" : ""}`}>
-                          {c.label}<Icon className="w-3 h-3 opacity-60" />
-                        </button>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {view.map((r, i) => (
-                  <tr key={r.id} onClick={() => { onOpenSubmission?.(r.id); onClose(); }} className={`border-b border-border/40 cursor-pointer hover:bg-primary/5 ${i % 2 ? "bg-muted/20" : ""}`}>
-                    {COLS.map((c) => (
-                      <td key={c.key} className={`px-3 py-2 text-muted-foreground ${c.num ? "text-right tabular-nums" : ""}`}>{cell(r, c.key)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="sticky bottom-0 bg-card border-t border-border font-semibold text-foreground">
-                <tr>
-                  <td className="px-3 py-2.5" colSpan={6}>Totals ({view.length})</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{totals.plots}</td>
-                  <td colSpan={2} />
-                  <td className="px-3 py-2.5 text-right tabular-nums">{money(totals.seller)}</td>
-                  <td />
-                  <td className="px-3 py-2.5 text-right tabular-nums">{money(totals.buyer)}</td>
-                  <td colSpan={5} />
-                </tr>
-              </tfoot>
-            </table>
-          )}
-        </div>
-        <p className="px-5 py-2 border-t border-border text-[10px] text-muted-foreground">
-          Property price excludes the one-time cemetery transfer fee. Buyer price includes that fee, the 15% buyer's premium, and any added fees. Red % means above the 70%-of-retail ceiling. Click a row to open that seller.
-        </p>
+      </header>
+      <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-5 py-3 sm:grid-cols-4 sm:px-7">
+        {[{ label: "Inventory", value: loading || error ? "—" : `${totals.plots} spaces`, sub: `${view.length} seller records` }, { label: "Final buyer value", value: loading || error ? "—" : money(totals.buyer), sub: totals.unpriced ? `${totals.unpriced} unconfirmed totals excluded` : "All spaces bought together per record" }, { label: "Our gross commission", value: loading || error ? "—" : money(totals.profit), sub: "Seller 15% + buyer 15% · before costs" }, { label: "Paperwork returned", value: loading || error ? "—" : `${totals.complete} records`, sub: `${totals.issues} records need a check` }].map(s => <div key={s.label} className="min-w-0"><p className="text-[11px] text-muted-foreground">{s.label}</p><p className="mt-1 text-lg font-semibold tabular-nums sm:text-2xl">{s.value}</p><p className="mt-1 text-[11px] text-muted-foreground">{s.sub}</p></div>)}
       </div>
-    </div>
-  );
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-muted/25 px-5 py-3 sm:px-7 print:hidden">
+        <div className="relative min-w-40 flex-1"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search price sheet" value={q} onChange={e => setQ(e.target.value)} placeholder="Search seller, cemetery, section…" className="bg-card pl-9" /></div>
+        <Button variant="outline" size="icon" className="sm:hidden" aria-label="Show price sheet filters" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(v => !v)}><SlidersHorizontal /></Button>
+        <div className={`${filtersOpen ? "flex" : "hidden"} w-full flex-wrap gap-2 sm:contents`}>
+        <Select value={scope} onValueChange={setScope}><SelectTrigger aria-label="Inventory scope" className="w-[calc(50%-4px)] bg-card sm:w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="history">Sold / closed</SelectItem><SelectItem value="all">All records</SelectItem></SelectContent></Select>
+        <Select value={metro} onValueChange={setMetro}><SelectTrigger aria-label="Metro area" className="w-[calc(50%-4px)] bg-card sm:w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All metro areas</SelectItem>{[...new Set(rows.map(r => r.metro))].sort().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
+        <Select value={docsFilter} onValueChange={setDocsFilter}><SelectTrigger aria-label="Paperwork filter" className="w-[calc(50%-4px)] bg-card sm:w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All paperwork</SelectItem>{Object.entries(PAPERWORK).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}<SelectItem value="issues">Any checks needed</SelectItem></SelectContent></Select>
+        <Select value={status} onValueChange={setStatus}><SelectTrigger aria-label="Listing status" className="w-[calc(50%-4px)] bg-card sm:w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{["Accepted", "Agreement signed", "Listed", "Reserved", "Sold", "Closed"].map(s => <SelectItem value={s} key={s}>{s}</SelectItem>)}</SelectContent></Select>
+        <Select value={sort.key} onValueChange={key => setSort({ key: key as Key, dir: 1 })}><SelectTrigger aria-label="Sort price sheet" className="w-[calc(50%-4px)] bg-card sm:w-44"><SelectValue /></SelectTrigger><SelectContent>{COLS.map(c => <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>)}</SelectContent></Select>
+        <Button variant="outline" size="icon" aria-label="Reverse sort order" title="Reverse sort order" onClick={() => setSort(s => ({ ...s, dir: s.dir === 1 ? -1 : 1 }))}>{sort.dir === 1 ? <ArrowUp /> : <ArrowDown />}</Button>
+        </div>
+      </div>
+      <div className="min-h-[260px] shrink-0 overflow-auto sm:min-h-0 sm:flex-1" aria-busy={loading}>
+        {error ? <div role="alert" className="p-8 text-sm"><p className="font-medium text-destructive">The complete sheet could not be verified.</p><p className="mt-2 text-muted-foreground">{error}</p><Button variant="outline" className="mt-4" onClick={() => setReload(n => n + 1)}><RefreshCw /> Try again</Button></div> : loading ? <div className="flex items-center justify-center gap-2 p-12 text-sm text-muted-foreground"><RefreshCw className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Checking all records…</div> : !view.length ? <p className="p-12 text-center text-sm text-muted-foreground">No inventory matches these filters.</p> : <table className="w-full min-w-[1180px] border-collapse text-xs">
+          <thead className="sticky top-0 z-20 bg-muted/95 backdrop-blur"><tr>{HEADERS.map(c => <th key={c.key} aria-sort={sort.key === c.key ? sort.dir === 1 ? "ascending" : "descending" : "none"} className={`border-b border-border px-3 py-3 ${c.num ? "text-right" : "text-left"}`}><Button variant="ghost" onClick={() => toggleSort(c.key)} className={`h-auto gap-1 p-0 text-[11px] hover:bg-transparent ${sort.key === c.key ? "text-foreground" : "text-muted-foreground"}`}>{c.label}{sort.key !== c.key ? <ArrowUpDown className="!h-3 !w-3" /> : sort.dir === 1 ? <ArrowUp className="!h-3 !w-3" /> : <ArrowDown className="!h-3 !w-3" />}</Button></th>)}<th className="w-12"><span className="sr-only">Details</span></th></tr></thead>
+          <tbody>{view.map(r => {
+            const p = PAPERWORK[r.documentState]; const isOpen = expanded === r.id;
+            return <Fragment key={r.id}><tr className={`border-b border-border/60 transition-colors hover:bg-muted/40 ${isOpen ? "bg-muted/40" : ""}`}>
+              <td className="max-w-[230px] px-4 py-4"><Button variant="link" className="h-auto max-w-full justify-start whitespace-normal p-0 text-left font-semibold text-foreground" onClick={() => openRecord(r.id)}>{r.cemetery}</Button><p className="mt-1 text-[11px] text-muted-foreground">{r.seller}{r.listingNumber ? ` · #${r.listingNumber}` : ""}</p><p className="mt-1 text-[11px] text-muted-foreground">{[r.location, r.propertyType].filter(Boolean).join(" · ") || "Location to confirm"}</p></td>
+              <td className="max-w-36 px-3 py-4 text-muted-foreground">{r.metro}<span className="mt-1 block text-[11px]">{r.city}</span></td>
+              <td className="px-3 py-4"><span className={`inline-flex items-center gap-1.5 whitespace-nowrap font-medium ${p.cls}`}><p.Icon className="h-3.5 w-3.5" />{p.label}</span><span className="mt-1 block text-[11px] text-muted-foreground">{r.docsTotal ? `${r.docsReceived} / ${r.docsTotal} received` : "No checklist evidence"}</span>{r.issues.length > 0 && <Button variant="link" className="mt-1 h-auto p-0 text-[11px] text-muted-foreground" onClick={() => setExpanded(isOpen ? null : r.id)}>{r.issues.length} check{r.issues.length === 1 ? "" : "s"}</Button>}</td>
+              <td className="px-3 py-4 text-right tabular-nums">{r.plots ?? "—"}</td><td className="px-3 py-4 text-right tabular-nums">{money(r.buyerPerSpace)}</td>
+              <td className="bg-primary/5 px-3 py-4 text-right text-sm font-semibold tabular-nums">{money(r.buyerTotal)}</td><td className="px-3 py-4 text-right text-sm font-semibold tabular-nums">{money(r.profit)}</td>
+              <td className={`px-3 py-4 text-right tabular-nums ${r.pctRetail !== null && r.pctRetail > 70 ? "font-medium text-destructive" : "text-muted-foreground"}`}>{percent(r.pctRetail)}<span className="mt-1 block text-[10px] text-muted-foreground">{percent(r.pctRetailBundle)} bundle</span></td>
+              <td className="px-3 py-4"><p className="whitespace-nowrap font-medium">{r.status}</p><p className={`mt-1 max-w-32 text-[10px] ${r.aiEligible ? "text-primary" : "text-muted-foreground"}`}>{r.aiEligible ? "Buyer AI eligible" : "Not Buyer AI ready"}</p></td>
+              <td className="px-2"><Button variant="ghost" size="icon" aria-label={`Details for ${r.seller}`} aria-expanded={isOpen} onClick={() => setExpanded(isOpen ? null : r.id)}>{isOpen ? <ChevronDown /> : <ChevronRight />}</Button></td>
+            </tr>{isOpen && <tr><td colSpan={10} className="border-b border-border bg-muted/20 px-6 py-5"><div className="grid grid-cols-3 gap-8">
+              <section><h4 className="mb-2 font-semibold">Price & proceeds</h4><dl>{field("Property price / space", money(r.netPerSpace))}{field("Property price · all spaces", money(r.sellerTotal))}{field("Seller commission · 15% of property", money(r.sellerCommission))}{field("Seller receives", money(r.sellerProceeds))}{field("Retail / space", money(r.retail))}{field("Accepted", date(r.acceptedAt))}</dl></section>
+              <section><h4 className="mb-2 font-semibold">Final buyer price & our profit</h4><dl>{field("Transfer fee · once per purchase", money(r.transferFee))}{field("Buyer commission · 15% of property + transfer", money(r.buyerCommission))}{field("Other buyer fees", money(r.extraFees))}{field("Buyer pays · all spaces together", money(r.buyerTotal))}{field("Our gross commission · both 15% fees", money(r.profit))}</dl>{r.pricing.single.buyerFees.length > 0 && <p className="mt-2 text-[11px] text-muted-foreground">{r.pricing.single.buyerFees.map(f => `${f.label}: ${money(f.amount)}`).join(" · ")}</p>}<p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">Gross commission is not net profit: operating costs, referral costs and upfront listing fees are excluded. Other buyer fees are itemized, not assumed to be profit.</p></section>
+              <section><h4 className="mb-2 font-semibold">Paperwork & listing evidence</h4><dl>{field("Recorded pipeline stage", r.stage)}{field("Buyer AI timing evidence", r.paperwork.aiReadiness)}{field("Checklist", `${r.docsReceived} / ${r.docsTotal} received`)}</dl>{r.paperwork.pending.length > 0 && <p className="mt-3 text-[11px] text-muted-foreground">Outstanding: {r.paperwork.pending.map(d => ({ D21: "Limited POA", D2P: "Photo ID", D2: "Photo ID", D1: "Deed", D6: "Death certificate", D12: "Heirship affidavit", LA: "Listing agreement", REVIEW: "Staff review", D15: "Existing outside POA" }[d.doc_code || ""] || d.document_type || d.doc_code || "Document")).join(" · ")}</p>}{r.issues.length > 0 && <ul className="mt-3 space-y-2 text-[11px] text-accent">{r.issues.map(issue => <li key={issue} className="flex gap-2"><AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />{issue}</li>)}</ul>}<Button variant="outline" size="sm" className="mt-4" onClick={() => openRecord(r.id)}><ExternalLink /> Open seller record</Button></section>
+            </div></td></tr>}</Fragment>;
+          })}</tbody>
+        </table>}
+      </div>
+      <footer className="shrink-0 space-y-1 border-t border-border px-5 py-3 text-[11px] leading-relaxed text-muted-foreground sm:px-7">
+        <p><span className="font-medium text-foreground">{view.length} records</span> · Buyer / space is a separate purchase including all saved buyer fees; final buyer total buys all spaces together, with one transfer fee. Both prices include the 15% buyer premium.</p>
+        <p>Green = returned paperwork including POA evidence · Amber = pending · Red = conflicting completion evidence. Uploaded copies are not physical originals. Retail % includes buyer fees; above 70% is flagged.</p>
+      </footer>
+    </DialogContent>
+  </Dialog>;
 };
-
 export default PriceSheetDialog;
