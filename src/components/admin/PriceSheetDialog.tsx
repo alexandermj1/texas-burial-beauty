@@ -14,9 +14,9 @@ const date = (s: string | null) => s ? new Date(s).toLocaleDateString("en-US", {
 const percent = (n: number | null) => n == null ? "—" : `${n.toFixed(1)}%`;
 const PAPERWORK = {
   complete: { label: "All docs back", Icon: CheckCircle2, cls: "text-primary" },
-  pending: { label: "Docs pending", Icon: Clock3, cls: "text-accent" },
+  pending: { label: "Docs returning", Icon: Clock3, cls: "price-sheet-returning-label" },
   review: { label: "Check completion", Icon: AlertCircle, cls: "text-destructive" },
-  not_requested: { label: "Not requested", Icon: Circle, cls: "text-muted-foreground" },
+  not_requested: { label: "Docs not started", Icon: Circle, cls: "text-muted-foreground" },
 } satisfies Record<PaperworkState, { label: string; Icon: typeof Circle; cls: string }>;
 const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "seller", label: "Seller" }, { key: "cemetery", label: "Cemetery" }, { key: "city", label: "City" }, { key: "metro", label: "Metro" },
@@ -26,6 +26,7 @@ const COLS: { key: Key; label: string; num?: boolean }[] = [
   { key: "buyerPerSpace", label: "Buyer · separate space", num: true }, { key: "buyerTotal", label: "Buyer · all spaces", num: true },
   { key: "sellerCommission", label: "Seller commission · 15%", num: true }, { key: "buyerCommission", label: "Buyer commission · 15%", num: true },
   { key: "profit", label: "Our gross commission", num: true }, { key: "extraFees", label: "Other buyer fees", num: true },
+  { key: "adjustmentFee", label: "Brokerage adjustment · all spaces", num: true }, { key: "adjustmentPerSpace", label: "Brokerage adjustment · separate space", num: true },
   { key: "retail", label: "Retail / space", num: true }, { key: "pctRetail", label: "Separate buyer % of retail", num: true },
   { key: "pctRetailBundle", label: "Bundle buyer % of retail", num: true }, { key: "documentState", label: "Paperwork" },
   { key: "docsReceived", label: "Docs received", num: true }, { key: "docsTotal", label: "Docs required", num: true },
@@ -34,7 +35,7 @@ const COLS: { key: Key; label: string; num?: boolean }[] = [
 const HEADERS: { key: Key; label: string; num?: boolean }[] = [
   { key: "cemetery", label: "Property" }, { key: "metro", label: "Metro" }, { key: "documentState", label: "Paperwork" },
   { key: "plots", label: "Spaces", num: true }, { key: "buyerPerSpace", label: "Buyer / space", num: true },
-  { key: "buyerTotal", label: "Final buyer total", num: true }, { key: "profit", label: "Our gross profit", num: true },
+  { key: "buyerTotal", label: "Final buyer total", num: true }, { key: "adjustmentFee", label: "Adjustment fee", num: true }, { key: "profit", label: "Our gross earnings", num: true },
   { key: "pctRetail", label: "% of retail", num: true }, { key: "status", label: "Status" },
 ];
 
@@ -109,11 +110,6 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
         return (typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv))) * sort.dir || a.cemetery.localeCompare(b.cemetery) || a.id.localeCompare(b.id);
       });
   }, [rows, q, scope, metro, status, docsFilter, sort]);
-  const totals = useMemo(() => ({
-    plots: view.reduce((n, r) => n + (r.plots || 0), 0), buyer: view.reduce((n, r) => n + (r.buyerTotal || 0), 0),
-    profit: view.reduce((n, r) => n + (r.profit || 0), 0), complete: view.filter(r => r.documentState === "complete").length,
-    unpriced: view.filter(r => r.buyerTotal === null).length, issues: view.filter(r => r.issues.length).length,
-  }), [view]);
   const toggleSort = (key: Key) => setSort(s => ({ key, dir: s.key === key && s.dir === 1 ? -1 : 1 }));
   const exportCsv = useCallback(() => {
     const esc = (v: unknown) => { const text = String(v ?? ""); return `"${(/^[=+@-]/.test(text) ? "'" : "") + text.replace(/"/g, '""')}"`; };
@@ -135,9 +131,6 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
           <Button variant="ghost" size="icon" title="Print price sheet" aria-label="Print price sheet" onClick={() => window.print()} disabled={loading || !!error}><Printer /></Button>
         </div>
       </header>
-      <div className="grid shrink-0 grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-5 py-3 sm:grid-cols-4 sm:px-7">
-        {[{ label: "Inventory", value: loading || error ? "—" : `${totals.plots} spaces`, sub: `${view.length} seller records` }, { label: "Final buyer value", value: loading || error ? "—" : money(totals.buyer), sub: totals.unpriced ? `${totals.unpriced} unconfirmed totals excluded` : "All spaces bought together per record" }, { label: "Our gross commission", value: loading || error ? "—" : money(totals.profit), sub: "Seller 15% + buyer 15% · before costs" }, { label: "Paperwork returned", value: loading || error ? "—" : `${totals.complete} records`, sub: `${totals.issues} records need a check` }].map(s => <div key={s.label} className="min-w-0"><p className="text-[11px] text-muted-foreground">{s.label}</p><p className="mt-1 text-lg font-semibold tabular-nums sm:text-2xl">{s.value}</p><p className="mt-1 text-[11px] text-muted-foreground">{s.sub}</p></div>)}
-      </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-muted/25 px-5 py-3 sm:px-7 print:hidden">
         <div className="relative min-w-40 flex-1"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Search price sheet" value={q} onChange={e => setQ(e.target.value)} placeholder="Search seller, cemetery, section…" className="bg-card pl-9" /></div>
         <Button variant="outline" size="icon" className="sm:hidden" aria-label="Show price sheet filters" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(v => !v)}><SlidersHorizontal /></Button>
@@ -155,18 +148,18 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
           <thead className="sticky top-0 z-20 bg-muted/95 backdrop-blur"><tr>{HEADERS.map(c => <th key={c.key} aria-sort={sort.key === c.key ? sort.dir === 1 ? "ascending" : "descending" : "none"} className={`border-b border-border px-3 py-3 ${c.num ? "text-right" : "text-left"}`}><Button variant="ghost" onClick={() => toggleSort(c.key)} className={`h-auto gap-1 p-0 text-[11px] hover:bg-transparent ${sort.key === c.key ? "text-foreground" : "text-muted-foreground"}`}>{c.label}{sort.key !== c.key ? <ArrowUpDown className="!h-3 !w-3" /> : sort.dir === 1 ? <ArrowUp className="!h-3 !w-3" /> : <ArrowDown className="!h-3 !w-3" />}</Button></th>)}<th className="w-12"><span className="sr-only">Details</span></th></tr></thead>
           <tbody>{view.map(r => {
             const p = PAPERWORK[r.documentState]; const isOpen = expanded === r.id;
-            return <Fragment key={r.id}><tr className={`border-b border-border/60 transition-colors hover:bg-muted/40 ${isOpen ? "bg-muted/40" : ""}`}>
+            return <Fragment key={r.id}><tr data-paperwork={r.documentState} className="price-sheet-row border-b border-border/60 transition-colors">
               <td className="max-w-[230px] px-4 py-4"><Button variant="link" className="h-auto max-w-full justify-start whitespace-normal p-0 text-left font-semibold text-foreground" onClick={() => openRecord(r.id)}>{r.cemetery}</Button><p className="mt-1 text-[11px] text-muted-foreground">{r.seller}{r.listingNumber ? ` · #${r.listingNumber}` : ""}</p><p className="mt-1 text-[11px] text-muted-foreground">{[r.location, r.propertyType].filter(Boolean).join(" · ") || "Location to confirm"}</p></td>
               <td className="max-w-36 px-3 py-4 text-muted-foreground">{r.metro}<span className="mt-1 block text-[11px]">{r.city}</span></td>
-              <td className="px-3 py-4"><span className={`inline-flex items-center gap-1.5 whitespace-nowrap font-medium ${p.cls}`}><p.Icon className="h-3.5 w-3.5" />{p.label}</span><span className="mt-1 block text-[11px] text-muted-foreground">{r.docsTotal ? `${r.docsReceived} / ${r.docsTotal} received` : "No checklist evidence"}</span>{r.issues.length > 0 && <Button variant="link" className="mt-1 h-auto p-0 text-[11px] text-muted-foreground" onClick={() => setExpanded(isOpen ? null : r.id)}>{r.issues.length} check{r.issues.length === 1 ? "" : "s"}</Button>}</td>
+              <td className="px-3 py-4"><p className="mb-1 text-base font-semibold tabular-nums">{r.docsReceived}/{r.docsTotal} <span className="text-[10px] font-normal text-muted-foreground">docs returned</span></p><span className={`inline-flex items-center gap-1.5 whitespace-nowrap font-medium ${p.cls}`}><p.Icon className="h-3.5 w-3.5" />{r.documentState === "not_requested" && r.status === "Agreement signed" ? "Agreement only" : p.label}</span>{r.docsTotal === 0 && <span className="mt-1 block text-[10px] text-muted-foreground">Checklist not confirmed</span>}{r.issues.length > 0 && <Button variant="link" className="mt-1 h-auto p-0 text-[11px] text-muted-foreground" onClick={() => setExpanded(isOpen ? null : r.id)}>{r.issues.length} check{r.issues.length === 1 ? "" : "s"}</Button>}</td>
               <td className="px-3 py-4 text-right tabular-nums">{r.plots ?? "—"}</td><td className="px-3 py-4 text-right tabular-nums">{money(r.buyerPerSpace)}</td>
-              <td className="bg-primary/5 px-3 py-4 text-right text-sm font-semibold tabular-nums">{money(r.buyerTotal)}</td><td className="px-3 py-4 text-right text-sm font-semibold tabular-nums">{money(r.profit)}</td>
-              <td className={`px-3 py-4 text-right tabular-nums ${r.pctRetail !== null && r.pctRetail > 70 ? "font-medium text-destructive" : "text-muted-foreground"}`}>{percent(r.pctRetail)}<span className="mt-1 block text-[10px] text-muted-foreground">{percent(r.pctRetailBundle)} bundle</span></td>
-              <td className="px-3 py-4"><p className="whitespace-nowrap font-medium">{r.status}</p><p className={`mt-1 max-w-32 text-[10px] ${r.aiEligible ? "text-primary" : "text-muted-foreground"}`}>{r.aiEligible ? "Buyer AI eligible" : "Not Buyer AI ready"}</p></td>
+              <td className="px-3 py-4 text-right text-sm font-semibold tabular-nums">{money(r.buyerTotal)}</td><td className="px-3 py-4 text-right tabular-nums">{money(r.adjustmentFee)}<span className="mt-1 block text-[10px] text-muted-foreground">{money(r.adjustmentPerSpace)} separate</span></td><td className="px-3 py-4 text-right text-sm font-semibold tabular-nums">{money(r.profit)}</td>
+              <td className="px-3 py-4 text-right tabular-nums text-muted-foreground">{percent(r.pctRetail)}<span className="mt-1 block text-[10px] text-muted-foreground">{percent(r.pctRetailBundle)} bundle</span></td>
+              <td className="px-3 py-4"><p className="whitespace-nowrap font-medium">{r.status}</p><p className="mt-1 max-w-32 text-[10px] text-muted-foreground">{!r.aiEligible ? "Pricing / listing check needed" : r.documentState === "complete" ? "Paperwork returned" : "Transfer not ready"}</p></td>
               <td className="px-2"><Button variant="ghost" size="icon" aria-label={`Details for ${r.seller}`} aria-expanded={isOpen} onClick={() => setExpanded(isOpen ? null : r.id)}>{isOpen ? <ChevronDown /> : <ChevronRight />}</Button></td>
-            </tr>{isOpen && <tr><td colSpan={10} className="border-b border-border bg-muted/20 px-6 py-5"><div className="grid grid-cols-3 gap-8">
+            </tr>{isOpen && <tr><td colSpan={11} className="border-b border-border bg-muted/20 px-6 py-5"><div className="grid grid-cols-3 gap-8">
               <section><h4 className="mb-2 font-semibold">Price & proceeds</h4><dl>{field("Property price / space", money(r.netPerSpace))}{field("Property price · all spaces", money(r.sellerTotal))}{field("Seller commission · 15% of property", money(r.sellerCommission))}{field("Seller receives", money(r.sellerProceeds))}{field("Retail / space", money(r.retail))}{field("Accepted", date(r.acceptedAt))}</dl></section>
-              <section><h4 className="mb-2 font-semibold">Final buyer price & our profit</h4><dl>{field("Transfer fee · once per purchase", money(r.transferFee))}{field("Buyer commission · 15% of property + transfer", money(r.buyerCommission))}{field("Other buyer fees", money(r.extraFees))}{field("Buyer pays · all spaces together", money(r.buyerTotal))}{field("Our gross commission · both 15% fees", money(r.profit))}</dl>{r.pricing.single.buyerFees.length > 0 && <p className="mt-2 text-[11px] text-muted-foreground">{r.pricing.single.buyerFees.map(f => `${f.label}: ${money(f.amount)}`).join(" · ")}</p>}<p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">Gross commission is not net profit: operating costs, referral costs and upfront listing fees are excluded. Other buyer fees are itemized, not assumed to be profit.</p></section>
+              <section><h4 className="mb-2 font-semibold">Final buyer price & our earnings</h4><dl>{field("Transfer fee · once per purchase", money(r.transferFee))}{field("Buyer commission · 15% of property + transfer", money(r.buyerCommission))}{field("Other buyer fees", money(r.extraFees))}{field("Brokerage adjustment · to 70% of retail", money(r.adjustmentFee))}{field("Buyer pays · all spaces together", money(r.buyerTotal))}{field("Our gross earnings · commissions + adjustment", money(r.profit))}</dl>{r.pricing.together && r.pricing.together.buyerFees.length > 0 && <p className="mt-2 text-[11px] text-muted-foreground">{r.pricing.together.buyerFees.map(f => `${f.label}: ${money(f.amount)}`).join(" · ")}</p>}<p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">The adjustment is added only when needed to reach 70% of saved retail. Higher totals stay unchanged. Gross earnings exclude operating costs, referral costs and upfront listing fees; other buyer fees are not assumed to be profit.</p></section>
               <section><h4 className="mb-2 font-semibold">Paperwork & listing evidence</h4><dl>{field("Recorded pipeline stage", r.stage)}{field("Buyer AI timing evidence", r.paperwork.aiReadiness)}{field("Checklist", `${r.docsReceived} / ${r.docsTotal} received`)}</dl>{r.paperwork.pending.length > 0 && <p className="mt-3 text-[11px] text-muted-foreground">Outstanding: {r.paperwork.pending.map(d => ({ D21: "Limited POA", D2P: "Photo ID", D2: "Photo ID", D1: "Deed", D6: "Death certificate", D12: "Heirship affidavit", LA: "Listing agreement", REVIEW: "Staff review", D15: "Existing outside POA" }[d.doc_code || ""] || d.document_type || d.doc_code || "Document")).join(" · ")}</p>}{r.issues.length > 0 && <ul className="mt-3 space-y-2 text-[11px] text-accent">{r.issues.map(issue => <li key={issue} className="flex gap-2"><AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />{issue}</li>)}</ul>}<Button variant="outline" size="sm" className="mt-4" onClick={() => openRecord(r.id)}><ExternalLink /> Open seller record</Button></section>
             </div></td></tr>}</Fragment>;
           })}</tbody>
@@ -174,7 +167,7 @@ const PriceSheetDialog = ({ open, onClose, onOpenSubmission }: Props) => {
       </div>
       <footer className="shrink-0 space-y-1 border-t border-border px-5 py-3 text-[11px] leading-relaxed text-muted-foreground sm:px-7">
         <p><span className="font-medium text-foreground">{view.length} records</span> · Buyer / space is a separate purchase including all saved buyer fees; final buyer total buys all spaces together, with one transfer fee. Both prices include the 15% buyer premium.</p>
-        <p>Green = returned paperwork including POA evidence · Amber = pending · Red = conflicting completion evidence. Uploaded copies are not physical originals. Retail % includes buyer fees; above 70% is flagged.</p>
+        <p>Green = all paperwork returned · Blue = documents returning / completion needs checking · White = agreement only or documents not started. A signed agreement does not mean transfer-ready. Uploaded copies are not physical originals. New buyer totals are at least 70% of saved retail; higher prices stay unchanged.</p>
       </footer>
     </DialogContent>
   </Dialog>;

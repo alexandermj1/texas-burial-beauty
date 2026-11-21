@@ -16,20 +16,24 @@ describe("private price sheet", () => {
   });
   it("charges transfer once in a bundle and keeps both 15% commissions separate", () => {
     const row = buildSheetRow(seller, docs, directory);
-    expect(row.buyerTotal).toBe(10753); // 9000 + 350 + round(9350 * 15%)
+    expect(row.buyerTotal).toBe(14000); // 70% of 2 x $10,000 retail
     expect(row.sellerCommission).toBe(1350);
     expect(row.buyerCommission).toBe(1403);
-    expect(row.profit).toBe(2753);
+    expect(row.adjustmentFee).toBe(3247);
+    expect(row.profit).toBe(6000); // 2753 commissions + 3247 brokerage adjustment
     expect(row.sellerProceeds).toBe(7650);
-    expect(row.buyerPerSpace).toBe(5578); // separate purchase, not bundle / 2
-    expect(row.pctRetail).toBeCloseTo(55.78, 8);
-    expect(row.pctRetailBundle).toBeCloseTo(53.765, 8);
+    expect(row.buyerPerSpace).toBe(7000);
+    expect(row.adjustmentPerSpace).toBe(1422);
+    expect(row.pctRetail).toBe(70);
+    expect(row.pctRetailBundle).toBe(70);
   });
   it("includes added fees in the final buyer total but not in commission profit", () => {
     const row = buildSheetRow({ ...seller, buyer_fees: [{ id: "notary", label: "Notary", amount: 150 }] }, docs, directory);
-    expect(row.buyerTotal).toBe(10903);
-    expect(row.buyerPerSpace).toBe(5728);
-    expect(row.profit).toBe(2753);
+    expect(row.buyerTotal).toBe(14000);
+    expect(row.buyerPerSpace).toBe(7000);
+    expect(row.extraFees).toBe(150);
+    expect(row.adjustmentFee).toBe(3097);
+    expect(row.profit).toBe(5850);
   });
   it("uses the same directory fee as Buyer AI and flags differing saved quotes", () => {
     const row = buildSheetRow({ ...seller, transfer_fee_amount: 200 }, docs, directory);
@@ -64,10 +68,24 @@ describe("private price sheet", () => {
   it("keeps sold/closed history separate and reserved inventory out of Buyer AI eligibility", () => {
     for (const change of [{ sold_at: "2026-11-21" }, { closed_at: "2026-11-21" }, { reserved_until: "2099-01-01" }]) expect(buildSheetRow({ ...seller, ...change }, docs, directory).aiEligible).toBe(false);
   });
-  it("flags buyer prices above the existing 70% retail ceiling without changing the saved price", () => {
+  it("leaves buyer prices already above 70% of retail unchanged", () => {
     const row = buildSheetRow({ ...seller, cemetery_retail: 5000 }, docs, directory);
     expect(row.pctRetail).toBeGreaterThan(70);
     expect(row.buyerTotal).toBe(10753);
-    expect(row.issues.length).toBeGreaterThan(buildSheetRow(seller, docs, directory).issues.length);
+    expect(row.adjustmentFee).toBe(0);
+    expect(row.profit).toBe(2753);
+  });
+  it("does not show a signed agreement alone as completed paperwork", () => {
+    const row = buildSheetRow({ ...seller, ownership_answers: {}, quote_response: null, la_signed_at: "2026-11-21" }, [], directory);
+    expect(row.documentState).toBe("not_requested");
+    expect(row.docsReceived).toBe(0);
+    expect(row.docsTotal).toBe(0);
+  });
+  it("shows exactly 5/7 documents returned while the packet is still returning", () => {
+    const packet = Array.from({ length: 7 }, (_, i) => ({ submission_id: "seller", doc_code: i === 0 ? "D21" : "D2", status: i < 5 ? "received" : "pending" }));
+    const row = buildSheetRow(seller, packet, directory);
+    expect(row.documentState).toBe("pending");
+    expect(row.docsReceived).toBe(5);
+    expect(row.docsTotal).toBe(7);
   });
 });

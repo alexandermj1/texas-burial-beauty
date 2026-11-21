@@ -1,4 +1,5 @@
-import { normalizeBuyerFees, quoteFigures } from "@/lib/quoteFigures";
+import { normalizeBuyerFees } from "@/lib/quoteFigures";
+import { buyerQuotePricing } from "../../supabase/functions/_shared/buyerQuotePricing";
 
 /** Inventory uses the same per-space quote and one-time fee convention as staff quotes. */
 export function buyerInventoryPricing(s: Record<string, any>, directoryFee: number | null) {
@@ -12,8 +13,9 @@ export function buyerInventoryPricing(s: Record<string, any>, directoryFee: numb
     acceptedAmount: s.accepted_quote_amount,
     transferFee,
     buyerFees: fees,
+    retailPerSpace: s.cemetery_retail,
   };
-  const single = quoteFigures({ ...input, plotCount: 1 });
-  const together = count ? quoteFigures({ ...input, plotCount: count }) : null;
+  const single = buyerQuotePricing({ ...input, plotCount: 1 });
+  const together = count ? buyerQuotePricing({ ...input, plotCount: count }) : null;
   return { count, transferFee, single, together, ready: single.hasQuote && transferFee !== null };
 }

@@ -60,6 +60,7 @@ import { isOutgoing } from "@/lib/emailReply";
 import { score as cemeteryScore } from "@/lib/cemeteryMatch";
 import { cemeteryCanon } from "@/lib/cemeteryCanon";
 import { quoteFigures, BUYER_FEE_PRESETS, normalizeBuyerFees, type BuyerFee } from "@/lib/quoteFigures";
+import { buyerQuotePricing } from "../../../supabase/functions/_shared/buyerQuotePricing";
 import { Button } from "@/components/ui/button";
 
 const EmailThread = lazy(() => import("./EmailThread"));
@@ -1798,6 +1799,7 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                 plotCount,
                 buyerFees,
               });
+              const buyerFigures = buyerQuotePricing({ quoteAmount: seller.quote_amount, acceptedAmount: seller.accepted_quote_amount, transferFee: cemeteryProfile?.transfer_fee ?? selected.transfer_fee_amount, plotCount, buyerFees, retailPerSpace: retail });
               const customerLocation = [seller.section, seller.lawn, seller.space_numbers].filter(Boolean).join(" · ") || "Not provided";
               const deedLocation = sharedDeedLocation;
               const deedLocationSource = aiFacts.find((fact) => ["Section", "Block", "Lot", "Space", "Plot type"].includes(fact.label))?.source;
@@ -1924,11 +1926,12 @@ const SubmissionsPanel = ({ submissions, searchQuery, onUpdate, onDelete, focusS
                           {figures.hasQuote && seller.quote_response === "accepted" && <details className="group mb-4 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5">
                             <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-2 gap-y-0.5 list-none">
                               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Buyer pays</span>
-                              <span className="text-sm font-semibold text-foreground">{fmtMoney(figures.buyerPriceTotal)}</span>
+                              <span className="text-sm font-semibold text-foreground">{fmtMoney(buyerFigures.buyerPriceTotal)}</span>
                               <span className="text-xs text-muted-foreground">{plotCount > 1 ? `for all ${plotCount} spaces · ` : ""}includes fees</span>
                               <ChevronRight className="ml-auto h-3.5 w-3.5 self-center text-muted-foreground transition-transform group-open:rotate-90" />
                             </summary>
                             <p className="mt-2 text-xs text-muted-foreground">{fmtMoney(figures.netTotal)} authorized + {fmtMoney(figures.transferFee)} transfer fee + {fmtMoney(figures.buyerPremiumTotal)} buyer's 15%{figures.buyerFeesTotal > 0 ? ` + ${fmtMoney(figures.buyerFeesTotal)} added fees` : ""}</p>
+                            {buyerFigures.adjustmentFee > 0 && <p className="mt-2 text-xs text-muted-foreground">Brokerage adjustment fee: {fmtMoney(buyerFigures.adjustmentFee)} · brings the final buyer total to 70% of saved retail.</p>}
                             {figures.buyerFees.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">
                               {figures.buyerFees.map(fee => (
                                 <button key={fee.id} type="button" onClick={() => saveBuyerFees(figures.buyerFees.filter(f => f.id !== fee.id))} className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-xs font-medium text-primary-foreground" title="Remove this fee">

@@ -33,6 +33,12 @@
 }
 
 /* Botanical listing stationery: a quiet irregular frame, never an image box. */
+.price-sheet-row { background: hsl(var(--card)); }
+.price-sheet-row[data-paperwork="complete"] { background: hsl(var(--pipeline-green-soft)); }
+.price-sheet-row[data-paperwork="pending"], .price-sheet-row[data-paperwork="review"] { background: hsl(var(--pipeline-sky-soft)); }
+.price-sheet-returning-label { color: hsl(var(--pipeline-sky-fg)); }
+.price-sheet-row:hover { box-shadow: inset 0 0 0 1px hsl(var(--border)); }
+
 .listing-stationery { --stationery-ink: var(--primary); border: 1px solid hsl(var(--stationery-ink) / .2); box-shadow: var(--shadow-soft); }
 .listing-stationery::before { content: ''; position: absolute; inset: 7px; border: 1px solid hsl(var(--stationery-ink) / .32); border-radius: 2px 5px 3px 6px; pointer-events: none; }
 .listing-stationery-priority { --stationery-ink: var(--accent); }

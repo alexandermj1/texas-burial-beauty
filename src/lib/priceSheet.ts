@@ -29,7 +29,7 @@ export function sheetPaperwork(s: SheetRecord, docs: SheetDocument[]) {
   const conflicts: string[] = [];
   if (readiness.complete && pending.length) conflicts.push("Completion milestone conflicts with outstanding checklist items.");
   if (readiness.complete && (!count.paperwork || !poa)) conflicts.push("Completion needs a transfer-paperwork checklist with POA evidence; a deed alone is not enough.");
-  const state: PaperworkState = conflicts.length ? "review" : readiness.complete ? "complete" : readiness.requested ? "pending" : "not_requested";
+  const state: PaperworkState = conflicts.length ? "review" : readiness.complete ? "complete" : readiness.requested || count.received > 0 ? "pending" : "not_requested";
   return { state, count, pending, conflicts, aiReadiness: readiness.complete ? "Available now (AI milestone/checklist)" : readiness.almostComplete ? "About 2 weeks (staff check)" : s.la_signed_at ? "About a month for preneed (staff check)" : "Timing to confirm" };
 }
 
@@ -54,12 +54,13 @@ export function buildSheetRow(s: SheetRecord, docs: SheetDocument[], directory: 
   const priceReady = pricing.ready && !!f;
   const sellerCommission = f?.hasQuote ? Math.round(f.netTotal * BUYER_FEE_RATE) : null;
   const buyerCommission = priceReady ? f.buyerPremiumTotal : null;
-  const profit = sellerCommission !== null && buyerCommission !== null ? sellerCommission + buyerCommission : null;
+  const adjustmentFee = priceReady ? f.adjustmentFee : null;
+  const adjustmentPerSpace = pricing.ready ? pricing.single.adjustmentFee : null;
+  const profit = sellerCommission !== null && buyerCommission !== null && adjustmentFee !== null ? sellerCommission + buyerCommission + adjustmentFee : null;
   const buyerEach = pricing.ready ? pricing.single.buyerPriceTotal : null;
   const buyerTotal = priceReady ? f.buyerPriceTotal : null;
   const pctRetail = retail && buyerEach !== null ? buyerEach / retail * 100 : null;
   const pctRetailBundle = retail && pricing.count && buyerTotal !== null ? buyerTotal / (retail * pricing.count) * 100 : null;
-  if (pctRetail !== null && pctRetail > 70) issues.push("Final separate-space buyer price exceeds 70% of saved retail; review the authorized price and retail evidence before quoting.");
   const status = s.sold_at ? "Sold" : s.closed_at ? "Closed" : reserved ? "Reserved" : s.listing_live_at ? "Listed" : s.la_signed_at ? "Agreement signed" : "Accepted";
   const stage = s.pipeline_stage_override || (s.sold_at ? "Sold" : s.closed_at ? "Closed" : s.listing_live_at ? "Listed" : s.contracts_completed_at ? "File compiled" : s.documents_completed_at ? "Docs complete" : s.documents_requested_at ? "Docs requested" : s.la_signed_at ? "Agreement signed" : "Quote accepted");
   return {
@@ -67,7 +68,7 @@ export function buildSheetRow(s: SheetRecord, docs: SheetDocument[], directory: 
     location: [s.lawn, s.section, s.space_numbers].filter(Boolean).join(" · "), propertyType: s.property_type || "", plots: pricing.count,
     netPerSpace: pricing.single.hasQuote ? pricing.single.netPerSpace : null, transferFee: pricing.transferFee, savedTransferFee: s.transfer_fee_amount,
     sellerTotal: f?.hasQuote ? f.netTotal : null, sellerProceeds: f?.hasQuote && sellerCommission !== null ? f.netTotal - sellerCommission : null,
-    buyerPerSpace: buyerEach, buyerTotal, buyerCommission, sellerCommission, profit, extraFees: pricing.single.buyerFeesTotal, retail, pctRetail, pctRetailBundle,
+    buyerPerSpace: buyerEach, buyerTotal, buyerCommission, sellerCommission, profit, adjustmentFee, adjustmentPerSpace, extraFees: pricing.single.buyerFeesTotal - pricing.single.adjustmentFee, retail, pctRetail, pctRetailBundle,
     acceptedAt: s.quote_responded_at || null, status, stage, listingNumber: s.listing_number || "", paperwork, docsReceived: paperwork.count.received, docsTotal: paperwork.count.total,
     documentState: paperwork.state, issues, active, reserved, aiEligible: active && !reserved && agreementEligible && !!cemetery && pricing.ready && !!retail && !!pricing.count,
     pricing,
