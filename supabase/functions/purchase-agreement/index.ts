@@ -11,7 +11,7 @@ import { z } from "npm:zod@3";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "npm:pdf-lib@1.17.1";
 import {
   ACKNOWLEDGEMENTS, BUYER_EDITABLE, CANCELLATION_NOTICE, ESIGN_CONSENT, TERMS, TERMS_VERSION,
-  canonicalDocument, chargeTotals, normalizeFields, type AgreementFields,
+  canonicalDocument, chargeTotals, normalizeFields, paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount, termsForVersion, type AgreementFields,
 } from "./terms.ts";
 
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
@@ -145,7 +145,7 @@ function summaryTable(f: AgreementFields) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 ${row("Cemetery", [f.property.cemetery, f.property.city].filter(Boolean).join(", "))}
 ${row("Property", `${f.property.description || f.property.property_type}${f.property.spaces > 1 ? ` (${f.property.spaces} spaces)` : ""}`)}
-${row("Total amount due", money(t.totalDue), true)}</table></td></tr></table>`;
+${row("Total purchase price", money(t.totalDue), true)}${f.payment ? row("Deposit (credited to total)", money(paymentSchedule(f).deposit)) + row("Balance after deposit", money(paymentSchedule(f).balance)) : ""}</table></td></tr></table>`;
 }
 
 function deedBlock(f: AgreementFields, url: string) {
@@ -171,7 +171,7 @@ ${button(signUrl, "Review &amp; sign your agreement")}
 <table role="presentation" cellpadding="0" cellspacing="0">
 ${step(1, "Review the agreement and add your details and the names for the deed.")}
 ${step(2, "Sign electronically &mdash; it takes about five minutes.")}
-${step(3, "The moment you sign, the broker countersigns and we email you the completed agreement with a secure card payment link.")}
+${step(3, paymentSchedule(f).collection === "manual" ? "After signing, the broker countersigns and emails the completed agreement. No payment link is issued; payment will be arranged separately." : paymentSchedule(f).collection === "deposit" ? `After countersignature, we email the completed agreement and a secure link for only the ${money(paymentSchedule(f).deposit)} deposit. The remaining balance is paid separately.` : "After countersignature, we email the completed agreement with a secure link for the full purchase price.")}
 ${step(4, "Once payment clears, we file the transfer with the cemetery and keep you updated.")}
 </table>
 <p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
@@ -227,7 +227,7 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   heading("Schedule of Charges");
   const line = (label: string, v: number, b = false) => { ensure(14); page.drawText(safe(label), { x: M, y: y - 10, size: 10, font: b ? bold : reg }); const s = money(v); page.drawText(s, { x: W - M - (b ? bold : reg).widthOfTextAtSize(s, 10), y: y - 10, size: 10, font: b ? bold : reg }); y -= 15; };
   text("I. Sale Price Breakdown", { font: bold, size: 9.5 });
-  line("1. Commitment Deposit", f.charges.deposit); line("2. Balance of Property Price", f.charges.balance); line("3. Total Property Price (Sum of 1 & 2)", t.totalProperty, true);
+  if (f.payment) line("Property price, before fees", t.totalProperty); else { line("1. Commitment Deposit", f.charges.deposit); line("2. Balance of Property Price", f.charges.balance); } line("3. Total Property Price (Sum of 1 & 2)", t.totalProperty, true);
   text("II. Fees and Adjustments", { font: bold, size: 9.5 });
   line("4. Cemetery Transfer Fee (Transfer Fee & Commodities)", f.charges.transfer_fee); line(`5. Adjustments${f.charges.adjustments_note ? ` (${f.charges.adjustments_note})` : " (if any)"}`, f.charges.adjustments);
   text("III. Total Amount Due", { font: bold, size: 9.5 }); line("6. Total Amount Due (Sum of 3, 4 & 5)", t.totalDue, true);
@@ -235,7 +235,8 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   const sig = pa.buyer_signature ?? {};
   heading("Purchaser Acknowledgements");
   for (const a of ACKNOWLEDGEMENTS) text(`${a.label}: ${a.text}  Purchaser initials: ${sig.initials?.[a.key] ?? "____"}`, { size: 9 });
-  for (const s of TERMS) { heading(s.heading); for (const p of s.body) { text(p, { size: 9 }); gap(3); } }
+  if (f.payment) { heading("Payment Schedule"); line("Commitment deposit (credited towards total)", paymentSchedule(f).deposit); line("Remaining balance after deposit", paymentSchedule(f).balance); text(`Payment after signing: ${paymentSchedule(f).collection === "manual" ? "agreement only; payment arranged separately" : paymentSchedule(f).collection === "deposit" ? "deposit link only; balance paid separately" : "full payment link"}`); }
+  for (const s of termsForVersion(pa.terms_version)) { heading(s.heading); for (const p of s.body) { text(p, { size: 9 }); gap(3); } }
 
   heading("Signatures");
   const drawSig = async (label: string, dataUrl: string | undefined, name: string, date: string) => {
@@ -269,14 +270,24 @@ const FieldsSchema = z.object({
   purchaser: z.object({ names: str(200), address: str(400), phone: str(60), email: str(200), dob: str(40), marital_status: str(40) }),
   property: z.object({ cemetery: str(200), city: str(100), description: str(800), spaces: z.coerce.number().int().min(1).max(50), property_type: str(120), commodities: str(800) }),
   deed: z.object({ same_as_purchaser: z.boolean(), holder1: str(200), holder2: str(200), names: str(200), address: str(400), phone: str(60), email: str(200), dob: str(40), marital_status: str(40) }),
+  payment: z.object({ collection: z.enum(["manual", "full", "deposit"]), deposit_basis: z.enum(["amount", "percent"]), deposit_value: z.coerce.number().min(0).max(5_000_000) }).optional(),
   charges: z.object({ deposit: z.coerce.number().min(0).max(5_000_000), balance: z.coerce.number().min(0).max(5_000_000), transfer_fee: z.coerce.number().min(0).max(1_000_000), adjustments: z.coerce.number().min(-1_000_000).max(1_000_000), adjustments_note: str(200) }),
 });
 
-const PUBLIC_VIEW = (pa: any) => ({
-  id: pa.id, status: pa.status, fields: normalizeFields(pa.fields), terms_version: pa.terms_version,
-  buyer_signed_at: pa.buyer_signed_at, countersigned_at: pa.countersigned_at, paid_at: pa.paid_at,
-  payment_url: pa.status === "countersigned" ? pa.payment_url : null,
-});
+async function paidProgress(pa: any, environment = "live") {
+  const { data, error } = await db.from("payment_transactions").select("amount_cents,refund_amount_cents,status,environment").contains("metadata", { purchase_agreement_id: pa.id }).is("deleted_at", null);
+  if (error) throw error;
+  return agreementPaymentProgress(normalizeFields(pa.fields), data ?? [], environment);
+}
+async function publicView(pa: any) {
+  const progress = await paidProgress(pa);
+  const { data: linkTx } = pa.payment_transaction_id ? await db.from("payment_transactions").select("status").eq("id", pa.payment_transaction_id).maybeSingle() : { data: null };
+  const lastLink = [...(pa.events ?? [])].reverse().find((e: any) => e.type === "payment_link_issued");
+  return { id: pa.id, status: pa.status, fields: normalizeFields(pa.fields), terms_version: pa.terms_version,
+    buyer_signed_at: pa.buyer_signed_at, countersigned_at: pa.countersigned_at, paid_at: pa.paid_at,
+    payment_url: pa.status === "countersigned" && progress.remaining > 0 && linkTx?.status === "pending" ? pa.payment_url : null,
+    payment_amount: lastLink?.amount ?? progress.remaining, payment_purpose: lastLink?.purpose ?? "balance", ...progress };
+}
 
 async function load(id: string) {
   const { data } = await db.from("purchase_agreements").select("*").eq("id", id).is("deleted_at", null).maybeSingle();
@@ -294,28 +305,41 @@ async function executeCountersign(pa: any, o: { name: string; image?: string; us
     const path = `purchase-agreements/${pa.id}/executed-${Date.now()}.pdf`;
     const up = await db.storage.from("contracts").upload(path, bytes, { contentType: "application/pdf", upsert: false });
     if (up.error) throw up.error;
-    const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
-      method: "POST", headers: { "Content-Type": "application/json", Authorization: o.authHeader },
-      body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
-        description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: f.purchaser.email,
-        recipientName: f.purchaser.names, environment: o.environment, purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
-    });
-    const pay = await payRes.json().catch(() => ({}));
-    if (!payRes.ok || !pay.url) throw new Error(`Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}`);
-    events.push(event("payment_link_issued", { by: o.by, amount: t.totalDue, environment: o.environment }));
-    if (pa.payment_url && pa.payment_url !== pay.url) await deactivatePaymentLink(db, pa.payment_url).catch(() => {});
-    await db.from("purchase_agreements").update({ countersignature, countersigned_at: signedAt, status: "countersigned", signed_pdf_path: path,
-      payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events }).eq("id", pa.id);
+    const progress = await paidProgress(pa, o.environment);
+    const schedule = paymentSchedule(f);
+    const purpose = schedule.collection === "deposit" ? "deposit" : "balance";
+    const amount = schedule.collection === "manual" ? 0 : requestedPaymentAmount(f, purpose, progress.paid);
+    let pay: any = {};
+    if (amount > 0) {
+      const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: o.authHeader },
+        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(amount * 100),
+          description: `${purpose === "deposit" ? "Deposit for" : "Purchase of"} ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: f.purchaser.email,
+          recipientName: f.purchaser.names, environment: o.environment, purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id, paymentPurpose: purpose }),
+      });
+      pay = await payRes.json().catch(() => ({}));
+      if (!payRes.ok || !pay.url) throw new Error(`Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}`);
+      events.push(event("payment_link_issued", { by: o.by, amount, purpose, environment: o.environment }));
+    }
+    if (pa.payment_url && pa.payment_url !== pay.url) await deactivatePaymentLink(db, pa.payment_url);
+    const { error: saveError } = await db.from("purchase_agreements").update({ countersignature, countersigned_at: signedAt, status: progress.fullyPaid && o.environment === "live" ? "paid" : "countersigned", signed_pdf_path: path,
+      ...(progress.fullyPaid && o.environment === "live" ? { paid_at: signedAt } : {}), payment_url: pay.url ?? null, payment_transaction_id: pay.transactionId ?? null, events }).eq("id", pa.id);
+    if (saveError) throw saveError;
+    if (progress.fullyPaid && o.environment === "live") {
+      const { error: saleError } = await db.from("contact_submissions").update({ sold_at: signedAt, sold_price: progress.paid, payment_received_at: signedAt, seller_payout_status: "pending", closed_outcome: "sold" }).eq("id", pa.seller_submission_id);
+      if (saleError) throw saleError;
+    }
     try {
-      await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Your agreement is signed by both parties. Pay securely with the link inside.",
-        subject: `Your signed purchase agreement for ${f.property.cemetery} — next step: payment`,
+      await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: pay.url ? `Executed agreement; ${purpose} payment link inside.` : "Executed agreement. Payment arranged separately.",
+        subject: `Your signed purchase agreement for ${f.property.cemetery}`,
         attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement.pdf", bytes },
-        html: shell(`<p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b5f55;">Purchase agreement &middot; fully signed</p><h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:32px;font-weight:normal;color:#2e2620;">Your agreement is complete. One step left: payment.</h1><p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Thank you for signing. Your purchase agreement has been countersigned by Texas Cemetery Brokers, and the fully executed copy is attached for your records.</p>${summaryTable(f)}<p>To complete your purchase, please pay the total amount due using the secure card payment link below.</p>${button(pay.url, `Pay ${money(t.totalDue)} securely`)}<p style="font-size:13px;color:#6b5f55;">Once your payment clears we will file the transfer with the cemetery and keep you updated. You may also pay by certified check or wire — just reply and we will send the details.</p>`, "purchase_agreement") });
+        html: shell(`<h1>Your signed purchase agreement</h1><p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Thank you for signing. Texas Cemetery Brokers has countersigned your agreement; the executed copy is attached.</p>${summaryTable(f)}${pay.url ? `<p>${purpose === "deposit" ? `Only the deposit of ${money(amount)} is requested now. This is credited to the total; the remaining balance will be arranged separately.` : `The remaining amount due is ${money(amount)}.`}</p>${button(pay.url, `Pay ${purpose === "deposit" ? "deposit " : ""}${money(amount)} securely`)}` : "<p>No payment link is included. We will arrange payment separately.</p>"}<p>Transfer begins only after the full purchase price has cleared. Reply with any questions.</p>`, "purchase_agreement") });
     } catch (e) {
       console.error("executed copy email failed", e);
-      return { ok: true, payment_url: pay.url, warning: `Countersigned and payment link created, but the email failed: ${(e as Error).message}` };
+      return { ok: true, payment_url: pay.url, warning: `Countersigned, but the executed-copy email failed: ${(e as Error).message}` };
     }
     return { ok: true, payment_url: pay.url };
+
   } catch (e) {
     console.error("countersign failed", e);
     return { ok: false, error: (e as Error).message };
@@ -340,7 +364,7 @@ Deno.serve(async (req) => {
           await db.from("purchase_agreements").update({ status: "viewed", viewed_at: nowIso(), events: [...pa.events, event("viewed", { ip: clientIp(req) })] }).eq("id", pa.id);
           pa.status = "viewed";
         }
-        return json(PUBLIC_VIEW(pa));
+        return json(await publicView(pa));
       }
       if (action === "download") {
         if (!pa.signed_pdf_path) return json({ error: "The executed copy is available once we countersign." }, 409);
@@ -380,7 +404,7 @@ Deno.serve(async (req) => {
       const signedPa = { ...pa, fields: f, status: "buyer_signed", buyer_signed_at: signedAt, buyer_signature, document_hash: hash, events };
       const sandbox = (pa.events ?? []).some((e: any) => e?.sample === true);
       const r = await executeCountersign(signedPa, { name: "Simon James", image: undefined, userId: null, ip: "auto", by: "Automatic broker countersignature", environment: sandbox ? "sandbox" : "live", authHeader: `Bearer ${SERVICE_KEY}` });
-      await db.rpc("notify_staff", { _title: `${f.purchaser.names || "A buyer"} signed a purchase agreement`, _body: r.ok ? `${f.property.cemetery} — countersigned automatically; payment link sent.` : `${f.property.cemetery} — automatic countersign failed, please countersign manually: ${r.error}`, _submission_id: pa.buyer_submission_id, _source_type: "purchase_agreement_signed" });
+      await db.rpc("notify_staff", { _title: `${f.purchaser.names || "A buyer"} signed a purchase agreement`, _body: r.ok ? `${f.property.cemetery} — countersigned automatically; ${paymentSchedule(f).collection === "manual" ? "payment arranged separately" : paymentSchedule(f).collection === "deposit" ? "deposit link sent" : "full payment link sent"}.` : `${f.property.cemetery} — automatic countersign failed, please countersign manually: ${r.error}`, _submission_id: pa.buyer_submission_id, _source_type: "purchase_agreement_signed" });
       return json({ ok: true, status: r.ok ? "countersigned" : "buyer_signed", payment_url: r.payment_url ?? null });
     }
 
@@ -389,7 +413,26 @@ Deno.serve(async (req) => {
     if (!user) return json({ error: "Unauthorized" }, 401);
 
     if (action === "create") {
-      const B = z.object({ seller_submission_id: z.string().uuid(), buyer_submission_id: z.string().uuid(), fields: FieldsSchema }).parse(body);
+      const B = z.object({ seller_submission_id: z.string().uuid(), buyer_submission_id: z.string().uuid().optional(), buyer_email: z.string().trim().email().max(200).optional(), buyer_name: str(200), fields: FieldsSchema }).refine((b) => !!b.buyer_submission_id || !!b.buyer_email, "Select a buyer or enter their email.").parse(body);
+      const { data: seller } = await db.from("contact_submissions").select("id,sold_at,deleted_at").eq("id", B.seller_submission_id).maybeSingle();
+      if (!seller || seller.sold_at || seller.deleted_at) return json({ error: "Select an active, unsold seller." }, 400);
+      if (!B.buyer_submission_id && B.buyer_email) {
+        const email = B.buyer_email.toLowerCase();
+        const { data: people, error: peopleError } = await db.from("contact_submissions").select("id,name,email,phone,customer_kind,source").ilike("email", email).is("deleted_at", null).order("created_at", { ascending: false });
+        if (peopleError) throw peopleError;
+        const buyer = people?.find((p: any) => p.customer_kind === "buyer" || /buy/.test(p.source ?? "")) ?? people?.find((p: any) => p.customer_kind !== "seller" && !/sell|valuation/.test(p.source ?? ""));
+        if (buyer) {
+          B.buyer_submission_id = buyer.id;
+          B.fields.purchaser = { ...B.fields.purchaser, names: B.fields.purchaser.names || buyer.name || "", email, phone: B.fields.purchaser.phone || buyer.phone || "" };
+        } else {
+          const { data: added, error: addError } = await db.from("contact_submissions").insert({ name: B.buyer_name || null, email, source: "manual_buyer_match", customer_kind: "buyer", buyer_ai_auto_reply_disabled: true, message: "Added by staff for buyer matching; no email requested." }).select("id").single();
+          if (addError) throw addError;
+          B.buyer_submission_id = added.id;
+          B.fields.purchaser.email = email;
+        }
+      }
+      const settingsError = paymentSettingsError(normalizeFields(B.fields));
+      if (settingsError) return json({ error: settingsError }, 400);
       if (B.seller_submission_id === B.buyer_submission_id) return json({ error: "A record cannot be matched to itself." }, 400);
       const { data: existing } = await db.from("purchase_agreements").select("id").eq("seller_submission_id", B.seller_submission_id).eq("buyer_submission_id", B.buyer_submission_id).neq("status", "void").is("deleted_at", null).maybeSingle();
       if (existing) return json({ error: "This buyer is already matched to this seller.", id: existing.id }, 409);
@@ -463,7 +506,10 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
     if (action === "update") {
       if (!["draft", "sent", "viewed"].includes(pa.status)) return json({ error: "The buyer has signed — void and re-issue to change terms." }, 409);
       const fields = FieldsSchema.parse(body.fields);
-      const { data, error } = await db.from("purchase_agreements").update({ fields, events: [...pa.events, event("edited", { by: user.name })] }).eq("id", id).select("*").single();
+      const settingsError = paymentSettingsError(normalizeFields(fields));
+      if (settingsError) return json({ error: settingsError }, 400);
+      if (pa.payment_url) await deactivatePaymentLink(db, pa.payment_url);
+      const { data, error } = await db.from("purchase_agreements").update({ fields, ...(fields.payment ? { terms_version: TERMS_VERSION } : {}), payment_url: null, payment_transaction_id: null, events: [...pa.events, event("edited", { by: user.name })] }).eq("id", id).select("*").single();
       if (error) throw error;
       return json({ agreement: data });
     }
@@ -471,6 +517,8 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
     if (action === "link" || action === "send") {
       if (!["draft", "sent", "viewed"].includes(pa.status)) return json({ error: "This agreement is already signed." }, 409);
       const f = normalizeFields(pa.fields);
+      const settingsError = paymentSettingsError(f);
+      if (settingsError) return json({ error: settingsError }, 400);
       if (!f.purchaser.names.trim()) return json({ error: "Add the purchaser's name first." }, 400);
       if (chargeTotals(f.charges).totalDue <= 0) return json({ error: "Set the price before sending." }, 400);
       if (!f.property.description.trim()) return json({ error: "Add the property description (section, lot, space) first." }, 400);
@@ -512,31 +560,36 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
     }
     if (action === "send_payment_link") {
       // Staff can issue a LIVE card payment link straight away (before signing/countersigning).
-      if (!["draft", "sent", "viewed", "buyer_signed"].includes(pa.status)) return json({ error: "A payment link can't be sent for an agreement in this state." }, 409);
-      const P = z.object({ to: z.string().trim().email().max(200).optional(), note: z.string().max(2000).optional() }).parse(body);
+      if (!["draft", "sent", "viewed", "buyer_signed", "countersigned"].includes(pa.status)) return json({ error: "A payment link can't be sent for an agreement in this state." }, 409);
+      const P = z.object({ purpose: z.enum(["deposit", "balance"]).default("balance"), to: z.string().trim().email().max(200).optional(), note: z.string().max(2000).optional() }).parse(body);
       const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
+      const settingsError = paymentSettingsError(f);
+      if (settingsError) return json({ error: settingsError }, 400);
+      const progress = await paidProgress(pa);
+      const amount = requestedPaymentAmount(f, P.purpose, progress.paid);
+      if (amount <= 0) return json({ error: "No outstanding amount for this payment choice." }, 400);
       const to = P.to || f.purchaser.email;
       if (!to) return json({ error: "Add the buyer's email first." }, 400);
       if (t.totalDue <= 0) return json({ error: "Set the price before sending a payment link." }, 400);
       const payRes = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: req.headers.get("Authorization") ?? "" },
-        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(t.totalDue * 100),
+        body: JSON.stringify({ submissionId: pa.seller_submission_id, kind: "plot_sale", amountCents: Math.round(amount * 100),
           description: `Purchase of ${f.property.cemetery} — ${f.property.description}`.slice(0, 480), recipientEmail: to,
-          recipientName: f.purchaser.names, environment: "live", purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id }),
+          recipientName: f.purchaser.names, environment: "live", purchaseAgreementId: pa.id, buyerSubmissionId: pa.buyer_submission_id, paymentPurpose: P.purpose }),
       });
       const pay = await payRes.json().catch(() => ({}));
       if (!payRes.ok || !pay.url) return json({ error: `Payment link could not be created: ${JSON.stringify(pay).slice(0, 300)}` }, 502);
       if (pa.payment_url && pa.payment_url !== pay.url) await deactivatePaymentLink(db, pa.payment_url);
       let token = (pa.sign_token as string | null) ?? (pa.status === "draft" ? newToken() : null);
       const signUrl = token && pa.status !== "buyer_signed" ? `${SITE}/purchase-agreement/${token}` : null;
-      const events = [...pa.events, event("payment_link_issued", { by: user.name, amount: t.totalDue, environment: "live", to })];
+      const events = [...pa.events, event("payment_link_issued", { by: user.name, amount, purpose: P.purpose, environment: "live", to })];
       const upd: Record<string, unknown> = { payment_url: pay.url, payment_transaction_id: pay.transactionId ?? null, events };
       if (pa.status === "draft" && token) { upd.sign_token = token; upd.status = "sent"; upd.sent_at = nowIso(); }
       await db.from("purchase_agreements").update(upd).eq("id", id);
       try {
         await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Secure payment link for your cemetery property purchase.",
           subject: `Payment link for your purchase — ${f.property.cemetery}`,
-          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p>${P.note ? `<p>${esc(P.note).replace(/\n/g, "<br>")}</p>` : ""}<p>Here is the secure card payment link for the property below.</p>${summaryTable(f)}${button(pay.url, `Pay ${money(t.totalDue)} securely`)}${signUrl ? `<p>Please also review and sign your purchase agreement online, if you have not already done so:</p>${button(signUrl, "Review and sign agreement")}` : ""}<p style="font-size:13px;color:#6b5f55;">Questions? Reply to this email or call (214) 230-4740.</p>`, "purchase_agreement") });
+          html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p>${P.note ? `<p>${esc(P.note).replace(/\n/g, "<br>")}</p>` : ""}<p>Here is the secure card payment link for ${P.purpose === "deposit" ? "only your deposit; the remaining balance is separate" : "your outstanding purchase balance"}.</p>${summaryTable(f)}${button(pay.url, `Pay ${P.purpose === "deposit" ? "deposit " : ""}${money(amount)} securely`)}${signUrl ? `<p>Please also review and sign your purchase agreement online, if you have not already done so:</p>${button(signUrl, "Review and sign agreement")}` : ""}<p style="font-size:13px;color:#6b5f55;">Questions? Reply to this email or call (214) 230-4740.</p>`, "purchase_agreement") });
       } catch (e) {
         return json({ ok: true, warning: `Payment link created, but the email failed: ${(e as Error).message}`, payment_url: pay.url });
       }
@@ -544,13 +597,13 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
     }
 
     if (action === "resend_executed") {
-      if (!pa.signed_pdf_path || !pa.payment_url) return json({ error: "Not countersigned yet." }, 409);
-      const f = normalizeFields(pa.fields); const t = chargeTotals(f.charges);
+      if (!pa.signed_pdf_path) return json({ error: "Not countersigned yet." }, 409);
+      const f = normalizeFields(pa.fields); const v = await publicView(pa);
       const { data: file } = await db.storage.from("contracts").download(pa.signed_pdf_path);
       await sendEmail({ to: f.purchaser.email, submissionId: pa.buyer_submission_id, snippet: "Payment link re-sent.",
         subject: `Reminder: payment link for your purchase — ${f.property.cemetery}`,
         attachment: file ? { name: "Texas-Cemetery-Brokers-Purchase-Agreement.pdf", bytes: new Uint8Array(await file.arrayBuffer()) } : undefined,
-        html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Here is your executed purchase agreement and the secure payment link again.</p>${summaryTable(f)}${button(pa.payment_url, `Pay ${money(t.totalDue)} securely`)}`, "purchase_agreement") });
+        html: shell(`<p>Dear ${esc(f.purchaser.names.split(/\s+/)[0] || "there")},</p><p>Here is your executed purchase agreement and the secure payment link again.</p>${summaryTable(f)}${v.payment_url ? button(v.payment_url, `Pay ${v.payment_purpose === "deposit" ? "deposit " : ""}${money(v.payment_amount)} securely`) : "<p>Payment will be arranged separately; no payment link is included.</p>"}`, "purchase_agreement") });
       await db.from("purchase_agreements").update({ events: [...pa.events, event("payment_link_resent", { by: user.name })] }).eq("id", id);
       return json({ ok: true });
     }

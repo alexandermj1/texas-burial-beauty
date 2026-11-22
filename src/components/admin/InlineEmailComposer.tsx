@@ -478,7 +478,10 @@ const InlineEmailComposer = ({
       if (!pa) { sonnerToast.error("No purchase agreement yet — match this buyer to a seller at the bottom of their record first."); return; }
       const f = normalizePaFields(pa.fields);
       let block: string;
-      if (pa.status === "countersigned" && pa.payment_url) block = purchaseAgreementEmailBlock({ url: pa.payment_url, cemetery: f.property.cemetery, total: paTotals(f.charges).totalDue, kind: "pay" });
+      if (pa.status === "countersigned" && pa.sign_token) {
+        const v = await paCall<{ payment_url: string | null; payment_amount: number; payment_purpose: string }>({ action: "get", token: pa.sign_token });
+        block = purchaseAgreementEmailBlock({ url: v.payment_url || `https://www.texascemeterybrokers.com/purchase-agreement/${pa.sign_token}`, cemetery: f.property.cemetery, total: v.payment_amount, kind: v.payment_url ? (v.payment_purpose === "deposit" ? "deposit" : "pay") : "copy" });
+      }
       else if (["draft", "sent", "viewed"].includes(pa.status)) {
         const r = await paCall<{ sign_url: string }>({ action: "link", id: pa.id, to: f.purchaser.email || to });
         block = purchaseAgreementEmailBlock({ url: r.sign_url, cemetery: f.property.cemetery, total: paTotals(f.charges).totalDue, kind: "sign" });

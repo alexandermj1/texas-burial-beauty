@@ -3,6 +3,7 @@
 // payment_transactions for accounting. Admin-only.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount } from "../_shared/purchaseAgreementPayments.ts";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -23,6 +24,7 @@ const BodySchema = z.object({
   environment: z.enum(["sandbox", "live"]).optional(),
   purchaseAgreementId: z.string().uuid().optional(),
   buyerSubmissionId: z.string().uuid().optional(),
+  paymentPurpose: z.enum(["deposit", "balance"]).optional(),
 });
 
 /** Pull the bare email out of a mailbox like `"Name" <a@b.com>`. */
@@ -64,6 +66,8 @@ Deno.serve(async (req) => {
       if (authError || !u) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.id).in("role", ["admin", "staff"]);
+      if (!roles?.length) return new Response(JSON.stringify({ error: "Staff access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       user = u;
     }
 
@@ -75,8 +79,20 @@ Deno.serve(async (req) => {
     if (!parsed.success) {
       return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const { submissionId, kind, amountCents, description, recipientEmail, recipientName, listingTier, purchaseAgreementId, buyerSubmissionId } = parsed.data;
+    const { submissionId, kind, amountCents, description, recipientEmail, recipientName, listingTier, purchaseAgreementId, buyerSubmissionId, paymentPurpose } = parsed.data;
     const env: StripeEnv = parsed.data.environment ?? "sandbox";
+
+    if (purchaseAgreementId) {
+      const { data: pa, error: paError } = await supabase.from("purchase_agreements").select("id,fields,status,seller_submission_id,buyer_submission_id").eq("id", purchaseAgreementId).is("deleted_at", null).maybeSingle();
+      if (paError || !pa || pa.status === "void" || pa.status === "paid" || pa.seller_submission_id !== submissionId || pa.buyer_submission_id !== buyerSubmissionId || kind !== "plot_sale") throw new Error("Invalid purchase agreement payment request.");
+      const settingsError = paymentSettingsError(pa.fields);
+      if (settingsError) throw new Error(settingsError);
+      const { data: txs, error: txError } = await supabase.from("payment_transactions").select("amount_cents,refund_amount_cents,status,environment").contains("metadata", { purchase_agreement_id: pa.id }).is("deleted_at", null);
+      if (txError) throw txError;
+      const progress = agreementPaymentProgress(pa.fields, txs ?? [], env);
+      const expected = requestedPaymentAmount(pa.fields, paymentPurpose ?? "balance", progress.paid);
+      if (expected <= 0 || Math.round(expected * 100) !== amountCents) throw new Error("Payment amount does not match the outstanding deposit or balance.");
+    } else if (paymentPurpose) throw new Error("A deposit requires a purchase agreement.");
 
     // Starter ($0) listing — no Stripe session needed. Create a PENDING
     // row and return a click-to-activate URL. Activation (mark paid,
@@ -118,7 +134,7 @@ Deno.serve(async (req) => {
         ? `Cemetery plot — ${submission.cemetery}${submission.section ? `, Section ${submission.section}` : ""}`
         : description;
 
-    const productDescription = purchaseAgreementId ? "Signed purchase agreement — total amount due" : [
+    const productDescription = purchaseAgreementId ? (paymentPurpose === "deposit" ? "Purchase agreement — deposit only, balance due separately" : "Purchase agreement — outstanding balance") : [
       submission?.cemetery && `Cemetery: ${submission.cemetery}`,
       submission?.section && `Section: ${submission.section}`,
       submission?.property_type && `Type: ${submission.property_type}`,
@@ -162,6 +178,7 @@ Deno.serve(async (req) => {
         ...(listingTier && { listing_tier: listingTier }),
         ...(purchaseAgreementId && { purchase_agreement_id: purchaseAgreementId }),
         ...(buyerSubmissionId && { buyer_submission_id: buyerSubmissionId }),
+        ...(paymentPurpose && { payment_purpose: paymentPurpose }),
       };
       const paymentLink = await stripe.paymentLinks.create({
         line_items: [{ price: price.id, quantity: 1 }],
@@ -200,7 +217,7 @@ Deno.serve(async (req) => {
         checkout_url: session.url,
         environment: env,
         created_by_user_id: user.id,
-        metadata: { product_name: productName, ...(listingTier && { listing_tier: listingTier }), ...(purchaseAgreementId && { purchase_agreement_id: purchaseAgreementId, buyer_submission_id: buyerSubmissionId }) },
+        metadata: { product_name: productName, ...(listingTier && { listing_tier: listingTier }), ...(purchaseAgreementId && { purchase_agreement_id: purchaseAgreementId, buyer_submission_id: buyerSubmissionId, payment_purpose: paymentPurpose ?? "balance" }) },
       })
       .select()
       .single();
@@ -209,7 +226,7 @@ Deno.serve(async (req) => {
       console.error("Failed to insert transaction:", txErr);
     }
 
-    if (kind === "plot_sale") {
+    if (kind === "plot_sale" && paymentPurpose !== "deposit") {
       await supabase
         .from("contact_submissions")
         .update({

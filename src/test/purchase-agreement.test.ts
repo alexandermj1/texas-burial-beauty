@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chargeTotals, defaultFields, sellerReadyForBuyer, normalizeFields, documentFingerprint } from "@/lib/purchaseAgreement";
+import { chargeTotals, defaultFields, sellerReadyForBuyer, normalizeFields, documentFingerprint, paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount, canonicalDocument, TERMS, LEGACY_TERMS_VERSION } from "@/lib/purchaseAgreement";
 
 describe("purchase agreement rules", () => {
   it("only offers buyer matching once a seller is at Docs out or later", () => {
@@ -18,9 +18,58 @@ describe("purchase agreement rules", () => {
     expect(chargeTotals(f.charges).totalDue).toBe(4945);
     expect(f.charges.transfer_fee).toBe(300);
   });
+  it("keeps an agreement for three spaces at or above 70% of their retail", () => {
+    const f = defaultFields({ plot_count: 4, quote_amount: 2000, transfer_fee_amount: 300, cemetery_retail: 10000 }, { name: "Buyer", spaces: "3" });
+    expect(f.property.spaces).toBe(3);
+    expect(chargeTotals(f.charges).totalDue).toBe(21000);
+    expect(f.charges.adjustments_note).toContain("Brokerage adjustment fee");
+  });
   it("fingerprint changes when the price changes", async () => {
     const a = normalizeFields({ charges: { balance: 1000 } });
     const b = normalizeFields({ charges: { balance: 1001 } });
+    expect(await documentFingerprint(a)).not.toBe(await documentFingerprint(b));
+  });
+  it("defaults to agreement only without an automatic payment request", () => {
+    expect(paymentSchedule(defaultFields({ quote_amount: 1000, transfer_fee_amount: 100 }, { email: "buyer@example.com" })).collection).toBe("manual");
+  });
+  it("calculates a selected 10% deposit on the full purchase including fees", () => {
+    const f = normalizeFields({ charges: { balance: 9000, transfer_fee: 1000 }, payment: { collection: "deposit", deposit_basis: "percent", deposit_value: 10 } });
+    expect(paymentSchedule(f)).toEqual({ total: 10000, deposit: 1000, balance: 9000, collection: "deposit" });
+    expect(requestedPaymentAmount(f, "deposit")).toBe(1000);
+  });
+  it("accepts a dollar deposit without adding it to the purchase price", () => {
+    const f = normalizeFields({ charges: { balance: 9000, transfer_fee: 1000 }, payment: { collection: "manual", deposit_basis: "amount", deposit_value: 750 } });
+    expect(paymentSchedule(f)).toEqual({ total: 10000, deposit: 750, balance: 9250, collection: "manual" });
+  });
+  it("allows a different selected percentage, not fixed at ten", () => {
+    const f = normalizeFields({ charges: { balance: 10000 }, payment: { collection: "deposit", deposit_basis: "percent", deposit_value: 25 } });
+    expect(requestedPaymentAmount(f, "deposit")).toBe(2500);
+  });
+  it("rejects deposits above the full price or percentages above 100", () => {
+    expect(paymentSettingsError(normalizeFields({ charges: { balance: 1000 }, payment: { collection: "deposit", deposit_basis: "amount", deposit_value: 1001 } }))).not.toBeNull();
+    expect(paymentSettingsError(normalizeFields({ charges: { balance: 1000 }, payment: { collection: "deposit", deposit_basis: "percent", deposit_value: 101 } }))).not.toBeNull();
+  });
+  it("a deposit is not a fully paid sale and only the remaining balance is charged later", () => {
+    const f = normalizeFields({ charges: { balance: 10000 }, payment: { collection: "deposit", deposit_basis: "percent", deposit_value: 10 } });
+    const p = agreementPaymentProgress(f, [{ amount_cents: 100000, status: "paid", environment: "live" }]);
+    expect(p).toEqual({ paid: 1000, remaining: 9000, fullyPaid: false });
+    expect(requestedPaymentAmount(f, "balance", p.paid)).toBe(9000);
+    expect(requestedPaymentAmount(f, "deposit", p.paid)).toBe(0);
+    expect(agreementPaymentProgress(f, [{ amount_cents: 100000, status: "paid", environment: "live" }, { amount_cents: 900000, status: "paid", environment: "live" }]).fullyPaid).toBe(true);
+  });
+  it("test payments do not settle a live agreement", () => {
+    expect(agreementPaymentProgress(normalizeFields({ charges: { balance: 1000 } }), [{ amount_cents: 100000, status: "paid", environment: "sandbox" }]).fullyPaid).toBe(false);
+  });
+  it("preserves legacy fields and terms in the signed fingerprint", () => {
+    const f = normalizeFields({ charges: { balance: 1000 } });
+    expect(f.payment).toBeUndefined();
+    const text = JSON.parse(canonicalDocument(f, LEGACY_TERMS_VERSION));
+    expect(text.terms).toEqual(TERMS);
+    expect(text.fields).not.toHaveProperty("payment");
+  });
+  it("payment choice and deposit are included in the fingerprint", async () => {
+    const a = normalizeFields({ charges: { balance: 1000 }, payment: { collection: "manual", deposit_basis: "percent", deposit_value: 10 } });
+    const b = { ...a, payment: { collection: "deposit" as const, deposit_basis: "percent" as const, deposit_value: 10 } };
     expect(await documentFingerprint(a)).not.toBe(await documentFingerprint(b));
   });
 });

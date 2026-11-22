@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Copy, CreditCard, Download, FileSignature, Handshake, Loader2, Mail, PenLine, RefreshCw, Search, XCircle } from "lucide-react";
@@ -17,7 +18,7 @@ import { resolveKind } from "./CustomerKindBadge";
 import DeedSpacesPanel from "./DeedSpacesPanel";
 import { getPaymentsEnvironment } from "@/lib/paymentEnvironment";
 import {
-  STATUS_LABEL, chargeTotals, chargesForSpaces, defaultFields, inviteEmailPreviewNote, money, normalizeFields, paCall, sellerReadyForBuyer,
+  STATUS_LABEL, chargeTotals, chargesForSpaces, defaultFields, inviteEmailPreviewNote, money, normalizeFields, paCall, sellerReadyForBuyer, paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount,
   type AgreementFields, type PaStatus,
 } from "@/lib/purchaseAgreement";
 
@@ -28,8 +29,8 @@ type Agreement = {
   void_reason: string | null; buyer_signature: any; document_hash: string | null; signed_pdf_path: string | null;
 };
 type Rec = Record<string, any>;
+const SELLER_COLS = "id,name,email,phone,cemetery,cemetery_city,section,lawn,plot_description,property_type,spaces,plot_count,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,cemetery_retail,documents_requested_at,documents_completed_at,listing_number,listing_live_at,sold_at,deleted_at,customer_kind,source,created_at,message";
 
-const SELLER_COLS = "id,name,email,phone,cemetery,cemetery_city,section,lawn,plot_description,property_type,spaces,plot_count,quote_amount,accepted_quote_amount,transfer_fee_amount,buyer_fees,documents_requested_at,documents_completed_at,listing_number,listing_live_at,sold_at,deleted_at,customer_kind,source,created_at,message";
 const STATUS_TONE: Record<PaStatus, string> = {
   draft: "bg-muted text-foreground", sent: "bg-secondary text-secondary-foreground", viewed: "bg-secondary text-secondary-foreground",
   buyer_signed: "bg-accent text-accent-foreground", countersigned: "bg-primary/15 text-primary", paid: "bg-primary text-primary-foreground", void: "bg-muted text-muted-foreground line-through",
@@ -66,7 +67,7 @@ export default function PurchaseAgreementPanel({ submission, kind, stageRecord }
   const match = async (other: Rec) => {
     const seller = isSeller ? submission : other; const buyer = isSeller ? other : submission;
     try {
-      await paCall({ action: "create", seller_submission_id: seller.id, buyer_submission_id: buyer.id, fields: defaultFields(seller, buyer) });
+      await paCall({ action: "create", seller_submission_id: seller.id, ...(buyer.id ? { buyer_submission_id: buyer.id } : { buyer_email: buyer.email, buyer_name: buyer.name }), fields: defaultFields(seller, buyer) });
       toast.success(`Matched ${buyer.name || "buyer"} to ${seller.name || "seller"}. Check the details, then send.`);
       setPicker(false); load();
     } catch (e) { toast.error((e as Error).message); }
@@ -104,7 +105,7 @@ function MatchPicker({ isSeller, submission, onClose, onPick }: { isSeller: bool
       if (!isSeller) query = query.is("sold_at", null);
       const { data } = await query;
       const want = isSeller ? "buyer" : "seller";
-      setRows(((data ?? []) as Rec[]).filter((r) => r.id !== submission.id && resolveKind(r.customer_kind, r.source) === want).sort((a, b) => Number(want === "seller" && sellerReadyForBuyer(b as any)) - Number(want === "seller" && sellerReadyForBuyer(a as any))));
+      setRows(((data ?? []) as Rec[]).filter((r) => r.id !== submission.id && (resolveKind(r.customer_kind, r.source) === want || (isSeller && resolveKind(r.customer_kind, r.source) === "contact" && !!r.email))).sort((a, b) => Number(want === "seller" && sellerReadyForBuyer(b as any)) - Number(want === "seller" && sellerReadyForBuyer(a as any))));
     })();
   }, [isSeller, submission.id]);
   const cem = String(submission.cemetery ?? "").toLowerCase().split(/\s+/)[0] ?? "";
@@ -123,6 +124,10 @@ function MatchPicker({ isSeller, submission, onClose, onPick }: { isSeller: bool
           <DialogDescription>{isSeller ? "Buyers at the same cemetery are listed first." : "Unsold sellers are listed, same cemetery first. Sellers at Docs out or later are ready to sell."}</DialogDescription>
         </DialogHeader>
         <div className="relative"><Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" /><Input autoFocus className="pl-9" placeholder="Search name, email, phone or cemetery" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        {isSeller && /^\S+@\S+\.\S+$/.test(q.trim()) && <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+          <span className="text-sm break-all">{q.trim()}</span>
+          <Button size="sm" disabled={!!busy} onClick={async () => { setBusy("email"); await onPick({ email: q.trim(), name: "" }); setBusy(null); }}><Handshake className="w-4 h-4 mr-1" />Match this email</Button>
+        </div>}
         <div className="max-h-[50vh] overflow-y-auto divide-y divide-border rounded-md border border-border">
           {rows === null && <div className="p-6 flex justify-center"><Loader2 className="w-4 h-4 animate-spin" /></div>}
           {rows && !shown.length && <p className="p-4 text-sm text-muted-foreground">No matching {isSeller ? "buyers" : "sellers"}.</p>}
@@ -159,6 +164,8 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
   const [voidOpen, setVoidOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(a.status === "draft");
   useEffect(() => { setF(normalizeFields(a.fields)); setDirty(false); }, [a.fields]);
+  const [paid, setPaid] = useState(0);
+  useEffect(() => { supabase.from("payment_transactions").select("amount_cents,refund_amount_cents,status,environment").contains("metadata", { purchase_agreement_id: a.id }).is("deleted_at", null).then(({ data }) => setPaid(agreementPaymentProgress(normalizeFields(a.fields), data ?? []).paid)); }, [a.id, a.events, a.fields]);
   const [seller, setSeller] = useState<Rec | null>(null);
   useEffect(() => { supabase.from("contact_submissions").select(SELLER_COLS).eq("id", a.seller_submission_id).maybeSingle().then(({ data }) => setSeller(data as Rec)); }, [a.seller_submission_id]);
   const pickSpaces = (labels: string[]) => {
@@ -168,6 +175,10 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
   };
   const editable = ["draft", "sent", "viewed"].includes(a.status);
   const t = chargeTotals(f.charges);
+  const schedule = paymentSchedule(f);
+  const depositDue = requestedPaymentAmount(f, "deposit", paid);
+  const balanceDue = requestedPaymentAmount(f, "balance", paid);
+  const settingsError = paymentSettingsError(f);
   const idx = STEPS.findIndex((s) => s.key === a.status);
   const signUrl = a.sign_token ? `${SITE}/purchase-agreement/${a.sign_token}` : null;
 
@@ -176,7 +187,7 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
     try { await fn(); if (ok) toast.success(ok); onChange(); } catch (e) { toast.error((e as Error).message); } finally { setBusy(null); }
   };
   const save = () => run("save", () => paCall({ action: "update", id: a.id, fields: f }), "Agreement details saved");
-  const set = <S extends keyof AgreementFields>(s: S, k: keyof AgreementFields[S], v: unknown) => { setF((x) => ({ ...x, [s]: { ...x[s], [k]: v } })); setDirty(true); };
+  const set = <S extends keyof AgreementFields>(s: S, k: keyof NonNullable<AgreementFields[S]>, v: unknown) => { setF((x) => ({ ...x, [s]: { ...x[s], [k]: v } })); setDirty(true); };
   const openPdf = () => run("pdf", async () => {
     const r = await paCall<{ url?: string; base64?: string }>({ action: "pdf", id: a.id });
     if (r.url) window.open(r.url, "_blank", "noopener");
@@ -187,7 +198,7 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <FileSignature className="w-4 h-4 text-primary" />
-        <span className="text-sm font-semibold text-foreground">{isSeller ? "Buyer matched:" : "Matched to seller:"} {other?.name ?? "—"}</span>
+        <span className="text-sm font-semibold text-foreground">{isSeller ? "Buyer matched:" : "Matched to seller:"} {other?.name || f.purchaser.names || f.purchaser.email || "—"}</span>
         {!isSeller && other?.cemetery && <span className="text-xs text-muted-foreground">({other.cemetery})</span>}
         <Badge className={`${STATUS_TONE[a.status]} border-0`}>{STATUS_LABEL[a.status]}</Badge>
         <span className="ml-auto text-sm font-semibold tabular-nums text-foreground">{money(t.totalDue)}</span>
@@ -207,7 +218,7 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
 
       {editable && (
         <div className="rounded-lg bg-muted/40 p-3">
-          <button type="button" className="text-xs font-medium text-foreground underline" onClick={() => setEditOpen((o) => !o)}>{editOpen ? "Hide" : "Edit"} agreement details (price, property, purchaser)</button>
+          <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => setEditOpen((o) => !o)}>{editOpen ? "Hide" : "Edit"} agreement details (price, property, purchaser)</Button>
           {editOpen && (
             <div className="mt-3 grid sm:grid-cols-2 gap-3">
               <E label="Purchaser name(s)" v={f.purchaser.names} on={(v) => set("purchaser", "names", v)} />
@@ -220,14 +231,22 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
               <E label="Number of spaces (price updates)" type="number" v={String(f.property.spaces)} on={(v) => { const n = Math.max(1, parseInt(v, 10) || 1); setF((x) => ({ ...x, property: { ...x.property, spaces: n }, charges: seller ? chargesForSpaces(seller, n) : x.charges })); setDirty(true); }} />
               <E label="Property type" v={f.property.property_type} on={(v) => set("property", "property_type", v)} />
               <div className="sm:col-span-2"><E label="Additional commodities / services (optional)" v={f.property.commodities} on={(v) => set("property", "commodities", v)} /></div>
-              <E label="1. Commitment deposit ($)" type="number" v={String(f.charges.deposit)} on={(v) => set("charges", "deposit", Number(v) || 0)} />
-              <E label="2. Balance of property price ($) — deposit + balance = plot price" type="number" v={String(f.charges.balance)} on={(v) => set("charges", "balance", Number(v) || 0)} />
+              {!f.payment && <E label="1. Commitment deposit ($)" type="number" v={String(f.charges.deposit)} on={(v) => set("charges", "deposit", Number(v) || 0)} />}
+              <E label={f.payment ? "Property price ($), before fees" : "2. Balance of property price ($) — deposit + balance = plot price"} type="number" v={String(f.charges.balance)} on={(v) => set("charges", "balance", Number(v) || 0)} />
               <E label="4. Cemetery transfer fee ($)" type="number" v={String(f.charges.transfer_fee)} on={(v) => set("charges", "transfer_fee", Number(v) || 0)} />
               <E label="5. Other fees we're adding / discounts ($, negative for discount)" type="number" v={String(f.charges.adjustments)} on={(v) => set("charges", "adjustments", Number(v) || 0)} />
               <div className="sm:col-span-2"><E label="Adjustment note (shown to buyer)" v={f.charges.adjustments_note} on={(v) => set("charges", "adjustments_note", v)} /></div>
-              <p className="sm:col-span-2 text-xs text-muted-foreground">3. Total property price {money(t.totalProperty)} · <strong className="text-foreground">6. Total amount due {money(t.totalDue)}</strong> — this is what the buyer's card payment link will charge.</p>
+              {!f.payment && <Button variant="outline" size="sm" className="sm:col-span-2" onClick={() => { setF((x) => ({ ...x, charges: { ...x.charges, deposit: 0, balance: x.charges.deposit + x.charges.balance }, payment: { collection: "manual", deposit_basis: "amount", deposit_value: x.charges.deposit } })); setDirty(true); }}>Configure agreement-only signing / deposit</Button>}
+              {f.payment && <>
+                <div className="sm:col-span-2 border-t border-border pt-3"><Label>After buyer signs</Label><Select value={f.payment.collection} onValueChange={(v) => set("payment", "collection", v)}><SelectTrigger className="h-auto min-h-10 text-left whitespace-normal" aria-label="After buyer signs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="manual">Agreement only · payment separately</SelectItem><SelectItem value="deposit">Send deposit payment link only</SelectItem><SelectItem value="full">Send full payment link</SelectItem></SelectContent></Select></div>
+                <div><Label>Optional deposit entered as</Label><Select value={f.payment.deposit_basis} onValueChange={(v) => { const payment = f.payment; if (!payment) return; setF((x) => ({ ...x, payment: { ...payment, deposit_basis: v as "amount" | "percent", deposit_value: v === "percent" ? (t.totalDue > 0 ? Math.round(schedule.deposit / t.totalDue * 10000) / 100 : 0) : schedule.deposit } })); setDirty(true); }}><SelectTrigger aria-label="Deposit entered as"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="amount">Dollar amount</SelectItem><SelectItem value="percent">Percentage of total purchase price</SelectItem></SelectContent></Select></div>
+                <E label={f.payment.deposit_basis === "percent" ? "Deposit (%)" : "Deposit ($)"} type="number" v={String(f.payment.deposit_value)} on={(v) => set("payment", "deposit_value", Number(v) || 0)} />
+                <p className="sm:col-span-2 text-sm">Deposit <strong>{money(schedule.deposit)}</strong> · Remaining balance <strong>{money(schedule.balance)}</strong></p>
+                {settingsError && <p className="sm:col-span-2 text-sm text-destructive">{settingsError}</p>}
+              </>}
+              <p className="sm:col-span-2 text-xs text-muted-foreground">3. Total property price {money(t.totalProperty)} · <strong className="text-foreground">6. Total amount due {money(t.totalDue)}</strong> — deposit is included in this total, not added on top.</p>
               <div className="sm:col-span-2 flex gap-2">
-                <Button size="sm" onClick={save} disabled={!dirty || !!busy}>{busy === "save" && <Loader2 className="w-4 h-4 animate-spin mr-1" />}Save details</Button>
+                <Button size="sm" onClick={save} disabled={!dirty || !!busy || !!settingsError}>{busy === "save" && <Loader2 className="w-4 h-4 animate-spin mr-1" />}Save details</Button>
                 {a.status !== "draft" && dirty && <p className="text-xs text-muted-foreground self-center">Saving updates the link the buyer already has — they'll be asked to reload.</p>}
               </div>
             </div>
@@ -238,18 +257,25 @@ function AgreementCard({ a, other, isSeller, onChange }: { a: Agreement; other?:
       {a.status === "buyer_signed" && (
         <p className="text-xs text-foreground">Signed by <strong>{a.buyer_signature?.typed_name}</strong> on {fmt(a.buyer_signed_at)} from IP {a.buyer_signature?.ip}. Deed to: {f.deed.same_as_purchaser ? f.purchaser.names : f.deed.names}{f.deed.holder2 ? ` & ${f.deed.holder2}` : ""}.</p>
       )}
+      {paid > 0 && <p className="text-sm">Paid {money(paid)} · Outstanding {money(balanceDue)}</p>}
       {a.payment_url && <p className="text-xs text-muted-foreground break-all">Payment link: <a className="underline" href={a.payment_url} target="_blank" rel="noreferrer">{a.payment_url}</a></p>}
 
       <div className="flex flex-wrap gap-2">
         {editable && <Button size="sm" onClick={() => (dirty ? toast.error("Save your changes first.") : setSendOpen(true))}><Mail className="w-4 h-4 mr-1.5" />{a.status === "draft" ? "Send purchase agreement to buyer" : "Resend to buyer"}</Button>}
         {signUrl && editable && <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(signUrl); toast.success("Signing link copied"); }}><Copy className="w-4 h-4 mr-1.5" />Copy signing link</Button>}
-        {["draft", "sent", "viewed", "buyer_signed"].includes(a.status) && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => {
-          if (dirty) return toast.error("Save your changes first.");
-          if (!window.confirm(`Create a LIVE card payment link for ${money(t.totalDue)} and email it to ${f.purchaser.email || "the buyer"}?`)) return;
-          run("paylink", async () => { const r = await paCall<{ warning?: string }>({ action: "send_payment_link", id: a.id }); if (r.warning) toast.warning(r.warning); }, "Live payment link emailed to the buyer");
-        }}>{busy === "paylink" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <CreditCard className="w-4 h-4 mr-1.5" />}{a.payment_url ? "Send new payment link" : "Send payment link to buyer"}</Button>}
-        {a.status === "buyer_signed" && <Button size="sm" onClick={() => setCsOpen(true)}><PenLine className="w-4 h-4 mr-1.5" />Countersign &amp; send payment link</Button>}
-        {a.status === "countersigned" && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => run("resend", () => paCall({ action: "resend_executed", id: a.id }), "Payment link re-sent to the buyer")}><RefreshCw className="w-4 h-4 mr-1.5" />Resend payment link</Button>}
+        {["draft", "sent", "viewed", "buyer_signed", "countersigned"].includes(a.status) && <>
+          {(["deposit", "balance"] as const).map((purpose) => {
+            const amount = purpose === "deposit" ? depositDue : balanceDue;
+            if (amount <= 0) return null;
+            return <Button key={purpose} size="sm" variant="outline" disabled={!!busy || !!settingsError} onClick={() => {
+              if (dirty) return toast.error("Save your changes first.");
+              if (!window.confirm(`Create a LIVE ${purpose === "deposit" ? "deposit" : "remaining balance"} link for ${money(amount)} and email it to ${f.purchaser.email || "the buyer"}?`)) return;
+              run("paylink", async () => { const r = await paCall<{ warning?: string }>({ action: "send_payment_link", id: a.id, purpose }); if (r.warning) toast.warning(r.warning); }, "Payment link emailed to the buyer");
+            }}><CreditCard className="w-4 h-4 mr-1.5" />Send {purpose === "deposit" ? "deposit" : paid > 0 ? "remaining balance" : "full payment"} link · {money(amount)}</Button>;
+          })}
+        </>}
+        {a.status === "buyer_signed" && <Button size="sm" onClick={() => setCsOpen(true)}><PenLine className="w-4 h-4 mr-1.5" />Countersign agreement</Button>}
+        {a.status === "countersigned" && <Button size="sm" variant="outline" disabled={!!busy} onClick={() => run("resend", () => paCall({ action: "resend_executed", id: a.id }), "Executed agreement re-sent")}><RefreshCw className="w-4 h-4 mr-1.5" />Resend executed agreement</Button>}
         <Button size="sm" variant="outline" disabled={!!busy} onClick={openPdf}>{busy === "pdf" ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Download className="w-4 h-4 mr-1.5" />}{a.signed_pdf_path ? "Executed PDF" : "Preview PDF"}</Button>
         {a.status !== "paid" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setVoidOpen(true)}><XCircle className="w-4 h-4 mr-1.5" />Void</Button>}
       </div>
@@ -287,7 +313,7 @@ function SendDialog({ a, f, onClose, onDone }: { a: Agreement; f: AgreementField
         <div className="rounded-md bg-muted/50 p-3 text-sm space-y-0.5">
           <p><strong>{f.property.cemetery}</strong>{f.property.city ? `, ${f.property.city}` : ""}</p>
           <p className="text-muted-foreground">{f.property.description} · {f.property.spaces} space(s)</p>
-          <p>Total amount due <strong>{money(t.totalDue)}</strong></p>
+          <p>Total purchase price <strong>{money(t.totalDue)}</strong></p><p>Deposit {money(paymentSchedule(f).deposit)} · Balance {money(paymentSchedule(f).balance)}</p><p>{paymentSchedule(f).collection === "manual" ? "Agreement only — no payment link after signing." : paymentSchedule(f).collection === "deposit" ? "Only the deposit will be requested after signing." : "Full payment will be requested after signing."}</p>
         </div>
         <div><Label>Send to</Label><Input value={to} onChange={(e) => setTo(e.target.value)} /></div>
         <div><Label>Personal note (optional)</Label><Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Lovely speaking with you today — here is the agreement for the two spaces we discussed." /></div>
@@ -307,14 +333,14 @@ function CountersignDialog({ a, total, onClose, onDone }: { a: Agreement; total:
     setBusy(true);
     try {
       const r = await paCall<{ warning?: string }>({ action: "countersign", id: a.id, signer_name: name, signature: sig, environment: getPaymentsEnvironment() });
-      if (r.warning) toast.warning(r.warning); else toast.success("Countersigned. Executed copy and payment link emailed to the buyer.");
+      if (r.warning) toast.warning(r.warning); else toast.success("Countersigned. Executed copy emailed using the saved payment choice.");
       onDone();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Countersign for Texas Cemetery Brokers</DialogTitle><DialogDescription>This makes the agreement binding, creates a live card payment link for {money(total)}, and emails the buyer the executed PDF with the link.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>Countersign for Texas Cemetery Brokers</DialogTitle><DialogDescription>This makes the agreement binding, emails the executed PDF, and follows the saved payment choice: {paymentSchedule(normalizeFields(a.fields)).collection === "manual" ? "no payment link" : paymentSchedule(normalizeFields(a.fields)).collection === "deposit" ? `deposit link for ${money(paymentSchedule(normalizeFields(a.fields)).deposit)}` : `full payment link for ${money(total)}`}.</DialogDescription></DialogHeader>
         <div><Label>Your name (authorized representative)</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <SignaturePad label="Broker signature" onChange={setSig} />
         <label className="flex items-start gap-2 text-sm"><Checkbox checked={ok} onCheckedChange={(c) => setOk(!!c)} className="mt-0.5" />I've checked the buyer's details, the deed names and the price, and I'm authorized to sign for Texas Cemetery Brokers.</label>

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { quoteFigures, normalizeBuyerFees } from "@/lib/quoteFigures";
+import { normalizeBuyerFees } from "@/lib/quoteFigures";
+import { buyerQuotePricing } from "../../supabase/functions/_shared/buyerQuotePricing";
 import { emptyFields, canonicalDocument, type AgreementFields } from "../../supabase/functions/purchase-agreement/terms";
 
 export * from "../../supabase/functions/purchase-agreement/terms";
@@ -11,7 +12,7 @@ export const STATUS_LABEL: Record<PaStatus, string> = {
   sent: "Sent to buyer",
   viewed: "Buyer opened it",
   buyer_signed: "Buyer signed — countersign",
-  countersigned: "Awaiting payment",
+  countersigned: "Fully signed",
   paid: "Paid",
   void: "Voided",
 };
@@ -29,7 +30,7 @@ function wantSpaces(buyer: any) {
 
 /**
  * Starting schedule for a match, using the same buyer pricing as quotes and the
- * buyer AI (quoteFigures). Staff can change every figure before sending.
+ * buyer AI (buyerQuotePricing). Staff can change every figure before sending.
  */
 export function defaultFields(seller: any, buyer: any): AgreementFields {
   const f = emptyFields();
@@ -47,18 +48,15 @@ export function defaultFields(seller: any, buyer: any): AgreementFields {
   return f;
 }
 
-/** Same rounding the buyer AI uses in buyer emails (buyer-agent roundDown). */
-export const buyerQuotedTotal = (n: number) => { const step = n >= 1000 ? 100 : 50; return Math.floor(n / step) * step; };
-
-/** Buyer schedule for a given number of the seller's spaces (same quoteFigures basis as quotes and the buyer AI). */
+/** Exact buyer schedule for the requested spaces, including the retail-floor adjustment. */
 export function chargesForSpaces(seller: any, spaces: number): AgreementFields["charges"] {
-  const q = quoteFigures({
+  const q = buyerQuotePricing({
     quoteAmount: seller.quote_amount, acceptedAmount: seller.accepted_quote_amount, transferFee: seller.transfer_fee_amount,
     plotCount: Math.max(1, spaces), buyerFees: normalizeBuyerFees(seller.buyer_fees),
+    retailPerSpace: seller.cemetery_retail,
   });
-  // Match the buyer AI's emailed figure exactly: the total is rounded DOWN to $100
-  // (to $50 under $1,000), and the rounding comes off the sales-price line.
-  const total = q.hasQuote ? buyerQuotedTotal(q.buyerPriceTotal) : 0;
+  // Keep the same exact full total as the buyer AI, including any 70%-retail adjustment.
+  const total = q.hasQuote ? q.buyerPriceTotal : 0;
   return {
     deposit: 0,
     balance: q.hasQuote ? total - q.transferFee - q.buyerFeesTotal : 0,
@@ -92,12 +90,12 @@ export const inviteEmailPreviewNote =
 const escHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
 /** Email-safe block for the composer: signing link, or payment link once countersigned. */
-export function purchaseAgreementEmailBlock(opts: { url: string; cemetery: string; total: number; kind: "sign" | "pay" }) {
+export function purchaseAgreementEmailBlock(opts: { url: string; cemetery: string; total: number; kind: "sign" | "pay" | "deposit" | "copy" }) {
   const head = opts.kind === "sign" ? "Your purchase agreement" : "Complete your purchase";
-  const body = opts.kind === "sign"
+  const body = opts.kind === "copy" ? `Your fully signed purchase agreement for <strong>${escHtml(opts.cemetery)}</strong> is ready. Payment will be arranged separately.` : opts.kind === "sign"
     ? `Your purchase agreement for <strong>${escHtml(opts.cemetery)}</strong> is ready to review and sign online. It takes about five minutes, and you'll receive a copy by email.`
-    : `Your purchase agreement for <strong>${escHtml(opts.cemetery)}</strong> is fully signed. The total amount due is <strong>${money(opts.total)}</strong>, payable securely by card.`;
-  const label = opts.kind === "sign" ? "Review &amp; sign your purchase agreement" : `Pay ${money(opts.total)} securely`;
+    : `Your purchase agreement for <strong>${escHtml(opts.cemetery)}</strong> is fully signed. The ${opts.kind === "deposit" ? "deposit" : "amount"} due is <strong>${money(opts.total)}</strong>, payable securely by card.`;
+  const label = opts.kind === "copy" ? "View signed agreement" : opts.kind === "sign" ? "Review &amp; sign your purchase agreement" : `Pay ${opts.kind === "deposit" ? "deposit " : ""}${money(opts.total)} securely`;
   return `<div data-purchase-agreement="1" style="margin:18px 0;padding:18px 20px;border:1px solid #e6dccf;border-left:4px solid #4b7359;border-radius:8px;background:#f6f1ea;font-family:Georgia,serif;">
 <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#4b7359;margin-bottom:6px;">${head}</div>
 <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#2d2a26;">${body}</p>

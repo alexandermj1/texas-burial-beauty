@@ -1,7 +1,8 @@
 // Handles Stripe webhook events. Marks payment_transactions as paid,
 // stamps the linked submission, notifies admins, and emails receipts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
+import { agreementPaymentProgress } from "../_shared/purchaseAgreementPayments.ts";
+import { type StripeEnv, verifyWebhook, createStripeClient } from "../_shared/stripe.ts";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function db() {
@@ -234,22 +235,29 @@ async function handleListingFeePaid(tx: any, cardBrand?: string, cardLast4?: str
 async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: string) {
   const isTest = tx.environment === "sandbox";
   const paId = tx.metadata?.purchase_agreement_id;
+  let fullyPaid = !paId;
+  let signed = !paId;
+  let totalPaid = tx.amount_cents / 100;
   if (paId) {
-    const { data: pa } = await db().from("purchase_agreements").select("events,status").eq("id", paId).maybeSingle();
-    if (pa) {
-      const ev = { at: new Date().toISOString(), type: "paid", amount: tx.amount_cents / 100, test: isTest || undefined, card: cardLast4 ? `${cardBrand ?? "card"} ••${cardLast4}` : undefined };
-      // Only a countersigned agreement moves to "paid"; an early payment is recorded
-      // but must not stop the buyer from signing.
-      const patch: Record<string, unknown> = { events: [...((pa as any).events ?? []), ev] };
-      if ((pa as any).status === "countersigned") { patch.status = "paid"; patch.paid_at = ev.at; }
-      await db().from("purchase_agreements").update(patch).eq("id", paId);
-    }
+    const { data: pa, error: paError } = await db().from("purchase_agreements").select("events,status,fields").eq("id", paId).maybeSingle();
+    if (paError || !pa) throw new Error("Cannot reconcile purchase agreement payment.");
+    const { data: transactions, error: txError } = await db().from("payment_transactions").select("amount_cents,refund_amount_cents,status,environment").contains("metadata", { purchase_agreement_id: paId }).is("deleted_at", null);
+    if (txError) throw txError;
+    const progress = agreementPaymentProgress(pa.fields, transactions ?? [], tx.environment);
+    fullyPaid = progress.fullyPaid;
+    totalPaid = progress.paid;
+    signed = ["countersigned", "paid"].includes(pa.status);
+    const ev = { at: new Date().toISOString(), type: fullyPaid ? "paid" : "deposit_received", transaction_id: tx.id, amount: tx.amount_cents / 100, remaining: progress.remaining, test: isTest || undefined, card: cardLast4 ? `${cardBrand ?? "card"} ••${cardLast4}` : undefined };
+    const patch: Record<string, unknown> = { events: [...(pa.events ?? []), ev] };
+    if (signed && fullyPaid && !isTest) { patch.status = "paid"; patch.paid_at = ev.at; }
+    const { error: updateError } = await db().from("purchase_agreements").update(patch).eq("id", paId);
+    if (updateError) throw updateError;
   }
   // Test (sandbox) payments never mark a real seller record as sold.
-  if (tx.submission_id && !isTest) {
+  if (tx.submission_id && !isTest && fullyPaid && signed) {
     await db().from("contact_submissions").update({
       sold_at: new Date().toISOString(),
-      sold_price: tx.amount_cents / 100,
+      sold_price: totalPaid,
       payment_received_at: new Date().toISOString(),
       seller_payout_status: "pending",
       closed_outcome: "sold",
@@ -267,7 +275,7 @@ async function handlePlotSalePaid(tx: any, cardBrand?: string, cardLast4?: strin
     await sendEmail(tx.recipient_email, `Receipt - plot purchase (${fmt(tx.amount_cents)})`, html);
   }
   await notifyAdmins(
-    "Plot sold",
+    fullyPaid && signed ? "Plot sold" : "Purchase deposit/payment received",
     `${tx.recipient_name || tx.recipient_email} paid ${fmt(tx.amount_cents)} for ${tx.description || "a plot"}.`,
     tx.submission_id,
   );
@@ -411,12 +419,16 @@ async function markPaid(sessionId: string, paymentIntentId: string | null, env: 
       })
       .eq("stripe_session_id", id)
       .eq("environment", env)
+      .eq("status", "pending")
       .select()
       .maybeSingle();
     if (data) { tx = data; break; }
   }
 
   if (!tx) return;
+  if (tx.metadata?.purchase_agreement_id && String(tx.stripe_session_id).startsWith("plink_")) {
+    await createStripeClient(env).paymentLinks.update(tx.stripe_session_id, { active: false }).catch((e) => console.error("Paid agreement link deactivation failed", e));
+  }
   const { brand, last4 } = await fetchCardDetails(paymentIntentId, env);
   if (tx.kind === "listing_fee") await handleListingFeePaid(tx, brand, last4);
   else if (tx.kind === "plot_sale") await handlePlotSalePaid(tx, brand, last4);

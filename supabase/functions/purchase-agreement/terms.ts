@@ -2,13 +2,15 @@
 // preview, the signed PDF and the document hash. Changing any wording here
 // MUST bump TERMS_VERSION so earlier signed agreements stay traceable to the
 // exact text the buyer saw.
-export const TERMS_VERSION = "tcb-pa-2026-11";
+export const LEGACY_TERMS_VERSION = "tcb-pa-2026-11";
+export const TERMS_VERSION = "tcb-pa-2026-11-deposit-v2";
 
 export type AgreementFields = {
   purchaser: { names: string; address: string; phone: string; email: string; dob: string; marital_status: string };
   property: { cemetery: string; city: string; description: string; spaces: number; property_type: string; commodities: string };
   deed: { same_as_purchaser: boolean; holder1: string; holder2: string; names: string; address: string; phone: string; email: string; dob: string; marital_status: string };
   charges: { deposit: number; balance: number; transfer_fee: number; adjustments: number; adjustments_note: string };
+  payment?: { collection: "manual" | "full" | "deposit"; deposit_basis: "amount" | "percent"; deposit_value: number };
 };
 
 export const emptyFields = (): AgreementFields => ({
@@ -16,6 +18,7 @@ export const emptyFields = (): AgreementFields => ({
   property: { cemetery: "", city: "", description: "", spaces: 1, property_type: "", commodities: "" },
   deed: { same_as_purchaser: true, holder1: "", holder2: "", names: "", address: "", phone: "", email: "", dob: "", marital_status: "" },
   charges: { deposit: 0, balance: 0, transfer_fee: 0, adjustments: 0, adjustments_note: "" },
+  payment: { collection: "manual", deposit_basis: "amount", deposit_value: 0 },
 });
 
 const n = (v: unknown) => { const x = Number(v); return Number.isFinite(x) ? Math.round(x * 100) / 100 : 0; };
@@ -39,8 +42,15 @@ export function normalizeFields(raw: any): AgreementFields {
       deposit: n(f.charges?.deposit), balance: n(f.charges?.balance), transfer_fee: n(f.charges?.transfer_fee),
       adjustments: n(f.charges?.adjustments), adjustments_note: String(f.charges?.adjustments_note ?? ""),
     },
+    ...(f.payment ? { payment: {
+      collection: (["manual", "full", "deposit"].includes(f.payment.collection) ? f.payment.collection : "manual") as "manual" | "full" | "deposit",
+      deposit_basis: (f.payment.deposit_basis === "percent" ? "percent" : "amount") as "amount" | "percent",
+      deposit_value: n(f.payment.deposit_value),
+    } } : {}),
   };
 }
+
+export { paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount } from "../_shared/purchaseAgreementPayments.ts";
 
 /** Fields the buyer may complete on the signing page. Everything else is set by staff. */
 export const BUYER_EDITABLE = {
@@ -111,11 +121,18 @@ export const TERMS: Section[] = [
   ] },
 ];
 
+export function termsForVersion(version = TERMS_VERSION): Section[] {
+  if (version === LEGACY_TERMS_VERSION) return TERMS;
+  return TERMS.map((s) => s.heading === "Article VII. Price and Payment" ? { ...s, body: s.body.map((p) => p.startsWith("VII.3 ")
+    ? "VII.3 Payment and Cleared Funds. The payment schedule specifies any Commitment Deposit, credited towards the Total Amount Due, and the remaining balance. Where agreement-only signing is selected, signing does not issue a payment link; the Broker will arrange payment separately. Where a deposit link is selected, only the scheduled deposit is requested after countersignature, with the remaining balance payable separately. Where full payment is selected, the Total Amount Due is requested after countersignature. Payment may be made by secure card link, certified check, wire transfer, or other immediately available funds acceptable to the Broker, no later than the date of Final Transfer of Title. Funds must irrevocably clear and settle in the Broker’s account. A deposit is not full payment, and transfer will not be initiated until the Broker confirms receipt of the Total Amount Due in full."
+    : p) } : s);
+}
+
 /** Canonical text the buyer agrees to — used for the SHA-256 document fingerprint. */
 export function canonicalDocument(fields: AgreementFields, version = TERMS_VERSION): string {
   return JSON.stringify({
     version, fields: normalizeFields(fields), totals: chargeTotals(normalizeFields(fields).charges),
     cancellation: CANCELLATION_NOTICE, acknowledgements: ACKNOWLEDGEMENTS.map((a) => a.text), esign: ESIGN_CONSENT,
-    terms: TERMS,
+    terms: termsForVersion(version),
   });
 }

@@ -8,11 +8,11 @@ import { toast } from "sonner";
 import { CheckCircle2, CreditCard, Download, Loader2, Lock, PenLine, ShieldCheck } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import {
-  ACKNOWLEDGEMENTS, CANCELLATION_NOTICE, ESIGN_CONSENT, TERMS, chargeTotals, documentFingerprint, money, paCall,
+  ACKNOWLEDGEMENTS, CANCELLATION_NOTICE, ESIGN_CONSENT, termsForVersion, chargeTotals, documentFingerprint, money, paCall, paymentSchedule,
   type AgreementFields,
 } from "@/lib/purchaseAgreement";
 
-type View = { id: string; status: string; fields: AgreementFields; terms_version: string; buyer_signed_at: string | null; payment_url: string | null };
+type View = { id: string; status: string; fields: AgreementFields; terms_version: string; buyer_signed_at: string | null; payment_url: string | null; payment_amount: number; payment_purpose: string; paid: number; remaining: number };
 
 const Row = ({ k, v, locked }: { k: string; v?: string | number | null; locked?: boolean }) => (
   <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-1 py-2 border-b border-border/50 last:border-0 items-center">
@@ -108,12 +108,14 @@ export default function SignPurchaseAgreement() {
         <p className="text-sm text-muted-foreground">{f.property.cemetery}{f.property.city ? ` · ${f.property.city}` : ""}</p>
       </header>
 
-      {view.status === "buyer_signed" && <Banner icon={CheckCircle2} title="Thank you — your agreement is signed">We are finalising your agreement now. Please refresh this page in a moment for your secure payment link.</Banner>}
+      {view.status === "buyer_signed" && <Banner icon={CheckCircle2} title="Thank you — your agreement is signed">We are finalising your agreement now. {paymentSchedule(f).collection === "manual" ? "Payment will be arranged separately; signing does not take payment." : "Your completed agreement and the selected payment request will follow."}</Banner>}
       {view.status === "countersigned" && (
-        <Banner icon={CreditCard} title="Countersigned by the broker — payment is the last step">
+        <Banner icon={CheckCircle2} title={view.paid > 0 ? "Deposit received — balance remains outstanding" : "Your agreement is fully signed"}>
           <p>Your agreement has been countersigned by Texas Cemetery Brokers and a copy has been emailed to you.</p>
+          <p>{view.payment_url ? `${view.payment_purpose === "deposit" ? "Only the deposit" : "The outstanding balance"} of ${money(view.payment_amount)} is requested through the link below.` : "Payment will be arranged separately. No payment is taken by signing."}</p>
+          {view.paid > 0 && <p>Paid {money(view.paid)} · Remaining balance {money(view.remaining)}</p>}
           <div className="flex flex-wrap gap-3 mt-3">
-            {view.payment_url && <Button asChild><a href={view.payment_url}>Pay {money(totals.totalDue)} securely</a></Button>}
+            {view.payment_url && <Button asChild><a href={view.payment_url}>Pay {view.payment_purpose === "deposit" ? "deposit " : ""}{money(view.payment_amount)} securely</a></Button>}
             <Button variant="outline" onClick={download}><Download className="w-4 h-4 mr-2" />Download executed copy</Button>
           </div>
         </Banner>
@@ -175,9 +177,8 @@ export default function SignPurchaseAgreement() {
           <LockedNote />
           <div className="text-sm">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1 mb-1">I. Sale price breakdown</p>
-            <Money k="1. Commitment deposit" v={f.charges.deposit} />
-            <Money k="2. Balance of property price" v={f.charges.balance} />
-            <Money k="3. Total property price (1 + 2)" v={totals.totalProperty} strong />
+            {f.payment ? <Money k="Property price, before fees" v={totals.totalProperty} /> : <><Money k="1. Commitment deposit" v={f.charges.deposit} /><Money k="2. Balance of property price" v={f.charges.balance} /></>}
+            <Money k={f.payment ? "Total property price" : "3. Total property price (1 + 2)"} v={totals.totalProperty} strong />
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground mt-4 mb-1">II. Fees and adjustments</p>
             <Money k="4. Cemetery transfer fee" v={f.charges.transfer_fee} />
             <Money k={`5. Adjustments${f.charges.adjustments_note ? ` — ${f.charges.adjustments_note}` : ""}`} v={f.charges.adjustments} />
@@ -185,7 +186,8 @@ export default function SignPurchaseAgreement() {
               <span className="font-serif text-lg text-foreground">6. Total amount due</span>
               <span className="font-serif text-2xl text-primary">{money(totals.totalDue)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">Payable by secure card link straight after you sign, or by certified check or wire.</p>
+            {f.payment && <div className="mt-3"><Money k={`Commitment deposit${f.payment.deposit_basis === "percent" ? ` (${f.payment.deposit_value}%)` : ""} — credited towards total`} v={paymentSchedule(f).deposit} /><Money k="Remaining balance after deposit" v={paymentSchedule(f).balance} /></div>}
+            <p className="text-xs text-muted-foreground mt-3">{paymentSchedule(f).collection === "manual" ? "Agreement only: signing does not issue a payment link. Payment is arranged separately." : paymentSchedule(f).collection === "deposit" ? "Only the deposit is requested after countersignature. The balance will be arranged separately." : "Full payment is requested after countersignature."} Transfer begins only after full payment clears.</p>
           </div>
         </Section>
 
@@ -205,7 +207,7 @@ export default function SignPurchaseAgreement() {
 
         <Section n="6" title="Terms and conditions">
           <div className="max-h-[28rem] overflow-y-auto pr-3 space-y-5 text-sm leading-relaxed" tabIndex={0} aria-label="Terms and conditions">
-            {TERMS.map((s) => (
+            {termsForVersion(view.terms_version).map((s) => (
               <div key={s.heading}><h3 className="font-serif text-base text-foreground mb-1">{s.heading}</h3>{s.body.map((p, i) => <p key={i} className="text-muted-foreground mb-2">{p}</p>)}</div>
             ))}
             <div><h3 className="font-serif text-base text-foreground mb-1">Notice of cancellation</h3><p className="text-muted-foreground mb-2">{CANCELLATION_NOTICE}</p></div>
@@ -246,7 +248,7 @@ function Field({ label, value, onChange, type = "text", className = "" }: { labe
   return <div className={className}><Label htmlFor={id} className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label><Input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 bg-background" /></div>;
 }
 function Money({ k, v, strong }: { k: string; v: number; strong?: boolean }) {
-  return <div className={`flex justify-between py-1.5 border-b border-border/40 ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}><span>{k}</span><span className="tabular-nums">{money(v)}</span></div>;
+  return <div className={`flex justify-between gap-3 py-1.5 border-b border-border/40 ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}><span className="min-w-0">{k}</span><span className="tabular-nums shrink-0">{money(v)}</span></div>;
 }
 function Confirm({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return <label className="flex items-start gap-3 text-sm leading-relaxed cursor-pointer"><Checkbox checked={checked} onCheckedChange={(c) => onChange(!!c)} className="mt-0.5" /><span className="text-foreground">{children}</span></label>;
