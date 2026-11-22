@@ -173,7 +173,7 @@ ${button(signUrl, "Review &amp; sign your agreement")}
 ${step(1, "Review the agreement and add your details and the names for the deed.")}
 ${step(2, "Sign electronically &mdash; it takes about five minutes.")}
 ${step(3, paymentSchedule(f).collection === "manual" ? "After signing, the broker countersigns and emails the completed agreement. No payment link is issued; payment will be arranged separately." : paymentSchedule(f).collection === "deposit" ? `After countersignature, we email the completed agreement and a secure link for only the ${money(paymentSchedule(f).deposit)} deposit. The remaining balance is paid separately.` : "After countersignature, we email the completed agreement with a secure link for the full purchase price.")}
-${step(4, "Once payment clears, we file the transfer with the cemetery and keep you updated.")}
+${step(4, "The remaining balance, including the cemetery transfer fee, is due in full before transfer. Once the full amount clears, we file the transfer with the cemetery and keep you updated.")}
 </table>
 <p style="margin:14px 0;font-size:13px;line-height:20px;color:#6b5f55;">If you have any questions, simply reply to this email or call us on (214) 230-4740.</p>
 <p style="margin:0 0 6px;font-size:11px;line-height:16px;color:#8a7766;word-break:break-all;">If the button does not work, copy this link into your browser:<br>${esc(signUrl)}</p>`, "purchase_agreement", sample ? sampleBanner : "");
@@ -464,9 +464,10 @@ Deno.serve(async (req) => {
       const { data: reviewerRole } = reviewer ? await db.from("user_roles").select("role").eq("user_id", reviewer.id).in("role", ["admin", "staff"]).limit(1).maybeSingle() : { data: null };
       if (!reviewerRole) return json({ error: "Review copies can only be emailed to verified staff addresses." }, 400);
       if (to.toLowerCase() === normalizeFields(pa.fields).purchaser.email.toLowerCase()) return json({ error: "Review must not be sent to the purchaser." }, 400);
-      const interactive = body.format === "interactive";
-      const reviewEvent = interactive ? "interactive_review_emailed" : "internal_review_emailed";
-      if (pa.events.some((e: any) => e.type === reviewEvent && e.to?.toLowerCase() === to.toLowerCase())) return json({ error: "This reviewer already received a copy; check the email history before resending." }, 409);
+      const customerCopy = body.format === "customer_copy";
+      const interactive = customerCopy || body.format === "interactive";
+      const reviewEvent = customerCopy ? "customer_copy_review_emailed" : interactive ? "interactive_review_emailed" : "internal_review_emailed";
+      if (pa.events.some((e: any) => e.type === reviewEvent && (!customerCopy || e.terms_version === pa.terms_version) && e.to?.toLowerCase() === to.toLowerCase())) return json({ error: "This reviewer already received a copy; check the email history before resending." }, 409);
       const f = normalizeFields(pa.fields);
       const bytes = await buildPdf(pa);
       const reviewToken = pa.fields._review_token || newToken();
@@ -476,10 +477,10 @@ Deno.serve(async (req) => {
         if (error) throw error;
       }
       const result = await sendEmail({ to, submissionId: null, snippet: "Complete unsigned purchase agreement attached for internal review only.",
-        subject: `INTERNAL REVIEW — ${f.purchaser.names} — ${f.property.cemetery} purchase agreement`,
-        html: interactive ? inviteEmailHtml(f, reviewUrl, "Internal review for Alexander and Simon only. Test the details and electronic signature without executing the real agreement, taking payment or emailing Chris. The deposit and cancellation terms are included in the agreement below.", true) : shell(`<h1>Purchase agreement for internal review</h1><p>The complete unsigned agreement for ${esc(f.purchaser.names)} is attached, including the full terms and signature pages. This is a review draft, not an executed agreement. Nothing has been sent to the purchaser.</p>${summaryTable(f)}<p>${esc(f.property.description)}</p><p>The purchaser may cancel before midnight of the fifth calendar day after signing. After that period the deposit is retained, subject to the refund exceptions in the agreement. Signing does not issue a payment link; payment is arranged separately.</p><p>Missing purchaser personal details and signature dates are left blank for completion, not invented.</p>`, "purchase_agreement_internal_review"),
-        attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement-Internal-Review.pdf", bytes } });
-      const { error } = await db.from("purchase_agreements").update({ events: [...pa.events, event(reviewEvent, { by: user.name, to, message_id: result.id ?? null })] }).eq("id", id);
+        subject: customerCopy ? `Your purchase agreement — ${f.property.cemetery}` : `INTERNAL REVIEW — ${f.purchaser.names} — ${f.property.cemetery} purchase agreement`,
+        html: interactive ? inviteEmailHtml(f, reviewUrl, customerCopy ? undefined : "Internal review for Alexander and Simon only. Test the details and electronic signature without executing the real agreement, taking payment or emailing Chris. The deposit and cancellation terms are included in the agreement below.", !customerCopy) : shell(`<h1>Purchase agreement for internal review</h1><p>The complete unsigned agreement for ${esc(f.purchaser.names)} is attached, including the full terms and signature pages. This is a review draft, not an executed agreement. Nothing has been sent to the purchaser.</p>${summaryTable(f)}<p>${esc(f.property.description)}</p><p>The purchaser may cancel before midnight of the fifth calendar day after signing. After that period the deposit is retained, subject to the refund exceptions in the agreement. Signing does not issue a payment link; payment is arranged separately.</p><p>Missing purchaser personal details and signature dates are left blank for completion, not invented.</p>`, "purchase_agreement_internal_review"),
+        attachment: { name: customerCopy ? "Texas-Cemetery-Brokers-Purchase-Agreement.pdf" : "Texas-Cemetery-Brokers-Purchase-Agreement-Internal-Review.pdf", bytes } });
+      const { error } = await db.from("purchase_agreements").update({ events: [...pa.events, event(reviewEvent, { by: user.name, to, terms_version: pa.terms_version, message_id: result.id ?? null })] }).eq("id", id);
       if (error) return json({ ok: true, warning: "Email sent, but review event could not be saved. Do not resend." });
       return json({ ok: true, to, message_id: result.id ?? null });
     }

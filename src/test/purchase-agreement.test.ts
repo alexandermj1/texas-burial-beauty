@@ -10,6 +10,14 @@ describe("purchase agreement rules", () => {
     expect(isInteractiveReview(f, "live-buyer-token")).toBe(false);
     expect(isInteractiveReview({ ...f, _review_expires_at: "2020-01-01T00:00:00Z" }, "internal-review-token")).toBe(false);
   });
+  it("requires the full Barton balance including the transfer fee to settle, not just the deposit", () => {
+    const f = normalizeFields({ charges: { deposit: 5290, balance: 47610, transfer_fee: 595 }, payment: { collection: "manual", deposit_basis: "amount", deposit_value: 5290 } });
+    const payment = (cents: number) => [{ amount_cents: cents, status: "paid", environment: "live" }];
+    expect(agreementPaymentProgress(f, payment(529000)).fullyPaid).toBe(false);
+    expect(agreementPaymentProgress(f, payment(5290000)).fullyPaid).toBe(false);
+    expect(agreementPaymentProgress(f, payment(5349500)).fullyPaid).toBe(true);
+    expect(requestedPaymentAmount(f, "balance", 5290)).toBe(48205);
+  });
   it("keeps the Barton deposit at ten percent of the property price, excluding transfer", () => {
     const f = normalizeFields({ charges: { deposit: 5290, balance: 47610, transfer_fee: 595 }, payment: { collection: "manual", deposit_basis: "amount", deposit_value: 5290 } });
     expect(chargeTotals(f.charges)).toEqual({ totalProperty: 52900, totalDue: 53495 });
