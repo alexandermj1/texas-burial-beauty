@@ -73,18 +73,23 @@ function hdr(s: string) {
   const bytes = new TextEncoder().encode(s); let bin = ""; bytes.forEach((b) => (bin += String.fromCharCode(b)));
   return `=?UTF-8?B?${btoa(bin)}?=`;
 }
-async function sendEmail(opts: { to: string; subject: string; html: string; submissionId: string | null; snippet: string; attachment?: { name: string; bytes: Uint8Array; mime?: string } }) {
+async function sendEmail(opts: { to: string; cc?: string[]; attachments?: { name: string; bytes: Uint8Array; mime?: string }[]; subject: string; html: string; submissionId: string | null; snippet: string; attachment?: { name: string; bytes: Uint8Array; mime?: string } }) {
+  const cc = z.array(z.string().email()).max(10).parse(opts.cc ?? []);
+  const attachments = opts.attachments ?? (opts.attachment ? [opts.attachment] : []);
   const lovableKey = Deno.env.get("LOVABLE_API_KEY"); const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY");
   const plain = opts.html.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const alt = `=_alt_${crypto.randomUUID().replace(/-/g, "")}`; const mix = `=_mix_${crypto.randomUUID().replace(/-/g, "")}`;
   const altPart = [`Content-Type: multipart/alternative; boundary="${alt}"`, "", `--${alt}`, 'Content-Type: text/plain; charset="UTF-8"', "", plain, `--${alt}`, 'Content-Type: text/html; charset="UTF-8"', "", opts.html, `--${alt}--`];
-  const lines = [`From: Texas Cemetery Brokers <${MAILBOX}>`, `To: ${opts.to}`, `Bcc: ${MAILBOX}`, `Subject: ${hdr(opts.subject)}`, "MIME-Version: 1.0"];
-  if (opts.attachment) {
-    let bin = ""; opts.attachment.bytes.forEach((b) => (bin += String.fromCharCode(b)));
-    const b64 = btoa(bin).replace(/.{76}/g, "$&\r\n");
-    lines.push(`Content-Type: multipart/mixed; boundary="${mix}"`, "", `--${mix}`, ...altPart, `--${mix}`,
-      `Content-Type: ${opts.attachment.mime ?? "application/pdf"}; name="${opts.attachment.name}"`, "Content-Transfer-Encoding: base64",
-      `Content-Disposition: attachment; filename="${opts.attachment.name}"`, "", b64, `--${mix}--`, "");
+  const lines = [`From: Texas Cemetery Brokers <${MAILBOX}>`, `To: ${opts.to}`, ...(cc.length ? [`Cc: ${cc.join(", ")}`] : []), `Bcc: ${MAILBOX}`, `Subject: ${hdr(opts.subject)}`, "MIME-Version: 1.0"];
+  if (attachments.length) {
+    lines.push(`Content-Type: multipart/mixed; boundary="${mix}"`, "", `--${mix}`, ...altPart);
+    for (const attachment of attachments) {
+      let bin = ""; attachment.bytes.forEach((b) => (bin += String.fromCharCode(b)));
+      const b64 = btoa(bin).replace(/.{76}/g, "$&\r\n");
+      lines.push(`--${mix}`, `Content-Type: ${attachment.mime ?? "application/pdf"}; name="${attachment.name}"`, "Content-Transfer-Encoding: base64",
+        `Content-Disposition: attachment; filename="${attachment.name}"`, "", b64);
+    }
+    lines.push(`--${mix}--`, "");
   } else lines.push(...altPart, "");
   if (!lovableKey) throw new Error("Email is not configured");
   // Try each linked Gmail connection (one may need reconnecting), then Resend.
@@ -102,10 +107,10 @@ async function sendEmail(opts: { to: string; subject: string; html: string; subm
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) throw new Error(`Email could not be sent (${failures.join(", ")})`);
     let att: unknown[] | undefined;
-    if (opts.attachment) { let bin = ""; opts.attachment.bytes.forEach((b) => (bin += String.fromCharCode(b))); att = [{ filename: opts.attachment.name, content: btoa(bin) }]; }
+    if (attachments.length) att = attachments.map((attachment) => { let bin = ""; attachment.bytes.forEach((b) => (bin += String.fromCharCode(b))); return { filename: attachment.name, content: btoa(bin) }; });
     const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
       method: "POST", headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": resendKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: `Texas Cemetery Brokers <${MAILBOX}>`, reply_to: MAILBOX, to: [opts.to], bcc: [MAILBOX], subject: opts.subject, html: opts.html, ...(att ? { attachments: att } : {}) }),
+      body: JSON.stringify({ from: `Texas Cemetery Brokers <${MAILBOX}>`, reply_to: MAILBOX, to: [opts.to], ...(cc.length ? { cc } : {}), bcc: [MAILBOX], subject: opts.subject, html: opts.html, ...(att ? { attachments: att } : {}) }),
     });
     text = "{}";
     if (!res.ok) throw new Error(`Email could not be sent (${failures.join(", ")}; Resend ${res.status} ${(await res.text()).slice(0, 200)})`);
@@ -563,7 +568,8 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
       const token = pa.sign_token ?? newToken();
       const signUrl = `${SITE}/purchase-agreement/${token}`;
       const to = z.string().email().parse(body.to || f.purchaser.email);
-      let ev = event(action === "send" ? "emailed" : "link_issued", { by: user.name, to });
+      const cc = z.array(z.string().email()).max(10).parse(body.cc ?? []);
+      let ev = event(action === "send" ? "emailed" : "link_issued", { by: user.name, to, cc });
       if (action === "send") {
         const sample = body.sample === true;
         let deedUrl: string | undefined; let deedBytes: Uint8Array | undefined;
@@ -578,9 +584,11 @@ box_2d coordinates are 0-1000 relative to the image exactly as provided (before 
           ev = { ...ev, deed_copy_shared: path };
         }
         const html = inviteEmailHtml(f, signUrl, typeof body.note === "string" ? body.note.slice(0, 2000) : undefined, sample, deedUrl);
-        await sendEmail({ to, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement sent for signature.",
+        const agreementBytes = await buildPdf(pa);
+        const result = await sendEmail({ to, cc, submissionId: pa.buyer_submission_id, snippet: "Purchase agreement sent for signature.",
           subject: `${sample ? "SAMPLE PURCHASE AGREEMENT — " : ""}Your purchase agreement — ${f.property.cemetery} — ready to sign`,
-          html, ...(deedBytes ? { attachment: { name: "Deed-copy-owner-details-redacted.jpg", bytes: deedBytes, mime: "image/jpeg" } } : {}) });
+          html, attachments: [{ name: "Texas-Cemetery-Brokers-Purchase-Agreement.pdf", bytes: agreementBytes }, ...(deedBytes ? [{ name: "Deed-copy-owner-details-redacted.jpg", bytes: deedBytes, mime: "image/jpeg" }] : [])] });
+        ev = { ...ev, message_id: result.id ?? null, agreement_pdf_attached: true };
         if (sample) ev = { ...ev, sample: true };
       }
       const { data } = await db.from("purchase_agreements").update({

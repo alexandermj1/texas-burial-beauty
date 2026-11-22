@@ -4,6 +4,16 @@ import { termsForVersion } from "../../supabase/functions/purchase-agreement/ter
 import { chargeTotals, defaultFields, sellerReadyForBuyer, normalizeFields, documentFingerprint, paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount, canonicalDocument, TERMS, LEGACY_TERMS_VERSION } from "@/lib/purchaseAgreement";
 
 describe("purchase agreement rules", () => {
+  it("keeps Chris the sole purchaser whether Brenda is omitted or added as a second deed holder", async () => {
+    const f = normalizeFields({ purchaser: { names: "Chris Barton", email: "chrisbartontx@gmail.com" }, deed: { same_as_purchaser: true, holder1: "Chris Barton", holder2: "" } });
+    expect(f.purchaser.names).toBe("Chris Barton");
+    expect(f.deed.holder2).toBe("");
+    const withBrenda = normalizeFields({ ...f, deed: { ...f.deed, holder2: "Brenda Barton" } });
+    expect(withBrenda.purchaser.names).toBe("Chris Barton");
+    expect(withBrenda.deed.holder1).toBe("Chris Barton");
+    expect(withBrenda.deed.holder2).toBe("Brenda Barton");
+    expect(await documentFingerprint(withBrenda)).not.toBe(await documentFingerprint(f));
+  });
   it("only treats the exact unexpired review token as a safe signature preview", () => {
     const f = { _review_token: "internal-review-token", _review_expires_at: "2099-01-01T00:00:00Z" };
     expect(isInteractiveReview(f, "internal-review-token")).toBe(true);
