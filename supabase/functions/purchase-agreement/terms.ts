@@ -3,7 +3,7 @@
 // MUST bump TERMS_VERSION so earlier signed agreements stay traceable to the
 // exact text the buyer saw.
 export const LEGACY_TERMS_VERSION = "tcb-pa-2026-11";
-export const TERMS_VERSION = "tcb-pa-2026-11-deposit-v2";
+export const TERMS_VERSION = "tcb-pa-2026-11-deposit-v3";
 
 export type AgreementFields = {
   purchaser: { names: string; address: string; phone: string; email: string; dob: string; marital_status: string };
@@ -123,9 +123,13 @@ export const TERMS: Section[] = [
 
 export function termsForVersion(version = TERMS_VERSION): Section[] {
   if (version === LEGACY_TERMS_VERSION) return TERMS;
-  return TERMS.map((s) => s.heading === "Article VII. Price and Payment" ? { ...s, body: s.body.map((p) => p.startsWith("VII.3 ")
+  const sections = TERMS.map((s) => s.heading === "Article VII. Price and Payment" ? { ...s, body: s.body.map((p) => p.startsWith("VII.3 ")
     ? "VII.3 Payment and Cleared Funds. The payment schedule specifies any Commitment Deposit, credited towards the Total Amount Due, and the remaining balance. Where agreement-only signing is selected, signing does not issue a payment link; the Broker will arrange payment separately. Where a deposit link is selected, only the scheduled deposit is requested after countersignature, with the remaining balance payable separately. Where full payment is selected, the Total Amount Due is requested after countersignature. Payment may be made by secure card link, certified check, wire transfer, or other immediately available funds acceptable to the Broker, no later than the date of Final Transfer of Title. Funds must irrevocably clear and settle in the Broker’s account. A deposit is not full payment, and transfer will not be initiated until the Broker confirms receipt of the Total Amount Due in full."
     : p) } : s);
+  if (version === "tcb-pa-2026-11-deposit-v2") return sections;
+  return sections.map((s) => s.heading === "Article IX. Cancellation and Default" ? { ...s, body: [...s.body,
+    "IX.5 Deposit Retention After Cancellation Period. If the Purchaser cancels after midnight of the fifth calendar day after the date the Purchaser signs this Agreement, the scheduled Commitment Deposit is retained by the Broker and is non-refundable, except where a refund is required under Sections VIII.2 or IX.4 or applicable law. A timely cancellation under Section IX.2 entitles the Purchaser to a refund of the full amount paid, including the deposit. The deposit is credited towards the Total Amount Due if the purchase proceeds.",
+  ] } : s);
 }
 
 /** Canonical text the buyer agrees to — used for the SHA-256 document fingerprint. */

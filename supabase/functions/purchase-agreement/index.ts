@@ -72,7 +72,7 @@ function hdr(s: string) {
   const bytes = new TextEncoder().encode(s); let bin = ""; bytes.forEach((b) => (bin += String.fromCharCode(b)));
   return `=?UTF-8?B?${btoa(bin)}?=`;
 }
-async function sendEmail(opts: { to: string; subject: string; html: string; submissionId: string; snippet: string; attachment?: { name: string; bytes: Uint8Array; mime?: string } }) {
+async function sendEmail(opts: { to: string; subject: string; html: string; submissionId: string | null; snippet: string; attachment?: { name: string; bytes: Uint8Array; mime?: string } }) {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY"); const gmailKey = Deno.env.get("GOOGLE_MAIL_API_KEY");
   const plain = opts.html.replace(/<style[\s\S]*?<\/style>/g, "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   const alt = `=_alt_${crypto.randomUUID().replace(/-/g, "")}`; const mix = `=_mix_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -214,6 +214,7 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   text("TEXAS CEMETERY BROKERS", { size: 18, font: bold, color: SAGE });
   text("Dallas, Texas  |  (214) 230-4740  |  www.texascemeterybrokers.com  |  info@texascemeterybrokers.com", { size: 8.5, color: MUTED });
   rule(); text("PURCHASE AGREEMENT", { size: 15, font: bold }); gap(2);
+  if (!pa.buyer_signed_at) text("UNSIGNED DRAFT - FOR REVIEW; NOT AN EXECUTED AGREEMENT", { size: 8, font: bold, color: MUTED });
   text(`Agreement ID ${pa.id}  ·  Terms version ${pa.terms_version}`, { size: 8, color: MUTED }); gap(4);
   text("The Undersigned, hereafter referred to as \u201cPurchaser\u201d, hereby agrees to purchase the following interment property, services and/or commodities.");
   heading("Purchaser Details");
@@ -235,7 +236,7 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   const sig = pa.buyer_signature ?? {};
   heading("Purchaser Acknowledgements");
   for (const a of ACKNOWLEDGEMENTS) text(`${a.label}: ${a.text}  Purchaser initials: ${sig.initials?.[a.key] ?? "____"}`, { size: 9 });
-  if (f.payment) { heading("Payment Schedule"); line("Commitment deposit (credited towards total)", paymentSchedule(f).deposit); line("Remaining balance after deposit", paymentSchedule(f).balance); text(`Payment after signing: ${paymentSchedule(f).collection === "manual" ? "agreement only; payment arranged separately" : paymentSchedule(f).collection === "deposit" ? "deposit link only; balance paid separately" : "full payment link"}`); }
+  if (f.payment) { heading("Payment Schedule"); line("Commitment deposit (credited towards total)", paymentSchedule(f).deposit); if (t.totalProperty > 0) text(`Deposit equals ${Number((paymentSchedule(f).deposit / t.totalProperty * 100).toFixed(2))}% of the property price, excluding the transfer fee.`, { size: 9 }); line("Remaining balance after deposit", paymentSchedule(f).balance); text(`Payment after signing: ${paymentSchedule(f).collection === "manual" ? "agreement only; payment arranged separately" : paymentSchedule(f).collection === "deposit" ? "deposit link only; balance paid separately" : "full payment link"}`); }
   for (const s of termsForVersion(pa.terms_version)) { heading(s.heading); for (const p of s.body) { text(p, { size: 9 }); gap(3); } }
 
   heading("Signatures");
@@ -252,7 +253,7 @@ async function buildPdf(pa: any): Promise<Uint8Array> {
   await drawSig("For Texas Cemetery Brokers (Broker)", cs.image, cs.name ? `${cs.name}, authorized representative` : "", cs.signed_at ? new Date(cs.signed_at).toUTCString() : "");
 
   page = pdf.addPage([W, H]); y = H - M;
-  text("CERTIFICATE OF ELECTRONIC SIGNATURE", { size: 13, font: bold, color: SAGE }); rule();
+  text(pa.buyer_signed_at ? "CERTIFICATE OF ELECTRONIC SIGNATURE" : "DRAFT AUDIT RECORD - UNSIGNED", { size: 13, font: bold, color: SAGE }); rule();
   kv("Agreement ID", pa.id); kv("Terms version", pa.terms_version); kv("Document SHA-256", pa.document_hash ?? "");
   kv("Purchaser", `${sig.typed_name ?? ""} <${f.purchaser.email}>`); kv("Signed (UTC)", sig.signed_at ?? ""); kv("IP address", sig.ip ?? ""); kv("Device", sig.user_agent ?? "");
   kv("E-sign consent", sig.esign_consent_at ? `Accepted ${sig.esign_consent_at}` : ""); kv("Countersigned by", cs.name ? `${cs.name} (${cs.signed_at})` : "");
@@ -446,6 +447,25 @@ Deno.serve(async (req) => {
 
     const id = z.string().uuid().parse(body.id);
     const pa = await load(id);
+
+    if (action === "send_review") {
+      if (pa.status !== "draft") return json({ error: "Internal review requires an unsigned draft." }, 409);
+      const to = z.string().email().parse(body.to);
+      const { data: reviewer } = await db.from("profiles").select("id").ilike("email", to).maybeSingle();
+      const { data: reviewerRole } = reviewer ? await db.from("user_roles").select("role").eq("user_id", reviewer.id).in("role", ["admin", "staff"]).limit(1).maybeSingle() : { data: null };
+      if (!reviewerRole) return json({ error: "Review copies can only be emailed to verified staff addresses." }, 400);
+      if (to.toLowerCase() === normalizeFields(pa.fields).purchaser.email.toLowerCase()) return json({ error: "Review must not be sent to the purchaser." }, 400);
+      if (pa.events.some((e: any) => e.type === "internal_review_emailed" && e.to?.toLowerCase() === to.toLowerCase())) return json({ error: "This reviewer already received a copy; check the email history before resending." }, 409);
+      const f = normalizeFields(pa.fields);
+      const bytes = await buildPdf(pa);
+      const result = await sendEmail({ to, submissionId: null, snippet: "Complete unsigned purchase agreement attached for internal review only.",
+        subject: `INTERNAL REVIEW — ${f.purchaser.names} — ${f.property.cemetery} purchase agreement`,
+        html: shell(`<h1>Purchase agreement for internal review</h1><p>The complete unsigned agreement for ${esc(f.purchaser.names)} is attached, including the full terms and signature pages. This is a review draft, not an executed agreement. Nothing has been sent to the purchaser.</p>${summaryTable(f)}<p>${esc(f.property.description)}</p><p>The purchaser may cancel before midnight of the fifth calendar day after signing. After that period the deposit is retained, subject to the refund exceptions in the agreement. Signing does not issue a payment link; payment is arranged separately.</p><p>Missing purchaser personal details and signature dates are left blank for completion, not invented.</p>`, "purchase_agreement_internal_review"),
+        attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement-Internal-Review.pdf", bytes } });
+      const { error } = await db.from("purchase_agreements").update({ events: [...pa.events, event("internal_review_emailed", { by: user.name, to, message_id: result.id ?? null })] }).eq("id", id);
+      if (error) return json({ ok: true, warning: "Email sent, but review event could not be saved. Do not resend." });
+      return json({ ok: true, to, message_id: result.id ?? null });
+    }
 
     // Read the seller's deed with AI: list every space on it and locate the owner
     // name/address so staff can review a redacted copy before it goes to a buyer.

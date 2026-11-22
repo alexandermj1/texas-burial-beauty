@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { termsForVersion } from "../../supabase/functions/purchase-agreement/terms";
 import { chargeTotals, defaultFields, sellerReadyForBuyer, normalizeFields, documentFingerprint, paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount, canonicalDocument, TERMS, LEGACY_TERMS_VERSION } from "@/lib/purchaseAgreement";
 
 describe("purchase agreement rules", () => {
+  it("keeps the Barton deposit at ten percent of the property price, excluding transfer", () => {
+    const f = normalizeFields({ charges: { deposit: 5290, balance: 47610, transfer_fee: 595 }, payment: { collection: "manual", deposit_basis: "amount", deposit_value: 5290 } });
+    expect(chargeTotals(f.charges)).toEqual({ totalProperty: 52900, totalDue: 53495 });
+    expect(paymentSchedule(f)).toEqual({ total: 53495, deposit: 5290, balance: 48205, collection: "manual" });
+    expect(paymentSchedule(f).deposit).toBe(chargeTotals(f.charges).totalProperty * 0.1);
+  });
+  it("preserves previously issued v2 terms while versioning the clarified retention clause", () => {
+    expect(termsForVersion("tcb-pa-2026-11-deposit-v2").find((s) => s.heading.startsWith("Article IX."))?.body).toHaveLength(4);
+    expect(termsForVersion().find((s) => s.heading.startsWith("Article IX."))?.body).toHaveLength(5);
+  });
   it("only offers buyer matching once a seller is at Docs out or later", () => {
     expect(sellerReadyForBuyer({ documents_requested_at: null, documents_completed_at: null })).toBe(false);
     expect(sellerReadyForBuyer({ documents_requested_at: "2026-11-01" })).toBe(true);
