@@ -1,3 +1,4 @@
+import { isInteractiveReview } from "./review.ts";
 import { aiFetch } from "../_shared/aiRunLabel.ts";
 // Buyer Purchase Agreement: staff match a buyer to a seller's property, edit the
 // schedule, email a private signing link; the buyer completes and e-signs on
@@ -356,11 +357,17 @@ Deno.serve(async (req) => {
     // ================= PUBLIC (token) =================
     if (["get", "sign", "download"].includes(action)) {
       const token = z.string().min(20).max(80).parse(body.token);
-      const { data: pa } = await db.from("purchase_agreements").select("*").eq("sign_token", token).is("deleted_at", null).maybeSingle();
-      if (!pa || pa.status === "draft") return json({ error: "This link is not valid. Please contact Texas Cemetery Brokers." }, 404);
+      let { data: pa } = await db.from("purchase_agreements").select("*").eq("sign_token", token).is("deleted_at", null).maybeSingle();
+      if (!pa) {
+        const { data: review } = await db.from("purchase_agreements").select("*").eq("fields->>_review_token", token).is("deleted_at", null).maybeSingle();
+        pa = review;
+      }
+      const preview = !!pa && isInteractiveReview(pa.fields, token);
+      if (!pa || (pa.status === "draft" && !preview) || (pa.fields?._review_token === token && !preview)) return json({ error: "This link is not valid. Please contact Texas Cemetery Brokers." }, 404);
       if (pa.status === "void") return json({ error: "This purchase agreement has been withdrawn. Please contact Texas Cemetery Brokers on (214) 230-4740." }, 410);
 
       if (action === "get") {
+        if (preview) return json({ ...(await publicView(pa)), status: "sent", preview: true, payment_url: null });
         if (pa.status === "sent") {
           await db.from("purchase_agreements").update({ status: "viewed", viewed_at: nowIso(), events: [...pa.events, event("viewed", { ip: clientIp(req) })] }).eq("id", pa.id);
           pa.status = "viewed";
@@ -373,6 +380,7 @@ Deno.serve(async (req) => {
         return json({ url: data?.signedUrl });
       }
       // sign
+      if (preview) pa.status = "sent";
       if (!["sent", "viewed"].includes(pa.status)) return json({ error: "This agreement has already been signed." }, 409);
       const S = z.object({
         purchaser: z.object(Object.fromEntries(BUYER_EDITABLE.purchaser.map((k) => [k, str(400)]))),
@@ -393,6 +401,7 @@ Deno.serve(async (req) => {
       // The buyer must be signing the exact text staff issued (plus their own entries).
       const issuedHash = await sha256(canonicalDocument(normalizeFields(pa.fields), pa.terms_version));
       if (issuedHash !== S.hash_seen) return json({ error: "This agreement was updated while you had it open. Please reload the page to review the latest version." }, 409);
+      if (preview) return json({ ok: true, preview: true, status: "preview_signed", payment_url: null });
       if (!f.deed.same_as_purchaser) f.deed.holder1 = f.deed.names; else if (!String(f.deed.holder1 ?? "").trim()) f.deed.holder1 = f.purchaser.names;
       const signedAt = nowIso(); const ip = clientIp(req); const ua = req.headers.get("user-agent")?.slice(0, 300) ?? "";
       const hash = await sha256(canonicalDocument(f, pa.terms_version) + `|${S.typed_name}|${signedAt}`);
@@ -455,14 +464,22 @@ Deno.serve(async (req) => {
       const { data: reviewerRole } = reviewer ? await db.from("user_roles").select("role").eq("user_id", reviewer.id).in("role", ["admin", "staff"]).limit(1).maybeSingle() : { data: null };
       if (!reviewerRole) return json({ error: "Review copies can only be emailed to verified staff addresses." }, 400);
       if (to.toLowerCase() === normalizeFields(pa.fields).purchaser.email.toLowerCase()) return json({ error: "Review must not be sent to the purchaser." }, 400);
-      if (pa.events.some((e: any) => e.type === "internal_review_emailed" && e.to?.toLowerCase() === to.toLowerCase())) return json({ error: "This reviewer already received a copy; check the email history before resending." }, 409);
+      const interactive = body.format === "interactive";
+      const reviewEvent = interactive ? "interactive_review_emailed" : "internal_review_emailed";
+      if (pa.events.some((e: any) => e.type === reviewEvent && e.to?.toLowerCase() === to.toLowerCase())) return json({ error: "This reviewer already received a copy; check the email history before resending." }, 409);
       const f = normalizeFields(pa.fields);
       const bytes = await buildPdf(pa);
+      const reviewToken = pa.fields._review_token || newToken();
+      const reviewUrl = `${SITE}/purchase-agreement/${reviewToken}`;
+      if (interactive) {
+        const { error } = await db.from("purchase_agreements").update({ fields: { ...pa.fields, _review_token: reviewToken, _review_expires_at: new Date(Date.now() + 7 * 86400000).toISOString() } }).eq("id", id);
+        if (error) throw error;
+      }
       const result = await sendEmail({ to, submissionId: null, snippet: "Complete unsigned purchase agreement attached for internal review only.",
         subject: `INTERNAL REVIEW — ${f.purchaser.names} — ${f.property.cemetery} purchase agreement`,
-        html: shell(`<h1>Purchase agreement for internal review</h1><p>The complete unsigned agreement for ${esc(f.purchaser.names)} is attached, including the full terms and signature pages. This is a review draft, not an executed agreement. Nothing has been sent to the purchaser.</p>${summaryTable(f)}<p>${esc(f.property.description)}</p><p>The purchaser may cancel before midnight of the fifth calendar day after signing. After that period the deposit is retained, subject to the refund exceptions in the agreement. Signing does not issue a payment link; payment is arranged separately.</p><p>Missing purchaser personal details and signature dates are left blank for completion, not invented.</p>`, "purchase_agreement_internal_review"),
+        html: interactive ? inviteEmailHtml(f, reviewUrl, "Internal review for Alexander and Simon only. Test the details and electronic signature without executing the real agreement, taking payment or emailing Chris. The deposit and cancellation terms are included in the agreement below.", true) : shell(`<h1>Purchase agreement for internal review</h1><p>The complete unsigned agreement for ${esc(f.purchaser.names)} is attached, including the full terms and signature pages. This is a review draft, not an executed agreement. Nothing has been sent to the purchaser.</p>${summaryTable(f)}<p>${esc(f.property.description)}</p><p>The purchaser may cancel before midnight of the fifth calendar day after signing. After that period the deposit is retained, subject to the refund exceptions in the agreement. Signing does not issue a payment link; payment is arranged separately.</p><p>Missing purchaser personal details and signature dates are left blank for completion, not invented.</p>`, "purchase_agreement_internal_review"),
         attachment: { name: "Texas-Cemetery-Brokers-Purchase-Agreement-Internal-Review.pdf", bytes } });
-      const { error } = await db.from("purchase_agreements").update({ events: [...pa.events, event("internal_review_emailed", { by: user.name, to, message_id: result.id ?? null })] }).eq("id", id);
+      const { error } = await db.from("purchase_agreements").update({ events: [...pa.events, event(reviewEvent, { by: user.name, to, message_id: result.id ?? null })] }).eq("id", id);
       if (error) return json({ ok: true, warning: "Email sent, but review event could not be saved. Do not resend." });
       return json({ ok: true, to, message_id: result.id ?? null });
     }

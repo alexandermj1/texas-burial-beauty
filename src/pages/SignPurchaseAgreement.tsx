@@ -12,7 +12,7 @@ import {
   type AgreementFields,
 } from "@/lib/purchaseAgreement";
 
-type View = { id: string; status: string; fields: AgreementFields; terms_version: string; buyer_signed_at: string | null; payment_url: string | null; payment_amount: number; payment_purpose: string; paid: number; remaining: number };
+type View = { id: string; status: string; fields: AgreementFields; terms_version: string; buyer_signed_at: string | null; payment_url: string | null; payment_amount: number; payment_purpose: string; paid: number; remaining: number; preview?: boolean };
 
 const Row = ({ k, v, locked }: { k: string; v?: string | number | null; locked?: boolean }) => (
   <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-1 py-2 border-b border-border/50 last:border-0 items-center">
@@ -89,7 +89,7 @@ export default function SignPurchaseAgreement() {
         purchaser: { names: f.purchaser.names, email: f.purchaser.email, address: f.purchaser.address, phone: f.purchaser.phone, dob: f.purchaser.dob, marital_status: f.purchaser.marital_status },
         deed: { same_as_purchaser: f.deed.same_as_purchaser, holder1: f.deed.same_as_purchaser ? (f.deed.holder1 || f.purchaser.names) : f.deed.names, holder2: f.deed.holder2, names: f.deed.names, address: f.deed.address, phone: f.deed.phone, email: f.deed.email, dob: f.deed.dob, marital_status: f.deed.marital_status },
       });
-      toast.success("Signed — thank you.");
+      toast.success(view.preview ? "Review signature tested — no agreement executed, payment taken or buyer email sent." : "Signed — thank you.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       await load();
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -108,6 +108,7 @@ export default function SignPurchaseAgreement() {
         <p className="text-sm text-muted-foreground">{f.property.cemetery}{f.property.city ? ` · ${f.property.city}` : ""}</p>
       </header>
 
+      {view.preview && <Banner icon={ShieldCheck} title="Internal review only">You may test the details and signature. Nothing is saved to the buyer’s agreement, no payment is taken and no email is sent to the buyer.</Banner>}
       {view.status === "buyer_signed" && <Banner icon={CheckCircle2} title="Thank you — your agreement is signed">We are finalising your agreement now. {paymentSchedule(f).collection === "manual" ? "Payment will be arranged separately; signing does not take payment." : "Your completed agreement and the selected payment request will follow."}</Banner>}
       {view.status === "countersigned" && (
         <Banner icon={CheckCircle2} title={view.paid > 0 ? "Deposit received — balance remains outstanding" : "Your agreement is fully signed"}>

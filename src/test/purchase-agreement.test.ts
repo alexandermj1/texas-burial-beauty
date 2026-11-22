@@ -1,8 +1,15 @@
+import { isInteractiveReview } from "../../supabase/functions/purchase-agreement/review";
 import { describe, expect, it } from "vitest";
 import { termsForVersion } from "../../supabase/functions/purchase-agreement/terms";
 import { chargeTotals, defaultFields, sellerReadyForBuyer, normalizeFields, documentFingerprint, paymentSchedule, paymentSettingsError, agreementPaymentProgress, requestedPaymentAmount, canonicalDocument, TERMS, LEGACY_TERMS_VERSION } from "@/lib/purchaseAgreement";
 
 describe("purchase agreement rules", () => {
+  it("only treats the exact unexpired review token as a safe signature preview", () => {
+    const f = { _review_token: "internal-review-token", _review_expires_at: "2099-01-01T00:00:00Z" };
+    expect(isInteractiveReview(f, "internal-review-token")).toBe(true);
+    expect(isInteractiveReview(f, "live-buyer-token")).toBe(false);
+    expect(isInteractiveReview({ ...f, _review_expires_at: "2020-01-01T00:00:00Z" }, "internal-review-token")).toBe(false);
+  });
   it("keeps the Barton deposit at ten percent of the property price, excluding transfer", () => {
     const f = normalizeFields({ charges: { deposit: 5290, balance: 47610, transfer_fee: 595 }, payment: { collection: "manual", deposit_basis: "amount", deposit_value: 5290 } });
     expect(chargeTotals(f.charges)).toEqual({ totalProperty: 52900, totalDue: 53495 });
