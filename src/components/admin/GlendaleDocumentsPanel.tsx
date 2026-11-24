@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import QRCode from 'qrcode';
-import { Camera, Check, ChevronDown, ChevronUp, ExternalLink, FolderOpen, Loader2, Plus, RefreshCw, RotateCcw, Upload, X } from 'lucide-react';
+import { Camera, Check, ChevronDown, ChevronUp, FolderOpen, Loader2, Plus, RefreshCw, RotateCcw, Upload, X } from 'lucide-react';
+import GlendaleScanQr from '@/components/admin/GlendaleScanQr';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,7 +16,6 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
   const [docs, setDocs] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(false);
   const [more, setMore] = useState(false);
-  const [qr, setQr] = useState('');
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [pages, setPages] = useState<Page[]>([]);
@@ -30,8 +29,6 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
   const [notice, setNotice] = useState('');
   const [view, setView] = useState<{name: string; urls: string[]} | null>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const scanOrigin = window.location.hostname === 'localhost' ? 'https://www.texascemeterybrokers.com' : window.location.origin;
-  const scanUrl = `${scanOrigin}/admin/glendale-scan`;
   const load = async (append = false) => {
     if (!user) return;
     setLoading(true);
@@ -46,7 +43,6 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, [user?.id]);
-  useEffect(() => { if (!phone) QRCode.toDataURL(scanUrl, { width: 220, margin: 2 }).then(setQr).catch(() => setError('Could not create the QR code. Use Open phone page instead.')); }, [scanUrl, phone]);
   useEffect(() => { pagesRef.current = pages; }, [pages]);
   useEffect(() => () => { pagesRef.current.forEach(p => URL.revokeObjectURL(p.url)); }, []);
   useEffect(() => {
@@ -133,10 +129,7 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
       <div className="flex gap-2"><Button variant="outline" size="icon" aria-label="Refresh documents" disabled={loading} onClick={() => { setError(''); void load(); }}><RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} /></Button>
       {!editing && <Button onClick={() => { setEditing(true); setNotice(''); setError(''); }}><Plus className="mr-2 h-4 w-4" />Upload new doc</Button>}</div>
     </header>
-    {!phone && <div className="flex flex-wrap items-center gap-5 border-y border-border py-5">
-      {qr && <img src={qr} alt="QR code for the private Glendale scanning page" className="h-36 w-36" />}
-      <div className="space-y-2"><h2 className="font-medium">Phone scanner</h2><p className="text-sm text-muted-foreground">Staff sign-in required · Private document folder</p><Button variant="outline" asChild><a href={scanUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Open phone page</a></Button></div>
-    </div>}
+    {!phone && <GlendaleScanQr className="border-y border-border py-5" />}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {notice && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Check className="h-4 w-4" />{notice}</p>}
     {editing && <div className="space-y-4 border-y border-border py-5">

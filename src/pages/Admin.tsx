@@ -23,6 +23,7 @@ import Seo from "@/components/Seo";
 import { toast } from "@/hooks/use-toast";
 import { bayCemeteries } from "@/data/cemeteries";
 import SubmissionsPanel from "@/components/admin/SubmissionsPanel";
+import GlendaleScanQr from "@/components/admin/GlendaleScanQr";
 import SellerAiUsage from "@/components/admin/ai/SellerAiUsage";
 import TexasCemeteriesPanel from "@/components/admin/TexasCemeteriesPanel";
 import CemeteryInfoCard from "@/components/admin/CemeteryInfoCard";
@@ -1080,6 +1081,12 @@ const Admin = () => {
 
           {tab === "email_marketing" && <EmailMarketingPanel />}
           {tab === "map" && <TexasMapPanel onViewSubmissions={(name) => { setSearchQuery(name); setTab("submissions"); }} />}
+          {tab === "submissions" && (
+            <div className="mt-10 rounded-xl border border-border bg-card p-5">
+              <p className="mb-4 text-xs uppercase tracking-wide text-muted-foreground">Glendale document scanner</p>
+              <GlendaleScanQr />
+            </div>
+          )}
           <div className="mt-10 flex items-center justify-end gap-3 flex-wrap">
             <button
               onClick={async () => {
