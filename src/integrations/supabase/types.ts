@@ -2181,6 +2181,68 @@ export type Database = {
         }
         Relationships: []
       }
+      glendale_scan_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      glendale_scan_uploads: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          link_id: string
+          name: string
+          pages: Json
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id: string
+          link_id: string
+          name: string
+          pages: Json
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          link_id?: string
+          name?: string
+          pages?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glendale_scan_uploads_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "glendale_scan_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_requests: {
         Row: {
           admin_response: string | null

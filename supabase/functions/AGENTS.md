@@ -20,3 +20,4 @@
 - Internal agreement reviews reuse inviteEmailHtml and the complete PDF for role-verified staff; customer-copy reviews preserve customer presentation and deduplicate by recipient/terms version; expiring review tokens allow fill-in/signature tests without live mutations, countersignature, payment or buyer email — why: the original experience must be reviewable safely.
 
 - Purchase-agreement send validates copied recipients, records them in the email event and attaches the complete agreement PDF alongside any redacted deed — why: staff copies and complete customer delivery stay auditable.
+- Glendale-scan validates hashed expiring staff-issued capabilities, signs only new page uploads and verifies storage/record completion internally; it never returns document reads — why: no-login scanning cannot expose private files.

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Camera, Check, ChevronDown, ChevronUp, FolderOpen, Loader2, Plus, RefreshCw, RotateCcw, Upload, X } from 'lucide-react';
 import GlendaleScanQr from '@/components/admin/GlendaleScanQr';
 import { Button } from '@/components/ui/button';
@@ -8,10 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { GLENDALE_BUCKET, MAX_SCAN_PAGES, scanName, scanPagePath, validScanPages } from '@/lib/glendaleDocuments';
+import { uploadScanPages } from '@/lib/glendaleScanUpload';
 
 type Scan = { id: string; name: string; pages: string[]; created_at: string };
 type Page = { id: string; blob: Blob; url: string };
-export default function GlendaleDocumentsPanel({ phone = false }: { phone?: boolean }) {
+export default function GlendaleDocumentsPanel({ uploadToken }: { uploadToken?: string }) {
+  const uploadOnly = uploadToken !== undefined;
   const { user } = useAuth();
   const [docs, setDocs] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,9 +29,10 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [view, setView] = useState<{name: string; urls: string[]} | null>(null);
+  const [locked, setLocked] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   const load = async (append = false) => {
-    if (!user) return;
+    if (uploadOnly || !user) return;
     setLoading(true);
     const start = append ? docs.length : 0;
     try {
@@ -42,7 +44,7 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
     } catch { setError('Could not load the document folder. Please try again.'); }
     finally { setLoading(false); }
   };
-  useEffect(() => { void load(); }, [user?.id]);
+  useEffect(() => { if (!uploadOnly) void load(); }, [user?.id, uploadOnly]);
   useEffect(() => { pagesRef.current = pages; }, [pages]);
   useEffect(() => () => { pagesRef.current.forEach(p => URL.revokeObjectURL(p.url)); }, []);
   useEffect(() => {
@@ -88,8 +90,20 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
     setPages(old => { const next = [...old]; const destination = index + direction; if (destination < 0 || destination >= next.length) return old; [next[index], next[destination]] = [next[destination], next[index]]; return next; });
   };
   const save = async () => {
-    if (!user || busy || !pages.length) return;
+    if ((!uploadOnly && !user) || busy || !pages.length) return;
     setCamera(false); setBusy(true); setError(''); setNotice('');
+    if (uploadToken) {
+      setLocked(true);
+      try {
+        await uploadScanPages(uploadToken, documentId.current, scanName(name), pages, uploaded.current);
+        pages.forEach(p => URL.revokeObjectURL(p.url)); setPages([]); setName(''); setEditing(false);
+        documentId.current = crypto.randomUUID(); uploaded.current.clear(); setLocked(false);
+        setNotice('Document uploaded successfully.');
+      } catch (e) { setError(e instanceof Error ? e.message : 'Upload could not be confirmed. Keep this page open and retry.'); }
+      finally { setBusy(false); }
+      return;
+    }
+    if (!user) { setBusy(false); return; }
     const paths = pages.map(p => scanPagePath(user.id, documentId.current, p.id));
     try {
       if (!validScanPages(paths)) throw new Error('Invalid document pages');
@@ -113,6 +127,7 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
     finally { setBusy(false); }
   };
   const open = async (doc: Scan) => {
+    if (uploadOnly) return;
     setError('');
     try {
       const urls = await Promise.all(doc.pages.map(async path => {
@@ -126,26 +141,25 @@ export default function GlendaleDocumentsPanel({ phone = false }: { phone?: bool
   return <section className="mx-auto w-full max-w-5xl space-y-6">
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div><p className="text-xs uppercase text-muted-foreground">Bayer office</p><h1 className="font-display text-2xl text-foreground">Documents at Glendale</h1></div>
-      <div className="flex gap-2"><Button variant="outline" size="icon" aria-label="Refresh documents" disabled={loading} onClick={() => { setError(''); void load(); }}><RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} /></Button>
+      <div className="flex gap-2">{!uploadOnly && <Button variant="outline" size="icon" aria-label="Refresh documents" disabled={loading} onClick={() => { setError(''); void load(); }}><RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} /></Button>}
       {!editing && <Button onClick={() => { setEditing(true); setNotice(''); setError(''); }}><Plus className="mr-2 h-4 w-4" />Upload new doc</Button>}</div>
     </header>
-    {!phone && <GlendaleScanQr className="border-y border-border py-5" />}
+    {!uploadOnly && <GlendaleScanQr className="border-y border-border py-5" />}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {notice && <p role="status" className="flex items-center gap-2 text-sm text-primary"><Check className="h-4 w-4" />{notice}</p>}
     {editing && <div className="space-y-4 border-y border-border py-5">
-      <label className="block space-y-2"><span className="text-sm font-medium">Document name (optional)</span><Input value={name} maxLength={200} disabled={busy} onChange={e => setName(e.target.value)} placeholder="e.g. Gerri Rougeau — deed" /></label>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || pages.length >= MAX_SCAN_PAGES} onClick={() => { setError(''); setCamera(true); }}><Camera className="mr-2 h-4 w-4" />{pages.length ? 'Add another page' : 'Take first page'}</Button>
+      <label className="block space-y-2"><span className="text-sm font-medium">Document name (optional)</span><Input value={name} maxLength={200} disabled={busy || locked} onChange={e => setName(e.target.value)} placeholder="e.g. Gerri Rougeau — deed" /></label>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || locked || pages.length >= MAX_SCAN_PAGES} onClick={() => { setError(''); setCamera(true); }}><Camera className="mr-2 h-4 w-4" />{pages.length ? 'Add another page' : 'Take first page'}</Button>
       <Button disabled={busy || !pages.length} onClick={() => void save()}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}Submit document{pages.length ? ` (${pages.length})` : ''}</Button></div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{pages.map((page, index) => <div key={page.id} className="rounded-lg border border-border p-2"><img src={page.url} alt={`Document page ${index + 1}`} className="aspect-[3/4] w-full object-contain bg-muted" /><div className="mt-2 flex flex-wrap items-center justify-between gap-1"><span className="text-xs">Page {index + 1}</span><div className="flex"><Button variant="ghost" size="icon" title="Move page earlier" aria-label={`Move page ${index + 1} earlier`} disabled={busy || index === 0} onClick={() => move(index, -1)}><ChevronUp className="h-4 w-4" /></Button><Button variant="ghost" size="icon" title="Move page later" aria-label={`Move page ${index + 1} later`} disabled={busy || index === pages.length - 1} onClick={() => move(index, 1)}><ChevronDown className="h-4 w-4" /></Button><Button variant="ghost" size="icon" title="Remove page" aria-label={`Remove page ${index + 1}`} disabled={busy} onClick={() => remove(page.id)}><X className="h-4 w-4" /></Button></div></div></div>)}</div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{pages.map((page, index) => <div key={page.id} className="rounded-lg border border-border p-2"><img src={page.url} alt={`Document page ${index + 1}`} className="aspect-[3/4] w-full object-contain bg-muted" /><div className="mt-2 flex flex-wrap items-center justify-between gap-1"><span className="text-xs">Page {index + 1}</span><div className="flex"><Button variant="ghost" size="icon" title="Move page earlier" aria-label={`Move page ${index + 1} earlier`} disabled={busy || locked || index === 0} onClick={() => move(index, -1)}><ChevronUp className="h-4 w-4" /></Button><Button variant="ghost" size="icon" title="Move page later" aria-label={`Move page ${index + 1} later`} disabled={busy || locked || index === pages.length - 1} onClick={() => move(index, 1)}><ChevronDown className="h-4 w-4" /></Button><Button variant="ghost" size="icon" title="Remove page" aria-label={`Remove page ${index + 1}`} disabled={busy || locked} onClick={() => remove(page.id)}><X className="h-4 w-4" /></Button></div></div></div>)}</div>
     </div>}
-    <div className="divide-y divide-border">{docs.map(doc => <div key={doc.id} className="flex items-center justify-between gap-3 py-4"><div className="min-w-0"><h2 className="break-words text-sm font-medium">{doc.name}</h2><p className="text-xs text-muted-foreground">{doc.pages.length} {doc.pages.length === 1 ? 'page' : 'pages'} · {new Date(doc.created_at).toLocaleDateString()}</p></div><Button variant="outline" onClick={() => void open(doc)}><FolderOpen className="mr-2 h-4 w-4" />View</Button></div>)}{!docs.length && !loading && <p className="py-8 text-center text-sm text-muted-foreground">No documents uploaded yet.</p>}</div>
-    {more && <Button variant="outline" disabled={loading} onClick={() => void load(true)}>Load more</Button>}
-    {phone && <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>}
+    {!uploadOnly && <div className="divide-y divide-border">{docs.map(doc => <div key={doc.id} className="flex items-center justify-between gap-3 py-4"><div className="min-w-0"><h2 className="break-words text-sm font-medium">{doc.name}</h2><p className="text-xs text-muted-foreground">{doc.pages.length} {doc.pages.length === 1 ? 'page' : 'pages'} · {new Date(doc.created_at).toLocaleDateString()}</p></div><Button variant="outline" onClick={() => void open(doc)}><FolderOpen className="mr-2 h-4 w-4" />View</Button></div>)}{!docs.length && !loading && <p className="py-8 text-center text-sm text-muted-foreground">No documents uploaded yet.</p>}</div>}
+    {!uploadOnly && more && <Button variant="outline" disabled={loading} onClick={() => void load(true)}>Load more</Button>}
     <Dialog open={camera} onOpenChange={open => { if (!busy) setCamera(open); }}><DialogContent className="max-h-[95svh] overflow-y-auto sm:max-w-xl"><DialogHeader><DialogTitle>Page {pages.length + 1}</DialogTitle></DialogHeader>
       <video ref={video} autoPlay playsInline muted className="aspect-[3/4] max-h-[65svh] w-full bg-muted object-contain" />
       <div className="flex flex-wrap justify-center gap-2"><Button disabled={!cameraReady || busy || pages.length >= MAX_SCAN_PAGES} onClick={() => void capture()}><Camera className="mr-2 h-4 w-4" />Capture page</Button><Button variant="outline" disabled={busy} onClick={() => setCamera(false)}><Check className="mr-2 h-4 w-4" />Review {pages.length} pages</Button></div>
       {pages.length > 0 && <div className="flex items-center gap-3"><img src={pages[pages.length - 1]?.url} alt="Latest captured page" className="h-20 w-16 object-contain" /><span className="text-sm">{pages.length} captured</span><Button variant="ghost" disabled={busy} onClick={() => { const last = pages[pages.length - 1]; if (last) remove(last.id); }}><RotateCcw className="mr-2 h-4 w-4" />Retake last</Button></div>}
     </DialogContent></Dialog>
-    <Dialog open={!!view} onOpenChange={open => { if (!open) setView(null); }}><DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>{view?.name}</DialogTitle></DialogHeader>{view?.urls.map((url, i) => <figure key={url} className="space-y-2"><figcaption className="text-xs text-muted-foreground">Page {i + 1}</figcaption><img src={url} alt={`${view.name} page ${i + 1}`} className="w-full object-contain" /></figure>)}</DialogContent></Dialog>
+    {!uploadOnly && <Dialog open={!!view} onOpenChange={open => { if (!open) setView(null); }}><DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>{view?.name}</DialogTitle></DialogHeader>{view?.urls.map((url, i) => <figure key={url} className="space-y-2"><figcaption className="text-xs text-muted-foreground">Page {i + 1}</figcaption><img src={url} alt={`${view.name} page ${i + 1}`} className="w-full object-contain" /></figure>)}</DialogContent></Dialog>}
   </section>;
 }
