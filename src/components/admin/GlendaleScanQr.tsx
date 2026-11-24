@@ -3,11 +3,7 @@ import QRCode from 'qrcode';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-
-export function glendaleScanUrl(token: string) {
-  const origin = window.location.hostname === 'localhost' ? 'https://www.texascemeterybrokers.com' : window.location.origin;
-  return `${origin}/admin/glendale-scan#${token}`;
-}
+import { glendaleScanUrl } from '@/lib/glendaleDocuments';
 
 export default function GlendaleScanQr({ className = '' }: { className?: string }) {
   const [qr, setQr] = useState('');

@@ -1,5 +1,9 @@
 export const GLENDALE_BUCKET = 'glendale-documents';
 export const MAX_SCAN_PAGES = 50;
+// Phones cannot open the protected preview; QR capabilities always use the live site.
+export function glendaleScanUrl(token: string) {
+  return `https://texascemeterybrokers.com/admin/glendale-scan#${token}`;
+}
 export function scanName(name: string) {
   return name.trim().slice(0, 200) || 'Untitled document';
 }
