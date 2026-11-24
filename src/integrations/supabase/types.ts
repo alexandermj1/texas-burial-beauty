@@ -2151,6 +2151,36 @@ export type Database = {
           },
         ]
       }
+      glendale_documents: {
+        Row: {
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          name: string
+          pages: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          name?: string
+          pages?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          name?: string
+          pages?: Json
+        }
+        Relationships: []
+      }
       inventory_requests: {
         Row: {
           admin_response: string | null

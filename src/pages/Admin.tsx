@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Pencil, Trash2, LogOut, Plus, MapPin, Map as MapIcon, Building2, Save, CalendarDays, Clock, TrendingUp, Search, DollarSign, CheckCircle, Inbox, Mail, Trophy, Users, Package, ClipboardList, Menu, X, RefreshCw, Megaphone, Radio, FlaskConical, Layers, Palette } from "lucide-react";
 import AgentPerformancePanel from "@/components/admin/AgentPerformancePanel";
 import BrandKitPanel from "@/components/admin/BrandKitPanel";
+import GlendaleDocumentsPanel from "@/components/admin/GlendaleDocumentsPanel";
 import ActivityMonitorPanel from "@/components/admin/ActivityMonitorPanel";
 import AccountingPanel from "@/components/admin/AccountingPanel";
 import CustomersPanel from "@/components/admin/CustomersPanel";
@@ -74,7 +75,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground" | "ai_agent" | "brand_kit">("submissions");
+  const [tab, setTab] = useState<"listings" | "cemeteries" | "map" | "reservations" | "sales" | "submissions" | "inbox" | "performance" | "customers" | "ca_inventory" | "inventory_requests" | "accounting" | "email_marketing" | "activity_monitor" | "tasks" | "rules_playground" | "ai_agent" | "brand_kit" | "glendale_docs">("submissions");
   const [reservations, setReservations] = useState<any[]>([]);
   const [sales, setSales] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -262,7 +263,7 @@ const Admin = () => {
       const t = params.get("tab");
       const sid = params.get("submission");
       const cust = params.get("customer");
-      if (t && ["listings","cemeteries","reservations","sales","submissions","inbox","performance","customers","ca_inventory","inventory_requests","brand_kit"].includes(t)) {
+      if (t && ["listings","cemeteries","reservations","sales","submissions","inbox","performance","customers","ca_inventory","inventory_requests","brand_kit","glendale_docs"].includes(t)) {
         setTab(t as any);
       }
       if (sid) { setFocusSubmissionId(sid); setTab("submissions"); }
@@ -495,6 +496,7 @@ const Admin = () => {
     { key: "map", label: "Map", Icon: MapIcon },
     { key: "email_marketing", label: "Email Marketing", Icon: Megaphone },
     { key: "brand_kit", label: "Brand Kit", Icon: Palette },
+    { key: "glendale_docs", label: "Glendale Docs", Icon: ClipboardList },
     ...(user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com"
       ? [{ key: "activity_monitor" as typeof tab, label: "Activity Monitor", Icon: Radio }]
       : []),
@@ -504,7 +506,7 @@ const Admin = () => {
 
   // Staff users only get Submissions and Map — even if they also carry the
   // admin role for backend access. isStaff drives UI limits.
-  const staffAllowed: Array<typeof tab> = ["submissions", "map"];
+  const staffAllowed: Array<typeof tab> = ["submissions", "map", "glendale_docs"];
   const uiRestricted = isStaff;
   const tabsConfig = uiRestricted ? allTabs.filter(t => staffAllowed.includes(t.key)) : allTabs;
 
@@ -1002,6 +1004,7 @@ const Admin = () => {
           {tab === "rules_playground" && <RulesPlaygroundPanel />}
           {tab === "performance" && <AgentPerformancePanel />}
           {tab === "brand_kit" && <BrandKitPanel />}
+          {tab === "glendale_docs" && <GlendaleDocumentsPanel />}
           {tab === "activity_monitor" && user?.email?.toLowerCase() === "alexandermaclarenjames@gmail.com" && <ActivityMonitorPanel />}
           {tab === "accounting" && <AccountingPanel />}
           {tab === "customers" && <CustomersPanel />}
