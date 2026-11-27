@@ -1,4 +1,6 @@
-import { aiFetch } from "../_shared/aiRunLabel.ts";
+import { aiFetch, labelRun } from "../_shared/aiRunLabel.ts";
+import { generateResponse } from "npm:@lovable.dev/ai-gateway@0.1.11";
+import { recoverBuyerCredits, retryableBuyerCreditDraft } from "./creditRecovery.ts";
 // Buyer AI: prepares one approval-only reply for a buyer inquiry using real seller inventory.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -331,8 +333,8 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
     db.from("customer_notes").select("created_at,author_name").eq("submission_id", id).is("deleted_at", null).not("author_name", "ilike", "%AI%").order("created_at", { ascending: false }).limit(1),
   ]);
   const lastContact = [ours?.[0]?.received_at, staffNotes?.[0]?.created_at].filter(Boolean).sort().pop() ?? null;
-  const { data: old } = await db.from("buyer_ai_drafts").select("id,status,decision_reason,excluded_listing_ids").eq("submission_id", id).maybeSingle();
-  if (old && !force) return { status: "skipped", reason: "Already drafted" };
+  const { data: old } = await db.from("buyer_ai_drafts").select("id,status,error,decision_reason,excluded_listing_ids").eq("submission_id", id).maybeSingle();
+  if (old && !force && !retryableBuyerCreditDraft(old)) return { status: "skipped", reason: "Already drafted" };
   if (["sent", "sending", "send_failed"].includes(old?.status)) return { status: "skipped", reason: "A reply was already sent or attempted; check the email thread" };
   const row = { submission_id: id, status: "processing", error: null, updated_at: new Date().toISOString(), deleted_at: null };
   // A run whose request died mid-flight leaves the row stuck on "processing"; let a stale one be re-claimed.
@@ -380,19 +382,32 @@ async function draft(db: any, apiKey: string, id: string, force: boolean) {
 // and every safety check of the approval path (prior contact, file review, duplicate address, inventory) still applies.
 async function sweep(db: any, url: string, service: string, apiKey?: string) {
   if (!apiKey) return { status: "skipped", reason: "AI is not configured" };
-  const { data: state } = await db.from("automation_job_state").select("status").eq("job_name", "buyer-ai-drafts").maybeSingle();
-  if (state?.status === "paused") return { status: "paused" };
   const run = crypto.randomUUID();
   const { data: locked } = await db.rpc("claim_automation_job", { _job_name: "buyer-ai-sweep", _run_id: run, _lease_seconds: 900 });
   if (!locked) return { status: "skipped", reason: "Another run is in progress" };
   const done: any[] = [];
   try {
+    const { data: state, error: stateError } = await db.from("automation_job_state").select("status,pause_reason").eq("job_name", "buyer-ai-drafts").maybeSingle();
+    if (stateError) throw new Error(stateError.message);
+    const recovery = await recoverBuyerCredits(state ?? {}, async () => {
+      try {
+        await generateResponse(labelRun({ model: MODEL, input: "Reply OK." }, "Buyer AI — checking restored credit access"), { maxRetries: 0 });
+        return true;
+      } catch { return false; }
+    }, async () => {
+      // Do not overwrite a different pause applied while the access check was running.
+      const { data: resumed, error } = await db.from("automation_job_state").update({ status: "active", pause_reason: null, updated_at: new Date().toISOString() })
+        .eq("job_name", "buyer-ai-drafts").eq("status", "paused").eq("pause_reason", state?.pause_reason).select("job_name").maybeSingle();
+      if (error) throw new Error(error.message);
+      return !!resumed;
+    });
+    if (!recovery.ready) return { status: "paused", reason: state?.pause_reason, recovered: false };
     const due = new Date(Date.now() - BUYER_REPLY_MIN_DELAY_MS).toISOString();
     const { data: cands } = await db.from("contact_submissions").select("id,email,customer_kind,source").eq("buyer_ai_auto_reply_disabled", false).is("deleted_at", null).is("archived_at", null).is("closed_at", null).is("ai_paused_at", null).not("email", "is", null).lte("created_at", due).order("created_at", { ascending: false }).limit(1000);
     // First round of outreach only: any buyer (or email address) the AI has already looked at is never re-read.
     const buyers = (cands ?? []).filter(isBuyer);
-    const { data: had } = await db.from("buyer_ai_drafts").select("submission_id").limit(5000);
-    const seenIds = new Set((had ?? []).map((h: any) => h.submission_id));
+    const { data: had } = await db.from("buyer_ai_drafts").select("submission_id,status,error").limit(5000);
+    const seenIds = new Set((had ?? []).filter((h: any) => !retryableBuyerCreditDraft(h)).map((h: any) => h.submission_id));
     const seenEmails = new Set(buyers.filter((b: any) => seenIds.has(b.id)).map((b: any) => String(b.email).toLowerCase().trim()));
     const todo: string[] = [];
     for (const b of buyers) {
@@ -408,7 +423,7 @@ async function sweep(db: any, url: string, service: string, apiKey?: string) {
       const sent = await sendDraft(db, url, `Bearer ${service}`, d, d.subject, d.body, "Buyer AI (automatic)", "Buyer AI reply emailed automatically.", { decided_by_name: "Buyer AI (automatic)", decided_at: new Date().toISOString(), updated_at: new Date().toISOString() });
       done.push({ id, sent: !("error" in sent), error: (sent as any).error });
     }
-    return { status: "ok", done };
+    return { status: "ok", recovered: recovery.recovered, done };
   } catch (e) {
     return { status: "error", error: String((e as Error).message), done };
   } finally { await db.rpc("release_automation_job", { _job_name: "buyer-ai-sweep", _run_id: run, _completed: true }); }

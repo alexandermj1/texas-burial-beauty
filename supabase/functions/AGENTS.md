@@ -21,3 +21,4 @@
 
 - Purchase-agreement send validates copied recipients, records them in the email event and attaches the complete agreement PDF alongside any redacted deed — why: staff copies and complete customer delivery stay auditable.
 - Glendale-scan validates hashed expiring staff-issued capabilities, signs only new page uploads and verifies storage/record completion internally; it never returns document reads — why: no-login scanning cannot expose private files.
+- Buyer sweeps recover credit-only pauses under their existing lease using a record-free SDK probe and guarded resume; only explicit credit-failed drafts are reconsidered — why: restored credits restart outreach without replaying attempted sends or overriding staff pauses.
