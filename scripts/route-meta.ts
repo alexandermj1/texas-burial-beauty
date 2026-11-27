@@ -140,4 +140,10 @@ export const STATIC_ROUTES: RouteMeta[] = [
       "Just lost someone and don't know what to do first? A plain-English Texas guide: your rights, real DFW prices, phone scripts, and where families overspend.",
     type: "article",
   },
+  {
+    path: "/privacy",
+    title: "Privacy Policy | Texas Cemetery Brokers",
+    description:
+      "How Texas Cemetery Brokers collects, uses and protects personal information from buyers, sellers and website visitors.",
+  },
 ];

@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate, createRoutesFromElements, matchRoutes } from "react-router-dom";
+import { Suspense, type ComponentType, type ReactNode } from "react";
+import { lazyPage } from "@/lib/lazyPage";
 import { AuthProvider } from "@/hooks/useAuth";
 import ScrollToTop from "@/components/ScrollToTop";
 import PageTransition from "@/components/PageTransition";
@@ -16,51 +17,51 @@ import NotFound from "./pages/NotFound";
 
 // Lazy-load secondary public pages and all private dashboards. Trims the
 // initial JS payload, improving LCP and Core Web Vitals (good for SEO).
-const Properties2 = lazy(() => import("./pages/Properties2"));
-const BuyProperty = lazy(() => import("./pages/BuyProperty"));
-const SellProperty = lazy(() => import("./pages/SellProperty"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const CreateListing = lazy(() => import("./pages/CreateListing"));
-const PropertyTypes = lazy(() => import("./pages/PropertyTypes"));
-const Blog = lazy(() => import("./pages/Blog"));
-const Team = lazy(() => import("./pages/Team"));
-const Admin = lazy(() => import("./pages/Admin"));
-const GlendaleScan = lazy(() => import("./pages/GlendaleScan"));
-const PhotoLibrary = lazy(() => import("./pages/admin/PhotoLibrary"));
-const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
-const Home2 = lazy(() => import("./pages/Home2"));
-const Partners = lazy(() => import("./pages/Partners"));
-const CemeteryDirectory = lazy(() => import("./pages/CemeteryDirectory"));
-const CemeteryDetail = lazy(() => import("./pages/CemeteryDetail"));
-const Contact = lazy(() => import("./pages/Contact"));
-const Guides = lazy(() => import("./pages/Guides"));
-const GuideCemeteryBroker = lazy(() => import("./pages/GuideCemeteryBroker"));
-const GuideSellingCemeteryPlot = lazy(() => import("./pages/GuideSellingCemeteryPlot"));
-const GuideBuyingCemeteryPlot = lazy(() => import("./pages/GuideBuyingCemeteryPlot"));
-const GuideCemeteryPlotCost = lazy(() => import("./pages/GuideCemeteryPlotCost"));
-const GuideCemeteryPlotWorth = lazy(() => import("./pages/GuideCemeteryPlotWorth"));
-const GuidePreneedCemeteryPlots = lazy(() => import("./pages/GuidePreneedCemeteryPlots"));
-const GuideCemeteryTransferProcess = lazy(() => import("./pages/GuideCemeteryTransferProcess"));
-const GuidePlanningFuneralTexas = lazy(() => import("./pages/GuidePlanningFuneralTexas"));
-const CityPlotsPage = lazy(() => import("./pages/CityPlotsPage"));
+const Properties2 = lazyPage(() => import("./pages/Properties2"));
+const BuyProperty = lazyPage(() => import("./pages/BuyProperty"));
+const SellProperty = lazyPage(() => import("./pages/SellProperty"));
+const Auth = lazyPage(() => import("./pages/Auth"));
+const Dashboard = lazyPage(() => import("./pages/Dashboard"));
+const CreateListing = lazyPage(() => import("./pages/CreateListing"));
+const PropertyTypes = lazyPage(() => import("./pages/PropertyTypes"));
+const Blog = lazyPage(() => import("./pages/Blog"));
+const Team = lazyPage(() => import("./pages/Team"));
+const Admin = lazyPage(() => import("./pages/Admin"));
+const GlendaleScan = lazyPage(() => import("./pages/GlendaleScan"));
+const PhotoLibrary = lazyPage(() => import("./pages/admin/PhotoLibrary"));
+const AgentDashboard = lazyPage(() => import("./pages/AgentDashboard"));
+const Home2 = lazyPage(() => import("./pages/Home2"));
+const Partners = lazyPage(() => import("./pages/Partners"));
+const CemeteryDirectory = lazyPage(() => import("./pages/CemeteryDirectory"));
+const CemeteryDetail = lazyPage(() => import("./pages/CemeteryDetail"));
+const Contact = lazyPage(() => import("./pages/Contact"));
+const Guides = lazyPage(() => import("./pages/Guides"));
+const GuideCemeteryBroker = lazyPage(() => import("./pages/GuideCemeteryBroker"));
+const GuideSellingCemeteryPlot = lazyPage(() => import("./pages/GuideSellingCemeteryPlot"));
+const GuideBuyingCemeteryPlot = lazyPage(() => import("./pages/GuideBuyingCemeteryPlot"));
+const GuideCemeteryPlotCost = lazyPage(() => import("./pages/GuideCemeteryPlotCost"));
+const GuideCemeteryPlotWorth = lazyPage(() => import("./pages/GuideCemeteryPlotWorth"));
+const GuidePreneedCemeteryPlots = lazyPage(() => import("./pages/GuidePreneedCemeteryPlots"));
+const GuideCemeteryTransferProcess = lazyPage(() => import("./pages/GuideCemeteryTransferProcess"));
+const GuidePlanningFuneralTexas = lazyPage(() => import("./pages/GuidePlanningFuneralTexas"));
+const CityPlotsPage = lazyPage(() => import("./pages/CityPlotsPage"));
 import { CITY_PAGES } from "./pages/city-page-data";
-const ThankYou = lazy(() => import("./pages/ThankYou"));
-const ThankYouBuyer = lazy(() => import("./pages/ThankYouBuyer"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
-const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
-const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
-const SignContract = lazy(() => import("./pages/SignContract"));
-const SignPurchaseAgreement = lazy(() => import("./pages/SignPurchaseAgreement"));
-const SelectStarter = lazy(() => import("./pages/SelectStarter"));
-const SellerPortal = lazy(() => import("./pages/SellerPortal"));
-const SellerPortalMobileUpload = lazy(() => import("./pages/SellerPortalMobileUpload"));
-const SellerIntakeUpload = lazy(() => import("./pages/SellerIntakeUpload"));
-const SellerDocuments = lazy(() => import("./pages/SellerDocuments"));
-const OwnershipConfirm = lazy(() => import("./pages/OwnershipConfirm"));
-const OwnershipConfirmV3 = lazy(() => import("./pages/OwnershipConfirmV3"));
-const FileViewer = lazy(() => import("./pages/FileViewer"));
+const ThankYou = lazyPage(() => import("./pages/ThankYou"));
+const ThankYouBuyer = lazyPage(() => import("./pages/ThankYouBuyer"));
+const Privacy = lazyPage(() => import("./pages/Privacy"));
+const PaymentSuccess = lazyPage(() => import("./pages/PaymentSuccess"));
+const PaymentCancelled = lazyPage(() => import("./pages/PaymentCancelled"));
+const Unsubscribe = lazyPage(() => import("./pages/Unsubscribe"));
+const SignContract = lazyPage(() => import("./pages/SignContract"));
+const SignPurchaseAgreement = lazyPage(() => import("./pages/SignPurchaseAgreement"));
+const SelectStarter = lazyPage(() => import("./pages/SelectStarter"));
+const SellerPortal = lazyPage(() => import("./pages/SellerPortal"));
+const SellerPortalMobileUpload = lazyPage(() => import("./pages/SellerPortalMobileUpload"));
+const SellerIntakeUpload = lazyPage(() => import("./pages/SellerIntakeUpload"));
+const SellerDocuments = lazyPage(() => import("./pages/SellerDocuments"));
+const OwnershipConfirm = lazyPage(() => import("./pages/OwnershipConfirm"));
+const OwnershipConfirmV3 = lazyPage(() => import("./pages/OwnershipConfirmV3"));
+const FileViewer = lazyPage(() => import("./pages/FileViewer"));
 
 
 
@@ -70,17 +71,7 @@ const RouteFallback = () => (
   <div className="min-h-screen bg-background" aria-busy="true" aria-live="polite" />
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
+const routeElements = (
               <Route element={<PageTransition />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/home2" element={<Home2 />} />
@@ -145,12 +136,42 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Route>
-            </Routes>
+);
+
+// Loads the code for the page at `pathname` ahead of the first render, so a
+// pre-rendered page is replaced by the live one without a blank frame.
+export async function preloadRouteFor(pathname: string): Promise<void> {
+  const matches = matchRoutes(createRoutesFromElements(routeElements), pathname) ?? [];
+  await Promise.all(
+    matches.map((m) => {
+      const type = (m.route.element as { type?: { preload?: () => Promise<void> } } | undefined)?.type;
+      return type?.preload?.();
+    }),
+  );
+}
+
+type RouterComponent = ComponentType<{ children?: ReactNode }>;
+
+// The whole app with a pluggable router: the browser uses BrowserRouter, the
+// build-time page renderer (src/entry-prerender.tsx) passes a StaticRouter.
+export const AppShell = ({ Router }: { Router: RouterComponent }) => (
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Router>
+          <ScrollToTop />
+          
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>{routeElements}</Routes>
           </Suspense>
-        </BrowserRouter>
+        </Router>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
+
+const App = () => <AppShell Router={BrowserRouter} />;
 
 export default App;

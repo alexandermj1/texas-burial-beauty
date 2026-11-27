@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import App, { preloadRouteFor } from "./App.tsx";
 import "./index.css";
 
 const fonts = document.createElement("link");
@@ -34,4 +34,15 @@ if (typeof window !== "undefined" && /lovable\.app$/i.test(window.location.hostn
 }
 
 const root = document.getElementById("root");
-if (root) createRoot(root).render(<App />);
+if (root) {
+  const start = () => createRoot(root).render(<App />);
+  if (root.hasChildNodes()) {
+    // This page was served with its content already in the HTML (for search
+    // engines and AI readers). Load the page's code first so the live app
+    // replaces that content in one step, with no blank frame.
+    const giveUp = new Promise<void>((resolve) => window.setTimeout(resolve, 4000));
+    Promise.race([preloadRouteFor(window.location.pathname), giveUp]).catch(() => undefined).then(start);
+  } else {
+    start();
+  }
+}
